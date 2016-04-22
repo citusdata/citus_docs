@@ -1,0 +1,12 @@
+.. _scaling_out_performance:
+
+Scaling Out Performance
+#######################
+
+Once you have achieved the desired performance on a single shard, you can set similar configuration parameters on all your worker nodes. As CitusDB runs all the fragment queries in parallel across the worker nodes, users can scale out the performance of their queries to be the cumulative of the computing power of all of the CPU cores in the cluster assuming that the data fits in memory.
+
+Users should try to fit as much of their working set in memory as possible to get best performance with CitusDB. If fitting the entire working set in memory is not feasible, we recommend using SSDs over HDDs as a best practice. This is because HDDs are able to show decent performance when you have sequential reads over contiguous blocks of data, but have significantly lower random read / write performance. In cases where you have a high number of concurrent queries doing random reads and writes, using SSDs can improve query performance by several times as compared to HDDs. Also, if your queries are highly compute intensive, it might be beneficial to choose machines with more powerful CPUs.
+
+To measure the disk space usage of your database objects, you can log into the worker nodes and use `PostgreSQL administration functions <http://www.postgresql.org/docs/9.4/static/functions-admin.html#FUNCTIONS-ADMIN-DBSIZE>`_ for individual shards. The pg_total_relation_size() function can be used to get the total disk space used by a table. You can also use other functions mentioned in the PostgreSQL docs to get more specific size information. On the basis of these statistics for a shard and the shard count, users can compute the hardware requirements for their cluster.
+
+Another factor which affects performance is the number of shards per node. CitusDB partitions an incoming query into its fragment queries which run on individual worker shards. Hence, the degree of parallelism for each query is governed by the number of shards the query hits. To ensure maximum parallelism, you should create enough shards on each node such that there is at least one shard per CPU core. Another consideration to keep in mind is that CitusDB will prune away unrelated shards if the query has filters on the partition key. So, creating more shards than the number of cores might also be beneficial so that you can achieve greater parallelism even after shard pruning.
