@@ -1,0 +1,23 @@
+{
+  "name": "citus_docs",
+  "scripts": {
+  },
+  "env": {
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+    {
+      "url": "https://github.com/citusdata/sphinx-heroku-buildpack.git"
+    },
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
