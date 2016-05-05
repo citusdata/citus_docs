@@ -16,17 +16,18 @@ topics.
    aboutcitus/introduction_to_citus.rst
 
 .. toctree::
+   :caption: Tutorials
+
+   tutorials/tut-cluster.rst
+   tutorials/tut-real-time.rst
+   tutorials/tut-user-data.rst
+
+.. toctree::
    :caption: Installation
 
    installation/requirements.rst
    installation/development.rst
    installation/production.rst
-
-.. toctree::
-   :caption: Tutorials
-
-   tutorials/tut-real-time.rst
-   tutorials/tut-user-data.rst
 
 .. toctree::
    :maxdepth: 1

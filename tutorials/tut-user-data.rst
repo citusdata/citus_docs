@@ -7,29 +7,13 @@ In this tutorial we'll continue looking at wikipedia edits. The previous
 tutorial ingested a stream of all live edits happening across wikimedia.  We'll
 continue looking at that stream but store it in a different way.
 
-.. note::
-
-  This tutorial assumes you've setup a Citus cluster. If you haven't, check out the
-  :ref:`development` section before continuing.
-
-  If you're using the **Docker** machine image on **Mac**::
-
-    export DATABASE_URI=postgres://postgres@$(docker-machine ip)
-
-  Else if you're using the **Docker** machine image on **Linux**::
-
-    export DATABASE_URI=postgres://postgres@localhost
-
-  Else if you're using the tutorial **tarball** (not Docker)::
-
-    export DATABASE_URI=postgresql://:9700
-
-Open a prompt to the master:
+This tutorial assumes you've set up a :ref:`single-machine demo cluster <tut_cluster>`.
+Once your cluster is running, open a prompt to the master instance:
 
 ::
 
-  cd try-citus
-  bin/psql $DATABASE_URI
+  cd citus-tutorial
+  bin/psql postgresql://:9700
 
 This will open a new prompt. You can leave it at any time by hitting
 :kbd:`Ctrl` + :kbd:`D`.
@@ -96,16 +80,14 @@ However, in this example cluster we only have 1 worker, so Citus would error
 out if we asked it to store any more than 1 replica.
 
 Now we're ready to accept some data! **Open a separate terminal**
-and set your environment variable ($DATABASE_URI) again.  Then, run
-the data ingest script we've made for you in this new terminal:
+and run the data ingest script we've made for you in this new terminal:
 
 ::
 
   # - in a new terminal -
-  # remember to re-export the DATABASE_URI environment variable
 
-  cd try-citus
-  scripts/collect-wikipedia-user-data $DATABASE_URI
+  cd citus-tutorial
+  scripts/collect-wikipedia-user-data postgresql://:9700
 
 This should keep running and aggregating data on the users who are
 editting right now. Let's run some queries! If you run any of these
@@ -167,16 +149,7 @@ aggregations of those events and made queries over them quick.
 We hope you enjoyed working through our tutorials. Once you're ready to stop
 the cluster run these commands:
 
-.. note::
+::
 
-  The procedure to stop the worker and master differs based on how
-  you set up your system.
-
-  If you used the **native** installation steps::
-
-    bin/pg_ctl -D data/master stop
-    bin/pg_ctl -D data/worker stop
-
-  Else if you're using the **Docker** machine image::
-
-    docker-compose -p citus down
+  bin/pg_ctl -D data/master stop
+  bin/pg_ctl -D data/worker stop
