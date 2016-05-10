@@ -3,7 +3,7 @@
 Docker
 ======
 
-This section describes setting up a Citus cluster on a single node using docker-compose.
+This section describes setting up a Citus cluster on a single machine using docker-compose.
 
 **1. Install docker and docker-compose**
 

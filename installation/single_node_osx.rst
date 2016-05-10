@@ -7,7 +7,7 @@ OS X
 
 This section will show you how to create a Citus cluster on a single OS X machine.
 
-**1. Install the Citus extension**
+**1. Install PostgreSQL 9.5 and the Citus extension**
 
 Use our `Homebrew <http://brew.sh/>`_ package to extend PostgreSQL with Citus.
 
@@ -31,7 +31,7 @@ Let's create directories for those nodes to store their data. For convenience we
   initdb -D citus/worker1
   initdb -D citus/worker2
 
-The master needs to know where it can find the worker. To tell it you can run:
+The master needs to know where it can find the workers. To tell it you can run:
 
 ::
 

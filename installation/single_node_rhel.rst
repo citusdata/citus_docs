@@ -5,14 +5,9 @@
 Fedora, CentOS, or Red Hat
 ==========================
 
-This section describes the steps needed to set up a multi-node Citus cluster on your own Linux machines from RPM packages.
+This section describes the steps needed to set up a single-node Citus cluster on your own Linux machine from RPM packages.
 
-.. _single_node_rhel_all_nodes:
-
-Steps to be executed on all nodes
----------------------------------
-
-**1. Add PGDG repository**
+**1. Install PostgreSQL 9.5 and the Citus extension**
 
 Locate the PostgreSQL 9.5 YUM repository for your Linux distribution in `this list <http://yum.postgresql.org/repopackages.php#pg95>`_. Copy its URL and add the repository:
 
@@ -21,100 +16,79 @@ Locate the PostgreSQL 9.5 YUM repository for your Linux distribution in `this li
   # add repository from URL you previously copied
   sudo yum install -y <repository-url>
 
-  # e.g on RHEL 7:
-  # sudo yum install -y https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-7-x86_64/pgdg-redhat95-9.5-2.noarch.rpm
-
-**2. Install PostgreSQL + Citus and initialize a database**
-
-::
-
-  # install PostgreSQL with Citus extension
+  # install Citus extension
   sudo yum install -y citus_95
-  # initialize system database (using RHEL 6 vs 7 method as necessary)
-  sudo service postgresql-9.5 initdb || sudo /usr/pgsql-9.5/bin/postgresql95-setup initdb
-  # preload citus extension
-  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/9.5/data/postgresql.conf
 
-PostgreSQL adds version-specific binaries in `/usr/pgsql-9.5/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
+**2. Initialize the Cluster**
 
-**3. Configure connection and authentication**
+Citus has two kinds of components, the master and the workers. The master coordinates queries and maintains metadata on where in the cluster each row of data is. The workers hold your data and respond to queries.
 
-Before starting the database let's change its access permissions. By default the database server listens only to clients on localhost. As a part of this step, we instruct it to listen on all IP interfaces, and then configure the client authentication file to allow all incoming connections from the local network.
+Let's create directories for those nodes to store their data. For convenience we suggest making subdirectories in your home folder, but feel free to choose another path.
 
 ::
 
-  sudo vi /var/lib/pgsql/9.5/data/postgresql.conf
+  # include path to postgres binaries
+  export PATH=$PATH:/usr/pgsql-9.5/bin
+
+  cd ~
+  mkdir -p citus/master citus/worker1 citus/worker2
+
+  # create three normal postgres instances
+  initdb -D citus/master
+  initdb -D citus/worker1
+  initdb -D citus/worker2
+
+The master needs to know where it can find the workers. To tell it you can run:
 
 ::
 
-  # Uncomment listen_addresses for the changes to take effect
-  listen_addresses = '*'
+  echo "localhost 9701" >> citus/master/pg_worker_list.conf
+  echo "localhost 9702" >> citus/master/pg_worker_list.conf
+
+We will configure the PostgreSQL instances to use ports 9700 (for the master) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
+
+Citus is a Postgres extension, to tell Postgres to use this extension you'll need to add it to a configuration variable called ``shared_preload_libraries``:
 
 ::
 
-  sudo vi /var/lib/pgsql/9.5/data/pg_hba.conf
+  echo "shared_preload_libraries = 'citus'" >> citus/master/postgresql.conf
+  echo "shared_preload_libraries = 'citus'" >> citus/worker1/postgresql.conf
+  echo "shared_preload_libraries = 'citus'" >> citus/worker2/postgresql.conf
+
+In order to run PostgreSQL servers under your user you will need to make the lock file accessible:
 
 ::
 
-  # Allow unrestricted access to nodes in the local network. The following ranges
-  # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
-  host    all             all             10.0.0.0/8              trust
+  sudo chmod a+w /var/run/postgresql
 
-Note: Your DNS settings may differ. Also these settings are too permissive for some environments. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/9.5/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
+**3. Start the master and workers**
 
-**4. Start database servers, create Citus extension**
+Let's start the databases::
 
-::
+  pg_ctl -D citus/master -o "-p 9700" -l master_logfile start
+  pg_ctl -D citus/worker1 -o "-p 9701" -l worker1_logfile start
+  pg_ctl -D citus/worker2 -o "-p 9702" -l worker2_logfile start
 
-  # start the db server
-  sudo service postgresql-9.5 restart
-  # and make it start automatically when computer does
-  sudo chkconfig postgresql-9.5 on
+And initialize them::
 
-You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
+  createdb -p 9700 $(whoami)
+  createdb -p 9701 $(whoami)
+  createdb -p 9702 $(whoami)
 
-::
-
-  sudo -i -u postgres psql -c "CREATE EXTENSION citus;"
-
-.. _single_node_rhel_master_node:
-
-Steps to be executed on the master node
----------------------------------------
-
-The steps listed below must be executed **only** on the master node after the previously mentioned steps have been executed.
-
-**1. Add worker node information**
-
-We need to inform the master about its workers. To add this information, we append the worker database names and server ports to the `pg_worker_list.conf` file in the data directory. For our example, we assume that there are two workers (named worker-101, worker-102). Add the workers' DNS names and server ports to the list.
+Above you added Citus to ``shared_preload_libraries``. That lets it hook into some deep parts of Postgres, swapping out the query planner and executor.  Here, we load the user-facing side of Citus (such as the functions you'll soon call):
 
 ::
 
-  echo "worker-101 5432" | sudo -u postgres tee -a /var/lib/pgsql/9.5/data/pg_worker_list.conf
-  echo "worker-102 5432" | sudo -u postgres tee -a /var/lib/pgsql/9.5/data/pg_worker_list.conf
+  psql -p 9700 -c "CREATE EXTENSION citus;"
+  psql -p 9701 -c "CREATE EXTENSION citus;"
+  psql -p 9702 -c "CREATE EXTENSION citus;"
 
-Note that you can also add this information by editing the file using your favorite editor.
+**4. Verify that installation has succeeded**
 
-**2. Reload master database settings**
-
-::
-
-  sudo service postgresql-9.5 reload
-
-**3. Verify that installation has succeeded**
-
-To verify that the installation has succeeded, we check that the master node has picked up the desired worker configuration. This command when run in the psql shell should output the worker nodes mentioned in the `pg_worker_list.conf` file.
+To verify that the installation has succeeded we check that the master node has picked up the desired worker configuration. First start the psql shell on the master node:
 
 ::
 
-  sudo -i -u postgres psql -c "SELECT * FROM master_get_active_worker_nodes();"
+  psql -p 9700 -c "select * from master_get_active_worker_nodes();"
 
-**Ready to use Citus**
-
-At this step, you have completed the installation process and are ready to use your Citus cluster. To help you get started, we have a :ref:`real-time aggregation tutorial<tut_real_time>` which has instructions on setting up a Citus cluster with sample data in minutes.
-
-Your new Citus database is accessible in psql through the postgres user:
-
-::
-
-  sudo -i -u postgres psql
+You should see a row for each worker node including the node name and port.
