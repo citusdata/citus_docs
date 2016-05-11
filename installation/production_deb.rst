@@ -40,7 +40,7 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo pg_conftool 9.5 main set listen_addresses *
+  sudo pg_conftool 9.5 main set listen_addresses '*'
 
 ::
 
