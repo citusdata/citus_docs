@@ -7,10 +7,10 @@ If you are a developer looking to try Citus out on your machine, the guides belo
 
 .. toctree::
 
-   single_node_osx.rst
-   single_node_rhel.rst
-   single_node_deb.rst
-   single_node_docker.rst
+   single_machine_osx.rst
+   single_machine_rhel.rst
+   single_machine_deb.rst
+   single_machine_docker.rst
 
 Alternatively try running a :ref:`demo cluster<tut_cluster>` which is temporary
 and easier to set up. It comes with tutorials to load a stream of live wikipedia

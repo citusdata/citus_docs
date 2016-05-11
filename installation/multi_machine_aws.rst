@@ -1,4 +1,4 @@
-.. _multi_node_aws:
+.. _multi_machine_aws:
 
 Amazon Web Services
 ===================

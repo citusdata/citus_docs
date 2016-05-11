@@ -8,6 +8,6 @@ one machine.  If you are looking to deploy Citus across multiple nodes, you can
 use the guide below.
 
 .. toctree::
-   multi_node_aws.rst
+   multi_machine_aws.rst
    production_rhel.rst
    production_deb.rst

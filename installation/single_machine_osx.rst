@@ -1,23 +1,19 @@
 .. highlight:: bash
 
-.. _single_node_rhel:
+.. _single_machine_osx:
 
-Fedora, CentOS, or Red Hat
-==========================
+OS X
+=======================================================
 
-This section describes the steps needed to set up a single-node Citus cluster on your own Linux machine from RPM packages.
+This section will show you how to create a Citus cluster on a single OS X machine.
 
 **1. Install PostgreSQL 9.5 and the Citus extension**
 
-Locate the PostgreSQL 9.5 YUM repository for your Linux distribution in `this list <http://yum.postgresql.org/repopackages.php#pg95>`_. Copy its URL and add the repository:
+Use our `Homebrew <http://brew.sh/>`_ package to extend PostgreSQL with Citus.
 
 ::
 
-  # add repository from URL you previously copied
-  sudo yum install -y <repository-url>
-
-  # install Citus extension
-  sudo yum install -y citus_95
+  brew install citus
 
 **2. Initialize the Cluster**
 
@@ -26,9 +22,6 @@ Citus has two kinds of components, the master and the workers. The master coordi
 Let's create directories for those nodes to store their data. For convenience we suggest making subdirectories in your home folder, but feel free to choose another path.
 
 ::
-
-  # include path to postgres binaries
-  export PATH=$PATH:/usr/pgsql-9.5/bin
 
   cd ~
   mkdir -p citus/master citus/worker1 citus/worker2
@@ -54,12 +47,6 @@ Citus is a Postgres extension, to tell Postgres to use this extension you'll nee
   echo "shared_preload_libraries = 'citus'" >> citus/master/postgresql.conf
   echo "shared_preload_libraries = 'citus'" >> citus/worker1/postgresql.conf
   echo "shared_preload_libraries = 'citus'" >> citus/worker2/postgresql.conf
-
-In order to run PostgreSQL servers under your user you will need to make the lock file accessible:
-
-::
-
-  sudo chmod a+w /var/run/postgresql
 
 **3. Start the master and workers**
 

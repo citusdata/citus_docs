@@ -1,6 +1,6 @@
 .. highlight:: bash
 
-.. _single_node_deb:
+.. _single_machine_deb:
 
 Ubuntu or Debian
 ================

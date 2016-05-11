@@ -1,4 +1,4 @@
-.. _single_node_docker:
+.. _single_machine_docker:
 
 Docker
 ======
