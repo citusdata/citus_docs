@@ -25,9 +25,12 @@ This section describes the steps needed to set up a single-node Citus cluster on
 
 Citus has two kinds of components, the master and the workers. The master coordinates queries and maintains metadata on where in the cluster each row of data is. The workers hold your data and respond to queries.
 
-Let's create directories for those nodes to store their data. For convenience we suggest making subdirectories in your home folder, but feel free to choose another path.
+Let's create directories for those nodes to store their data. For convenience in using PostgreSQL Unix domain socket connections we'll use the postgres user.
 
 ::
+
+  # this user has access to sockets in /var/run/postgresql
+  sudo su - postgres
 
   # include path to postgres binaries
   export PATH=$PATH:/usr/lib/postgresql/9.5/bin
@@ -57,12 +60,6 @@ Citus is a Postgres extension, to tell Postgres to use this extension you'll nee
   echo "shared_preload_libraries = 'citus'" >> citus/worker1/postgresql.conf
   echo "shared_preload_libraries = 'citus'" >> citus/worker2/postgresql.conf
 
-In order to run PostgreSQL servers under your user you will need to make the lock file accessible:
-
-::
-
-  sudo chmod a+w /var/run/postgresql
-
 **3. Start the master and workers**
 
 Let's start the databases::
@@ -70,12 +67,6 @@ Let's start the databases::
   pg_ctl -D citus/master -o "-p 9700" -l master_logfile start
   pg_ctl -D citus/worker1 -o "-p 9701" -l worker1_logfile start
   pg_ctl -D citus/worker2 -o "-p 9702" -l worker2_logfile start
-
-And initialize them::
-
-  createdb -p 9700 $(whoami)
-  createdb -p 9701 $(whoami)
-  createdb -p 9702 $(whoami)
 
 Above you added Citus to ``shared_preload_libraries``. That lets it hook into some deep parts of Postgres, swapping out the query planner and executor.  Here, we load the user-facing side of Citus (such as the functions you'll soon call):
 
