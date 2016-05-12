@@ -24,7 +24,7 @@ We discuss the step by step process of upgrading the cluster below. Please note 
 
 **1. Download and install Citus 5 on the server having the to-be-upgraded 4.0 data directory**
 
-Follow the :ref:`installation instructions<requirements>` appropriate for your situation (e.g. single-machine or multi-machine). These instructions use the Citus package for your operating system, and includes PostgreSQL 9.5 as a dependency.
+Follow the :ref:`installation instructions<requirements>` appropriate for your situation (e.g. single-machine or multi-machine). These instructions use the Citus package for your operating system, which includes PostgreSQL 9.5 as a dependency.
 
 .. note::
     The instructions below assume that the PostgreSQL installation is in your path. If not, you will need to add it to your PATH environment variable. For example:
