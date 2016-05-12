@@ -8,11 +8,9 @@ $$$$$$$$$$$$$$$
 Major Update from 4 to 5
 ########################
 
-This section describes how you can upgrade your existing Citus installation to Citus 5.0.
+This section describes how you can upgrade your existing Citus installation to Citus 5.
 
-If you are upgrading from CitusDB 4.0 to Citus 5.0, you can use the standard `PostgreSQL pg_upgrade <http://www.postgresql.org/docs/9.5/static/pgupgrade.html>`_ utility. pg_upgrade uses the fact that the on-disk representation of the data has probably not changed, and copies over the disk files as is, thus making the upgrade process faster.
-
-Citus 5.0 is not a standalone application but a PostgreSQL extension. Therefore, you should first install `PostgreSQL 9.5 <http://www.postgresql.org/download/>`_ before installing Citus 5.0.
+If you are upgrading from CitusDB 4 to Citus 5, you can use the standard `PostgreSQL pg_upgrade <http://www.postgresql.org/docs/9.5/static/pgupgrade.html>`_ utility. pg_upgrade uses the fact that the on-disk representation of the data has probably not changed, and copies over the disk files as is, thus making the upgrade process faster.
 
 Apart from running pg_upgrade, there are 3 manual steps to be accounted for in order to update Citus.
 
@@ -24,20 +22,18 @@ The others are known pg_upgrade manual steps, i.e. manually updating configurati
 
 We discuss the step by step process of upgrading the cluster below. Please note that you need to run the steps on all the nodes in the cluster. Some steps need to be run only on the master and they are explicitly marked as such.
 
-**1. Download and install Citus 5.0 on the server having the to-be-upgraded 4.0 data directory**
+**1. Download and install Citus 5 on the server having the to-be-upgraded 4.0 data directory**
 
-Download and install PostgreSQL 9.5.x from http://www.postgresql.org/download/.
+Follow the :ref:`installation instructions<requirements>` appropriate for your situation (e.g. single-machine or multi-machine). These instructions use the Citus package for your operating system, and includes PostgreSQL 9.5 as a dependency.
 
 .. note::
     The instructions below assume that the PostgreSQL installation is in your path. If not, you will need to add it to your PATH environment variable. For example:
-    
+
     ::
-        
+
         export PATH=/usr/lib/postgresql/9.5/:$PATH
 
-You can then download and install the new Citus packages from our Downloads page. Please visit the :ref:`production` section for specific instructions.
-
-Note that the Citus 5.0 extension will be installed at the PostgreSQL install location.
+Note that the Citus 5 extension will be installed at the PostgreSQL install location.
 
 **2. Setup environment variables for the data directories**
 
@@ -45,15 +41,14 @@ Please set appropriate values for data location like below. This makes accessing
 
 ::
 
-    export PGDATA5_0=/usr/lib/postgresql/9.5/data
-    export PGDATA4_0=/opt/citusdb/4.0/data
+    export PGDATA5=/usr/lib/postgresql/9.5/data
+    export PGDATA4=/opt/citusdb/4.0/data
 
 
 **3. Stop loading data on to that instance**
 
 If you are upgrading the master, then you should stop all data-loading/appending
-and staging before copying out the metadata. If data-loading continues after step 4 below,
-then the metadata will be out of date.
+and staging before copying out the metadata. If data-loading continues after step 4 below, then the metadata will be out of date.
 
 **4. Copy out pg_dist catalog metadata from the 4.0 server (Only needed for master)**
 ::
@@ -62,18 +57,11 @@ then the metadata will be out of date.
     COPY pg_dist_shard TO '/var/tmp/pg_dist_shard.data';
     COPY pg_dist_shard_placement TO '/var/tmp/pg_dist_shard_placement.data';
 
-**5. Initialize a new data directory for 5.0**
-::
-
-    initdb -D $PGDATA5_0
-
-Note: On some platforms, PostgreSQL creates a data directory by default during installation. You can ignore this step if you want to use that data directory.
-
-**6. Check upgrade compatibility**
+**5. Check upgrade compatibility**
 
 :: 
 
-	pg_upgrade -b /opt/citusdb/4.0/bin/ -B /usr/lib/postgresql/9.5/bin/ -d $PGDATA4_0 -D $PGDATA5_0 --check
+	pg_upgrade -b /opt/citusdb/4.0/bin/ -B /usr/lib/postgresql/9.5/bin/ -d $PGDATA4 -D $PGDATA5 --check
 
 This should return **Clusters are compatible**. If this doesn't return that message, you need to stop and check what the error is.
 
@@ -84,36 +72,36 @@ Note: This may return the following warning if the 4.0 server has not been stopp
     *failure*
     Consult the last few lines of "pg_upgrade_server.log" for the probable cause of the failure.
 
-**7. Shutdown the running 4.0 server**
+**6. Shutdown the running 4.0 server**
 
 ::
 
-	/opt/citusdb/4.0/bin/pg_ctl stop -D $PGDATA4_0
+	/opt/citusdb/4.0/bin/pg_ctl stop -D $PGDATA4
 
-**8. Run pg_upgrade, remove the --check flag**
-
-::
-
-    pg_upgrade -b /opt/citusdb/4.0/bin/ -B /usr/lib/postgresql/9.5/bin/ -d $PGDATA4_0 -D $PGDATA5_0 
-
-**9. Copy over pg_worker_list.conf (Only needed for master)**
+**7. Run pg_upgrade, remove the --check flag**
 
 ::
 
-	cp $PGDATA4_0/pg_worker_list.conf $PGDATA5_0/pg_worker_list.conf
+    pg_upgrade -b /opt/citusdb/4.0/bin/ -B /usr/lib/postgresql/9.5/bin/ -d $PGDATA4 -D $PGDATA5 
 
-**10. Re-do changes to config settings in postgresql.conf and pg_hba.conf in the 5.0 data directory**
+**8. Copy over pg_worker_list.conf (Only needed for master)**
+
+::
+
+	cp $PGDATA4/pg_worker_list.conf $PGDATA5/pg_worker_list.conf
+
+**9. Re-do changes to config settings in postgresql.conf and pg_hba.conf in the 5.0 data directory**
 
 * listen_addresses
 * performance tuning parameters
 * enabling connections
 * Copy all non-default settings below **DISTRIBUTED DATABASE** section (eg. shard_max_size, shard_replication_factor etc) to the end of the new postgresql.conf. Also note that for usage with Citus 5.0, each setting name must be prefixed with "citus". i.e. **shard_max_size** becomes **citus.shard_max_size**.
 
-**11. Add citus to shared_preload_libraries in postgresql.conf**
+**10. Add citus to shared_preload_libraries in postgresql.conf**
 
 ::
 
-    vi $PGDATA5_0/postgresql.conf
+    vi $PGDATA5/postgresql.conf
 
 ::
 
@@ -121,13 +109,13 @@ Note: This may return the following warning if the 4.0 server has not been stopp
 
 Make sure **citus** is the first extension if there are more extensions you want to add there.
 
-**12.  Start the new 5.0 server**
+**11.  Start the new 5.0 server**
 
 ::
 
-	pg_ctl -D $PGDATA5_0 start
+	pg_ctl -D $PGDATA5 start
 
-**13. Connect to postgresql instance and create citus extension**
+**12. Connect to postgresql instance and create citus extension**
 
 ::
 
@@ -135,7 +123,7 @@ Make sure **citus** is the first extension if there are more extensions you want
     create extension citus;
 
 
-**14. Copy over pg_dist catalog tables to the new server using the PostgreSQL 9.5.x psql client (Only needed for master)**
+**13. Copy over pg_dist catalog tables to the new server using the PostgreSQL 9.5.x psql client (Only needed for master)**
 
 ::
 
@@ -144,7 +132,7 @@ Make sure **citus** is the first extension if there are more extensions you want
     COPY pg_dist_shard FROM '/var/tmp/pg_dist_shard.data';
     COPY pg_dist_shard_placement FROM '/var/tmp/pg_dist_shard_placement.data';
 
-**15. Restart the sequence pg_dist_shardid_seq (Only needed for master)**
+**14. Restart the sequence pg_dist_shardid_seq (Only needed for master)**
 
 ::
 
@@ -160,7 +148,7 @@ If you are using hash distributed tables, then this step may return an error :
 
 You can ignore this error and continue with the process below.
 
-**16. Ready to run queries/create tables/load data**
+**15. Ready to run queries/create tables/load data**
  
 At this step, you have successfully completed the upgrade process. You can run queries, create new tables or add data to existing tables. Once everything looks good, the old 4.0 data directory can be deleted.
 
