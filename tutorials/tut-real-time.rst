@@ -8,31 +8,14 @@ In this tutorial we'll look at a stream of live wikipedia edits. Wikimedia is
 kind enough to publish all changes happening across all their sites in real time;
 this can be a lot of events!
 
-.. note::
-
-  This tutorial assumes you've setup a Citus cluster. If you haven't, check out the
-  :ref:`development` section before continuing.
-
-  If you're using the **Docker** machine image on **Mac**::
-
-    export DATABASE_URI=postgres://postgres@$(docker-machine ip)
-
-  Else if you're using the **Docker** machine image on **Linux**::
-
-    export DATABASE_URI=postgres://postgres@localhost
-
-  Else if you're using the tutorial **tarball** (not Docker)::
-
-    export DATABASE_URI=postgresql://:9700
-
-
-Let's now get the cluster ready to accept the stream of edits. First, open a psql shell
-to the master:
+This tutorial assumes you've set up a :ref:`single-machine demo cluster <tut_cluster>`.
+Our first task is to get the cluster ready to accept a stream of wikipedia edits.
+First, open a psql shell to the master:
 
 ::
 
-  cd try-citus
-  bin/psql $DATABASE_URI
+  cd citus-tutorial
+  bin/psql postgresql://:9700
 
 This will open a new prompt. You can leave psql at any time by hitting
 :kbd:`Ctrl` + :kbd:`D`.
@@ -98,17 +81,13 @@ Now we create a shard for the data to be inserted into:
   SELECT master_create_empty_shard('wikipedia_edits');
 
 Citus is eagerly awaiting data, let's give it some! **Open a separate
-terminal** and set your environment variable ($DATABASE_URI) again.
-Then, run the data ingest script we've made for you in this new
-terminal:
-
+terminal** and run the data ingest script we've made for you.
 ::
 
   # - in a new terminal -
-  # remember to re-export the DATABASE_URI environment variable
 
-  cd try-citus
-  scripts/insert-live-wikipedia-edits $DATABASE_URI
+  cd citus-tutorial
+  scripts/insert-live-wikipedia-edits postgresql://:9700
 
 This should continue running and adding edits, let's run some queries
 on them!  If you run any of these queries multiple times you'll see
@@ -165,19 +144,10 @@ Or how about combining the two? What are the top contributors, and how big are t
   GROUP BY 2 ORDER BY 1 DESC LIMIT 20;
 
 That's all for now. To learn more about Citus continue to the :doc:`next
-tutorial <./tut-user-data>`, or, if you're done with the cluster, run these to
+tutorial <./tut-user-data>`, or, if you're done with the cluster, run this to
 stop the worker and master:
 
-.. note::
+::
 
-  The procedure to stop the worker and master differs based on how
-  you set up your system.
-
-  If you used the **native** installation steps::
-
-    bin/pg_ctl -D data/master stop
-    bin/pg_ctl -D data/worker stop
-
-  Else if you're using the **Docker** machine image::
-
-    docker-compose -p citus down
+  bin/pg_ctl -D data/master stop
+  bin/pg_ctl -D data/worker stop

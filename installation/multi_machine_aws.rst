@@ -1,7 +1,7 @@
-.. _multi_node_aws:
+.. _multi_machine_aws:
 
-Multi-node setup on AWS
-=============================
+Amazon Web Services
+===================
 
 This section describes the steps needed to set up a Citus cluster on AWS using the CloudFormation console.
 

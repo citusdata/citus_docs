@@ -1,9 +1,9 @@
-.. _single_node_docker:
+.. _single_machine_docker:
 
-Docker single-node setup
-=======================================================
+Docker
+======
 
-This section describes setting up a Citus cluster on a single node using docker-compose.
+This section describes setting up a Citus cluster on a single machine using docker-compose.
 
 **1. Install docker and docker-compose**
 
@@ -46,19 +46,3 @@ Then run this query:
 	select * from master_get_active_worker_nodes();
 
 You should see a row for each worker node including the node name and port.
-
-**4. Download Tutorials**
-
-We created tutorials for you that show example use-cases. To run these tutorials, you'll
-first need to download a tarball for your platform.
-
-* `Linux Tutorials <https://s3.amazonaws.com/packages.citusdata.com/tutorials/try-citus-4.tar.gz>`_
-* `OS X Tutorials <https://s3.amazonaws.com/packages.citusdata.com/tutorials/try-citus-osx-3.tar.gz>`_
-
-Download and unzip this tutorial into a directory of your choosing.
-
-**5. Go run some queries**
-
-Your cluster is running and eagerly waiting for data. We created tutorials for you that
-show example use-cases. :ref:`Visit our tutorials to feed data into your Citus cluster and
-run example queries within minutes <tut_real_time>`.

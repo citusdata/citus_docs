@@ -1,23 +1,21 @@
+.. _tut_cluster:
 .. highlight:: bash
 
-.. _single_node_linux:
+Start Demo Cluster
+##################
 
-Linux
-=======================================================
-
-This section will show you how to create a working installation of Citus.
+To do the tutorials you'll need a single-machine Citus cluster with a master and two worker PostgreSQL instances. Follow these instructions to create a temporary installation which is quick to try and easy to remove.
 
 **1. Download the package**
 
-We've provided `a tarball
-<https://s3.amazonaws.com/packages.citusdata.com/tutorials/try-citus-4.tar.gz>`_
-which lets you configure and start Citus without requiring sudo.
+* OS X Package: `Download <https://packages.citusdata.com/tutorials/citus-tutorial-osx-1.0.0.tar.gz>`_
+* Linux Package: `Download <https://packages.citusdata.com/tutorials/citus-tutorial-linux-1.0.0.tar.gz>`_
 
 Download and unzip it into a directory of your choosing. Then, enter that directory:
 
 ::
 
-  cd try-citus
+  cd citus-tutorial
 
 **2. Initialize the cluster**
 
@@ -75,8 +73,8 @@ load the user-facing side of Citus (such as the functions you'll soon call):
   bin/psql -p 9700 -c "CREATE EXTENSION citus;"
   bin/psql -p 9701 -c "CREATE EXTENSION citus;"
 
-**4. Go run some queries**
+**4. Ready for the tutorials!**
 
-Your cluster is running and eagerly waiting for data. We created tutorials for you that
-show example use-cases. :ref:`Visit our tutorials to feed data into your Citus cluster and
-run example queries within minutes <tut_real_time>`.
+Your cluster is running and eagerly awaiting data. Proceed to the 
+:ref:`Real Time Aggregation <tut_real_time>` tutorial to begin learning
+how to use Citus.
