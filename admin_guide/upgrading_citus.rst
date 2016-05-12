@@ -1,7 +1,12 @@
-.. _upgrading_citus:
+.. _upgrading:
 
-Upgrading to Citus 5
-#######################
+Upgrading Citus
+$$$$$$$$$$$$$$$
+
+.. _upgrading_citus_major:
+
+Major Update from 4 to 5
+########################
 
 This section describes how you can upgrade your existing Citus installation to Citus 5.0.
 
@@ -163,3 +168,45 @@ At this step, you have successfully completed the upgrade process. You can run q
 **Running in a mixed mode**
 
 For users who don’t want to take a cluster down and upgrade all nodes at the same time, there is the possibility of running in a mixed 4.0 / 5.0 mode. To do so, you can first upgrade the master. Then, you can upgrade the workers one at a time. This way you can upgrade the cluster with no downtime. However, we recommend using 5.0 version in whole cluster.
+
+
+.. _upgrading_citus_minor:
+
+Minor Update from 5.0 to 5.1
+############################
+
+Upgrading requires first obtaining the new Citus extension and then installing it in each of your database instances. The first step varies by operating system.
+
+.. _upgrading_citus_minor_package:
+
+Step 1, Update Citus Package
+----------------------------
+
+**OS X**
+
+::
+
+  brew update
+  brew upgrade citus
+
+**Ubuntu or Debian**
+
+::
+
+  sudo apt-get update
+  sudo apt-get upgrade postgresql-9.5-citus
+
+**Fedora, CentOS, or Red Hat**
+
+::
+
+  sudo yum update citus_95
+
+.. _upgrading_citus_minor_extension:
+
+Step 2, Apply Update to DB
+--------------------------
+
+::
+
+  psql -c "ALTER EXTENSION citus UPDATE;"
