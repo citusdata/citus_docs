@@ -118,9 +118,7 @@ The ideal value of remote_task_check_interval depends on the workload. If your q
 citus.task_executor_type (enum)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Citus has 3 different executor types for running distributed SELECT queries. The desired executor can be selected by setting this configuration parameter. The accepted values for this parameter are:
-
-* **router:** The router executor simply routes the incoming select query to a single target shard. It is optimal for key-value lookups requiring swift responses.
+Citus has two executor types for running distributed SELECT queries. The desired executor can be selected by setting this configuration parameter. The accepted values for this parameter are:
 
 * **real-time:** The real-time executor is the default executor and is optimal when you require fast responses to queries that involve aggregations and colocated joins spanning across multiple shards.
 
