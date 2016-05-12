@@ -10,7 +10,7 @@ The best method to distribute tables and ingest your data depends on your use ca
 Hash Distributed Tables
 $$$$$$$$$$$$$$$$$$$$$$$
 
-Hash distributed tables support ingestion using standard single row INSERT and UPDATE commands. This sub-section describes how you maximize insert throughput for hash distributed tables.
+Hash distributed tables support ingestion using standard single row INSERT and UPDATE commands, as well as bulk ingestion through COPY.
 
 Real-time Inserts (0-50k/s)
 ---------------------------
@@ -27,36 +27,18 @@ When processing an INSERT, Citus first finds the right shard placements based on
     SELECT master_create_worker_shards('counters', 128, 2);
 
     -- Enable timing to see reponse times
-    \timing
+    \timing on
 
     -- First INSERT requires connection set-up, second will be faster
     INSERT INTO counters VALUES ('num_purchases', '2016-03-04', 12); -- Time: 10.314 ms
     INSERT INTO counters VALUES ('num_purchases', '2016-03-05', 5); -- Time: 3.132 ms
-
-INSERT is currently the only way of adding data to hash-distributed tables. To load data from a file into a hash-distributed table, Citus comes with a command-line tool called copy_to_distributed_table, which mimicks the behaviour of COPY by performing an INSERT for each row in an input (CSV) file. However, the script only uses a single connection, meaning every INSERT waits for several round-trips and throughput is very low by default. However, you can parallelize the script by splitting the input and doing the INSERTs in parallel using xargs, which gives vastly better throughput.
-
-For example, for Linux systems you can use the split command to split the input file into 64 pieces.
-
-::
-
-    mkdir chunks
-    split -n l/64 github_events-2015-01-01-0.csv chunks/
-
-Then, you can load each of the chunks in parallel using xargs.
-
-::
-  
-    export PGDATABASE=postgres
-    find chunks/ -type f | xargs -n 1 -P 64 sh -c 'echo $0 `copy_to_distributed_table -C $0 github_events`'
-
-To learn more about the copy_to_distributed_table script, you can visit the :ref:`hash_distribution` section of our documentation.
 
 To reach high throughput rates, applications should send INSERTs over a many separate connections and keep connections open to avoid the initial overhead of connection set-up.
 
 Real-time Updates (0-50k/s)
 ---------------------------
 
-On the Citus master, you can also perform UPDATE, DELETE, and INSERT ... ON CONFLICT (UPSERT) commands on distributed tables. By default, these queries take an exclusive lock on the shard, which prevents concurrent modifications to guarantee that the commands are applied in the same order on all shard placements. 
+On the Citus master, you can also perform UPDATE, DELETE, and INSERT ... ON CONFLICT (UPSERT) commands on distributed tables. By default, these queries take an exclusive lock on the shard, which prevents concurrent modifications to guarantee that the commands are applied in the same order on all shard placements.
 
 Given that every command requires several round-trips to the workers, and no two commands can run on the same shard at the same time, update throughput is very low by default. However, if you know that the order of the queries doesn't matter (they are commutative), then you can turn on citus.all_modifications_commutative, in which case multiple commands can update the same shard concurrently.
 
@@ -72,12 +54,36 @@ Note that this query also takes an exclusive lock on the row in PostgreSQL, whic
 
 When the replication factor is 1, it is always safe to enable citus.all_modifications_commutative. Citus does not do this automatically yet.
 
+Bulk Copy (100-200k/s)
+----------------------
+
+Hash distributed tables support `COPY <http://www.postgresql.org/docs/current/static/sql-copy.html>`_ from the Citus master for bulk ingestion, which can achieve much higher ingestion rates than regular INSERT statements.
+
+COPY can be used to load data directly from an application using COPY .. FROM STDIN, or from a file on the server or program executed on the server.
+
+::
+
+    COPY counters FROM STDIN WTIH (FORMAT CSV);
+
+In psql, the \COPY command can be used to load data from the local machine. The \COPY command actually sends a COPY .. FROM STDIN command to the server before sending the local data, as would an application that loads data directly.
+
+::
+
+    psql -c "\\COPY counters FROM 'counters-20160304.csv' (FORMAT CSV)"
+
+
+A very powerful feature of COPY for hash distributed tables is that it asynchronously copies data to the workers over many parallel connections, one for each shard placement. This means that data can be ingested using multiple workers and multiple cores in parallel. Especially when there are expensive indexes such as a GIN, this can lead to major performance boosts over ingesting into a regular PostgreSQL table.
+
+.. note::
+
+    To avoid opening too many connections to the workers. We recommend only running only one COPY command on a hash distributed table at a time. In practice, running more than two at a time rarely results in performance benefits. An exception is when all the data in the ingested file has a specific partition key value, which goes into a single shard. COPY will only open connections to shards when necessary.
+
 Masterless Citus (50k/s-500k/s)
 -------------------------------
 
 .. note::
 
-    This section is currently experimental and not a guide to setup masterless clusters in production. We are working on providing official support for masterless clusters including replication and automated fail-over solutions. Please contact us at engage@citusdata.com if your use case requires multiple masters.
+    This section is currently experimental and not a guide to setup masterless clusters in production. We are working on providing official support for masterless clusters including replication and automated fail-over solutions. Please contact us at engage@citusdata.com if your use-case requires multiple masters.
 
 It is technically possible to create the distributed table on every node in the cluster. The big advantage is that all  queries on distributed tables can be performed at a very high rate by spreading the queries across the workers. In this case, the replication factor should always be 1 to ensure consistency, which causes data to become unavailable when a node goes down. All nodes should have a hot standby and automated fail-over to ensure high availability.
 
@@ -92,7 +98,7 @@ Then on the master, create shards for the distributed table with a replication f
 
 ::
 
-    /* Create 128 shards with a single replica on the workers */
+    -- Create 128 shards with a single replica on the workers
     SELECT master_create_worker_shards('data', 128, 1);
 
 Finally, you need to copy and convert the shard metadata from the master to the workers. The logicalrelid column in pg_dist_shard may differ per node. If you have the dblink extension installed, then you can run the following commands on the workers to get the metadata from master-node.
@@ -112,14 +118,14 @@ Finally, you need to copy and convert the shard metadata from the master to the 
 After these commands, you can connect to any node and perform both SELECT and DML commands on the distributed table. However, DDL commands won't be supported.
 
 Append Distributed Tables
-$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$
 
 If your use-case does not require real-time ingests, then using append distributed tables will give you the highest ingest rates. This approach is more suitable for use-cases which use time-series data and where the database can be a few minutes or more behind.
 
-Master Node Bulk Ingestion (50k/s-100k/s)
------------------------------------------
+Master Node Bulk Ingestion (100k/s-200k/s)
+------------------------------------------
 
-To ingest data into an append-distributed table, your application can first create a staging table, copy or insert data into the staging table, and finally append the staging table to the distributed table. The simplest approach is to create the staging table on the master and append the table to a new shard using master_append_table_to_shard:
+To ingest data into an append distributed table, you can use the `COPY <http://www.postgresql.org/docs/9.5/static/sql-copy.html>`_ command, which will create a new shard out of the data you ingest. COPY can break up files larger than the configured citus.shard_max_size into multiple shards. COPY for append distributed tables only opens connections for the new shards, which means it behaves a bit differently than COPY for hash distributed tables, which may open connections for all shards. A COPY for append distributed tables command does not ingest rows in parallel over many connections, but it is safe to run many commands in parallel.
 
 ::
 
@@ -128,38 +134,34 @@ To ingest data into an append-distributed table, your application can first crea
     SELECT master_create_distributed_table('events', 'time', 'append');
     
     -- Add data into a new staging table
-    CREATE UNLOGGED TABLE stage_1 (LIKE events);
-    COPY stage_1 FROM 'path-to-csv-file' WITH CSV; -- followed by CSV data
-    
-    -- Add the data in the staging table to a new shard in the events table and drop the staging table
-    SELECT master_append_table_to_shard(master_create_empty_shard('events'), 'stage_1', 'master-node', 5432);
-    DROP TABLE stage_1;
+    \COPY events FROM 'path-to-csv-file' WITH CSV
 
-Note that copying to the staging table and appending to a shard need to be in separate transactions. Otherwise, the data would not yet be visible to the workers when trying to append. You can choose to make the staging table unlogged for better performance if you can easily reload the data. To learn more about the master_append_table_to_shard and master_create_empty_shard UDFs, please visit the :ref:`user_defined_functions` section of the documentation.
-
-The example above uses master_create_empty_shard to create a new shard every time new data is ingested, which allows many files to be ingested simultaneously, but may cause issues if queries end up involving thousands of shards.
-
-One way to solve this problem is to define a function that selects either a new or existing shard:
+COPY creates new shards every time it is used, which allows many files to be ingested simultaneously, but may cause issues if queries end up involving thousands of shards. An alternative way to ingest data is to append it to existing shards using the master_append_table_to_shard function. To use master_append_table_to_shard, the data needs to be loaded into a staging table and some custom logic to select an appropriate shard is required.
 
 ::
 
-    SELECT master_append_table_to_shard(choose_shard('events'), 'stage_1', 'master-node', 5432);
+    -- Prepare a staging table
+    CREATE TABLE stage_1 (LIKE events);
+    \COPY stage_1 FROM 'path-to-csv-file WITH CSV
+
+    -- In a separate transaction, append the staging table
+    SELECT master_append_table_to_shard(select_events_shard(), 'stage_1', 'master-node', 5432);
 
 An example of a shard selection function is given below. It appends to a shard until its size is greater than 1GB and then creates a new one, which has the drawback of only allowing one append at a time, but the advantage of bounding shard sizes.
 
 ::
 
-    CREATE OR REPLACE FUNCTION choose_shard(table_id regclass) RETURNS bigint AS $$
+    CREATE OR REPLACE FUNCTION select_events_shard() RETURNS bigint AS $$
     DECLARE
       shard_id bigint;
     BEGIN
       SELECT shardid INTO shard_id
       FROM pg_dist_shard JOIN pg_dist_shard_placement USING (shardid)
-      WHERE logicalrelid = table_id AND shardlength < 1024*1024*1024;
+      WHERE logicalrelid = 'events'::regclass AND shardlength < 1024*1024*1024;
 
       IF shard_id IS NULL THEN
         /* no shard smaller than 1GB, create a new one */
-        SELECT master_create_empty_shard(table_id::text) INTO shard_id;
+        SELECT master_create_empty_shard('events') INTO shard_id;
       END IF;
        
       RETURN shard_id;
@@ -176,36 +178,38 @@ It may also be useful to create a sequence to generate a unique name for the sta
     -- Generate a stage table name
     SELECT 'stage_'||nextval('stage_id_sequence');
 
+To learn more about the master_append_table_to_shard and master_create_empty_shard UDFs, please visit the :ref:`user_defined_functions` section of the documentation.
+
 Worker Node Bulk Ingestion (100k/s-1M/s)
 ----------------------------------------
 
-For very high data ingestion rates, data can be staged via the workers. This method scales out horizontally and provides the highest ingestion rates, but is more complex to setup. Hence, we recommend trying this method only if your data ingestion rates cannot be addressed by the previously described methods.
+For very high data ingestion rates, data can be staged via the workers. This method scales out horizontally and provides the highest ingestion rates, but can be more complex to use. Hence, we recommend trying this method only if your data ingestion rates cannot be addressed by the previously described methods.
 
-A relatively simple way to ingest data files directly into new shards in the distributed table is to use csql, a database client that comes with Citus. csql is the same as psql, but with an additional \STAGE command that copies data directly from the client to the workers into a new shard. STAGE can break up files larger than the configured citus.shard_max_size into multiple shards. The main drawbacks of \STAGE are that it requires going through the command-line, only ingests files, and always creates one or more new shards. 
+Append distributed tables support COPY via the worker, by specifying the address of the master in a master_host option, and optionally a master_port option (defaults to 5432). COPY via the workers has the same general properties as COPY via the master, except the initial parsing is not bottlenecked on the master.
 
 ::
 
-    csql -h master-node -c "\\STAGE events FROM 'data.csv' WITH CSV"
+    psql -h worker-node-1 -c "\\COPY events FROM 'data.csv' WITH (FORMAT CSV, MASTER_HOST 'master-node')"
 
 
-An alternative to using \STAGE is to create a staging table and use standard SQL clients to append it to the distributed table, which is similar to staging data via the master. An example of staging a file via a worker using psql is as follows:
+An alternative to using COPY is to create a staging table and use standard SQL clients to append it to the distributed table, which is similar to staging data via the master. An example of staging a file via a worker using psql is as follows:
 
 ::
 
     stage_table=$(psql -tA -h worker-node-1 -c "SELECT 'stage_'||nextval('stage_id_sequence')")
     psql -h worker-node-1 -c "CREATE TABLE $stage_table (time timestamp, data jsonb)"
     psql -h worker-node-1 -c "\\COPY $stage_table FROM 'data.csv' WITH CSV"
-    psql -h master-node -c "SELECT master_append_table_to_shard(choose_shard('events'), '$stage_table', 'worker-node-1', 5432)"
+    psql -h master-node -c "SELECT master_append_table_to_shard(choose_underutilized_shard(), '$stage_table', 'worker-node-1', 5432)"
     psql -h worker-node-1 -c "DROP TABLE $stage_table"
     
-The example above again uses a choose_shard function to select the shard to which to append. To ensure parallel data ingestion, this function should balance across many different shards.
+The example above uses a choose_underutilized_shard function to select the shard to which to append. To ensure parallel data ingestion, this function should balance across many different shards.
 
-An example choose_shard function belows randomly picks one of the 20 smallest shards or creates a new one if there are less than 20 under 1GB. This allows 20 concurrent appends, which allows data ingestion of up to 1 million rows/s (depending on indexes, size, capacity). 
+An example choose_underutilized_shard function belows randomly picks one of the 20 smallest shards or creates a new one if there are less than 20 under 1GB. This allows 20 concurrent appends, which allows data ingestion of up to 1 million rows/s (depending on indexes, size, capacity).
 
 ::
 
     /* Choose a shard to which to append */
-    CREATE OR REPLACE FUNCTION choose_shard(table_id regclass)
+    CREATE OR REPLACE FUNCTION choose_underutilized_shard()
     RETURNS bigint LANGUAGE plpgsql
     AS $function$
     DECLARE
@@ -214,20 +218,20 @@ An example choose_shard function belows randomly picks one of the 20 smallest sh
     BEGIN
       SELECT shardid, count(*) OVER () INTO shard_id, num_small_shards
       FROM pg_dist_shard JOIN pg_dist_shard_placement USING (shardid)
-      WHERE logicalrelid = table_id AND shardlength < 1024*1024*1024
+      WHERE logicalrelid = 'events'::regclass AND shardlength < 1024*1024*1024
       GROUP BY shardid ORDER BY RANDOM() ASC;
 
       IF num_small_shards IS NULL OR num_small_shards < 20 THEN
-        SELECT master_create_empty_shard(table_id::text) INTO shard_id;
+        SELECT master_create_empty_shard('events') INTO shard_id;
       END IF;
 
       RETURN shard_id;
     END;
     $function$;
     
-A drawback of this approach is that shards may span longer time periods, which means that queries for a specific time period may involve shards that contain a lot of data outside of that period.
+A drawback of ingesting into many shards concurrently is that shards may span longer time ranges, which means that queries for a specific time period may involve shards that contain a lot of data outside of that period.
 
-In addition to copying into temporary staging tables, it is also possible to set up tables on the workers which can continuously take INSERTs. In that case, the data has to be periodically moved into a staging table and then appended, but this requires more advanced scripting. 
+In addition to copying into temporary staging tables, it is also possible to set up tables on the workers which can continuously take INSERTs. In that case, the data has to be periodically moved into a staging table and then appended, but this requires more advanced scripting.
 
 Pre-processing Data in Citus
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -259,13 +263,13 @@ To load the data, we can download the data, decompress it, filter out unsupporte
 
     CREATE TEMPORARY TABLE prepare_1 (data jsonb);
     
-    /* Load a file directly from Github archive and filter out rows with unescaped 0-bytes */
+    -- Load a file directly from Github archive and filter out rows with unescaped 0-bytes
     COPY prepare_1 FROM PROGRAM
     'curl -s http://data.githubarchive.org/2016-01-01-15.json.gz | zcat | grep -v "\\u0000"'
     CSV QUOTE e'\x01' DELIMITER e'\x02';
     
-    /* Prepare a staging table */
-    CREATE UNLOGGED TABLE stage_1 AS
+    -- Prepare a staging table
+    CREATE TABLE stage_1 AS
     SELECT (data->>'id')::bigint event_id,
            (data->>'type') event_type,
            (data->>'public')::boolean event_public,
@@ -276,5 +280,7 @@ To load the data, we can download the data, decompress it, filter out unsupporte
            (data->>'created_at')::timestamp created_at FROM prepare_1;
 
 You can then use the master_append_table_to_shard function to append this staging table to the distributed table.
- 
+
 This approach works especially well when staging data via the workers, since the pre-processing itself can be scaled out by running it on many workers in parallel for different chunks of input data.
+
+For a more complete example, see `Interactive Analytics on GitHub Data using PostgreSQL with Citus <https://www.citusdata.com/blog/14-marco/402-interactive-analytics-github-data-using-postgresql-citus>`_.
