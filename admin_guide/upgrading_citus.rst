@@ -172,14 +172,14 @@ For users who don’t want to take a cluster down and upgrade all nodes at the s
 
 .. _upgrading_citus_minor:
 
-Minor Update from 5.0 to 5.1
-############################
+Minor Update to Latest 5.x
+##########################
 
 Upgrading requires first obtaining the new Citus extension and then installing it in each of your database instances. The first step varies by operating system.
 
 .. _upgrading_citus_minor_package:
 
-Step 1, Update Citus Package
+Step 1. Update Citus Package
 ----------------------------
 
 **OS X**
@@ -204,9 +204,15 @@ Step 1, Update Citus Package
 
 .. _upgrading_citus_minor_extension:
 
-Step 2, Apply Update to DB
+Step 2. Apply Update in DB
 --------------------------
+
+Restart PostgreSQL and run
 
 ::
 
+  # after restarting postgres
   psql -c "ALTER EXTENSION citus UPDATE;"
+
+  psql -c "\dx"
+  # you should see a newer Citus 5.x version in the list
