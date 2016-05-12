@@ -41,14 +41,15 @@ Please set appropriate values for data location like below. This makes accessing
 
 ::
 
+    # this location differs by operating system
     export PGDATA5=/usr/lib/postgresql/9.5/data
+
     export PGDATA4=/opt/citusdb/4.0/data
 
 
 **3. Stop loading data on to that instance**
 
-If you are upgrading the master, then you should stop all data-loading/appending
-and staging before copying out the metadata. If data-loading continues after step 4 below, then the metadata will be out of date.
+If you are upgrading the master, then you should stop all data-loading/appending and staging before copying out the metadata. If data-loading continues after step 4 below, then the metadata will be out of date.
 
 **4. Copy out pg_dist catalog metadata from the 4.0 server (Only needed for master)**
 ::
