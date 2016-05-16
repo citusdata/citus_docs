@@ -70,7 +70,7 @@ You can use \\copy both on the master and from any of the workers. When using it
 ::
 
     SET citus.shard_max_size TO '64MB';
-    \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV, master_host 'master-host-101');
+    \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV, master_host 'master-host-101')
 
 Citus assigns a unique shard id to each new shard and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. One can connect to the worker postgres instances to view or run commands on individual shards.
 
