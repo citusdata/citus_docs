@@ -44,14 +44,16 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Sets the maximum size to which a shard will grow before it gets split and defaults to 1GB. When the source file's size (which is used for staging) for one shard exceeds this configuration value, the database ensures that a new shard gets created. This parameter can be set at run-time and is effective on the master.
 
-citus.shard_placement_policy (enum)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+.. Comment out this configuration as currently COPY only support random
+   placement policy.
+.. citus.shard_placement_policy (enum)
+   $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Sets the policy to use when choosing nodes for placing newly created shards. When using the \copy command, the master needs to choose the worker nodes on which it will place the new shards. This configuration value is applicable on the master and specifies the policy to use for selecting these nodes. The supported values for this parameter are :-
+   Sets the policy to use when choosing nodes for placing newly created shards. When using the \copy command, the master needs to choose the worker nodes on which it will place the new shards. This configuration value is applicable on the master and specifies the policy to use for selecting these nodes. The supported values for this parameter are :-
 
-* **round-robin:** The round robin policy is the default and aims to distribute shards evenly across the cluster by selecting nodes in a round-robin fashion. This allows you to copy from any node including the master node.
+   * **round-robin:** The round robin policy is the default and aims to distribute shards evenly across the cluster by selecting nodes in a round-robin fashion. This allows you to copy from any node including the master node.
 
-* **local-node-first:** The local node first policy places the first replica of the shard on the client node from which the \copy command is being run. As the master node does not store any data, the policy requires that the command be run from a worker node. As the first replica is always placed locally, it provides better shard placement guarantees.
+   * **local-node-first:** The local node first policy places the first replica of the shard on the client node from which the \copy command is being run. As the master node does not store any data, the policy requires that the command be run from a worker node. As the first replica is always placed locally, it provides better shard placement guarantees.
 
 Planner Configuration
 ------------------------------------------------
