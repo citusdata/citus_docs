@@ -80,16 +80,16 @@ To insert data into hash distributed tables, you can use the standard PostgreSQL
 
 When inserting rows into hash distributed tables, the distribution column of the row being inserted must be specified. Based on the distribution column, Citus determines the right shard to which the insert should be routed to. Then, the query is forwarded to the right shard, and the remote insert command is executed on all the replicas of that shard.
 
-Bulk inserts
+Bulk loading
 $$$$$$$$$$$$
 
-Sometimes, you may want to bulk load several rows together into your hash distributed tables. To bulk load data from a file, you can directly use `PostgreSQL's COPY command <http://www.postgresql.org/docs/9.5/static/sql-copy.html>`_.
+Sometimes, you may want to bulk load several rows together into your hash distributed tables. To bulk load data from a file, you can directly use `PostgreSQL's \\COPY command <http://www.postgresql.org/docs/current/static/app-psql.html#APP-PSQL-META-COMMANDS-COPY>`_.
 
 For example:
 
 ::
     
-    COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV);
+    \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
 
 
 Updating and Deleting Data

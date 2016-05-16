@@ -38,9 +38,9 @@ Next, you can use the master_create_distributed_table() function to mark the tab
 
 This function informs Citus that the github_events table should be distributed by range on the repo_id column.
 
-Range distribution signifies to the database that all the shards have non-overlapping ranges of the distribution key. Currently, the \copy command for data loading does not impose that the shards have non-overlapping distribution key ranges. Hence, the user needs to make sure that the shards don't overlap.
+Range distribution signifies to the database that all the shards have non-overlapping ranges of the distribution key. Currently, the \\copy command for data loading does not impose that the shards have non-overlapping distribution key ranges. Hence, the user needs to make sure that the shards don't overlap.
 
-To set up range distributed shards, you first have to sort the data on the distribution column. This may not be required if the data already comes sorted on the distribution column (eg. facts, events, or time-series tables distributed on time). The next step is to split the input file into different files having non-overlapping ranges of the distribution key and run the \copy command for each file separately. As \copy always creates a new shard, the shards are guaranteed to have non-overlapping ranges.
+To set up range distributed shards, you first have to sort the data on the distribution column. This may not be required if the data already comes sorted on the distribution column (eg. facts, events, or time-series tables distributed on time). The next step is to split the input file into different files having non-overlapping ranges of the distribution key and run the \\copy command for each file separately. As \\copy always creates a new shard, the shards are guaranteed to have non-overlapping ranges.
 
 As an example, we'll describe how to copy data into the github_events table shown above. First, you download and extract two hours of github data.
 
@@ -78,17 +78,17 @@ For this example, you can download and extract data that has been previously spl
     gzip -d github_events_2015-01-01-0-1_range3.csv.gz
     gzip -d github_events_2015-01-01-0-1_range4.csv.gz
 
-Then, you can connect to the master using psql and load the files using the \copy command.
+Then, you can connect to the master using psql and load the files using the \\copy command.
 
 ::
 
     psql -h localhost -d postgres
     SET citus.shard_replication_factor TO 1;
-    \copy github_events from 'github_events_2015-01-01-0-1_range1.csv' with csv;
-    \copy github_events from 'github_events_2015-01-01-0-1_range2.csv' with csv;
-    \copy github_events from 'github_events_2015-01-01-0-1_range3.csv' with csv;
-    \copy github_events from 'github_events_2015-01-01-0-1_range4.csv' with csv;
+    \copy github_events from 'github_events_2015-01-01-0-1_range1.csv' with csv
+    \copy github_events from 'github_events_2015-01-01-0-1_range2.csv' with csv
+    \copy github_events from 'github_events_2015-01-01-0-1_range3.csv' with csv
+    \copy github_events from 'github_events_2015-01-01-0-1_range4.csv' with csv
 
-After this point, you can run queries on the range distributed table. To generate per-repository metrics, your queries would generally have filters on the repo_id column. Then, Citus can easily prune away unrelated shards and ensure that the query hits only one shard. Also, groupings and orderings on repo_id can be easily pushed down the workers leading to more efficient queries. We also note here that all the commands which can be run on tables using the append distribution method can be run on tables using range distribution. This includes \copy, the append and shard creation UDFs and the delete UDF. 
+After this point, you can run queries on the range distributed table. To generate per-repository metrics, your queries would generally have filters on the repo_id column. Then, Citus can easily prune away unrelated shards and ensure that the query hits only one shard. Also, groupings and orderings on repo_id can be easily pushed down the workers leading to more efficient queries. We also note here that all the commands which can be run on tables using the append distribution method can be run on tables using range distribution. This includes \\copy, the append and shard creation UDFs and the delete UDF. 
 
 The difference between range and append methods is that Citus’s distributed query planner has extra knowledge that the shards have distinct non-overlapping distribution key ranges. This allows the planner to push down more operations to the workers so that they can be executed in parallel. This reduces both the amount of data transferred across network and the amount of computation to be done for aggregation on the master.

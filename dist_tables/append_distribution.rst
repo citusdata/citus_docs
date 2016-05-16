@@ -55,7 +55,7 @@ This function informs Citus that the github_events table should be distributed b
 Data Loading
 ------------
 
-Citus supports two methods to load data into your append distributed tables. The first one is suitable for bulk loads from CSV/TSV files and involves using the \copy command. For use cases requiring smaller, incremental data loads, Citus provides two user defined functions. We describe each of the methods and their usage below.
+Citus supports two methods to load data into your append distributed tables. The first one is suitable for bulk loads from files and involves using the \\copy command. For use cases requiring smaller, incremental data loads, Citus provides two user defined functions. We describe each of the methods and their usage below.
 
 Bulk load using \\copy
 $$$$$$$$$$$$$$$$$$$$$$$
@@ -63,9 +63,9 @@ $$$$$$$$$$$$$$$$$$$$$$$
 The `\\copy <http://www.postgresql.org/docs/current/static/app-psql.html#APP-PSQL-META-COMMANDS-COPY>`_
 command is used to copy data from a file to a distributed table while handling
 replication and failures automatically. You can also use the server side `COPY command <http://www.postgresql.org/docs/current/static/sql-copy.html>`_. 
-However, in general, \\copy is preferable over COPY in examples, since the latter requires superuser, whereas \\copy does not. \\copy actually sends a COPY .. FROM STDIN to the server.
+In the examples, we use the \copy command from psql, which sends a COPY .. FROM STDIN to the server and reads files on the client side, whereas COPY from a file would read the file on the server.
 
-Behind the scenes, \\copy first opens a connection to the master using the provided master_host option and fetches candidate workers on which to create new shards. Then, the command connects to these workers, creates at least one shard there, and uploads the data to the shards. The command then replicates these shards on other workers until the replication factor is satisfied and fetches statistics for these shards. Finally, the command stores the shard metadata with the master.
+You can use \\copy both on the master and from any of the workers. When using it from the worker, you need to add the master_host option. Behind the scenes, \\copy first opens a connection to the master using the provided master_host option and fetches candidate workers on which to create new shards. Then, the command connects to these workers, creates at least one shard there, and uploads the data to the shards. The command then replicates these shards on other workers until the replication factor is satisfied and fetches statistics for these shards. Finally, the command stores the shard metadata with the master.
 
 ::
 
