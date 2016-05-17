@@ -48,6 +48,7 @@ topics.
    performance/performance_tuning.rst
 
 .. toctree::
+   :maxdepth: 1
    :caption: Administration
 
    admin_guide/cluster_management.rst
