@@ -8,8 +8,14 @@ To do the tutorials you'll need a single-machine Citus cluster with a master and
 
 **1. Download the package**
 
-* OS X Package: `Download <https://packages.citusdata.com/tutorials/citus-tutorial-osx-1.0.0.tar.gz>`_
-* Linux Package: `Download <https://packages.citusdata.com/tutorials/citus-tutorial-linux-1.0.0.tar.gz>`_
+.. raw:: html 
+
+  <ul>
+  <li> OS X Package: <a href="https://packages.citusdata.com/tutorials/citus-tutorial-osx-1.0.0.tar.gz" onclick="trackOutboundLink('https://packages.citusdata.com/tutorials/citus-tutorial-osx-1.0.0.tar.gz'); return false;">Download</a>
+  </li>
+  <li> Linux Package: <a href="https://packages.citusdata.com/tutorials/citus-tutorial-linux-1.0.0.tar.gz" onclick="trackOutboundLink('https://packages.citusdata.com/tutorials/citus-tutorial-linux-1.0.0.tar.gz'); return false;">Download</a>
+  </li>
+  </ul>
 
 Download and unzip it into a directory of your choosing. Then, enter that directory:
 

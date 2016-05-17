@@ -17,7 +17,10 @@ Below, we explain in detail the steps required to setup a multi-node Citus clust
 
 **1. Start a Citus cluster**
 
-To begin, you can start a Citus cluster using CloudFormation by clicking `here <https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus5%2Fcloudformation%2Fcitus5.json>`_. This will take you directly to the AWS CloudFormation console.
+.. raw:: html 
+  
+  To begin, you can start a Citus cluster using CloudFormation by clicking <a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus5%2Fcloudformation%2Fcitus5.json" onclick="trackOutboundLink('https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus5%2Fcloudformation%2Fcitus5.json'); return false;">here</a>. This will take you directly to the AWS CloudFormation console.
+
 
 Note: You might need to login to AWS at this step if you aren’t already logged in.
 
