@@ -7,7 +7,7 @@ As Citus is a PostgreSQL extension, PostgreSQL users can start using Citus by si
 
 To move your data from a PostgreSQL table to a distributed table, you can copy
 out the data into a csv file and then use the \copy command to load it into a
-distributed table. Alternately, you could copy out data from the local table and
+distributed table. Alternatively, you could copy out data from the local table and
 directly pipe it to a copy into the distributed table. For example:
 ::
     psql -c "COPY local_table TO STDOUT" | psql -c "COPY distributed_table FROM STDIN"
