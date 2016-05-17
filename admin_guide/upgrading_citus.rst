@@ -22,7 +22,7 @@ The others are known pg_upgrade manual steps, i.e. manually updating configurati
 
 We discuss the step by step process of upgrading the cluster below. Please note that you need to run the steps on all the nodes in the cluster. Some steps need to be run only on the master and they are explicitly marked as such.
 
-**1. Download and install Citus 5 on the server having the to-be-upgraded 4.0 data directory**
+**1. Download and install Citus 5**
 
 Follow the :ref:`installation instructions<requirements>` appropriate for your situation (e.g. single-machine or multi-machine). These instructions use the Citus package for your operating system, which includes PostgreSQL 9.5 as a dependency.
 
@@ -51,7 +51,7 @@ Please set appropriate values for data location like below. This makes accessing
 
 If you are upgrading the master, then you should stop all data-loading/appending and staging before copying out the metadata. If data-loading continues after step 4 below, then the metadata will be out of date.
 
-**4. Copy out pg_dist catalog metadata from the 4.0 server (Only needed for master)**
+**4. Copy out pg_dist catalog metadata from the Citus 4 server (Only needed for master)**
 ::
 
     COPY pg_dist_partition TO '/var/tmp/pg_dist_partition.data';
@@ -66,14 +66,14 @@ If you are upgrading the master, then you should stop all data-loading/appending
 
 This should return **Clusters are compatible**. If this doesn't return that message, you need to stop and check what the error is.
 
-Note: This may return the following warning if the 4.0 server has not been stopped. This warning is OK:
+Note: This may return the following warning if the Citus 4 server has not been stopped. This warning is OK:
 
 ::
 
     *failure*
     Consult the last few lines of "pg_upgrade_server.log" for the probable cause of the failure.
 
-**6. Shutdown the running 4.0 server**
+**6. Shutdown the running Citus 4 server**
 
 ::
 
@@ -151,12 +151,12 @@ You can ignore this error and continue with the process below.
 
 **15. Ready to run queries/create tables/load data**
  
-At this step, you have successfully completed the upgrade process. You can run queries, create new tables or add data to existing tables. Once everything looks good, the old 4.0 data directory can be deleted.
+At this step, you have successfully completed the upgrade process. You can run queries, create new tables or add data to existing tables. Once everything looks good, the old version 4 data directory can be deleted.
 
 
 **Running in a mixed mode**
 
-For users who don’t want to take a cluster down and upgrade all nodes at the same time, there is the possibility of running in a mixed 4.0 / 5.0 mode. To do so, you can first upgrade the master. Then, you can upgrade the workers one at a time. This way you can upgrade the cluster with no downtime. However, we recommend using 5.0 version in whole cluster.
+For users who don’t want to take a cluster down and upgrade all nodes at the same time, there is the possibility of running in a mixed version 4 / 5 mode. To do so, you can first upgrade the master. Then, you can upgrade the workers one at a time. This way you can upgrade the cluster with no downtime. However, we recommend using version five across the whole cluster.
 
 
 .. _upgrading_citus_minor:
