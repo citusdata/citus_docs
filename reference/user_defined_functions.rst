@@ -287,7 +287,8 @@ The example below will repair an inactive shard placement of shard 12345 which i
 rebalance_table_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Note: The rebalance_table_shards function is a part of Citus Enterprise. Please contact engage@citusdata.com to obtain this functionality.
+.. note::
+  The rebalance_table_shards function is a part of Citus Enterprise. Please contact engage@citusdata.com to obtain this functionality.
 
 The rebalance_table_shards() function moves shards of the given table to make them evenly distributed among the workers. The function first calculates the list of moves it needs to make in order to ensure that the cluster is balanced within the given threshold. Then, it moves shard placements one by one from the source node to the destination node and updates the corresponding shard metadata to reflect the move.
 
@@ -326,7 +327,8 @@ This example usage will attempt to rebalance the github_events table without mov
 replicate_table_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Note: The replicate_table_shards function is a part of Citus Enterprise. Please contact engage@citusdata.com to obtain this functionality.
+.. note::
+  The replicate_table_shards function is a part of Citus Enterprise. Please contact engage@citusdata.com to obtain this functionality.
 
 The replicate_table_shards() function replicates the under-replicated shards of the given table. The function first calculates the list of under-replicated shards and locations from which they can be fetched for replication. The function then copies over those shards and updates the corresponding shard metadata to reflect the copy.
 

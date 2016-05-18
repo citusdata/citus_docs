@@ -41,10 +41,11 @@ Below, we explain in detail the steps required to setup a multi-node Citus clust
 
 .. raw:: html 
   
-  To begin, you can start a Citus cluster using CloudFormation by clicking <a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus5%2Fcloudformation%2Fcitus5.json" onclick="trackOutboundLink('https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus5%2Fcloudformation%2Fcitus5.json'); return false;">here</a>. This will take you directly to the AWS CloudFormation console.
+  <p>To begin, you can start a Citus cluster using CloudFormation by clicking <a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus5%2Fcloudformation%2Fcitus5.json" onclick="trackOutboundLink('https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus5%2Fcloudformation%2Fcitus5.json'); return false;">here</a>. This will take you directly to the AWS CloudFormation console.</p>
 
 
-Note: You might need to login to AWS at this step if you aren’t already logged in.
+.. note::
+  You might need to login to AWS at this step if you aren’t already logged in.
 
 **2. Select Citus template**
 
@@ -56,9 +57,11 @@ In the form, pick a unique name for your stack. You can customize your cluster s
 
 .. image:: ../images/aws_parameters.png
 
-Note: Please ensure that you choose unique names for all your clusters. Otherwise, the cluster creation may fail with the error “Template_name template already created”.
+.. note::
+  Please ensure that you choose unique names for all your clusters. Otherwise, the cluster creation may fail with the error “Template_name template already created”.
 
-Note: If you want to launch a cluster in a region other than US East, you can update the region in the top-right corner of the AWS console as shown below.
+.. note::
+  If you want to launch a cluster in a region other than US East, you can update the region in the top-right corner of the AWS console as shown below.
 
 .. image:: ../images/aws_region.png
 	:scale: 50 %
@@ -80,7 +83,8 @@ After the above steps, you will be redirected to the CloudFormation console. You
 
 .. image:: ../images/aws_cluster_launch.png
 
-Note: Sometimes, you might not see the outputs tab on your screen by default. In that case, you should click on “restore” from the menu on the bottom right of your screen.
+.. note::
+  Sometimes, you might not see the outputs tab on your screen by default. In that case, you should click on “restore” from the menu on the bottom right of your screen.
  
 .. image:: ../images/aws_restore_icon.png
 	:align: center
@@ -122,4 +126,5 @@ Similarly to restart the database, you can use the command:
 
 	/usr/pgsql-9.5/bin/pg_ctl -D /data/base -l logfile restart
 
-Note: You typically want to avoid making changes to resources created by CloudFormation, such as terminating EC2 instances. To shut the cluster down, you can simply delete the stack in the CloudFormation console.
+.. note::
+  You typically want to avoid making changes to resources created by CloudFormation, such as terminating EC2 instances. To shut the cluster down, you can simply delete the stack in the CloudFormation console.

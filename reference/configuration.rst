@@ -156,7 +156,8 @@ max_files_per_process (integer)
 
 Sets the maximum number of simultaneously open files for each server process and defaults to 1000. The real-time executor requires two file descriptors for each shard it sends queries to. Increasing this configuration parameter will allow the executor to have more open file descriptors, and hence handle more shards in parallel. This change has to be made on the workers as well as the master, and can be done only during server start.
 
-Note: Along with max_files_per_process, one may also have to increase the kernel limit for open file descriptors per process using the ulimit command.
+.. note::
+  Along with max_files_per_process, one may also have to increase the kernel limit for open file descriptors per process using the ulimit command.
 
 Task tracker executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

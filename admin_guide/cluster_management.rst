@@ -5,7 +5,8 @@ $$$$$$$$$$$$$$$$$$
 
 In this section, we discuss how you can add or remove nodes from your Citus cluster and how you can deal with node failures.
 
-Note: To make moving shards across nodes or re-replicating shards on failed nodes easier, Citus Enterprise comes with a shard rebalancer extension. We discuss briefly about the functions provided by the shard rebalancer as and when relevant in the sections below. You can learn more about these functions, their arguments and usage, in the :ref:`cluster_management_functions` reference section.
+.. note::
+  To make moving shards across nodes or re-replicating shards on failed nodes easier, Citus Enterprise comes with a shard rebalancer extension. We discuss briefly about the functions provided by the shard rebalancer as and when relevant in the sections below. You can learn more about these functions, their arguments and usage, in the :ref:`cluster_management_functions` reference section.
 
 .. _scaling_out_cluster:
 
