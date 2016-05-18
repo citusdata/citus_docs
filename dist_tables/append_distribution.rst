@@ -30,7 +30,7 @@ To create an append distributed table, you need to first define the table schema
 
 ::
 
-    csql -h localhost -d postgres
+    psql -h localhost -d postgres
     CREATE TABLE github_events
     (
     	event_id bigint,
@@ -55,38 +55,41 @@ This function informs Citus that the github_events table should be distributed b
 Data Loading
 ------------
 
-Citus supports two methods to load data into your append distributed tables. The first one is suitable for bulk loads from CSV/TSV files and involves using the \stage command. For use cases requiring smaller, incremental data loads, Citus provides two user defined functions. We describe each of the methods and their usage below.
+Citus supports two methods to load data into your append distributed tables. The first one is suitable for bulk loads from files and involves using the \\copy command. For use cases requiring smaller, incremental data loads, Citus provides two user defined functions. We describe each of the methods and their usage below.
 
-Bulk load using \\stage
+Bulk load using \\copy
 $$$$$$$$$$$$$$$$$$$$$$$
 
-The \stage command is used to copy data from a file to a distributed table while handling replication and failures automatically. It is not available in the standard `psql <http://www.postgresql.org/docs/9.5/static/app-psql.html>`_ client. Instead, Citus provides a database client called csql which supports all the commands of psql plus the \stage command.
+The `\\copy <http://www.postgresql.org/docs/current/static/app-psql.html#APP-PSQL-META-COMMANDS-COPY>`_
+command is used to copy data from a file to a distributed table while handling
+replication and failures automatically. You can also use the server side `COPY command <http://www.postgresql.org/docs/current/static/sql-copy.html>`_. 
+In the examples, we use the \copy command from psql, which sends a COPY .. FROM STDIN to the server and reads files on the client side, whereas COPY from a file would read the file on the server.
 
-Note: You can use the psql client if you do not wish to use \stage to ingest data. In upcoming releases, \stage will be replaced by more native ingest methods which will remove the need for csql.
-
-The \stage command borrows its syntax from the `client-side \copy command <http://www.postgresql.org/docs/9.5/static/app-psql.html>`_ in PostgreSQL. Behind the scenes, \stage first opens a connection to the master and fetches candidate workers on which to create new shards. Then, the command connects to these workers, creates at least one shard there, and uploads the data to the shards. The command then replicates these shards on other workers until the replication factor is satisfied and fetches statistics for these shards. Finally, the command stores the shard metadata with the master.
+You can use \\copy both on the master and from any of the workers. When using it from the worker, you need to add the master_host option. Behind the scenes, \copy first opens a connection to the master using the provided master_host option and uses master_create_empty_shard to create a new shard. Then, the command connects to the workers and copies data into the replicas until the size reaches shard_max_size, at which point another new shard is created. Finally, the command fetches statistics for the shards and updates the metadata.
 
 ::
 
     SET citus.shard_max_size TO '64MB';
-    SET citus.shard_replication_factor TO 1;
-    \stage github_events from 'github_events-2015-01-01-0.csv' WITH CSV;
+    \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV, master_host 'master-host-101')
 
 Citus assigns a unique shard id to each new shard and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. One can connect to the worker postgres instances to view or run commands on individual shards.
 
-By default, the \stage command depends on two configuration parameters for its behavior. These are called citus.shard_max_size and citus.shard_replication_factor.
+By default, the \\copy command depends on two configuration parameters for its behavior. These are called citus.shard_max_size and citus.shard_replication_factor.
 
-(1) **citus.shard_max_size :-** This parameter determines the maximum size of a shard created using \stage, and defaults to 1 GB. If the file is larger than this parameter, \stage will break it up into multiple shards.
+(1) **citus.shard_max_size :-** This parameter determines the maximum size of a shard created using \\copy, and defaults to 1 GB. If the file is larger than this parameter, \\copy will break it up into multiple shards.
 (2) **citus.shard_replication_factor :-** This parameter determines the number of nodes each shard gets replicated to, and defaults to two. The ideal value for this parameter depends on the size of the cluster and rate of node failure. For example, you may want to increase the replication factor if you run large clusters and observe node failures on a more frequent basis.
 
-Please note that you can load several files in parallel through separate database connections or from different nodes. It is also worth noting that \stage always creates at least one shard and does not append to existing shards. You can use the method described below to append to previously created shards.
+.. note::
+    The configuration setting citus.shard_replication_factor can only be set on the master node.
+
+Please note that you can load several files in parallel through separate database connections or from different nodes. It is also worth noting that \\copy always creates at least one shard and does not append to existing shards. You can use the method described below to append to previously created shards.
 
 Incremental loads by appending to existing shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The \stage command always creates a new shard when it is used and is best suited for bulk loading of data. Using \stage to load smaller data increments will result in many small shards which might not be ideal. In order to allow smaller, incremental loads into append distributed tables, Citus provides 2 user defined functions. They are master_create_empty_shard() and master_append_table_to_shard().
+The \copy command always creates a new shard when it is used and is best suited for bulk loading of data. Using \copy to load smaller data increments will result in many small shards which might not be ideal. In order to allow smaller, incremental loads into append distributed tables, Citus provides 2 user defined functions. They are master_create_empty_shard() and master_append_table_to_shard().
 
-master_create_empty_shard() can be used to create new empty shards for a table. This function also replicates the empty shard to citus.shard_replication_factor number of nodes like the \stage command.
+master_create_empty_shard() can be used to create new empty shards for a table. This function also replicates the empty shard to citus.shard_replication_factor number of nodes like the \copy command.
 
 master_append_table_to_shard() can be used to append the contents of a PostgreSQL table to an existing shard. This allows the user to control the shard to which the rows will be appended. It also returns the shard fill ratio which helps to make a decision on whether more data should be appended to this shard or if a new shard should be created.
 

@@ -80,30 +80,17 @@ To insert data into hash distributed tables, you can use the standard PostgreSQL
 
 When inserting rows into hash distributed tables, the distribution column of the row being inserted must be specified. Based on the distribution column, Citus determines the right shard to which the insert should be routed to. Then, the query is forwarded to the right shard, and the remote insert command is executed on all the replicas of that shard.
 
-Bulk inserts
+Bulk loading
 $$$$$$$$$$$$
 
-Sometimes, you may want to bulk load several rows together into your hash distributed tables. To facilitate this, a script named copy_to_distributed_table is provided for loading many rows of data from a file, similar to the functionality provided by `PostgreSQL's COPY command <http://www.postgresql.org/docs/9.5/static/sql-copy.html>`_. It is automatically installed into the bin directory for your PostgreSQL installation.
+Sometimes, you may want to bulk load several rows together into your hash distributed tables. To bulk load data from a file, you can directly use `PostgreSQL's \\COPY command <http://www.postgresql.org/docs/current/static/app-psql.html#APP-PSQL-META-COMMANDS-COPY>`_.
 
-Before invoking the script, you should set the environment variables which will be used as connection parameters while connecting to your Postgres server. For example, to set the default database to postgres, you can run the command shown below.
-
-::
-
-    export PGDATABASE=postgres
-
-As an example usage for the script, the invocation below would copy rows into the github_events table from a CSV file.
+For example:
 
 ::
     
-    copy_to_distributed_table -C github_events-2015-01-01-0.csv github_events
+    \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
 
-To learn more about the different options supported by the script, you can call the script with -h for usage information.
-
-::
-
-    copy_to_distributed_table -h
-
-Note that hash distributed tables are optimised for real-time ingestion, where users typically have to do single row inserts into distributed tables. Bulk loading, though supported, is generally slower than tables using the append distribution method. For use cases involving bulk loading of data, please consider using :ref:`append_distribution`.
 
 Updating and Deleting Data
 --------------------------
