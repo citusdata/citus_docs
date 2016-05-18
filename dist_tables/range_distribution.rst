@@ -40,7 +40,7 @@ This function informs Citus that the github_events table should be distributed b
 
 Range distribution signifies to the database that all the shards have
 non-overlapping ranges of the distribution key. Currently, the \\copy command
-for data loading expects that shard's have been created with non-overlapping
+for data loading expects that shards have been created with non-overlapping
 ranges, and cover the range of values expected in the file.
 
 For example, with the above use-case, you would first create shards using
@@ -49,8 +49,8 @@ and max values manually for that day, and \\COPY would then be able to load the
 data for the day. If \\COPY encounters a partition-column value which isn't
 covered by an existing shard, it will throw an error.
 
-The difference between range and append methods is that Citus’s distributed query planner has extra knowledge that the shards have distinct non-overlapping distribution key ranges. This allows the planner to push down more operations to the workers so that they can be executed in parallel. This reduces both the amount of data transferred across network and the amount of computation to be done for aggregation on the master.
+The difference between range and append methods is that Citus' distributed query planner has extra knowledge that the shards have distinct non-overlapping distribution key ranges. This allows the planner to push down more operations to the workers so that they can be executed in parallel. This reduces both the amount of data transferred across network and the amount of computation to be done for aggregation on the master.
 
 If you want more specific details on how to set up range partitioning, please get in touch with us via
-our mailing-list.
+our `mailing-list <https://groups.google.com/forum/#!forum/citus-users>`_.
 
