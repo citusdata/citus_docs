@@ -65,11 +65,11 @@ COPY can be used to load data directly from an application using COPY .. FROM ST
 
     COPY counters FROM STDIN WTIH (FORMAT CSV);
 
-In psql, the \COPY command can be used to load data from the local machine. The \COPY command actually sends a COPY .. FROM STDIN command to the server before sending the local data, as would an application that loads data directly.
+In psql, the \\COPY command can be used to load data from the local machine. The \\COPY command actually sends a COPY .. FROM STDIN command to the server before sending the local data, as would an application that loads data directly.
 
 ::
 
-    psql -c "\\COPY counters FROM 'counters-20160304.csv' (FORMAT CSV)"
+    psql -c "\COPY counters FROM 'counters-20160304.csv' (FORMAT CSV)"
 
 
 A very powerful feature of COPY for hash distributed tables is that it asynchronously copies data to the workers over many parallel connections, one for each shard placement. This means that data can be ingested using multiple workers and multiple cores in parallel. Especially when there are expensive indexes such as a GIN, this can lead to major performance boosts over ingesting into a regular PostgreSQL table.
@@ -189,7 +189,7 @@ Append distributed tables support COPY via the worker, by specifying the address
 
 ::
 
-    psql -h worker-node-1 -c "\\COPY events FROM 'data.csv' WITH (FORMAT CSV, MASTER_HOST 'master-node')"
+    psql -h worker-node-1 -c "\COPY events FROM 'data.csv' WITH (FORMAT CSV, MASTER_HOST 'master-node')"
 
 
 An alternative to using COPY is to create a staging table and use standard SQL clients to append it to the distributed table, which is similar to staging data via the master. An example of staging a file via a worker using psql is as follows:
@@ -198,7 +198,7 @@ An alternative to using COPY is to create a staging table and use standard SQL c
 
     stage_table=$(psql -tA -h worker-node-1 -c "SELECT 'stage_'||nextval('stage_id_sequence')")
     psql -h worker-node-1 -c "CREATE TABLE $stage_table (time timestamp, data jsonb)"
-    psql -h worker-node-1 -c "\\COPY $stage_table FROM 'data.csv' WITH CSV"
+    psql -h worker-node-1 -c "\COPY $stage_table FROM 'data.csv' WITH CSV"
     psql -h master-node -c "SELECT master_append_table_to_shard(choose_underutilized_shard(), '$stage_table', 'worker-node-1', 5432)"
     psql -h worker-node-1 -c "DROP TABLE $stage_table"
     
