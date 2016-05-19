@@ -405,10 +405,7 @@ footer
   .wy-nav-top
     display: block
   .wy-nav-side
-    @if $nav-desktop-position == left
-      left: -$nav-desktop-width
-    @else
-      right: -$nav-desktop-width
+    display: none
     &.shift
       width: 85%
       left: 0
