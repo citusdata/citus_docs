@@ -33,7 +33,6 @@
 .wy-menu-vertical
   flex: auto
   -webkit-flex: auto
-  width: $nav-desktop-width
   header, p.caption
     height: $base-font-size * 2
     display: inline-block
@@ -177,7 +176,6 @@
   display: block
   flex: initial
   -webkit-flex: initial
-  width: $nav-desktop-width
   padding: $gutter / 2
   margin-bottom: $gutter / 2
   z-index: $z-index-popover
@@ -282,10 +280,11 @@
 
 .wy-nav-side
   padding-bottom: 2em
+  width: $nav-desktop-width
   background: $nav-background-color
   z-index: $z-index-popover
-  flex: initial
-  -webkit-flex: initial
+  flex: none
+  -webkit-flex: none
 
 .nav-wrap
   background: #09436a
