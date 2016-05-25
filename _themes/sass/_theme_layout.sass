@@ -264,16 +264,12 @@
   height: 100%
 
 .wy-nav-side
-  position: absolute
-  bottom: 0
-  left: 0
   padding-bottom: 2em
   width: $nav-desktop-width
-  overflow-x: hidden
-  overflow-y: hidden
   min-height: 100%
   background: $nav-background-color
   z-index: $z-index-popover
+  float: left
 
 .nav-wrap
   background: #09436a
@@ -307,10 +303,6 @@
 
 .wy-side-scroll
   width: $nav-desktop-width + 20px
-  position: relative
-  overflow-x: hidden
-  overflow-y: scroll
-  height: 100%
 
 .wy-nav-top
   display: none
@@ -402,13 +394,7 @@ footer
   .wy-nav-top
     display: block
   .wy-nav-side
-    @if $nav-desktop-position == left
-      left: -$nav-desktop-width
-    @else
-      right: -$nav-desktop-width
-    &.shift
-      width: 85%
-      left: 0
+    display: none
   .wy-side-scroll
     width: auto
   .wy-side-nav-search
