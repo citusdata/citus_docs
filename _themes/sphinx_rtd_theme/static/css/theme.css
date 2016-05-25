@@ -4235,7 +4235,8 @@ div[class^='highlight'] pre {
 }
 
 .wy-menu-vertical {
-  width: 300px;
+  flex: auto;
+  -webkit-flex: auto;
 }
 .wy-menu-vertical header, .wy-menu-vertical p.caption {
   height: 32px;
@@ -4394,7 +4395,8 @@ div[class^='highlight'] pre {
 
 .wy-side-nav-search {
   display: block;
-  width: 300px;
+  flex: initial;
+  -webkit-flex: initial;
   padding: 0.809em;
   margin-bottom: 0.809em;
   z-index: 200;
@@ -4450,6 +4452,10 @@ div[class^='highlight'] pre {
   color: black;
 }
 
+.wy-nav .wy-menu-vertical {
+  flex: auto;
+  -webkit-flex: auto;
+}
 .wy-nav .wy-menu-vertical header {
   color: #2980B9;
 }
@@ -4459,6 +4465,11 @@ div[class^='highlight'] pre {
 .wy-nav .wy-menu-vertical a:hover {
   background-color: #2980B9;
   color: #fff;
+}
+
+.wy-nav-shift {
+  flex: auto;
+  -webkit-flex: auto;
 }
 
 [data-menu-wrap] {
@@ -4490,25 +4501,28 @@ div[class^='highlight'] pre {
   background: left repeat-y #fcfcfc;
   background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDoxOERBMTRGRDBFMUUxMUUzODUwMkJCOThDMEVFNURFMCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDoxOERBMTRGRTBFMUUxMUUzODUwMkJCOThDMEVFNURFMCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjE4REExNEZCMEUxRTExRTM4NTAyQkI5OEMwRUU1REUwIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjE4REExNEZDMEUxRTExRTM4NTAyQkI5OEMwRUU1REUwIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+EwrlwAAAAA5JREFUeNpiMDU0BAgwAAE2AJgB9BnaAAAAAElFTkSuQmCC);
   background-size: 300px 1px;
+  flex-direction: column;
+  -webkit-flex-direction: column;
+  display: flex;
+  display: -webkit-flex;
 }
 
 .wy-grid-for-nav {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  flex-direction: row;
+  -webkit-flex-direction: row;
+  flex: auto;
+  -webkit-flex: auto;
+  display: flex;
+  display: -webkit-flex;
 }
 
 .wy-nav-side {
-  position: absolute;
-  bottom: 0;
-  left: 0;
   padding-bottom: 2em;
   width: 300px;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  min-height: 100%;
   background: #09436a;
   z-index: 200;
+  flex: none;
+  -webkit-flex: none;
 }
 
 .nav-wrap {
@@ -4524,9 +4538,11 @@ div[class^='highlight'] pre {
 }
 
 .header {
-  padding-top: 40px;
+  padding-top: 10px;
   padding-bottom: 10px;
   background: #fff;
+  flex: initial;
+  -webkit-flex: initial;
 }
 
 .menu li {
@@ -4540,14 +4556,6 @@ div[class^='highlight'] pre {
   text-transform: uppercase;
   padding: 11px 30px 11px;
   display: block;
-}
-
-.wy-side-scroll {
-  width: 320px;
-  position: absolute;
-  overflow-x: hidden;
-  overflow-y: scroll;
-  height: 100%;
 }
 
 .wy-nav-top {
@@ -4588,16 +4596,15 @@ div[class^='highlight'] pre {
 }
 
 .wy-nav-content-wrap {
-  margin-left: 300px;
   background: #fcfcfc;
   min-height: 100%;
+  flex: auto;
+  -webkit-flex: auto;
 }
 
 .wy-nav-content {
   padding: 1.618em 3.236em;
-  height: 100%;
   max-width: 800px;
-  margin: auto;
 }
 
 .wy-body-mask {
@@ -4638,6 +4645,10 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
   clear: both;
 }
 
+div.section div[class^='highlight'] pre {
+  white-space: pre-wrap;
+}
+
 #search-results .search li {
   margin-bottom: 24px;
   border-bottom: solid 1px #e1e4e5;
@@ -4675,7 +4686,7 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
   }
 
   .wy-nav-side {
-    left: -300px;
+    display: none;
   }
   .wy-nav-side.shift {
     width: 85%;
