@@ -4499,16 +4499,12 @@ div[class^='highlight'] pre {
 }
 
 .wy-nav-side {
-  position: absolute;
-  bottom: 0;
-  left: 0;
   padding-bottom: 2em;
   width: 300px;
-  overflow-x: hidden;
-  overflow-y: hidden;
   min-height: 100%;
   background: #09436a;
   z-index: 200;
+  float: left;
 }
 
 .nav-wrap {
@@ -4524,7 +4520,7 @@ div[class^='highlight'] pre {
 }
 
 .header {
-  padding-top: 40px;
+  padding-top: 10px;
   padding-bottom: 10px;
   background: #fff;
 }
@@ -4544,10 +4540,6 @@ div[class^='highlight'] pre {
 
 .wy-side-scroll {
   width: 320px;
-  position: absolute;
-  overflow-x: hidden;
-  overflow-y: scroll;
-  height: 100%;
 }
 
 .wy-nav-top {
@@ -4675,11 +4667,7 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
   }
 
   .wy-nav-side {
-    left: -300px;
-  }
-  .wy-nav-side.shift {
-    width: 85%;
-    left: 0;
+    display: none;
   }
 
   .wy-side-scroll {
