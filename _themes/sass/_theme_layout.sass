@@ -377,6 +377,10 @@ footer
 .rst-footer-buttons
   +clearfix
 
+// override non-wrapped whitespace from Pygments
+div.section div[class^='highlight'] pre
+  white-space: pre-wrap
+
 #search-results
   .search li
     margin-bottom: $base-line-height
