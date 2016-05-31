@@ -52,6 +52,10 @@ Before starting the database let's change its access permissions. By default the
   # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
   host    all             all             10.0.0.0/8              trust
 
+  # Also allow the host unrestricted access to connect to itself
+  host    all             all             127.0.0.1/32            trust
+  host    all             all             ::1/128                 trust
+
 Note: Your DNS settings may differ. Also these settings are too permissive for some environments. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/9.5/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
 
 **4. Start database servers, create Citus extension**
