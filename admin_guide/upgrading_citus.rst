@@ -206,3 +206,6 @@ Restart PostgreSQL and run
 
   psql -c "\dx"
   # you should see a newer Citus 5.x version in the list
+
+That's all it takes! No further steps are necessary after updating
+the extension on all database instances in your cluster.
