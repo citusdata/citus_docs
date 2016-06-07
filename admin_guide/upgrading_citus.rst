@@ -66,12 +66,13 @@ If you are upgrading the master, then you should stop all data-loading/appending
 
 This should return **Clusters are compatible**. If this doesn't return that message, you need to stop and check what the error is.
 
-Note: This may return the following warning if the Citus 4 server has not been stopped. This warning is OK:
+.. note::
+  This may return the following warning if the Citus 4 server has not been stopped. This warning is OK:
 
-::
+  ::
 
-    *failure*
-    Consult the last few lines of "pg_upgrade_server.log" for the probable cause of the failure.
+      *failure*
+      Consult the last few lines of "pg_upgrade_server.log" for the probable cause of the failure.
 
 **6. Shutdown the running Citus 4 server**
 
