@@ -20,7 +20,7 @@ Arguments
 
 **distribution_column:** The column on which the table is to be distributed.
 
-**distribution_method:** The method according to which the table is to be distributed. Permissible values are append, hash or range.
+**distribution_method:** The method according to which the table is to be distributed. Permissible values are append or hash.
 
 Return Value
 ********************************
@@ -221,7 +221,7 @@ A tuple containing the following information:
 
 **part_storage_type:** Type of storage used for the table. May be 't' (standard table), 'f' (foreign table) or 'c' (columnar table).
 
-**part_method:** Distribution method used for the table. May be 'a' (append), 'h' (hash) or 'r' (range).
+**part_method:** Distribution method used for the table. May be 'a' (append), or 'h' (hash).
 
 **part_key:** Distribution column for the table.
 
