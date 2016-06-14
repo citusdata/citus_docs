@@ -36,7 +36,6 @@ topics.
    dist_tables/working_with_distributed_tables.rst
    dist_tables/append_distribution.rst
    dist_tables/hash_distribution.rst
-   dist_tables/range_distribution.rst
    dist_tables/querying.rst
    dist_tables/postgresql_extensions.rst
 
