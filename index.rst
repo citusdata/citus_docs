@@ -40,12 +40,6 @@ topics.
    dist_tables/postgresql_extensions.rst
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Data Manipulation
-
-   dml/updating_deleting.rst
-
-.. toctree::
    :caption: Performance
 
    performance/query_processing.rst
