@@ -91,6 +91,11 @@ For example:
     
     \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
 
+.. note::
+
+    There is no notion of snapshot isolation across shards, which means that a multi-shard SELECT that runs concurrently with a COPY might see it committed on some shards, but not on others. If the user is storing events data, he may occasionally observe small gaps in recent data. It is up to applications to deal with this if it is a problem (e.g.  exclude the most recent data from queries, or use some lock).
+
+    If COPY fails to open a connection for a shard placement then it behaves in the same way as INSERT, namely to mark the placement(s) as inactive unless there are no more active placements. If any other failure occurs after connecting, the transaction is rolled back and thus no metadata changes are made.
 
 Updating and Deleting Data
 --------------------------
