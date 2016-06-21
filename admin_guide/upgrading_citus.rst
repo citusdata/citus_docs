@@ -165,7 +165,7 @@ For users who don’t want to take a cluster down and upgrade all nodes at the s
 Minor Update to Latest 5.x
 ##########################
 
-Upgrading requires first obtaining the new Citus extension and then installing it in each of your database instances, doing the master instance last. The first step varies by operating system.
+Upgrading requires first obtaining the new Citus extension and then installing it in each of your database instances. The first step varies by operating system.
 
 .. _upgrading_citus_minor_package:
 
