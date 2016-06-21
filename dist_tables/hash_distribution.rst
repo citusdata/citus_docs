@@ -97,8 +97,8 @@ For example:
 
     If COPY fails to open a connection for a shard placement then it behaves in the same way as INSERT, namely to mark the placement(s) as inactive unless there are no more active placements. If any other failure occurs after connecting, the transaction is rolled back and thus no metadata changes are made.
 
-Updating and Deleting Data
---------------------------
+Single-Shard Updates and Deletion
+---------------------------------
 
 You can also update or delete rows from your tables, using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/9.5/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/9.5/static/sql-delete.html>`_ commands.
 
@@ -107,7 +107,19 @@ You can also update or delete rows from your tables, using the standard PostgreS
     UPDATE github_events SET org = NULL WHERE repo_id = 24509048;
     DELETE FROM github_events WHERE repo_id = 24509048;
 
-Currently, Citus requires that an UPDATE or DELETE involves exactly one shard. This means commands must include a WHERE qualification on the distribution column that restricts the query to a single shard. Such qualifications usually take the form of an equality clause on the table’s distribution column.
+Currently, Citus requires that standard UPDATE or DELETE statements involve exactly one shard. This means commands must include a WHERE qualification on the distribution column that restricts the query to a single shard. Such qualifications usually take the form of an equality clause on the table’s distribution column. To update or delete across shards see the section below.
+
+Cross-Shard Updates and Deletion
+--------------------------------
+
+The most flexible way to modify or delete rows throughout a Citus cluster is the master_modify_multiple_shards command. It takes a regular SQL statement as argument and runs it on all workers:
+
+::
+
+  SELECT master_modify_multiple_shards(
+    'DELETE FROM github_events WHERE repo_id IN (24509048, 24509049)');
+
+This uses a two-phase commit to remove or update data safely everywhere. Unlike the standard UPDATE statement, Citus allows it to operate on more than one shard. To learn more about the function, its arguments and its usage, please visit the :ref:`user_defined_functions` section of our documentation.
 
 Maximizing Write Performance
 ----------------------------
