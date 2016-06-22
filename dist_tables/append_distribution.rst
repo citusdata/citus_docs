@@ -151,7 +151,7 @@ The most flexible way to modify or delete rows throughout a Citus cluster is the
   SELECT master_modify_multiple_shards(
     'DELETE FROM github_events WHERE created_at <= ''2014-01-01 00:00:00''');
 
-This uses a two-phase commit to remove or update data safely everywhere. Unlike master_apply_delete_command, it works at the row- rather than shard-level to modify or delete all rows that match the condition in the where clause. It deletes rows regardless of whether they comprise an entire shard. To learn more about the function, its arguments and its usage, please visit the :ref:`user_defined_functions` section of our documentation.
+The function uses a configurable commit protocol to update or delete data safely across multiple shards. Unlike master_apply_delete_command, it works at the row- rather than shard-level to modify or delete all rows that match the condition in the where clause. It deletes rows regardless of whether they comprise an entire shard. To learn more about the function, its arguments and its usage, please visit the :ref:`user_defined_functions` section of our documentation.
 
 Dropping Tables
 ---------------
