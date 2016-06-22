@@ -1,3 +1,4 @@
+.. _tut_hash:
 .. highlight:: bash
 
 Updatable User Data
