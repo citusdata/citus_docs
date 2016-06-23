@@ -61,3 +61,8 @@ topics.
    reference/user_defined_functions.rst
    reference/metadata_tables.rst
    reference/configuration.rst
+
+.. toctree::
+   :caption: FAQ
+
+   faq/faq.rst
