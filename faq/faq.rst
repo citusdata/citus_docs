@@ -12,13 +12,14 @@ You can add nodes to a Citus cluster by adding the DNS host name and port of the
 How do I change the shard count for a hash partitioned table?
 -------------------------------------------------------------
 
-Currently changing the shard count for an existing hash partitioned table is not supported.
-However we typically recommend creating a large number of initial shards (greater than planned CPU cores) during table creation (e.g. 128 or 256). This allows for future scaling, if you add more workers.
+Optimal shard count is related to the total number of cores on the workers. Citus partitions an incoming query into its fragment queries which run on individual worker shards. Hence the degree of parallelism for each query is governed by the number of shards the query hits. To ensure maximum parallelism, you should create enough shards on each node such that there is at least one shard per CPU core.
+
+We typically recommend creating a high number of initial shards, e.g. 2x or 4x the number of current CPU cores. This allows for future scaling if you add more workers and CPU cores.
 
 How does citus hadle failure of a worker node?
 ----------------------------------------------
 
-If a backend server fails during e.g. a SELECT query, jobs involving shards from that server will automatically fail over to replica shards located on healthy hosts. This means intermittent failures will not require restarting potentially long-running analytical queries, so long as the shards involved can be reached on other healthy hosts.
+If a worker node fails during e.g. a SELECT query, jobs involving shards from that server will automatically fail over to replica shards located on healthy hosts. This means intermittent failures will not require restarting potentially long-running analytical queries, so long as the shards involved can be reached on other healthy hosts.
 You can find more information about Citus' failure handling logic in :ref:`dealing_with_node_failures`.
 
 How does Citus handle failover of the master node?
