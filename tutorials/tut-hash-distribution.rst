@@ -1,12 +1,12 @@
 .. _tut_hash:
 .. highlight:: bash
 
-Updatable User Data
-===================
+Hash-Distributed Data
+=====================
 
-In this tutorial we'll continue looking at wikipedia edits. The previous
-tutorial ingested a stream of all live edits happening across wikimedia.  We'll
-continue looking at that stream but store it in a different way.
+In this tutorial we'll look at a stream of live wikipedia edits. Wikimedia is
+kind enough to publish all changes happening across all their sites in real time;
+this can be a lot of events!
 
 This tutorial assumes you've set up a :ref:`single-machine demo cluster <tut_cluster>`.
 Once your cluster is running, open a prompt to the master instance:
