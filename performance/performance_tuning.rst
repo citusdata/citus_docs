@@ -28,6 +28,155 @@ Hash based distribution is more suited to cases where users want to do real-time
 Once you choose the right distribution method and column, you can then proceed
 to the next step, which is tuning single node performance.
 
+.. _examining_plan:
+
+Examining Distributed Query Plan
+##################################
+
+Citus extends the SQL EXPLAIN command to provide information about simple distributed queries, meaning queries that do not contain re-partition jobs. The EXPLAIN output consists of two parts: the distributed query and the master query. These parts provide information to help tune Citus and the underlying PostgreSQL database.
+
+Here is an example of explaining the plan for a query in the :ref:`hash partitioning tutorial <tut_hash>`:
+
+::
+
+  explain SELECT comment FROM wikipedia_changes c, wikipedia_editors e
+          WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
+
+  Distributed Query into pg_merge_job_0005
+    Executor: Real-Time
+    Task Count: 16
+    Tasks Shown: One of 16
+    ->  Task
+      Node: host=localhost port=9701 dbname=j
+      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
+        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
+          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
+          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
+            Index Cond: (editor = c.editor)
+            Filter: (bot IS TRUE)
+  Master Query
+    ->  Limit  (cost=0.00..0.00 rows=0 width=0)
+      ->  Seq Scan on pg_merge_job_0005  (cost=0.00..0.00 rows=0 width=0)
+  (15 rows)
+
+Let's examine it piece by piece. The first thing it reveals is the :ref:`distributed_query_executor` type being used and the number of shards (sixteen) that the query is referencing.
+
+::
+
+  Executor: Real-Time
+  Task Count: 16
+  Tasks Shown: One of 16
+
+Next explain goes into each shard of each worker and finds the plan used internally there by PostgreSQL. By default it shows the output from only one shard. In the case of this example it was running on a worker on localhost, port 9701.
+
+::
+
+  ->  Task
+    Node: host=localhost port=9701 dbname=j
+    ->  Limit  (cost=0.15..6.87 rows=10 width=32)
+      ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
+        ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
+        ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
+          Index Cond: (editor = c.editor)
+          Filter: (bot IS TRUE)
+
+The above is standard PostgreSQL explain output. You can use it for :ref:`postgresql_tuning` on the workers. After the output of distributed tasks there is a section about Citus' behavior on the master node.
+
+::
+
+  Master Query
+    ->  Limit  (cost=0.00..0.00 rows=0 width=0)
+      ->  Seq Scan on pg_merge_job_0005  (cost=0.00..0.00 rows=0 width=0)
+
+This explains how Citus is combining the results of each task to create the final result. If you see an expensive query plan in this area it means you should apply :ref:`distributed_query_performance_tuning` to improve it.
+
+Also different workers (or different shards on the same worker) may choose different query plans, either because some workers have more hardware resources than others or because the data is not distributed evenly across shards. To see the plan for all workers rather than just one set the GUC variable citus.explain_all_tasks to 1.
+
+::
+
+  SET citus.explain_all_tasks = 1;
+
+  explain SELECT comment FROM wikipedia_changes c, wikipedia_editors e
+          WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
+
+  Distributed Query into pg_merge_job_0003
+    Executor: Real-Time
+    Task Count: 16
+    Tasks Shown: All
+    ->  Task
+      Node: host=localhost port=9701 dbname=j
+      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
+        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
+          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
+          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
+            Index Cond: (editor = c.editor)
+            Filter: (bot IS TRUE)
+    ->  Task
+      Node: host=localhost port=9702 dbname=j
+      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
+        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
+          ->  Seq Scan on wikipedia_changes_102025 c  (cost=0.00..13.90 rows=390 width=64)
+          ->  Index Scan using wikipedia_editors_editor_key_102009 on wikipedia_editors_102009 e  (cost=0.15..0.29 rows=1 width=32)
+            Index Cond: (editor = c.editor)
+            Filter: (bot IS TRUE)
+    ->  Task
+      Node: host=localhost port=9701 dbname=j
+      ->  Limit  (cost=1.13..2.36 rows=10 width=74)
+        ->  Hash Join  (cost=1.13..8.01 rows=56 width=74)
+          Hash Cond: (c.editor = e.editor)
+          ->  Seq Scan on wikipedia_changes_102036 c  (cost=0.00..5.69 rows=169 width=83)
+          ->  Hash  (cost=1.09..1.09 rows=3 width=12)
+            ->  Seq Scan on wikipedia_editors_102020 e  (cost=0.00..1.09 rows=3 width=12)
+              Filter: (bot IS TRUE)
+    --
+    -- ... repeats for all 16 tasks
+    --     alternating between workers one and two
+    --     (running in this case locally on ports 9701, 9702)
+    --
+  Master Query
+    ->  Limit  (cost=0.00..0.00 rows=0 width=0)
+      ->  Seq Scan on pg_merge_job_0003  (cost=0.00..0.00 rows=0 width=0)
+
+This case illustrates that not every shard uses the same query plan. One of the shards on worker one uses a hash join while another uses a nested loop.
+
+Finally note that Citus supports EXPLAIN ANALYZE to get more information about the time it takes the query to run on each shard.
+
+::
+
+  SET citus.explain_all_tasks = 0;
+
+  explain analyze SELECT comment FROM wikipedia_changes c, wikipedia_editors e
+                  WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
+
+  Distributed Query into pg_merge_job_0004
+    Executor: Real-Time
+    Task Count: 16
+    Tasks Shown: One of 16
+    ->  Task
+      Node: host=localhost port=9701 dbname=j
+      ->  Limit  (cost=0.15..6.87 rows=10 width=32) (actual time=0.587..0.628 rows=1 loops=1)
+        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32) (actual time=0.584..0.625 rows=1 loops=1)
+          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64) (actual time=0.021..0.023 rows=16 loops=1)
+          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32) (actual time=0.008..0.008 rows=0 loops=16)
+            Index Cond: (editor = c.editor)
+            Filter: (bot IS TRUE)
+            Rows Removed by Filter: 1
+          Planning time: 0.557 ms
+          Execution time: 0.713 ms
+  Master Query
+    ->  Limit  (cost=0.00..0.00 rows=0 width=0) (actual time=0.003..0.005 rows=10 loops=1)
+      ->  Seq Scan on pg_merge_job_0004  (cost=0.00..0.00 rows=0 width=0) (actual time=0.002..0.003 rows=10 loops=1)
+  Planning time: 8.756 ms
+  Execution time: 0.015 ms
+
+Notice above that tasks on the workers and the master all report their planning and execution time.
+
+.. note::
+
+  * When citus.explain_all_tasks is on, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE.
+  * A remote EXPLAIN may error out when explaining a broadcast join while the shards for the small table have not yet been fetched. An error message is displayed advising to run the query first.
+
+
 .. _postgresql_tuning:
 
 PostgreSQL tuning

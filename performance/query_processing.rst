@@ -27,44 +27,6 @@ Next, the planner breaks the query into two parts - the master query which runs 
 
 The planning process for key-value lookups on the distribution column or modification queries is slightly different as they hit exactly one shard. Once the planner receives an incoming query, it needs to decide the correct shard to which the query should be routed. To do this, it extracts the distribution column in the incoming row and looks up the metadata to determine the right shard for the query. Then, the planner rewrites the SQL of that command to reference the shard table instead of the original table. This re-written plan is then passed to the distributed executor.
 
-.. _examining_plan:
-
-Examining Distributed Query Plan
-##################################
-
-Citus extends the SQL EXPLAIN command to provide information about simple distributed queries, meaning queries that do not contain re-partition jobs. The EXPLAIN output consists of two parts: the distributed query and the master query.
-
-Here is an example of explaining the plan for a query in the :ref:`hash partitioning tutorial <tut_hash>`:
-
-::
-
-  explain SELECT comment FROM wikipedia_changes c, wikipedia_editors e
-          WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
-
-  Distributed Query into pg_merge_job_0005
-    Executor: Real-Time
-    Task Count: 16
-    Tasks Shown: One of 16
-    ->  Task
-      Node: host=localhost port=9701 dbname=j
-      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
-        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
-          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
-          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
-            Index Cond: (editor = c.editor)
-            Filter: (bot IS TRUE)
-  Master Query
-    ->  Limit  (cost=0.00..0.00 rows=0 width=0)
-      ->  Seq Scan on pg_merge_job_0005  (cost=0.00..0.00 rows=0 width=0)
-  (15 rows)
-
-Every shard corresponds to a task. From the above you can see in this case the master query iterates over the merged results of each task. By default one worker task is selected arbitrarily for display. If all workers have a similar hardware configuration and all shards are of similar size then the plan for this task will be representative of the others. If however you want to see the plan of every task individually, set the GUC variable citus.explain_all_tasks to 1.
-
-.. note::
-
-  * A remote EXPLAIN may error out when explaining a broadcast join while the shards for the small table have not yet been fetched. An error message is displayed advising to run the query first.
-  * When citus.explain_all_tasks is on, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE.
-
 .. _distributed_query_executor:
 
 Distributed Query Executor
