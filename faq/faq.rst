@@ -4,6 +4,11 @@ Frequently Asked Questions
 ##########################
 
 
+Can I create primary keys on distributed tables?
+------------------------------------------------
+
+Currently Citus imposes primary key constraint only if the distribution column is a part of the primary key. This assures that the constraint needs to be checked only on one shard to ensure uniqueness.
+
 How do I add nodes to an existing Citus cluster?
 ------------------------------------------------
 
@@ -26,11 +31,6 @@ How does Citus handle failover of the master node?
 --------------------------------------------------
 
 As the Citus master node is similar to a standard PostgreSQL server, regular PostgreSQL synchronous replication and failover can be used to provide higher availability of the master node. Many of our customers use synchronous replication in this way to add resilience against master node failure. You can find more information about handling :ref:`master_node_failures`.
-
-Can I create primary keys on distributed tables?
-------------------------------------------------
-
-Currently Citus imposes primary key constraint only if the distribution column is a part of the primary key. This assures that the constraint needs to be checked only on one shard to ensure uniqueness.
 
 How do I ingest the results of a query into a distributed table?
 ----------------------------------------------------------------
