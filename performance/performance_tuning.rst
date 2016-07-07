@@ -25,17 +25,20 @@ For distribution methods, Citus supports both append and hash distribution. Appe
 
 Hash based distribution is more suited to cases where users want to do real-time inserts along with analytics on their data or want to distribute by a non-ordered column (eg. user id). This data model is relevant for real-time analytics use cases; for example, actions in a mobile application, user website events, or social media analytics. This distribution method allows users to perform co-located joins and efficiently run queries involving equality based filters on the distribution column.
 
-Once you choose the right distribution method and column, you can then proceed
-to the next step, which is tuning single node performance.
+Once you choose the right distribution method and column, you can then proceed to the next step, which is tuning worker node performance.
 
-.. _examining_plan:
+.. _postgresql_tuning:
 
-Examining Distributed Query Plan
-##################################
+PostgreSQL tuning
+#################
 
-Citus extends the SQL EXPLAIN command to provide information about simple distributed queries, meaning queries that do not contain re-partition jobs. The EXPLAIN output consists of two parts: the distributed query and the master query. These parts provide information to help tune Citus and the underlying PostgreSQL database.
+The Citus master partitions an incoming query into fragment queries, and sends them to the workers for parallel processing. The workers are just extended PostgreSQL servers and they apply PostgreSQL's standard planning and execution logic for these queries. So, the first step in tuning Citus is tuning the PostgreSQL configuration parameters on the workers for high performance.
 
-Here is an example of explaining the plan for a query in the :ref:`hash partitioning tutorial <tut_hash>`:
+While adjusting parameters to tune the workers we want fast iterations. To begin the tuning process, create a Citus cluster and load a small portion of your data in it. This will keep operations fast. Once the data is loaded, use the EXPLAIN command on the master node to inspect performance. 
+
+Citus extends the SQL EXPLAIN command to provide information about simple distributed queries, meaning queries that do not contain re-partition jobs. The EXPLAIN output shows how each worker is processing the query and also a little about how the master node is combining all the results.
+
+Here is an example of explaining the plan for a particular query in the :ref:`hash partitioning tutorial <tut_hash>`:
 
 ::
 
@@ -59,42 +62,56 @@ Here is an example of explaining the plan for a query in the :ref:`hash partitio
       ->  Seq Scan on pg_merge_job_0005  (cost=0.00..0.00 rows=0 width=0)
   (15 rows)
 
-Let's examine it piece by piece. The first thing it reveals is the :ref:`distributed_query_executor` type being used and the number of shards (sixteen) that the query is referencing.
+This tells you several things. To begin with there are sixteen shards, and we're using the real-time Citus executor setting:
 
 ::
 
-  Executor: Real-Time
-  Task Count: 16
-  Tasks Shown: One of 16
+  Distributed Query into pg_merge_job_0005
+    Executor: Real-Time
+    Task Count: 16
 
-Next explain goes into each shard of each worker and finds the plan used internally there by PostgreSQL. By default it shows the output from only one shard. In the case of this example it was running on a worker on localhost, port 9701.
-
-::
-
-  ->  Task
-    Node: host=localhost port=9701 dbname=j
-    ->  Limit  (cost=0.15..6.87 rows=10 width=32)
-      ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
-        ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
-        ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
-          Index Cond: (editor = c.editor)
-          Filter: (bot IS TRUE)
-
-The above is standard PostgreSQL explain output. You can use it for :ref:`postgresql_tuning` on the workers. After the output of distributed tasks there is a section about Citus' behavior on the master node.
+Next it picks one of the workers to and shows you more about how the query behaves there. It indicates the host, port, and database so you can connect to the worker directly if desired:
 
 ::
 
-  Master Query
-    ->  Limit  (cost=0.00..0.00 rows=0 width=0)
-      ->  Seq Scan on pg_merge_job_0005  (cost=0.00..0.00 rows=0 width=0)
+    Tasks Shown: One of 16
+    ->  Task
+      Node: host=localhost port=9701 dbname=j
 
-This explains how Citus is combining the results of each task to create the final result. If you see an expensive query plan in this area it means you should apply :ref:`distributed_query_performance_tuning` to improve it.
+Distributed EXPLAIN next shows the results of running a normal PostgreSQL EXPLAIN on that worker for the fragment query:
 
-Also different workers (or different shards on the same worker) may choose different query plans, either because some workers have more hardware resources than others or because the data is not distributed evenly across shards. To see the plan for all workers rather than just one set the GUC variable citus.explain_all_tasks to 1.
+::
+
+      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
+        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
+          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
+          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
+            Index Cond: (editor = c.editor)
+            Filter: (bot IS TRUE)
+
+At this stage you can connect to the worker to use standard PostgreSQL tuning to optimize query performance. As you make changes try re-running EXPLAIN from the master.
+
+The first set of such optimizations relates to configuration settings. PostgreSQL by default comes with conservative resource settings; and among these settings, shared_buffers and work_mem are probably the most important ones in optimizing read performance. We discuss these parameters in brief below. Apart from them, several other configuration settings impact query performance. These settings are covered in more detail in the `PostgreSQL manual <http://www.postgresql.org/docs/9.5/static/runtime-config.html>`_ and are also discussed in the `PostgreSQL 9.0 High Performance book <http://www.amazon.com/PostgreSQL-High-Performance-Gregory-Smith/dp/184951030X>`_.
+
+shared_buffers defines the amount of memory allocated to the database for caching data, and defaults to 128MB. If you have a worker node with 1GB or more RAM, a reasonable starting value for shared_buffers is 1/4 of the memory in your system. There are some workloads where even larger settings for shared_buffers are effective, but given the way PostgreSQL also relies on the operating system cache, it's unlikely you'll find using more than 25% of RAM to work better than a smaller amount.
+
+If you do a lot of complex sorts, then increasing work_mem allows PostgreSQL to do larger in-memory sorts which will be faster than disk-based equivalents. If you see lot of disk activity on your worker node inspite of having a decent amount of memory, then increasing work_mem to a higher value can be useful. This will help PostgreSQL in choosing more efficient query plans and allow for greater amount of operations to occur in memory.
+
+Other than the above configuration settings, the PostgreSQL query planner relies on statistical information about the contents of tables to generate good plans. These statistics are gathered when ANALYZE is run, which is enabled by default. You can learn more about the PostgreSQL planner and the ANALYZE command in greater detail in the `PostgreSQL documentation <http://www.postgresql.org/docs/9.5/static/sql-analyze.html>`_.
+
+Lastly, you can create indexes on your tables to enhance database performance. Indexes allow the database to find and retrieve specific rows much faster than it could do without an index. To choose which indexes give the best performance, you can run the query with `EXPLAIN <http://www.postgresql.org/docs/9.5/static/sql-explain.html>`_ to view query plans and optimize the slower parts of the query. After an index is created, the system has to keep it synchronized with the table which adds overhead to data manipulation operations. Therefore, indexes that are seldom or never used in queries should be removed.
+
+For write performance, you can use general PostgreSQL configuration tuning to increase INSERT rates. We commonly recommend increasing checkpoint_timeout and max_wal_size settings. Also, depending on the reliability requirements of your application, you can choose to change fsync or synchronous_commit values.
+
+Once you have tuned a worker to your satisfaction you will have to manually apply those changes to the other workers as well. To verify that they are all behaving properly, set this configuration variable on the master:
 
 ::
 
   SET citus.explain_all_tasks = 1;
+
+This will cause EXPLAIN to show the the query plan for all tasks, not just one.
+
+::
 
   explain SELECT comment FROM wikipedia_changes c, wikipedia_editors e
           WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
@@ -137,73 +154,16 @@ Also different workers (or different shards on the same worker) may choose diffe
     ->  Limit  (cost=0.00..0.00 rows=0 width=0)
       ->  Seq Scan on pg_merge_job_0003  (cost=0.00..0.00 rows=0 width=0)
 
-This case illustrates that not every shard uses the same query plan. One of the shards on worker one uses a hash join while another uses a nested loop.
+Differences in worker execution can be caused by tuning configuration differences, uneven data distribution across shards, or hardware differences between the machines.
 
-Finally note that Citus supports EXPLAIN ANALYZE to get more information about the time it takes the query to run on each shard.
-
-::
-
-  SET citus.explain_all_tasks = 0;
-
-  explain analyze SELECT comment FROM wikipedia_changes c, wikipedia_editors e
-                  WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
-
-  Distributed Query into pg_merge_job_0004
-    Executor: Real-Time
-    Task Count: 16
-    Tasks Shown: One of 16
-    ->  Task
-      Node: host=localhost port=9701 dbname=j
-      ->  Limit  (cost=0.15..6.87 rows=10 width=32) (actual time=0.587..0.628 rows=1 loops=1)
-        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32) (actual time=0.584..0.625 rows=1 loops=1)
-          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64) (actual time=0.021..0.023 rows=16 loops=1)
-          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32) (actual time=0.008..0.008 rows=0 loops=16)
-            Index Cond: (editor = c.editor)
-            Filter: (bot IS TRUE)
-            Rows Removed by Filter: 1
-          Planning time: 0.557 ms
-          Execution time: 0.713 ms
-  Master Query
-    ->  Limit  (cost=0.00..0.00 rows=0 width=0) (actual time=0.003..0.005 rows=10 loops=1)
-      ->  Seq Scan on pg_merge_job_0004  (cost=0.00..0.00 rows=0 width=0) (actual time=0.002..0.003 rows=10 loops=1)
-  Planning time: 8.756 ms
-  Execution time: 0.015 ms
-
-Notice above that tasks on the workers and the master all report their planning and execution time.
-
-.. note::
-
-  * When citus.explain_all_tasks is on, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE.
-  * A remote EXPLAIN may error out when explaining a broadcast join while the shards for the small table have not yet been fetched. An error message is displayed advising to run the query first.
-
-
-.. _postgresql_tuning:
-
-PostgreSQL tuning
-#################
-
-The Citus master partitions an incoming query into fragment queries, and sends them to the workers for parallel processing. The workers are just extended PostgreSQL servers and they apply PostgreSQL's standard planning and execution logic for these queries. So, the first step in tuning Citus is tuning the PostgreSQL configuration parameters on the workers for high performance.
-
-This step involves loading a small portion of the data into regular PostgreSQL tables on the workers. These tables would be representative of shards on which your queries would run once the full data has been distributed. Then, you can run the fragment queries on the individual shards and use standard PostgreSQL tuning to optimize query performance.
-
-The first set of such optimizations relates to configuration settings. PostgreSQL by default comes with conservative resource settings; and among these settings, shared_buffers and work_mem are probably the most important ones in optimizing read performance. We discuss these parameters in brief below. Apart from them, several other configuration settings impact query performance. These settings are covered in more detail in the `PostgreSQL manual <http://www.postgresql.org/docs/9.5/static/runtime-config.html>`_ and are also discussed in the `PostgreSQL 9.0 High Performance book <http://www.amazon.com/PostgreSQL-High-Performance-Gregory-Smith/dp/184951030X>`_.
-
-shared_buffers defines the amount of memory allocated to the database for caching data, and defaults to 128MB. If you have a worker node with 1GB or more RAM, a reasonable starting value for shared_buffers is 1/4 of the memory in your system. There are some workloads where even larger settings for shared_buffers are effective, but given the way PostgreSQL also relies on the operating system cache, it's unlikely you'll find using more than 25% of RAM to work better than a smaller amount.
-
-If you do a lot of complex sorts, then increasing work_mem allows PostgreSQL to do larger in-memory sorts which will be faster than disk-based equivalents. If you see lot of disk activity on your worker node inspite of having a decent amount of memory, then increasing work_mem to a higher value can be useful. This will help PostgreSQL in choosing more efficient query plans and allow for greater amount of operations to occur in memory.
-
-Other than the above configuration settings, the PostgreSQL query planner relies on statistical information about the contents of tables to generate good plans. These statistics are gathered when ANALYZE is run, which is enabled by default. You can learn more about the PostgreSQL planner and the ANALYZE command in greater detail in the `PostgreSQL documentation <http://www.postgresql.org/docs/9.5/static/sql-analyze.html>`_.
-
-Lastly, you can create indexes on your tables to enhance database performance. Indexes allow the database to find and retrieve specific rows much faster than it could do without an index. To choose which indexes give the best performance, you can run the query with `EXPLAIN <http://www.postgresql.org/docs/9.5/static/sql-explain.html>`_ to view query plans and optimize the slower parts of the query. After an index is created, the system has to keep it synchronized with the table which adds overhead to data manipulation operations. Therefore, indexes that are seldom or never used in queries should be removed.
-
-For write performance, you can use general PostgreSQL configuration tuning to increase INSERT rates. We commonly recommend increasing checkpoint_timeout and max_wal_size settings. Also, depending on the reliability requirements of your application, you can choose to change fsync or synchronous_commit values.
+To get more information about the time it takes the query to run on each shard you can use EXPLAIN ANALYZE. Note that when citus.explain_all_tasks is on, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE. Also a remote EXPLAIN may error out when explaining a broadcast join while the shards for the small table have not yet been fetched. An error message is displayed advising to run the query first.
 
 .. _scaling_out_performance:
 
 Scaling Out Performance
 #######################
 
-Once you have achieved the desired performance for a single shard, you can set similar configuration parameters on all your workers. As Citus runs all the fragment queries in parallel across the worker nodes, users can scale out the performance of their queries to be the cumulative of the computing power of all of the CPU cores in the cluster assuming that the data fits in memory.
+As mentioned, once you have achieved the desired performance for a single shard you can set similar configuration parameters on all your workers. As Citus runs all the fragment queries in parallel across the worker nodes, users can scale out the performance of their queries to be the cumulative of the computing power of all of the CPU cores in the cluster assuming that the data fits in memory.
 
 Users should try to fit as much of their working set in memory as possible to get best performance with Citus. If fitting the entire working set in memory is not feasible, we recommend using SSDs over HDDs as a best practice. This is because HDDs are able to show decent performance when you have sequential reads over contiguous blocks of data, but have significantly lower random read / write performance. In cases where you have a high number of concurrent queries doing random reads and writes, using SSDs can improve query performance by several times as compared to HDDs. Also, if your queries are highly compute intensive, it might be beneficial to choose machines with more powerful CPUs.
 
