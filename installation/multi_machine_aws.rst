@@ -14,13 +14,13 @@ Citus Cloud is a fully managed "Citus-as-a-Service" built on top of Amazon Web S
 
 .. raw:: html
 
-  <div class="wy-btn-group wy-text-center">
+  <p class="wy-text-center">
     <a href="https://www.citusdata.com/cloud" class="btn btn-neutral"
        onclick="trackOutboundLink('https://www.citusdata.com/cloud'); return false;">
       Try Citus Cloud
       <span class="fa fa-cloud"></span>
     </a>
-  </div>
+  </p>
 
 .. _multi_machine_manual:
 
