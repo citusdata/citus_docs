@@ -48,18 +48,19 @@ topics.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Administration
-
-   admin_guide/cluster_management.rst
-   admin_guide/upgrading_citus.rst
-   admin_guide/transitioning_from_postgresql_to_citus.rst
-
-.. toctree::
    :caption: Cloud
 
    cloud/index.rst
    cloud/features.rst
    cloud/support.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Administration
+
+   admin_guide/cluster_management.rst
+   admin_guide/upgrading_citus.rst
+   admin_guide/transitioning_from_postgresql_to_citus.rst
 
 .. toctree::
    :caption: Reference

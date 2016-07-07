@@ -1,7 +1,14 @@
-Citus Cloud
-===========
+Citus Overview
+==============
 
 Citus Cloud is a fully managed hosted version of Citus Enterprise edition on top of AWS. Citus Cloud comes with the benefit of Citus allowing you to easily scale out your memory and processing power, without having to worry about keeping it up and running. 
+
+.. toctree::
+  :maxdepth: 2
+
+  index.rst
+  features.rst
+  support.rst
 
 Provisioning
 ############
@@ -30,4 +37,6 @@ Each custom plans allows you to configure the size of your primary instance and 
 Sizing your Citus Cluster
 -------------------------
 
-All nodes within a Citus cluster come with 512 GB of storage. 
+All nodes within a Citus cluster come with 512 GB of storage. The number of nodes and size of the nodes you need will vary based on your data volume and performance requirements. We encourange you to focus on the number of logical shards and right distribution key first before focusing on overall size of your cluster. 
+
+For the number of right logical shards we recommend setting it to the number of physical cores you expect to grow to at some point. A good estimate is 4-8x the number of cores you're currently using within your cluster. A good starting point can often be around 128 logical shards when you create your distributed tables.
