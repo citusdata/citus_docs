@@ -91,9 +91,6 @@ This example creates an empty shard for the github_events table. The shard id of
                     102089
     (1 row)
 
-Table and Shard DML
--------------------
-
 .. _master_append_table_to_shard:
 
 master_append_table_to_shard
@@ -168,34 +165,6 @@ The first example deletes all the shards for the github_events table since no de
     -----------------------------
                                3
     (1 row)
-
-master_modify_multiple_shards
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-The master_modify_multiple_shards() function is used to run a query against all shards which match the criteria specified by the query. As the function uses shard metadata to decide whether or not a shard needs to be updated, it requires the WHERE clause in the query to be on the distribution column. Depending on the value of citus.multi_shard_commit_protocol, the commit can be done in one- or two-phases.
-
-Limitations:
-
-* It cannot be called inside a transaction block
-* It must be called with simple operator expressions only
-
-Arguments
-**********
-
-**modify_query:** A simple DELETE or UPDATE query as a string.
-
-Return Value
-************
-
-N/A
-
-Example
-********
-
-::
-
-  SELECT master_modify_multiple_shards(
-    'DELETE FROM customer_delete_protocol WHERE c_custkey > 500 AND c_custkey < 500');
 
 Metadata / Configuration Information
 ------------------------------------------------------------------------
