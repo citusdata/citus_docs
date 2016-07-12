@@ -24,12 +24,12 @@ If you do not need high availability or want a different number or size of nodes
 Custom plans
 ------------
 
-Each custom plans allows you to configure the size of your primary instance and whether it has HA or not, the number of distributed nodes, size of them, and whether they have HA or not. With longer term commitements discounts are available on custom plans which are already baked into some of the preconfigured plans. 
+Each custom plan allows you to configure the size of your primary instance, the number and size of distributed nodes, and whether the primary instance and nodes have HA enabled. Discounts are available for longer-term commitments on custom plans which make them comparable in price to the preconfigured plans.
 
 
 Sizing your Citus Cluster
 -------------------------
 
-All nodes within a Citus cluster come with 512 GB of storage. The number of nodes and size of the nodes you need will vary based on your data volume and performance requirements. We encourange you to focus on the number of logical shards and right distribution key first before focusing on overall size of your cluster. 
+All nodes within a Citus cluster come with 512 GB of storage. The number of nodes and size of the nodes you need will vary based on your data volume and performance requirements. We encourage you to focus on the number of logical shards and right distribution key first before focusing on overall size of your cluster. 
 
-For the number of right logical shards we recommend setting it to the number of physical cores you expect to grow to at some point. A good estimate is 4-8x the number of cores you're currently using within your cluster. A good starting point can often be around 128 logical shards when you create your distributed tables.
+Citus will use only as many physical cores to process a query as there are logical shards in your cluster. Thus we recommend creating sufficient shards to give your cluster room to grow. A good estimate is 4-8x the number of cores you currently use in your cluster. For instance choosing 128 logical shards is quite reasonable when you create your distributed tables.
