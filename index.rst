@@ -48,6 +48,14 @@ topics.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Cloud
+
+   cloud/index.rst
+   cloud/features.rst
+   cloud/support.rst
+
+.. toctree::
+   :maxdepth: 1
    :caption: Administration
 
    admin_guide/cluster_management.rst
