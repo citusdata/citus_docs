@@ -34,11 +34,11 @@ PostgreSQL tuning
 
 The Citus master partitions an incoming query into fragment queries, and sends them to the workers for parallel processing. The workers are just extended PostgreSQL servers and they apply PostgreSQL's standard planning and execution logic for these queries. So, the first step in tuning Citus is tuning the PostgreSQL configuration parameters on the workers for high performance.
 
-While adjusting parameters to tune the workers we want fast iterations. To begin the tuning process, create a Citus cluster and load a small portion of your data in it. This will keep operations fast. Once the data is loaded, use the EXPLAIN command on the master node to inspect performance. 
+Tuning the parameters is a matter of experimentation and often takes several attempts to achieve acceptable performance. Thus it's best to load only a small portion of your data when tuning to make each iteration go faster.
 
-Citus extends the SQL EXPLAIN command to provide information about simple distributed queries, meaning queries that do not contain re-partition jobs. The EXPLAIN output shows how each worker is processing the query and also a little about how the master node is combining all the results.
+To begin the tuning process create a Citus cluster and load data in it. From the master node, run the EXPLAIN command on representative queries to inspect performance. Citus extends the EXPLAIN command to provide information about distributed query execution. The EXPLAIN output shows how each worker processes the query and also a little about how the master node combines their results.
 
-Here is an example of explaining the plan for a particular query in the :ref:`hash partitioning tutorial <tut_hash>`:
+Here is an example of explaining the plan for a particular query in :ref:`one of <tut_hash>` our example tutorials.
 
 ::
 
@@ -50,7 +50,7 @@ Here is an example of explaining the plan for a particular query in the :ref:`ha
     Task Count: 16
     Tasks Shown: One of 16
     ->  Task
-      Node: host=localhost port=9701 dbname=j
+      Node: host=localhost port=9701 dbname=postgres
       ->  Limit  (cost=0.15..6.87 rows=10 width=32)
         ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
           ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
@@ -76,7 +76,7 @@ Next it picks one of the workers to and shows you more about how the query behav
 
     Tasks Shown: One of 16
     ->  Task
-      Node: host=localhost port=9701 dbname=j
+      Node: host=localhost port=9701 dbname=postgres
 
 Distributed EXPLAIN next shows the results of running a normal PostgreSQL EXPLAIN on that worker for the fragment query:
 
@@ -89,7 +89,8 @@ Distributed EXPLAIN next shows the results of running a normal PostgreSQL EXPLAI
             Index Cond: (editor = c.editor)
             Filter: (bot IS TRUE)
 
-At this stage you can connect to the worker to use standard PostgreSQL tuning to optimize query performance. As you make changes try re-running EXPLAIN from the master.
+
+You can now connect to the worker at 'localhost', port '9701' and tune query performance for the shard wikipedia_changes_102024 using standard PostgreSQL techniques. As you make changes run EXPLAIN again from the master or right on the worker.
 
 The first set of such optimizations relates to configuration settings. PostgreSQL by default comes with conservative resource settings; and among these settings, shared_buffers and work_mem are probably the most important ones in optimizing read performance. We discuss these parameters in brief below. Apart from them, several other configuration settings impact query performance. These settings are covered in more detail in the `PostgreSQL manual <http://www.postgresql.org/docs/9.5/static/runtime-config.html>`_ and are also discussed in the `PostgreSQL 9.0 High Performance book <http://www.amazon.com/PostgreSQL-High-Performance-Gregory-Smith/dp/184951030X>`_.
 
@@ -121,7 +122,7 @@ This will cause EXPLAIN to show the the query plan for all tasks, not just one.
     Task Count: 16
     Tasks Shown: All
     ->  Task
-      Node: host=localhost port=9701 dbname=j
+      Node: host=localhost port=9701 dbname=postgres
       ->  Limit  (cost=0.15..6.87 rows=10 width=32)
         ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
           ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
@@ -129,7 +130,7 @@ This will cause EXPLAIN to show the the query plan for all tasks, not just one.
             Index Cond: (editor = c.editor)
             Filter: (bot IS TRUE)
     ->  Task
-      Node: host=localhost port=9702 dbname=j
+      Node: host=localhost port=9702 dbname=postgres
       ->  Limit  (cost=0.15..6.87 rows=10 width=32)
         ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
           ->  Seq Scan on wikipedia_changes_102025 c  (cost=0.00..13.90 rows=390 width=64)
@@ -137,7 +138,7 @@ This will cause EXPLAIN to show the the query plan for all tasks, not just one.
             Index Cond: (editor = c.editor)
             Filter: (bot IS TRUE)
     ->  Task
-      Node: host=localhost port=9701 dbname=j
+      Node: host=localhost port=9701 dbname=postgres
       ->  Limit  (cost=1.13..2.36 rows=10 width=74)
         ->  Hash Join  (cost=1.13..8.01 rows=56 width=74)
           Hash Cond: (c.editor = e.editor)
@@ -158,7 +159,7 @@ Differences in worker execution can be caused by tuning configuration difference
 
 .. note::
 
-  Note that when citus.explain_all_tasks is on, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE. Also a remote EXPLAIN may error out when explaining a broadcast join while the shards for the small table have not yet been fetched. An error message is displayed advising to run the query first.
+  Note that when citus.explain_all_tasks is enabled, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE. Also a remote EXPLAIN may error out when explaining a broadcast join while the shards for the small table have not yet been fetched. An error message is displayed advising to run the query first.
 
 .. _scaling_out_performance:
 
