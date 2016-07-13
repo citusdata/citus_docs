@@ -122,12 +122,14 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The methods described above enable you to achieve high bulk load rates which are sufficient for most use cases. If you require even higher data load rates, you can use the functions described above in several ways and write scripts to better control sharding and data loading. For more information, you can consult the :ref:`scaling_data_ingestion` section of our documentation.
 
-Expiring Data
+Dropping Shards
 ---------------
 
 In append distribution, users typically want to track data only for the last few months / years. In such cases, the shards that are no longer needed still occupy disk space. To address this, Citus provides a user defined function master_apply_delete_command() to delete old shards. The function takes a `DELETE <http://www.postgresql.org/docs/9.5/static/sql-delete.html>`_ command as input and deletes all the shards that match the delete criteria with their metadata.
 
 The function uses shard metadata to decide whether or not a shard needs to be deleted, so it requires the WHERE clause in the DELETE statement to be on the distribution column. If no condition is specified, then all shards are selected for deletion. The UDF then connects to the worker nodes and issues DROP commands for all the shards which need to be deleted. If a drop query for a particular shard replica fails, then that replica is marked as TO DELETE. The shard replicas which are marked as TO DELETE are not considered for future queries and can be cleaned up later.
+
+Please note that this function only deletes complete shards and not individual rows from shards. If your use case requires deletion of individual rows in real-time, please consider using the hash distribution method.
 
 The example below deletes those shards from the github_events table which have all rows with created_at <= '2014-01-01 00:00:00'. Note that the table is distributed on the created_at column.
 
@@ -139,19 +141,7 @@ The example below deletes those shards from the github_events table which have a
                                3
     (1 row)
 
-To learn more about the function, its arguments and its usage, please visit the :ref:`user_defined_functions` section of our documentation.  Please note that this function only deletes complete shards and not individual rows from shards. If your use case requires deletion of individual rows in real-time, see the section below about deleting data.
-
-Deleting Data
----------------
-
-The most flexible way to modify or delete rows throughout a Citus cluster is the master_modify_multiple_shards command. It takes a regular SQL statement as argument and runs it on all workers:
-
-::
-
-  SELECT master_modify_multiple_shards(
-    'DELETE FROM github_events WHERE created_at <= ''2014-01-01 00:00:00''');
-
-The function uses a configurable commit protocol to update or delete data safely across multiple shards. Unlike master_apply_delete_command, it works at the row- rather than shard-level to modify or delete all rows that match the condition in the where clause. It deletes rows regardless of whether they comprise an entire shard. To learn more about the function, its arguments and its usage, please visit the :ref:`user_defined_functions` section of our documentation.
+To learn more about the function, its arguments and its usage, please visit the :ref:`user_defined_functions` section of our documentation.
 
 Dropping Tables
 ---------------
