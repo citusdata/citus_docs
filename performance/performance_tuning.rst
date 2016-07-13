@@ -154,9 +154,11 @@ This will cause EXPLAIN to show the the query plan for all tasks, not just one.
     ->  Limit  (cost=0.00..0.00 rows=0 width=0)
       ->  Seq Scan on pg_merge_job_0003  (cost=0.00..0.00 rows=0 width=0)
 
-Differences in worker execution can be caused by tuning configuration differences, uneven data distribution across shards, or hardware differences between the machines.
+Differences in worker execution can be caused by tuning configuration differences, uneven data distribution across shards, or hardware differences between the machines. To get more information about the time it takes the query to run on each shard you can use EXPLAIN ANALYZE.
 
-To get more information about the time it takes the query to run on each shard you can use EXPLAIN ANALYZE. Note that when citus.explain_all_tasks is on, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE. Also a remote EXPLAIN may error out when explaining a broadcast join while the shards for the small table have not yet been fetched. An error message is displayed advising to run the query first.
+.. note::
+
+  Note that when citus.explain_all_tasks is on, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE. Also a remote EXPLAIN may error out when explaining a broadcast join while the shards for the small table have not yet been fetched. An error message is displayed advising to run the query first.
 
 .. _scaling_out_performance:
 
