@@ -1,8 +1,8 @@
 .. _tut_hash:
 .. highlight:: bash
 
-Hash-Distributed Data
-=====================
+Sharding Data
+=============
 
 In this tutorial we'll look at a stream of live wikipedia edits. Wikimedia is
 kind enough to publish all changes happening across all their sites in real time;
@@ -143,12 +143,13 @@ Usually, around a fifth of all non-bot edits are made from unregistered
 editors. The real percentage is a lot higher, since "bot" is a user-settable
 flag which many bots neglect to set.
 
-That's all for now. This script showed a data layout which many Citus users
-choose. One table stored a stream of events while another table stored some
+This script showed a data layout which many Citus users choose. One
+table stored a stream of events while another table stored some
 aggregations of those events and made queries over them quick.
 
-We hope you enjoyed working through our tutorials. Once you're ready to stop
-the cluster run these commands:
+That's all for now. To learn more about Citus continue to the :doc:`next
+tutorial <./tut-timeseries>`, or, if you're done with the cluster, run this to
+stop the worker and master:
 
 ::
 

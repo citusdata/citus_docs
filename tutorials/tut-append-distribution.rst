@@ -1,7 +1,7 @@
-.. _tut_real_time:
+.. _tut_timeseries:
 .. highlight:: bash
 
-Append-Distributed Data
+Working with Timeseries
 #######################
 
 In this tutorial we'll continue looking at wikipedia edits. The previous
@@ -143,9 +143,8 @@ Or how about combining the two? What are the top contributors, and how big are t
   WHERE new_length IS NOT NULL AND old_length IS NOT NULL
   GROUP BY 2 ORDER BY 1 DESC LIMIT 20;
 
-That's all for now. To learn more about Citus continue to the :doc:`next
-tutorial <./tut-user-data>`, or, if you're done with the cluster, run this to
-stop the worker and master:
+We hope you enjoyed working through our tutorials. Once you're ready to stop
+the cluster run these commands:
 
 ::
 

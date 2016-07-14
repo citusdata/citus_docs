@@ -82,5 +82,5 @@ load the user-facing side of Citus (such as the functions you'll soon call):
 **4. Ready for the tutorials!**
 
 Your cluster is running and eagerly awaiting data. Proceed to the 
-:ref:`Real Time Aggregation <tut_real_time>` tutorial to begin learning
+:ref:`Real Time Aggregation <tut_timeseries>` tutorial to begin learning
 how to use Citus.
