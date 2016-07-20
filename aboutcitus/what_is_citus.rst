@@ -10,7 +10,7 @@ Citus extends the underlying database rather than forking it, which gives develo
 When to Use Citus
 -----------------
 
-Example use cases:
+Citus provides users real-time responsiveness over large datasets, most commonly seen in rapidly growing event systems or with time series data. Example use cases include:
 
 * Analytic dashboards with subsecond response times
 * Exploratory queries on unfolding events
