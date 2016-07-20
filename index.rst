@@ -30,6 +30,15 @@ topics.
    installation/production.rst
 
 .. toctree::
+   :caption: Reference Architecture
+
+   ref-arch/introduction.rst
+   ref-arch/data-ingest.rst
+   ref-arch/roll-ups.rst
+   ref-arch/approx-dist-count.rst
+   ref-arch/jsonb.rst
+
+.. toctree::
    :maxdepth: 1
    :caption: Distributed Tables
 
