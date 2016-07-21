@@ -19,8 +19,8 @@ topics.
    :caption: Tutorials
 
    tutorials/tut-cluster.rst
-   tutorials/tut-real-time.rst
-   tutorials/tut-user-data.rst
+   tutorials/tut-hash-distribution.rst
+   tutorials/tut-append-distribution.rst
 
 .. toctree::
    :caption: Installation
@@ -34,8 +34,8 @@ topics.
    :caption: Distributed Tables
 
    dist_tables/working_with_distributed_tables.rst
-   dist_tables/append_distribution.rst
    dist_tables/hash_distribution.rst
+   dist_tables/append_distribution.rst
    dist_tables/querying.rst
    dist_tables/postgresql_extensions.rst
 

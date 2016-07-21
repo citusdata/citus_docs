@@ -1,12 +1,12 @@
 .. _tut_hash:
 .. highlight:: bash
 
-Updatable User Data
-===================
+Hash-Distributed Data
+=====================
 
-In this tutorial we'll continue looking at wikipedia edits. The previous
-tutorial ingested a stream of all live edits happening across wikimedia.  We'll
-continue looking at that stream but store it in a different way.
+In this tutorial we'll look at a stream of live wikipedia edits. Wikimedia is
+kind enough to publish all changes happening across all their sites in real time;
+this can be a lot of events!
 
 This tutorial assumes you've set up a :ref:`single-machine demo cluster <tut_cluster>`.
 Once your cluster is running, open a prompt to the master instance:
@@ -143,12 +143,13 @@ Usually, around a fifth of all non-bot edits are made from unregistered
 editors. The real percentage is a lot higher, since "bot" is a user-settable
 flag which many bots neglect to set.
 
-That's all for now. This script showed a data layout which many Citus users
-choose. One table stored a stream of events while another table stored some
+This script showed a data layout which many Citus users choose. One
+table stored a stream of events while another table stored some
 aggregations of those events and made queries over them quick.
 
-We hope you enjoyed working through our tutorials. Once you're ready to stop
-the cluster run these commands:
+That's all for now. To learn more about Citus continue to the
+:ref:`next tutorial <tut_append>`, or, if you're done with the
+cluster, run this to stop the worker and master:
 
 ::
 
