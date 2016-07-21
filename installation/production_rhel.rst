@@ -116,7 +116,7 @@ To verify that the installation has succeeded, we check that the master node has
 
 **Ready to use Citus**
 
-At this step, you have completed the installation process and are ready to use your Citus cluster. To help you get started, we have a :ref:`tutorial<tut_sharding>` which has instructions on setting up a Citus cluster with sample data in minutes.
+At this step, you have completed the installation process and are ready to use your Citus cluster. To help you get started, we have a :ref:`tutorial<tut_hash>` which has instructions on setting up a Citus cluster with sample data in minutes.
 
 Your new Citus database is accessible in psql through the postgres user:
 

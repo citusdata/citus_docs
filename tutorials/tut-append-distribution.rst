@@ -1,8 +1,8 @@
-.. _tut_timeseries:
+.. _tut_append:
 .. highlight:: bash
 
-Working with Timeseries
-#######################
+Append-Distributed Data
+########################
 
 In this tutorial we'll continue looking at wikipedia edits. The previous
 tutorial ingested a stream of all live edits happening across wikimedia.  We'll

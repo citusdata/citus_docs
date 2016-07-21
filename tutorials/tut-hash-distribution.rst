@@ -1,8 +1,8 @@
-.. _tut_sharding:
+.. _tut_hash:
 .. highlight:: bash
 
-Sharding Data
-=============
+Hash-Distributed Data
+=====================
 
 In this tutorial we'll look at a stream of live wikipedia edits. Wikimedia is
 kind enough to publish all changes happening across all their sites in real time;
@@ -148,7 +148,7 @@ table stored a stream of events while another table stored some
 aggregations of those events and made queries over them quick.
 
 That's all for now. To learn more about Citus continue to the
-:ref:`next tutorial <tut_timeseries>`, or, if you're done with the
+:ref:`next tutorial <tut_append>`, or, if you're done with the
 cluster, run this to stop the worker and master:
 
 ::

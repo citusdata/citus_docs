@@ -82,5 +82,5 @@ load the user-facing side of Citus (such as the functions you'll soon call):
 **4. Ready for the tutorials!**
 
 Your cluster is running and eagerly awaiting data. Proceed to the 
-:ref:`sharding tutorial<tut_sharding>` to begin learning
+:ref:`sharding tutorial<tut_hash>` to begin learning
 how to use Citus.
