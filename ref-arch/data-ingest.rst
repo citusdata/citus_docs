@@ -2,8 +2,7 @@ Data Ingest
 ###########
 
 - We'll hash distribute the raw data on zone_id
-
-  - Distributed queries hit a single worker
+  - Dashboard queries hit a single shard.
 
 .. code-block:: sql
 
@@ -26,7 +25,8 @@ If you tried to run the above code you might have been made aware that '[see bel
 a valid integer. master_create_worker_shards takes three arguments, the distributed table,
 the number of shards to make, and the number of replicas each shard should consist of.
 
-- Replication factor is > 1, which means data is written to multiple places.
+- Replication factor is > 1, which means data is written to multiple places. You aren't
+  affected by node failure
 
 - Does cloud have a different signature I should call out?
 
@@ -55,3 +55,8 @@ the number of shards to make, and the number of replicas each shard should consi
   CREATE INDEX ON http_requests_1min (zone_id, ingest_time);
 
 - We also have count-min sketch if you want percentile queries
+
+- Run the data ingest script we've provided and some of these example queries
+
+- As described in the introduction, this has a few problems. In the next section we
+  introduce rollups to solve those problems.
