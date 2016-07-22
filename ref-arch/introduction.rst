@@ -7,7 +7,7 @@ Over the last few years we've helped many different kinds of clients use Citus a
 a technical problem many businesses have: running real-time analytics over large streams
 of data.
 
-For example, say you're building a web analytics dashboard. You have enough clients that
+For example, say you're building an HTTP analytics dashboard. You have enough clients that
 around every millisecond a user hits one of their websites and sends a log record to you.
 You want to ingest all of those records (1000 inserts/sec) and create a dashboard which
 shows your clients things like how many requests to their sites are errors. It's important
@@ -22,6 +22,14 @@ as possible and show both historical and live data on a dashboard.
 In this reference architecture we'll demonstrate how to build part of the first example
 but this architecture would work equally well for the second and many other business
 use-cases.
+
+Running It Yourself
+-------------------
+
+There's `a github repo <http://github.com>`_ with scripts and usage instructions. If
+you've gone through our installation instructions for running on either single or multiple
+machines you're ready to try it out. There will be some code snippets in this tutorial,
+but the github repo has all the details in one place.
 
 Data Model
 ----------
@@ -40,16 +48,19 @@ far as http analytics go but sufficient for showing off the architecture we have
 
   CREATE TABLE http_requests (
     ingest_time TIMESTAMPTZ DEFAULT now(),
-    customer_id INT,
-    site_id INT,
+    zone_id INT,
 
-    customer_id UUID,
+    session_id UUID,
     url TEXT,
     request_country TEXT,
+    ip_address CIDR,
 
     status_code INT,
     response_time_msec INT,
   )
+
+We'll :ref:`hash-distribute this table <hash_distribution>` by the `zone_id` column,
+meaning all the data for a single zone will go into the same shard.
 
 This will get us pretty far, but means that dashboard queries must aggregate every row
 in the target time range for every query it answers... pretty slow! It also means that
@@ -83,7 +94,7 @@ during the last week. This query requires accessing data from across the cluster
 were to use postgres it would take a while to access every row in parallel, but Citus
 parallelizes the query so that it returns quickly.
 
-Approximate Distince Counts
+Approximate Distinct Counts
 ---------------------------
 
 One kind of query we're particularily proud of is :ref:`approximate distinct counts
@@ -103,8 +114,14 @@ using HLLs you can greatly improve query speed.
 We've included :ref:`a section <approx_dist_count>` which showcases their usage with
 Citus.
 
-Check in out
-------------
+JSONB
+-----
 
-There's `a github repo <http://github.com>`_ with lots of resources you can use, be sure
-to check it out! Next, we'll go over how to ingest data into the system.
+Citus works well with Postgres' built-in support for JSON data types.
+
+- We have `a blog post
+  <https://www.citusdata.com/blog/2016/07/14/choosing-nosql-hstore-json-jsonb/>`_
+  explaining which format to use for your semi-structured data. It says you should
+  usually use jsonb but never says how. A section here will go over an example usage of
+  JSONB.
+
