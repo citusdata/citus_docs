@@ -52,6 +52,10 @@ Before starting the database let's change its access permissions. By default the
   # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
   host    all             all             10.0.0.0/8              trust
 
+  # Also allow the host unrestricted access to connect to itself
+  host    all             all             127.0.0.1/32            trust
+  host    all             all             ::1/128                 trust
+
 .. note::
   Your DNS settings may differ. Also these settings are too permissive for some environments. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/9.5/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
 
@@ -105,7 +109,7 @@ To verify that the installation has succeeded, we check that the master node has
 
 **Ready to use Citus**
 
-At this step, you have completed the installation process and are ready to use your Citus cluster. To help you get started, we have a :ref:`real-time aggregation tutorial<tut_real_time>` which has instructions on setting up a Citus cluster with sample data in minutes.
+At this step, you have completed the installation process and are ready to use your Citus cluster. To help you get started, we have a :ref:`tutorial<tut_hash>` which has instructions on setting up a Citus cluster with sample data in minutes.
 
 Your new Citus database is accessible in psql through the postgres user:
 

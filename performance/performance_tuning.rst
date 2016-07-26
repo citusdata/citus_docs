@@ -25,8 +25,7 @@ For distribution methods, Citus supports both append and hash distribution. Appe
 
 Hash based distribution is more suited to cases where users want to do real-time inserts along with analytics on their data or want to distribute by a non-ordered column (eg. user id). This data model is relevant for real-time analytics use cases; for example, actions in a mobile application, user website events, or social media analytics. This distribution method allows users to perform co-located joins and efficiently run queries involving equality based filters on the distribution column.
 
-Once you choose the right distribution method and column, you can then proceed
-to the next step, which is tuning single node performance.
+Once you choose the right distribution method and column, you can then proceed to the next step, which is tuning worker node performance.
 
 .. _postgresql_tuning:
 
@@ -35,7 +34,63 @@ PostgreSQL tuning
 
 The Citus master partitions an incoming query into fragment queries, and sends them to the workers for parallel processing. The workers are just extended PostgreSQL servers and they apply PostgreSQL's standard planning and execution logic for these queries. So, the first step in tuning Citus is tuning the PostgreSQL configuration parameters on the workers for high performance.
 
-This step involves loading a small portion of the data into regular PostgreSQL tables on the workers. These tables would be representative of shards on which your queries would run once the full data has been distributed. Then, you can run the fragment queries on the individual shards and use standard PostgreSQL tuning to optimize query performance.
+Tuning the parameters is a matter of experimentation and often takes several attempts to achieve acceptable performance. Thus it's best to load only a small portion of your data when tuning to make each iteration go faster.
+
+To begin the tuning process create a Citus cluster and load data in it. From the master node, run the EXPLAIN command on representative queries to inspect performance. Citus extends the EXPLAIN command to provide information about distributed query execution. The EXPLAIN output shows how each worker processes the query and also a little about how the master node combines their results.
+
+Here is an example of explaining the plan for a particular query in :ref:`one of <tut_hash>` our example tutorials.
+
+::
+
+  explain SELECT comment FROM wikipedia_changes c, wikipedia_editors e
+          WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
+
+  Distributed Query into pg_merge_job_0005
+    Executor: Real-Time
+    Task Count: 16
+    Tasks Shown: One of 16
+    ->  Task
+      Node: host=localhost port=9701 dbname=postgres
+      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
+        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
+          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
+          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
+            Index Cond: (editor = c.editor)
+            Filter: (bot IS TRUE)
+  Master Query
+    ->  Limit  (cost=0.00..0.00 rows=0 width=0)
+      ->  Seq Scan on pg_merge_job_0005  (cost=0.00..0.00 rows=0 width=0)
+  (15 rows)
+
+This tells you several things. To begin with there are sixteen shards, and we're using the real-time Citus executor setting:
+
+::
+
+  Distributed Query into pg_merge_job_0005
+    Executor: Real-Time
+    Task Count: 16
+
+Next it picks one of the workers to and shows you more about how the query behaves there. It indicates the host, port, and database so you can connect to the worker directly if desired:
+
+::
+
+    Tasks Shown: One of 16
+    ->  Task
+      Node: host=localhost port=9701 dbname=postgres
+
+Distributed EXPLAIN next shows the results of running a normal PostgreSQL EXPLAIN on that worker for the fragment query:
+
+::
+
+      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
+        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
+          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
+          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
+            Index Cond: (editor = c.editor)
+            Filter: (bot IS TRUE)
+
+
+You can now connect to the worker at 'localhost', port '9701' and tune query performance for the shard wikipedia_changes_102024 using standard PostgreSQL techniques. As you make changes run EXPLAIN again from the master or right on the worker.
 
 The first set of such optimizations relates to configuration settings. PostgreSQL by default comes with conservative resource settings; and among these settings, shared_buffers and work_mem are probably the most important ones in optimizing read performance. We discuss these parameters in brief below. Apart from them, several other configuration settings impact query performance. These settings are covered in more detail in the `PostgreSQL manual <http://www.postgresql.org/docs/9.5/static/runtime-config.html>`_ and are also discussed in the `PostgreSQL 9.0 High Performance book <http://www.amazon.com/PostgreSQL-High-Performance-Gregory-Smith/dp/184951030X>`_.
 
@@ -49,12 +104,69 @@ Lastly, you can create indexes on your tables to enhance database performance. I
 
 For write performance, you can use general PostgreSQL configuration tuning to increase INSERT rates. We commonly recommend increasing checkpoint_timeout and max_wal_size settings. Also, depending on the reliability requirements of your application, you can choose to change fsync or synchronous_commit values.
 
+Once you have tuned a worker to your satisfaction you will have to manually apply those changes to the other workers as well. To verify that they are all behaving properly, set this configuration variable on the master:
+
+::
+
+  SET citus.explain_all_tasks = 1;
+
+This will cause EXPLAIN to show the the query plan for all tasks, not just one.
+
+::
+
+  explain SELECT comment FROM wikipedia_changes c, wikipedia_editors e
+          WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
+
+  Distributed Query into pg_merge_job_0003
+    Executor: Real-Time
+    Task Count: 16
+    Tasks Shown: All
+    ->  Task
+      Node: host=localhost port=9701 dbname=postgres
+      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
+        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
+          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
+          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
+            Index Cond: (editor = c.editor)
+            Filter: (bot IS TRUE)
+    ->  Task
+      Node: host=localhost port=9702 dbname=postgres
+      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
+        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
+          ->  Seq Scan on wikipedia_changes_102025 c  (cost=0.00..13.90 rows=390 width=64)
+          ->  Index Scan using wikipedia_editors_editor_key_102009 on wikipedia_editors_102009 e  (cost=0.15..0.29 rows=1 width=32)
+            Index Cond: (editor = c.editor)
+            Filter: (bot IS TRUE)
+    ->  Task
+      Node: host=localhost port=9701 dbname=postgres
+      ->  Limit  (cost=1.13..2.36 rows=10 width=74)
+        ->  Hash Join  (cost=1.13..8.01 rows=56 width=74)
+          Hash Cond: (c.editor = e.editor)
+          ->  Seq Scan on wikipedia_changes_102036 c  (cost=0.00..5.69 rows=169 width=83)
+          ->  Hash  (cost=1.09..1.09 rows=3 width=12)
+            ->  Seq Scan on wikipedia_editors_102020 e  (cost=0.00..1.09 rows=3 width=12)
+              Filter: (bot IS TRUE)
+    --
+    -- ... repeats for all 16 tasks
+    --     alternating between workers one and two
+    --     (running in this case locally on ports 9701, 9702)
+    --
+  Master Query
+    ->  Limit  (cost=0.00..0.00 rows=0 width=0)
+      ->  Seq Scan on pg_merge_job_0003  (cost=0.00..0.00 rows=0 width=0)
+
+Differences in worker execution can be caused by tuning configuration differences, uneven data distribution across shards, or hardware differences between the machines. To get more information about the time it takes the query to run on each shard you can use EXPLAIN ANALYZE.
+
+.. note::
+
+  Note that when citus.explain_all_tasks is enabled, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE. Also a remote EXPLAIN may error out when explaining a broadcast join while the shards for the small table have not yet been fetched. An error message is displayed advising to run the query first.
+
 .. _scaling_out_performance:
 
 Scaling Out Performance
 #######################
 
-Once you have achieved the desired performance for a single shard, you can set similar configuration parameters on all your workers. As Citus runs all the fragment queries in parallel across the worker nodes, users can scale out the performance of their queries to be the cumulative of the computing power of all of the CPU cores in the cluster assuming that the data fits in memory.
+As mentioned, once you have achieved the desired performance for a single shard you can set similar configuration parameters on all your workers. As Citus runs all the fragment queries in parallel across the worker nodes, users can scale out the performance of their queries to be the cumulative of the computing power of all of the CPU cores in the cluster assuming that the data fits in memory.
 
 Users should try to fit as much of their working set in memory as possible to get best performance with Citus. If fitting the entire working set in memory is not feasible, we recommend using SSDs over HDDs as a best practice. This is because HDDs are able to show decent performance when you have sequential reads over contiguous blocks of data, but have significantly lower random read / write performance. In cases where you have a high number of concurrent queries doing random reads and writes, using SSDs can improve query performance by several times as compared to HDDs. Also, if your queries are highly compute intensive, it might be beneficial to choose machines with more powerful CPUs.
 
