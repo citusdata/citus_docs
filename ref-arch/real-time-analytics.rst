@@ -187,13 +187,21 @@ Rollups
 
 .. code-block:: sql
 
-  -- this is a file called create.sql
+  -- this should be run on the master
+  CREATE FUNCTION run_rollups RETURNS void
+  AS $$
+  DECLARE
+  BEGIN
+        -- SELECT node_name FROM master_get_active_worker_nodes()
+  END;
+  $$ LANGUAGE 'plpgsql';
+
+The above script should be invoked every minute:
 
 .. code-block:: crontab
 
   # this goes in your crontab
-  * * * * * psql -tA -F" " -c "SELECT node_name FROM master_get_active_worker_nodes()" |
-    xargs -n1 psql -f create.sql -h
+  * * * * * psql -c "SELECT run_rollups();"
 
 Approximate Distinct Counts
 ---------------------------
