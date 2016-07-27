@@ -60,8 +60,8 @@ In this technique we use PL/pgSQL to construct and execute one statement based o
   drop table results_temp;
 
 
-Workaround 2. Join on Master
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Workaround 2. Duplicate on Master
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Pros
     * Works for subqueries returning any number of results
@@ -85,10 +85,10 @@ In this workaround the client runs the outer- and sub-query independently, saves
     from facts
    where ...conditions...;
   
-  -- Join them, get filtered dimension results
+  -- Run the query on local tables where subqueries are OK
   select dim_a, dim_b, dim_c
-    from dim_temp, fact_temp
-   where dim_temp.fact_id = fact_temp.id;
+    from dim_temp
+   where fact_id in (select id from fact_temp);
 
   -- Remove temp tables
   drop table dim_temp;
