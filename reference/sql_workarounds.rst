@@ -108,10 +108,14 @@ This does incur network cost. If this workaround is too slow please contact Citu
 SELECT DISTINCT (non-distribution column)
 -----------------------------------------
 
-Citus supports SELECT DISTINCT col but only when col is the shard distribution column. If it is not, use GROUP BY for a simple workaround:
+Citus does not yet support SELECT DISTINCT but you can use GROUP BY for a simple workaround:
 
 .. code-block:: sql
 
+  -- rather than this
+  -- select distinct col from table;
+
+  -- use this
   select col from table group by col;
 
 JOIN a local and a distributed table
