@@ -19,7 +19,7 @@ Optimal shard count is related to the total number of cores on the workers. Citu
 
 We typically recommend creating a high number of initial shards, e.g. 2x or 4x the number of current CPU cores. This allows for future scaling if you add more workers and CPU cores.
 
-How does citus hadle failure of a worker node?
+How does citus handle failure of a worker node?
 ----------------------------------------------
 
 If a worker node fails during e.g. a SELECT query, jobs involving shards from that server will automatically fail over to replica shards located on healthy hosts. This means intermittent failures will not require restarting potentially long-running analytical queries, so long as the shards involved can be reached on other healthy hosts.
