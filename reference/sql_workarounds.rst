@@ -59,6 +59,31 @@ In this technique we use PL/pgSQL to construct and execute one statement based o
   select * from results_temp;
   drop table results_temp;
 
+Workaround 1½. Build query in SQL client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Pros
+    * Able to distribute the query across shards
+* Cons
+    * Constructed query not suitable when facts subquery returns large number of results
+    * Requires two query roundtrips to client
+
+Like the previous workaround this one creates an explicit list of values for an IN comparison. The client obtains the list of items with one query, and uses it to construct the second query.
+
+.. code-block:: sql
+
+  -- first run this
+  select id from facts where ...conditions...
+
+Interpolate the list of ids into a new query
+
+.. code-block:: sql
+
+  -- notice the explicit list of ids obtained from previous query
+  select dim_a, dim_b, dim_c
+    from dimensions
+   where fact_id in (2,3,5,7,11,13)
+     and ...conditions...;
 
 Workaround 2. Duplicate on Master
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +92,6 @@ Workaround 2. Duplicate on Master
     * Works for subqueries returning any number of results
 * Cons
     * Must transmit full rows from the queries back to the master
-    * Requires extra storage space in the master database
 
 In this workaround the client runs the outer- and sub-query independently, saves their results, and joins them.
 
@@ -94,10 +118,10 @@ In this workaround the client runs the outer- and sub-query independently, saves
   drop table dim_temp;
   drop table fact_temp;
 
-SELECT ... INTO
----------------
+INSERT INTO ... SELECT
+----------------------
 
-Citus does not support inserting the results of a query into a distributed table with the standard SELECT INTO command. One workaround is to use two database connections to stream the query results to master and then distribute them to the shards.
+Citus does not support directly inserting the results of a query into a distributed table. One workaround is to use two database connections to stream the query results to master and then distribute them to the shards.
 
 .. code-block:: bash
 
@@ -105,8 +129,8 @@ Citus does not support inserting the results of a query into a distributed table
 
 This does incur network cost. If this workaround is too slow please contact Citus Data support. We can assist you in parallelizing the table insertion across all workers using a more complicated technique.
 
-SELECT DISTINCT (non-distribution column)
------------------------------------------
+SELECT DISTINCT
+---------------
 
 Citus does not yet support SELECT DISTINCT but you can use GROUP BY for a simple workaround:
 
@@ -141,5 +165,8 @@ In Citus Community and Enterprise editions there is a workaround. You can replic
     (SELECT count(1) from master_get_active_worker_nodes())::integer
   );
 
-Now Citus will accept a join query between *here* and *there*, and each worker will have all the information it needs to work efficiently. Note: Citus Cloud uses PostgreSQL replication, not Citus replication, so this technique does not work there.
+Now Citus will accept a join query between *here* and *there*, and each worker will have all the information it needs to work efficiently.
 
+.. note::
+
+  Citus Cloud uses PostgreSQL replication, not Citus replication, so this technique does not work there.
