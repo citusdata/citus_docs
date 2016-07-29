@@ -112,38 +112,36 @@ Interpolate the list of ids into a new query
    where page_id in (2,3,5,7,13)
   group by page_id
 
-Workaround 2. Duplicate on Master
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Workaround 2. Use a JOIN
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Pros
     * Works for subqueries returning any number of results
 * Cons
-    * Must transmit full rows from the queries back to the master
+    * Can be inefficient if the JOIN requires data repartitioning
 
-In this workaround the client runs the outer- and sub-query independently, saves their results, and joins them.
+Sometimes you can convert a where-clause subquery to a (self) join. This is appropriate when the subquery returns a potentially large number of rows. Note that in the following example the group by clauses are workarounds for the lack of select distinct support as documented in another section.
 
 .. code-block:: sql
 
-  -- Capture the dimension query results
-  create temp table dim_temp as
-  select fact_id, dim_a, dim_b, dim_c
-    from dimensions
-   where ...conditions...;
-  
-  -- Capture the subquery results
-  create temp table fact_temp as
-  select id
-    from facts
-   where ...conditions...;
-  
-  -- Run the query on local tables where subqueries are OK
-  select dim_a, dim_b, dim_c
-    from dim_temp
-   where fact_id in (select id from fact_temp);
-
-  -- Remove temp tables
-  drop table dim_temp;
-  drop table fact_temp;
+  select user_id
+  from (
+    select a.user_id as user_id
+    from (
+      select user_id
+        from events
+       where event_type = 'A'
+       group by user_id
+      ) as a
+    join (
+      select user_id
+        from events
+       where event_Type = 'B'
+       group by user_id
+      ) as b
+    on a.user_id = b.user_id
+    group by user_id
+  ) as inner_subquery;
 
 INSERT INTO ... SELECT
 ----------------------
