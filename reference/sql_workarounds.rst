@@ -5,24 +5,38 @@ SQL Workarounds
 
 Citus supports most, but not all, SQL statements directly. Its SQL support continues to improve. Also many of the unsupported features have workarounds; below are a number of the most useful.
 
-Subqueries
-----------
+Subqueries in WHERE
+-------------------
 
-In analytics it is common to model information using a "star schema." This is a collection of dimensional tables (e.g. observations, statistics) referencing a table of facts (e.g. people, pages or events). Furthermore, a common form of query examines dimensions for a subset of the facts. Examples of these kind of queries:
-
-* "Get aggregated statistics about football players whose passes exceed three hundred yards."
-* "Which other pages do people visit who view a certain page?"
-* "Count the number of distinct sessions for the top twenty-five most visited blog posts."
-* "What is the number of people in companies among the top fifty product areas?"
-
-The general form of the query in SQL is
+A common type of query asks for values which appear in designated ways within a table, or aggregations of those values. For instance we might want to find which users caused events of types A *and* B in a table which records one user and event record per row:
 
 .. code-block:: sql
 
-  select dim_a, dim_b, dim_c
-    from dimensions
-   where fact_id in (select id from facts where ...conditions...)
-     and ...conditions...;
+  select user_id
+    from events
+   where event_type = 'A'
+     and user_id in (
+       select user_id
+         from events
+        where event_type = 'B'
+     )
+
+Another example. How many distinct sessions viewed the top twenty-five most visited web pages?
+
+.. code-block:: sql
+
+  select page_id, count(distinct session_id)
+    from visits
+   where page_id in (
+    select page_id from (
+      select page_id, count(1) as total
+        from visits
+       group by page_id
+       order by total desc
+       limit 25
+    ) as t
+  )
+  group by page_id
 
 Citus does not allow subqueries in the WHERE clause so we must choose a workaround.
 
@@ -35,23 +49,30 @@ Workaround 1. Generate explicit WHERE-IN expression
     * Constructed query not suitable when facts subquery returns large number of results
     * Somewhat hard to read, requires building custom SQL
 
-In this technique we use PL/pgSQL to construct and execute one statement based on the results of another.
+In this technique we use PL/pgSQL to construct and execute one statement based on the results of another. This workaround works best when there is a short list for the IN clause. For instance the page visits query is a good candidate because it limits its inner query to twenty-five rows.
 
 .. code-block:: sql
 
   -- create temporary table with results
   do language plpgsql $$
-    declare facts_array integer[];
+    declare page_ids integer[];
   begin 
-    execute 'select id from facts where ...conditions...'
-       into facts_array;
+    execute
+      'select page_id from ('
+      '  select page_id, count(1) as total'
+      '    from visits'
+      '   group by page_id'
+      '   order by total desc'
+      '   limit 25'
+      ') as t '
+      'group by page_id'
+      into page_ids;
     execute format(
       'create temp table results_temp as '
-      'select dim_a, dim_b, dim_c'
-      '  from dimension'
-      ' where fact_id = any(array[%s])'
-      '   and ...conditions...',
-      array_to_string(facts_array, ','));
+      'select page_id, count(distinct session_id)'
+      '  from visits
+      ' where page_id = any(array[%s])',
+      array_to_string(page_ids, ','));
   end;
   $$;
 
@@ -73,17 +94,23 @@ Like the previous workaround this one creates an explicit list of values for an 
 .. code-block:: sql
 
   -- first run this
-  select id from facts where ...conditions...
+  select page_id from (
+    select page_id, count(1) as total
+      from visits
+     group by page_id
+     order by total desc
+     limit 25
+  )
 
 Interpolate the list of ids into a new query
 
 .. code-block:: sql
 
   -- notice the explicit list of ids obtained from previous query
-  select dim_a, dim_b, dim_c
-    from dimensions
-   where fact_id in (2,3,5,7,11,13)
-     and ...conditions...;
+  select page_id, count(distinct session_id)
+    from visits
+   where page_id in (2,3,5,7,13)
+  group by page_id
 
 Workaround 2. Duplicate on Master
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
