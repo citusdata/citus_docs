@@ -3,6 +3,8 @@
 SQL Workarounds
 ===============
 
+Before attempting workarounds consider whether Citus is appropriate for your situation. Citus' current version works well for real-time analytics use cases. We are continuously working to increase SQL coverage to better support other use-cases such as data warehousing queries.
+
 Citus supports most, but not all, SQL statements directly. Its SQL support continues to improve. Also many of the unsupported features have workarounds; below are a number of the most useful.
 
 Subqueries in WHERE
@@ -195,3 +197,45 @@ Now Citus will accept a join query between *here* and *there*, and each worker w
 .. note::
 
   Citus Cloud uses PostgreSQL replication, not Citus replication, so this technique does not work there.
+
+.. _data_warehousing_queries:
+
+Data Warehousing Queries
+------------------------
+
+When queries have restrictive filters (i.e. when very few results need to be transferred to the master) there is a general technique to run unsupported queries in two steps. First store the results of the inner queries in regular PostgreSQL tables on the master. Then the next step can be executed on the master like a regular PostgreSQL query.
+
+For example, currently Citus does not have out of the box support for window functions on queries involving distributed tables. Suppose you have a query with a window function on a table of github_events function like the following:
+
+::
+
+    select repo_id, actor->'id', count(*)
+      over (partition by repo_id)
+      from github_events
+     where repo_id = 1 or repo_id = 2;
+
+You can re-write the query like below:
+
+Statement 1:
+
+::
+
+    create temp table results as (
+      select repo_id, actor->'id' as actor_id
+        from github_events
+       where repo_id = 1 or repo_id = 2
+    );
+
+Statement 2:
+
+::
+
+    select repo_id, actor_id, count(*)
+      over (partition by repo_id)
+      from results;
+
+Similar workarounds can be found for other data warehousing queries involving unsupported constructs.
+
+.. Note::
+
+  The above query is a simple example intended at showing how meaningful workarounds exist around the lack of support for a few query types. Over time, we intend to support these commands out of the box within Citus.
