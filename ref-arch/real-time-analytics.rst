@@ -38,7 +38,7 @@ The data we're dealing with is an immutable stream of log data. Here we'll inser
 into Citus but it's also common for this data to first be routed through something like
 Kafka. Doing so makes the system a little more resilient to failures, lets the data be
 routed to multiple places (such as a warehouse like redshift), and (once data volumes
-become unmanageable high) makes it a little easier to start pre-aggregating the data
+become unmanageably high) makes it a little easier to start pre-aggregating the data
 before inserting.
 
 In this example, the raw data will use the following schema which isn't very realistic as
@@ -46,7 +46,8 @@ far as http analytics go but sufficient for showing off the architecture we have
 
 .. code-block:: sql
 
-  CREATE TABLE http_requests (
+  -- this gets run on the master
+  CREATE TABLE http_request (
     zone_id INT,
     ingest_time TIMESTAMPTZ DEFAULT now(),
 
@@ -58,33 +59,83 @@ far as http analytics go but sufficient for showing off the architecture we have
     status_code INT,
     response_time_msec INT,
   )
-  SELECT master_create_distributed_table('http_requests', 'zone_id', 'hash');
-  SELECT master_create_worker_shards('http_requests', 16, 2);
+  SELECT master_create_distributed_table('http_request', 'zone_id', 'hash');
+  SELECT master_create_worker_shards('http_request', 16, 2);
 
-When we call master_create_distributed_table we're telling it to hash-distribute using
-the `zone_id` column. That means dashboard queries will each hit a single shard.
+When we call :ref:`master_create_distributed_table <master_create_distributed_table>`
+we're telling it to hash-distribute using the `zone_id` column. That means dashboard
+queries will each hit a single shard.
 
-When we call master_create_worker_shards we tell it to create 16 shards, and 2 copies of
-each shard. `We recommend
-<http://docs.citusdata.com/en/v5.1/faq/faq.html#how-do-i-choose-the-shard-count-when-i-hash-partition-my-data>`_
-using 2-4x as many shards as cores in your cluster, this reduces the overhead of keeping
-track of lots of shards, but also leaves you plenty of shards to spread around when you
-scale up your cluster by adding workers.
+When we call :ref:`master_create_worker_shards <master_create_worker_shards>` we tell it
+to create 16 shards, and 2 copies of each shard. :ref:`We recommend
+<faq_choose_shard_count>` using 2-4x as many shards as cores in your cluster, this reduces
+the overhead of keeping track of lots of shards but also leaves you plenty of shards to
+spread around when you scale up your cluster by adding workers.
 
 Using a replication factor of 2 (or any number > 1, really), means data is written to
-multiple workers, when a node fails the other shard will be used instead.
+multiple workers. When a node fails the worker will serve queries for a shard using the
+other node so you don't have any downtime.
 
-Note: In Citus Cloud you must use a replication factor of 1, as they have a different HA
-solution.
+.. NOTE::
+
+  In Citus Cloud you must use a replication factor of 1 (instead of the 2 used here), as
+  they have a different HA solution.
+
+With this, the system is already ready to accept data and serve queries. You can run
+queries such as:
 
 .. code-block:: sql
 
-  CREATE TABLE http_requests_1min (
+  INSERT INTO http_request (
+      zone_id, session_id, url, request_country,
+      ip_address, status_code, reponse_time_msec
+    ) VALUES (
+        1, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'http://example.com/path', 'USA',
+        cidr '88.250.10.123', 200, 10
+    );
+
+And do some dashboard queries like:
+
+.. code-block:: sql
+
+  SELECT
+    date_trunc('minute', ingest_time) as minute,
+    COUNT(1) AS request_count,
+
+    COUNT(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
+    COUNT(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
+
+    SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
+  FROM http_request
+  WHERE zone_id = 1 AND minute = date_trunc('minute', now())
+  GROUP BY minute;
+
+We've provided `a data ingest script <http://github.com>`_ you can run to generate example
+data. There are also a few more `example queries <http://github.com>`_ to play around with
+in the github repo.
+
+This will get us pretty far, but means that dashboard queries must aggregate every row in
+the target time range for every query they answer. It also means storage costs will grow
+proportionately with the ingest rate and length of queryable history.
+
+Rollups
+-------
+
+In order to fix both problems, let's start rolling up data. The raw data will be
+aggregated into other tables which store the same data in 1-minute, 1-hour, and 1-day
+intervals. These correspond to zoom-levels in the dashboard. When the user wants request
+times for the last month the dashboard can read and chart the values for each of the last
+30 days.
+
+.. code-block:: sql
+
+  CREATE TABLE http_request_1min (
         zone_id INT,
         ingest_time TIMESTAMPTZ,
 
         error_count INT,
         success_count INT,
+        request_count INT,
         average_response_time_msec INT,
   )
   SELECT master_create_distributed_table('http_requests_1min', 'zone_id', 'hash');
@@ -94,98 +145,100 @@ solution.
   -- this will create the index on all shards
   CREATE INDEX ON http_requests_1min (zone_id, ingest_time);
 
-- Run the data ingest script we've provided and some of these example queries
+The github repo has `DDL commands <http://github.com>`_ for the other granularities, for
+now we'll only talk about this one. Because we're distributing this table by the same
+key as we hashed the http_request table (zone_id), and we use the same number of shards
+and the same replication factor, there's a 1-to-1 correspondence between http_request
+shards and http_request_1min shards. Because of this correspondence, Citus puts the
+matching shards onto the same machine. This means that rollups don't involve any network
+transfer, data for a row will always belong on the same machine. We call this colocation
+and it makes many kinds of queries (such as joins) far faster.
 
-- As described earlier, this has a few problems. In the next section we
-  introduce rollups to solve those problems.
+In order to populate this table we're going to periodically run the equivalent of an
+INSERT INTO SELECT. However, Citus doesn't yet support INSERT INTO SELECT on distributed
+tables, so we're going to run it on each of the workers. Here's the function that does
+the update:
 
-This will get us pretty far, but means that dashboard queries must aggregate every row
-in the target time range for every query it answers... pretty slow! It also means that
-storage costs will grow proportionately with the ingest rate and length of queryable
-history.
-
-In order to fix both problems, let's start rolling up data. The raw data will be
-aggregated into other tables which store the same data in 1-minute, 1-hour, and 1-day
-intervals. These correspond to zoom-levels in the dashboard. When the user wants request
-times for the last month the dashboard can read and chart the values for the last 30 days.
- 
-Example Queries
----------------
-
-This example is designed to support queries from two broad categories: queries specific
-to a site or client (which can have multiple sites) and global queries. To understand the
-differences between them it's important to know how Citus stores data. Distributed tables
-are stored as collections of shards, each shard residing on one of the worker nodes. In
-this architecture we hash-partition on the customer_id, which means all the data for a
-single customer lives on the same machines.
-
-Site/Client Queries: This is the bulk of the load on the system, since it's the type of
-queries that dashboard will emit. Because all the data for a client lives on the same
-machines these queries will hit one machine, minimizing time spent waiting for the
-network. They won't benefit from any parallelization but they generally involve reading a
-small number of rows.
-
-Global Queries: An analyst might want to know which customer served the most requests
-during the last week. This query requires accessing data from across the cluster. If you
-were to use postgres it would take a while to access every row in parallel, but Citus
-parallelizes the query so that it returns quickly.
-
-Rollups
--------
-
-- We're going to do the equivalent of a INSERT INTO ... SELECT ...
-- There's a pl/pgsql function on the workers
-- The master, every minute (by cron), reads metadata and calls the function on each shard pair
-- Use lock_timeout so you don't get a bunch of these queued up
-
-- There's a local table on each worker keeping track of the high-water mark for each:
-
-.. code-block:: sql
+.. code-block:: plpgsql
 
   -- this should be run on each worker
-  CREATE TABLE rollup_thresholds (
-        ingest_time timestamptz,
-        granulatiry text,
-  );
+  CREATE FUNCTION rollup_1min(source_shard text, dest_shard text) RETURNS void
+  AS $$
+  DECLARE
+    v_latest_minute_already_aggregated timestamptz;
+    v_new_latest_already_aggregated timestamptz;
+  BEGIN
+    PERFORM SET lock_timeout 100;
+    -- since master calls this function every minute, and future invokations will
+    -- do any work this function doesn't do, it's safe to quit if we wait too long
+    -- for this FOR UPDATE lock which makes sure at most one instance of this function
+    -- runs at a time
+    SELECT ingest_time INTO v_latest_minute_already_aggregated FROM rollup_thresholds
+      WHERE source_shard = source_shard AND dest_shard = dest_shard
+      FOR UPDATE;
+    IF NOT FOUND THEN
+      INSERT INTO rollup_thresholds VALUES (
+        '1970-01-01', source_shard::regclass, dest_shard::regclass);
+      RETURN;
+    END IF;
+    PERFORM RESET lock_timeout;
 
-- There's a function on each worker which aggregates 
+    EXECUTE format('
+      WITH (
+        INSERT INTO %I (
+            zone_id, ingest_time, request_count,
+            error_count, success_count, average_response_time_msec)
+          SELECT
+            zone_id,
+            date_trunc('minute', ingest_time) as minute,
+            COUNT(1) as request_count,
+            COUNT(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
+            request_count - success_count AS error_count
+    
+            SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
+          FROM %I
+          WHERE ingest_time > v_latest_minute_already_aggregated
+          GROUP BY zone_id, minute
+        ) as inserted_rows
+      SELECT max(minute) INTO v_new_latest_already_aggregated FROM inserted_rows;
+    ', dest_shard, source_shard);
+
+    -- mark how much work we did, so the next invocation picks up where we left off
+    PERFORM UPDATE rollup_thresholds
+      SET ingest_time = v_new_latest_already_aggregated
+      WHERE source_shard = source_shard AND dest_shard = dest_shard;
+  END;
+  $$ LANGUAGE 'plpgsql';
+
+That function assumes the existence of a local table to keep track of which rows have
+been aggregated:
 
 .. code-block:: sql
 
   -- this should also be run on each worker
-  CREATE FUNCTION rollup_1min(source_shard text, dest_shard text) RETURNS void
-  AS $$
-  DECLARE
-        v_latest_minute_already_aggregated timestamptz;
-        v_new_latest_already_aggregated timestamptz;
-  BEGIN
-        PERFORM SET lock_timeout 100;
-        SELECT ingest_time INTO v_latest_minute_already_aggregated FROM rollup_thresholds
-                WHERE granularity = '1minute'
-                FOR UPDATE;
-        PERFORM RESET lock_timeout;
-        IF NOT FOUND THEN
-          -- create the row and lock it... can we upsert here?
-        END IF;
+  CREATE TABLE rollup_thresholds (
+        ingest_time timestamptz,
+        source_shard regclass,
+        dest_shard regclass,
+        UNIQUE (source_shard, dest_shard)
+  );
 
-        INSERT INTO dest_shard::regclass (zone_id, ingest_time, error_count)
-                SELECT zone_id, ingest_time, count(1)
-                FROM source_shard::regclass 
-                WHERE ingest_time > v_latest_minute_already_aggregated
-                GROUP BY zone_id
-                RETURNING INTO v_new_latest_already_aggregated
+As discussed above, there's a 1-to-1 correspondence between http_request shards and
+http_request_1min shards. This function accepts the name of the http_request shard to
+read from and the name of the http_request_1min shard to write to. It can't figure it
+out itself because that kind of metadata is kept on the master, not the workers.
 
-        PERFORM UPDATE rollup_thresholds
-                SET ingest_time = v_new_latest_already_aggregated
-                WHERE granularity = '1minute';
-  END;
-  $$ LANGUAGE 'plpgsql';
+That means, the master must call this function on each pair of shards. Every minute it
+calls its own function:
 
-- there are matching functions for the other two granularities
+.. code-block:: crontab
 
-- on the master you have:
+  # added to the master's crontab:
+  * * * * * psql -c "SELECT run_rollups();"
 
-.. code-block:: sql
+Which reads the metadata and fires off all the aggregations:
+
+.. code-block:: plpgsql
 
   -- this should be run on the master
   CREATE FUNCTION run_rollups RETURNS void
@@ -193,15 +246,43 @@ Rollups
   DECLARE
   BEGIN
         -- SELECT node_name FROM master_get_active_worker_nodes()
+        -- do some dblink magic?
   END;
   $$ LANGUAGE 'plpgsql';
 
-The above script should be invoked every minute:
+The dashboard query from earlier is now a lot nicer:
+
+.. code-block:: sql
+
+  SELECT
+    request_count, success_count, error_count, average_response_time_msec
+  FROM http_request_1min
+  WHERE zone_id = 1 AND minute = date_trunc('minute', now());
+
+Expiring Old Data
+-----------------
+
+The rollups make queries faster but we still have a lot of raw data sitting around. How
+long you should keep each granularity of data is a business decision, but once you decide
+it's easy to write a script to expire old data:
 
 .. code-block:: crontab
 
-  # this goes in your crontab
-  * * * * * psql -c "SELECT run_rollups();"
+  # another master crontab entry
+  * * * * * psql -c "SELECT expire_old_request_data();"
+    
+Where the function looks something like this:
+
+.. code-block:: sql
+
+  -- another master function
+  CREATE FUNCTION expire_old_request_data RETURNS void
+  AS $$
+    SELECT master_modify_multiple_shards(
+      'DELETE FROM http_request WHERE ingest_time < now() - interval \'1 hour\';);
+    SELECT master_modify_multiple_shards(
+      'DELETE FROM http_request_1min WHERE ingest_time < now() - interval \'1 day\';);
+  $$ LANGUAGE SQL;
 
 Approximate Distinct Counts
 ---------------------------
@@ -209,40 +290,145 @@ Approximate Distinct Counts
 One kind of query we're particularily proud of is :ref:`approximate distinct counts
 <approx_dist_count>` using HLLs. How many unique visitors visited your site over some time
 period? Answering it requires storing the list of all previously-seen visitors in the
-rollup tables, a prohibitively large amount of data. An alternative technique is to use a
-datatype called hyperloglog, or HLL, which takes a surprisingly small amount of space to
-tell you approximately how many unique elements are part of the set you have it. Their
-accuracy can be adjusted, we'll use ones which, using only 2kb, will be able to count up
-to billions of unique visitors with at most 5% error.
+rollup tables, a prohibitively large amount of data. Rather than answer the query exactly,
+we can answer the query approximately, using a datatype called hyperloglog, or HLL, which
+takes a surprisingly small amount of space to tell you approximately how many unique
+elements are in the set you pass it. Their accuracy can be adjusted, we'll use ones which,
+using only [xxx]kb, will be able to count up to billions of unique visitors with at most
+[xxx]% error.
 
-How many unique visitors visited any site over some time period? Without HLLs this query
-involves shipping the list of all visitors from the workers to the master and then doing a
-merge on the master. That's both a lot of network traffic and a lot of computation. By
-using HLLs you can greatly improve query speed.
+An equivalent problem appears if you want to run a global query, such has the number of
+unique ip addresses who visited any site over some time period. Without HLLs this query
+involves shipping lists of ip addresses from the workers to the master for it to
+deduplicate. That's both a lot of network traffic and a lot of computation. By using HLLs
+you can greatly improve query speed.
 
-First you must enable the extension:
+First you must install the hll extension; `the github repo
+<https://github.com/aggregateknowledge/postgresql-hll>`_ has instructions. Next, you have
+to enable it:
 
 .. code-block:: sql
 
+  -- this part must be run on all workers
   CREATE EXTENSION hll;
+
+  -- this part runs on the master
   ALTER TABLE http_requests_1min ADD COLUMN distinct_sessions (hll);
 
-- Modify the rollups to also compute the hll
-- Here's a query you might run to get out the cardinality
-- Redefine SUM to run ad-hoc queries, here's an ad-hoc query you might run
-- We also have some more exotic data types, such as count-min sketch and topn.
+When doing our rollups, we can now aggregate sessions into an hll column with queries
+like this:
+
+.. code-block:: sql
+
+  SELECT
+    zone_id, date_trunc('minute', ingest_time) as minute,
+    hll_add_agg(hll_hash_text(session_id)) AS distinct_sessions
+  WHERE minute = date_trunc('minute', now())
+  FROM http_request
+  GROUP BY zone_id, minute;
+
+Now dashboard queries are a little more complicated, you have to read out the cardinality
+during SELECT:
+
+.. code-block:: sql
+
+  SELECT
+    request_count, success_count, error_count, average_response_time_msec,
+    hll_cardinality(distinct_sessions) AS distinct_session_count
+  FROM http_request_1min
+  WHERE zone_id = 1 AND minute = date_trunc('minute', now());
+
+HLLs aren't just faster, they let you do things you couldn't previously. Say we did our
+rollups, but instead of using HLLs we saved the exact unique counts. This works fine, but
+you can't answer queries such as "how many distinct sessions were there during this
+one-week period in the past we've thrown away the raw data for?". With HLLs, it's easy:
+
+.. code-block:: sql
+
+  -- careful, doesn't work!
+  SELECT
+    hll_cardinality(hll_union_agg(distinct_sessions))
+  FROM http_request_1day
+  WHERE ingest_time BETWEEN timestamp '06-01-2016' AND '06-08-2016';
+
+Well, it would be easy, except since Citus `can't yet
+<https://github.com/citusdata/citus/issues/120>`_ push down aggregates such as
+hll_union_agg. Instead you have to do a bit of trickery:
+
+.. code-block:: sql
+
+  -- this should be run on the workers and master
+  CREATE AGGREGATE sum (hll)
+  (
+    sfunc = hll_union_agg,
+    stype = internal,
+  );
+
+Now, when we call SUM over a collection of hlls, postgresql will return the hll for us.
+This lets us write the above query as:
+
+.. code-block:: sql
+
+  -- working version of the above query
+  SELECT
+    hll_cardinality(SUM(distinct_sessions))
+  FROM http_request_1day
+  WHERE ingest_time BETWEEN timestamp '06-01-2016' AND '06-08-2016';
+
+More information on HLLs can be found in `their github repo
+<https://github.com/aggregateknowledge/postgresql-hll>`_.
+
+HLLS are an example from the postgresql community, but there are a couple extensions we've
+written ourselves which do the same thing (improve performance and storage requirements)
+for different kinds of queries. This includes `count-min sketch
+<https://github.com/citusdata/cms_topn>`_ for
+top-n queries, and `HDR <https://github.com/citusdata/HDR>`_, for percentile queries.
 
 Unstructured Data with JSONB
 ----------------------------
 
-Citus works well with Postgres' built-in support for JSON data types.
+Citus works well with Postgres' built-in support for unstructured data types. To
+demonstrate this, let's keep track of the number of visitors which came from each country.
+Using a semi-structure data type saves you from needing to add a column for every
+individual country and blowing up your row width.  We have `a blog post
+<https://www.citusdata.com/blog/2016/07/14/choosing-nosql-hstore-json-jsonb/>`_ explaining
+which format to use for your semi-structured data. It says you should usually use jsonb
+but never says how. Let's correct that :)
 
-- We have `a blog post
-  <https://www.citusdata.com/blog/2016/07/14/choosing-nosql-hstore-json-jsonb/>`_
-  explaining which format to use for your semi-structured data. It says you should
-  usually use jsonb but never says how. A section here will go over an example usage of
-  JSONB.
+First, add the new column to our rollup table:
 
 .. code-block:: sql
 
   ALTER TABLE http_requests_1min ADD COLUMN country_counters (JSONB);
+
+Next, include it in the rollups by adding a query like this to the rollup function:
+
+.. code-block:: sql
+
+  SELECT
+    zone_id, minute,
+    hll_union_agg(distinct_sessions) AS distinct_sessions,
+    jsonb_object_agg(request_country, country_count)
+  FROM (
+    SELECT
+      zone_id, date_trunc('minute', ingest_time) as minute,
+      hll_add_agg(hll_hash_text(session_id)) AS distinct_sessions,
+      request_country,
+      count(1) AS country_count
+    WHERE minute = date_trunc('minute', now())
+    FROM http_request
+    GROUP BY zone_id, minute, request_country
+  )
+  GROUP BY zone_id, minute;
+
+Now, if you want to get the number of requests which came from america in your dashboard,
+your can modify the dashboard query to look like this:
+
+.. code-block:: sql
+
+  SELECT
+    request_count, success_count, error_count, average_response_time_msec,
+    hll_cardinality(distinct_sessions) as distinct_session_count,
+    country_counters->'USA' AS american_visitors
+  FROM http_request_1min
+  WHERE zone_id = 1 AND minute = date_trunc('minute', now());
