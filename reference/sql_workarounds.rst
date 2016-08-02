@@ -82,7 +82,7 @@ In this technique we use PL/pgSQL to construct and execute one statement based o
   select * from results_temp;
   drop table results_temp;
 
-Workaround 1½. Build query in SQL client
+Workaround 2. Build query in SQL client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Pros
@@ -114,7 +114,7 @@ Interpolate the list of ids into a new query
    where page_id in (2,3,5,7,13)
   group by page_id
 
-Workaround 2. Use a JOIN
+Workaround 3. Use a JOIN
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Pros
