@@ -124,9 +124,7 @@ If you have UPDATE statements that are commutative with your INSERTs or other UP
 citus.remote_task_check_interval (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Sets the frequency at which Citus checks for job statuses and defaults to 10ms. The master assigns tasks to workers, and then regularly checks with them about each task's progress. This configuration value sets the time interval between two consequent checks. This parameter is effective on the master and can be set at runtime.
-
-The ideal value of remote_task_check_interval depends on the workload. If your queries take a few seconds on average, then reducing this value makes sense. On the other hand, if an average query over a shard takes minutes as opposed to seconds then reducing this value may not be ideal. This would make the master contact each worker more frequently, which is an overhead you may not want to pay in this case.
+Sets the frequency at which Citus checks for statuses of jobs managed by the task tracker executor. It defaults to 10ms. The master assigns tasks to workers, and then regularly checks with them about each task's progress. This configuration value sets the time interval between two consequent checks. This parameter is effective on the master and can be set at runtime.
 
 citus.task_executor_type (enum)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
