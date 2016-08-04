@@ -16,8 +16,8 @@ with their sites. It's also useful to show graphs of historical data, however ke
 the raw data around forever is prohibitively expensive.
 
 Or maybe you're building an advertising network and want to show clients clickthrough
-rates on their campaigns. Likewise, you want to ingest lots of data with as little latency
-as possible and show both historical and live data on a dashboard.
+rates on their campaigns. In this example latency is also critical, raw data volume is
+also high, and both historical and live data are important.
 
 In this reference architecture we'll demonstrate how to build part of the first example
 but this architecture would work equally well for the second and many other business
@@ -26,10 +26,10 @@ use-cases.
 Running It Yourself
 -------------------
 
-There's `a github repo <http://github.com>`_ with scripts and usage instructions. If
+There's `a github repo <https://github.com>`_ with scripts and usage instructions. If
 you've gone through our installation instructions for running on either single or multiple
-machines you're ready to try it out. There will be some code snippets in this tutorial
-but the github repo has all the details in one place.
+machines you're ready to try it out. There will be code snippets in this tutorial but they
+don't quite specify a complete system, the github repo has all the details in one place.
 
 Data Model
 ----------
@@ -48,7 +48,7 @@ far as http analytics go but sufficient for showing off the architecture we have
 
   -- this gets run on the master
   CREATE TABLE http_request (
-    zone_id INT,
+    zone_id INT, -- every customer's site is a different "zone"
     ingest_time TIMESTAMPTZ DEFAULT now(),
 
     session_id UUID,
@@ -63,25 +63,30 @@ far as http analytics go but sufficient for showing off the architecture we have
   SELECT master_create_worker_shards('http_request', 16, 2);
 
 When we call :ref:`master_create_distributed_table <master_create_distributed_table>`
-we're telling it to hash-distribute using the `zone_id` column. That means dashboard
-queries will each hit a single shard.
+we ask Citus to hash-distribute ``http_request`` using the ``zone_id`` column. That means
+that, since the dashboard only looks at a single zone, all dashboard queries will hit a
+single shard.
 
 When we call :ref:`master_create_worker_shards <master_create_worker_shards>` we tell it
-to create 16 shards, and 2 copies of each shard. :ref:`We recommend
-<faq_choose_shard_count>` using 2-4x as many shards as cores in your cluster, this reduces
-the overhead of keeping track of lots of shards but also leaves you plenty of shards to
-spread around when you scale up your cluster by adding workers.
+to create 16 shards, and 2 replicas of each shard (for a total of 32 shard replicas).
+:ref:`We recommend <faq_choose_shard_count>` using 2-4x as many shards as cores in your
+cluster. If you use 1x as many shards as cores, any queries you run across the entire
+dataset will run in parallel and take advantage of all your workers. If you use 2-4x as
+many shards, you make it easy to add workers later, but don't add much additional
+overhead.
 
-Using a replication factor of 2 (or any number > 1, really), means data is written to
-multiple workers. When a node fails the worker will serve queries for a shard using the
-other node so you don't have any downtime.
+Using a replication factor of 2 (or any number > 1, really), means every row is written to
+multiple workers. When a worker fails the master will serve queries for any shards that
+worker was responsible for by querying the other replicas so you don't have any downtime.
 
 .. NOTE::
 
-  In Citus Cloud you must use a replication factor of 1 (instead of the 2 used here), as
-  they have a different HA solution.
+  In Citus Cloud you must use a replication factor of 1 (instead of the 2 used here). As
+  Citus Cloud uses `streaming replication
+  <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high
+  availability maintaining shard replicas would be redundant and inneficient.
 
-With this, the system is already ready to accept data and serve queries. You can run
+With this, the system is ready to accept data and serve queries! You can run
 queries such as:
 
 .. code-block:: sql
@@ -103,7 +108,7 @@ And do some dashboard queries like:
     COUNT(1) AS request_count,
 
     COUNT(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
-    COUNT(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
+    request_count - success_count AS error_count,
 
     SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
   FROM http_request
@@ -114,29 +119,35 @@ We've provided `a data ingest script <http://github.com>`_ you can run to genera
 data. There are also a few more `example queries <http://github.com>`_ to play around with
 in the github repo.
 
-This will get us pretty far, but means that dashboard queries must aggregate every row in
-the target time range for every query they answer. It also means storage costs will grow
-proportionately with the ingest rate and length of queryable history.
+The above setup will get you pretty far, but has a few drawbacks:
+
+* The dashboard must aggregate every row in the target date range for every query it
+  answers.
+* Storage costs will grow proportionally with the ingest rate and the length of the
+  queryable history.
 
 Rollups
 -------
 
-In order to fix both problems, let's start rolling up data. The raw data will be
-aggregated into other tables which store the same data in 1-minute, 1-hour, and 1-day
-intervals. These correspond to zoom-levels in the dashboard. When the user wants request
-times for the last month the dashboard can read and chart the values for each of the last
-30 days.
+In order to fix both problems, we have multiple clients who roll up the raw data into a
+pre-aggregated form. Here, we'll aggregat the raw data into other tables which store
+summaries of 1-minute, 1-hour, and 1-day intervals. These might correspond to zoom-levels
+in the dashboard. When the user wants request times for the last month the dashboard can
+read and chart the values for each of the last 30 days, no math required! For the rest of
+this document we'll only talk about the first granularity, the 1-minute one. The github
+repo has `DDL <http://github.com>`_ for the other resolutions.
 
 .. code-block:: sql
 
   CREATE TABLE http_request_1min (
         zone_id INT,
-        ingest_time TIMESTAMPTZ,
+        ingest_time TIMESTAMPTZ, -- which minute this row represents
 
         error_count INT,
         success_count INT,
         request_count INT,
         average_response_time_msec INT,
+        CHECK (request_count = error_count + success_count)
   )
   SELECT master_create_distributed_table('http_requests_1min', 'zone_id', 'hash');
   SELECT master_create_worker_shards('http_requests_1min', 16, 2);
@@ -145,19 +156,18 @@ times for the last month the dashboard can read and chart the values for each of
   -- this will create the index on all shards
   CREATE INDEX ON http_requests_1min (zone_id, ingest_time);
 
-The github repo has `DDL commands <http://github.com>`_ for the other granularities, for
-now we'll only talk about this one. Because we're distributing this table by the same
-key as we hashed the http_request table (zone_id), and we use the same number of shards
-and the same replication factor, there's a 1-to-1 correspondence between http_request
-shards and http_request_1min shards. Because of this correspondence, Citus puts the
-matching shards onto the same machine. This means that rollups don't involve any network
-transfer, data for a row will always belong on the same machine. We call this colocation
-and it makes many kinds of queries (such as joins) far faster.
+This looks a lot like the previous code block. Most importantly: It also shards on
+``zone_id``, and it also uses 16 shards with 2 replicas of each. Because all three of
+those match, there's a 1-to-1 correspondence between ``http_request`` shards and
+``http_request_1min`` shards, and Citus will place matching shards on the same worker.
+This is called colocation; it makes queries such as joins faster and our rollups possible.
 
-In order to populate this table we're going to periodically run the equivalent of an
-INSERT INTO SELECT. However, Citus doesn't yet support INSERT INTO SELECT on distributed
-tables, so we're going to run it on each of the workers. Here's the function that does
-the update:
+.. image:: /images/colocation.png
+  :alt: colocation in citus
+
+In order to populate ``http_request_1min`` we're going to periodically run the equivalent
+of an INSERT INTO SELECT. Citus doesn't yet support INSERT INTO SELECT on distributed
+tables, so instead we'll run a function on every matching pair of shards:
 
 .. code-block:: plpgsql
 
@@ -210,12 +220,17 @@ the update:
   END;
   $$ LANGUAGE 'plpgsql';
 
-That function assumes the existence of a local table to keep track of which rows have
-been aggregated:
+As discussed above, there's a 1-to-1 correspondence between http_request shards and
+``http_request_1min`` shards. This function accepts the name of the ``http_request`` shard
+to read from and the name of the ``http_request_1min`` shard to write to. It can't figure
+it out itself because that kind of metadata is kept on the master, not the workers.
+
+It also uses a local table, to keep track of how much of the raw data has already been
+aggregated:
 
 .. code-block:: sql
 
-  -- this should also be run on each worker
+  -- every worker should have their own local version of this table
   CREATE TABLE rollup_thresholds (
         ingest_time timestamptz,
         source_shard regclass,
@@ -223,32 +238,43 @@ been aggregated:
         UNIQUE (source_shard, dest_shard)
   );
 
-As discussed above, there's a 1-to-1 correspondence between http_request shards and
-http_request_1min shards. This function accepts the name of the http_request shard to
-read from and the name of the http_request_1min shard to write to. It can't figure it
-out itself because that kind of metadata is kept on the master, not the workers.
-
-That means, the master must call this function on each pair of shards. Every minute it
-calls its own function:
-
-.. code-block:: crontab
-
-  # added to the master's crontab:
-  * * * * * psql -c "SELECT run_rollups();"
-
-Which reads the metadata and fires off all the aggregations:
+Since this function is given some metadata from the master, where does the master get that
+metadata from? Every minute it calls its own function which fires off all the
+aggregations:
 
 .. code-block:: plpgsql
 
   -- this should be run on the master
-  CREATE FUNCTION run_rollups RETURNS void
+  CREATE FUNCTION run_rollups(source_table text, dest_table text) RETURNS void
   AS $$
   DECLARE
   BEGIN
-        -- SELECT node_name FROM master_get_active_worker_nodes()
-        -- do some dblink magic?
+    FOR source_shard, dest_shard, nodename, nodeport IN
+      SELECT
+        a.logicalrelid::regclass||'_'||a.shardid,
+        b.logicalrelid::regclass||'_'||b.shardid,
+        nodename, nodeport
+      FROM pg_dist_shard a
+      JOIN pg_dist_shard b USING (shardminvalue)
+      JOIN pg_dist_shard_placement p ON (a.shardid = p.shardid)
+      WHERE a.logicalrelid = 'first'::regclass AND b.logicalrelid = 'second'::regclass;
+    LOOP
+      SELECT * FROM dblink(
+        format('host=%s port=%d', nodename, nodeport),
+        format('SELECT rollup_1min(%, %s);', source_shard, dest_shard));
+    END LOOP;
   END;
   $$ LANGUAGE 'plpgsql';
+
+.. NOTE::
+
+  There are many ways to make sure the function is called periodically and no answer that
+  works well for every system. If you're able to run cron on the same machine as the
+  master, you can do something as simple as this:
+
+  .. code-block:: bash
+  
+    * * * * * psql -c "SELECT run_rollups('http_requests', 'http_requests_1min');"
 
 The dashboard query from earlier is now a lot nicer:
 
@@ -264,25 +290,31 @@ Expiring Old Data
 
 The rollups make queries faster but we still have a lot of raw data sitting around. How
 long you should keep each granularity of data is a business decision, but once you decide
-it's easy to write a script to expire old data:
+it's easy to write a function to expire old data:
 
-.. code-block:: crontab
+.. code-block:: plpgsql
 
-  # another master crontab entry
-  * * * * * psql -c "SELECT expire_old_request_data();"
-    
-Where the function looks something like this:
-
-.. code-block:: sql
-
-  -- another master function
+  -- another function for the master
   CREATE FUNCTION expire_old_request_data RETURNS void
   AS $$
     SELECT master_modify_multiple_shards(
-      'DELETE FROM http_request WHERE ingest_time < now() - interval \'1 hour\';);
+      'DELETE FROM http_request WHERE ingest_time < now() - interval ''1 hour'';');
     SELECT master_modify_multiple_shards(
-      'DELETE FROM http_request_1min WHERE ingest_time < now() - interval \'1 day\';);
-  $$ LANGUAGE SQL;
+      'DELETE FROM http_request_1min WHERE ingest_time < now() - interval ''1 day'';');
+  END;
+  $$ LANGUAGE 'sql';
+
+.. NOTE::
+
+  The above function should be called every minute. As mentioned above there are many
+  different ways to accomplish this and no way which makes everybody happy. If you're
+  capable of adding cron entries to the machine the master is running on you might
+  consider adding a crontab entry:
+
+  .. code-block:: bash
+  
+    * * * * * psql -c "SELECT expire_old_request_data();"
+
 
 Approximate Distinct Counts
 ---------------------------
@@ -432,3 +464,12 @@ your can modify the dashboard query to look like this:
     country_counters->'USA' AS american_visitors
   FROM http_request_1min
   WHERE zone_id = 1 AND minute = date_trunc('minute', now());
+
+Resources
+---------
+
+That's everything we wanted to cover. This article has been a little more in-depth than
+the rest of our documentation, but it shows a complete system to give you an idea of what
+building a non-trivial application with Citus looks like. We hope it helps you figure out
+how to use Citus for your specific use-case. Have we mentioned there's `a github repo
+<https://github.com>`_ with lots of resources?
