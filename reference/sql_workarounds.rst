@@ -30,15 +30,13 @@ Another example. How many distinct sessions viewed the top twenty-five most visi
   select page_id, count(distinct session_id)
     from visits
    where page_id in (
-     select page_id from (
-       select page_id, count(1) as total
-         from visits
-        group by page_id
-        order by total desc
-        limit 25
-     ) as t
+     select page_id
+       from visits
+      group by page_id
+      order by count(*) desc
+      limit 25
    )
-   group by page_id
+   group by page_id;
 
 Citus does not allow subqueries in the WHERE clause so we must choose a workaround.
 
