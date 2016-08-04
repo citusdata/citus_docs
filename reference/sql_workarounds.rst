@@ -10,7 +10,7 @@ Citus supports most, but not all, SQL statements directly. Its SQL support conti
 Subqueries in WHERE
 -------------------
 
-A common type of query asks for values which appear in designated ways within a table, or aggregations of those values. For instance we might want to find which users caused events of types A *and* B in a table which records one user and event record per row:
+A common type of query asks for values which appear in designated ways within a table, or aggregations of those values. For instance we might want to find which users caused events of types *A and B* in a table which records *one* user and event record per row:
 
 .. code-block:: sql
 
@@ -30,51 +30,43 @@ Another example. How many distinct sessions viewed the top twenty-five most visi
   select page_id, count(distinct session_id)
     from visits
    where page_id in (
-    select page_id from (
-      select page_id, count(1) as total
-        from visits
-       group by page_id
-       order by total desc
-       limit 25
-    ) as t
-  )
-  group by page_id
+     select page_id from (
+       select page_id, count(1) as total
+         from visits
+        group by page_id
+        order by total desc
+        limit 25
+     ) as t
+   )
+   group by page_id
 
 Citus does not allow subqueries in the WHERE clause so we must choose a workaround.
 
 Workaround 1. Generate explicit WHERE-IN expression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Pros
-    * Able to distribute the query across shards
-* Cons
-    * Constructed query not suitable when facts subquery returns large number of results
-    * Somewhat hard to read, requires building custom SQL
+*Best used when you don't want to complicate code in the application layer.*
 
-In this technique we use PL/pgSQL to construct and execute one statement based on the results of another. This workaround works best when there is a short list for the IN clause. For instance the page visits query is a good candidate because it limits its inner query to twenty-five rows.
+In this technique we use PL/pgSQL to construct and execute one statement based on the results of another.
 
 .. code-block:: sql
 
   -- create temporary table with results
   do language plpgsql $$
-    declare page_ids integer[];
+    declare user_ids integer[];
   begin 
     execute
-      'select page_id from ('
-      '  select page_id, count(1) as total'
-      '    from visits'
-      '   group by page_id'
-      '   order by total desc'
-      '   limit 25'
-      ') as t '
-      'group by page_id'
-      into page_ids;
+      'select user_id'
+      '  from events'
+      ' where event_type = ''B'''
+      into user_ids;
     execute format(
       'create temp table results_temp as '
-      'select page_id, count(distinct session_id)'
-      '  from visits
-      ' where page_id = any(array[%s])',
-      array_to_string(page_ids, ','));
+      'select user_id'
+      '  from events'
+      ' where user_id = any(array[%s])'
+      '   and event_type = ''A''',
+      array_to_string(user_ids, ','));
   end;
   $$;
 
@@ -85,65 +77,29 @@ In this technique we use PL/pgSQL to construct and execute one statement based o
 Workaround 2. Build query in SQL client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Pros
-    * Able to distribute the query across shards
-* Cons
-    * Constructed query not suitable when facts subquery returns large number of results
-    * Requires two query roundtrips to client
+*Best used for simple cases when the subquery returns limited rows.*
 
-Like the previous workaround this one creates an explicit list of values for an IN comparison. The client obtains the list of items with one query, and uses it to construct the second query.
+Like the previous workaround this one creates an explicit list of values for an IN comparison. This workaround does too, except it does so in the application layer, not in the backend. It works best when there is a short list for the IN clause. For instance the page visits query is a good candidate because it limits its inner query to twenty-five rows.
 
 .. code-block:: sql
 
   -- first run this
-  select page_id from (
-    select page_id, count(1) as total
-      from visits
-     group by page_id
-     order by total desc
-     limit 25
-  )
+  select page_id
+    from visits
+   group by page_id
+   order by count(*) desc
+   limit 25;
 
 Interpolate the list of ids into a new query
 
 .. code-block:: sql
 
-  -- notice the explicit list of ids obtained from previous query
+  -- Notice the explicit list of ids obtained from previous query
+  -- and added by the application layer
   select page_id, count(distinct session_id)
     from visits
    where page_id in (2,3,5,7,13)
   group by page_id
-
-Workaround 3. Use a JOIN
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-* Pros
-    * Works for subqueries returning any number of results
-* Cons
-    * Can be inefficient if the JOIN requires data repartitioning
-
-Sometimes you can convert a where-clause subquery to a (self) join. This is appropriate when the subquery returns a potentially large number of rows. Note that in the following example the group by clauses are workarounds for the lack of select distinct support as documented in another section.
-
-.. code-block:: sql
-
-  select user_id
-  from (
-    select a.user_id as user_id
-    from (
-      select user_id
-        from events
-       where event_type = 'A'
-       group by user_id
-      ) as a
-    join (
-      select user_id
-        from events
-       where event_Type = 'B'
-       group by user_id
-      ) as b
-    on a.user_id = b.user_id
-    group by user_id
-  ) as inner_subquery;
 
 INSERT INTO ... SELECT
 ----------------------
