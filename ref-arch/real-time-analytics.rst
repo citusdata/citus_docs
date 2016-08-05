@@ -167,7 +167,8 @@ This is called colocation; it makes queries such as joins faster and our rollups
 
 In order to populate ``http_request_1min`` we're going to periodically run the equivalent
 of an INSERT INTO SELECT. Citus doesn't yet support INSERT INTO SELECT on distributed
-tables, so instead we'll run a function on every matching pair of shards:
+tables, so instead we'll run a function on all the workers which runs INSERT INTO SELECT
+on every matching pair of shards (this is possible because the shards are colocated)
 
 .. code-block:: plpgsql
 
@@ -203,9 +204,9 @@ tables, so instead we'll run a function on every matching pair of shards:
             date_trunc('minute', ingest_time) as minute,
             COUNT(1) as request_count,
             COUNT(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
-            request_count - success_count AS error_count
-    
+            request_count - success_count AS error_count,
             SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
+            -- later sections will show some more clauses that can go here
           FROM %I
           WHERE ingest_time > v_latest_minute_already_aggregated
           GROUP BY zone_id, minute
@@ -297,10 +298,12 @@ it's easy to write a function to expire old data:
   -- another function for the master
   CREATE FUNCTION expire_old_request_data RETURNS void
   AS $$
+    SET citus.all_modification_commutative TO TRUE;
     SELECT master_modify_multiple_shards(
       'DELETE FROM http_request WHERE ingest_time < now() - interval ''1 hour'';');
     SELECT master_modify_multiple_shards(
       'DELETE FROM http_request_1min WHERE ingest_time < now() - interval ''1 day'';');
+    RESET citus.all_modification_commutative;
   END;
   $$ LANGUAGE 'sql';
 
@@ -315,6 +318,37 @@ it's easy to write a function to expire old data:
   
     * * * * * psql -c "SELECT expire_old_request_data();"
 
+Review, what have we done?
+--------------------------
+
+That's the entire architecture! The next few sections are just extensions for additional
+problems which often pop up. So what makes this better than what it replaced? Well, let's
+look again at the problem it solves. We wanted to enable a dashboard which aggregated:
+
+1. Large amounts of data with
+2. Low latency
+
+Where the naive solution struggled with a few problems:
+
+A. The dashboard must aggregate every row in the target date range for every query it
+   answers.
+B. Storage costs will grow proportionally with the ingest rate and the length of the
+   queryable history.
+
+Because we roll up the raw data, and the dashboard only runs queries on that raw data, it
+must do a constant amount of work for each user. Users who have much more visiters than
+average won't have a dashboard which works any slower. Because the rollups fire every
+minute,
+
+If you've heard of postgres' VACUUM, you know it can be a pain once you have a large
+number of rows. The write pattern we're using turns out to be the ideal VACUUM use-case.
+We never modify rows, we only write to one end of the table while deleting from the other
+end. When VACUUM runs it marks a `visibility map
+<https://www.postgresql.org/docs/9.5/static/storage-vm.html>`_ to keep track of which
+pages have already been vacuumed and can be skipped during the next vacuum. Since we never
+UPDATE, the only pages which have that bit reset are the pages of entirely DELETEd rows.
+All VACUUM needs to do is scan through and reclaim those empty pages, is happens very
+quickly!
 
 Approximate Distinct Counts
 ---------------------------
@@ -326,8 +360,8 @@ rollup tables, a prohibitively large amount of data. Rather than answer the quer
 we can answer the query approximately, using a datatype called hyperloglog, or HLL, which
 takes a surprisingly small amount of space to tell you approximately how many unique
 elements are in the set you pass it. Their accuracy can be adjusted, we'll use ones which,
-using only [xxx]kb, will be able to count up to billions of unique visitors with at most
-[xxx]% error.
+using only 1280 bytes, will be able to count up to tens of billions of unique visitors
+with at most 2.2% error.
 
 An equivalent problem appears if you want to run a global query, such has the number of
 unique ip addresses who visited any site over some time period. Without HLLs this query
