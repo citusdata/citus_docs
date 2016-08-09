@@ -111,6 +111,18 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Use the binary copy format to transfer data between master and the workers. When running distributed queries, the workers transfer their intermediate results to the master for final aggregation. By default, this data is transferred in text format. Enabling this parameter instructs the database to use PostgreSQL’s binary serialization format to transfer this data. This parameter can be set at runtime and is effective on the master.
 
+DDL
+-------------------------------------------------------------------
+
+citus.enable_ddl_propagation (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Specifies whether to automatically propagate DDL changes from the master to all workers. The default value is true. Because some schema changes require an access exclusive lock on tables and because the automatic propagation applies to all workers sequentially it can make a Citus cluter temporarily less responsive. You may choose to disable this setting and propagate changes manually.
+
+.. note::
+
+  Currently CREATE INDEX and ALTER TABLE are the only DDL changes that Citus propagates automatically.
+
 Executor Configuration
 ------------------------------------------------------------
 
