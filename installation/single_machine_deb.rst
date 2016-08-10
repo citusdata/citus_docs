@@ -11,11 +11,8 @@ This section describes the steps needed to set up a single-node Citus cluster on
 
 ::
 
-  # add postgresql-9.5-citus pgdg repository
-  echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee -a /etc/apt/sources.list.d/pgdg.list
-  sudo apt-get install wget ca-certificates
-  wget --quiet --no-check-certificate -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-  sudo apt-get update
+  # Add Citus repository for package manager
+  curl https://install.citusdata.com/community/deb.sh | sudo bash
 
   # install the server and initialize db
   sudo apt-get -y install postgresql-9.5-citus

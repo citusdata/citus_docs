@@ -9,12 +9,10 @@ This section describes the steps needed to set up a single-node Citus cluster on
 
 **1. Install PostgreSQL 9.5 and the Citus extension**
 
-Locate the PostgreSQL 9.5 YUM repository for your Linux distribution in `this list <http://yum.postgresql.org/repopackages.php#pg95>`_. Copy its URL and add the repository:
-
 ::
 
-  # add repository from URL you previously copied
-  sudo yum install -y <repository-url>
+  # Add Citus repository for package manager
+  curl https://install.citusdata.com/community/rpm.sh | sudo bash
 
   # install Citus extension
   sudo yum install -y citus_95
