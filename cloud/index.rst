@@ -33,3 +33,9 @@ Sizing your Citus Cluster
 All nodes within a Citus cluster come with 512 GB of storage. The number of nodes and size of the nodes you need will vary based on your data volume and performance requirements. We encourage you to focus on the number of logical shards and right distribution key first before focusing on overall size of your cluster. 
 
 Citus will use only as many physical cores to process a query as there are logical shards in your cluster. Thus we recommend creating sufficient shards to give your cluster room to grow. A good estimate is 4-8x the number of cores you currently use in your cluster. For instance choosing 128 logical shards is quite reasonable when you create your distributed tables.
+
+.. raw:: html
+
+  <script type="text/javascript">
+  Intercom('trackEvent', 'docs-cloud-pageview’);
+  </script>

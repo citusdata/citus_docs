@@ -38,3 +38,9 @@ Workloads which require a large flow of information between worker nodes general
 * Queries that return data-heavy ETL results rather than summaries
 
 These constraints come from the fact that Citus operates across many nodes (as compared to a single node database), giving you easy horizontal scaling as well as high availability.
+
+.. raw:: html
+
+  <script type="text/javascript">
+  Intercom('trackEvent', 'docs-whatis-pageview’);
+  </script>

@@ -1,7 +1,7 @@
 Support and Billing
 ###################
 
-All Citus Cloud plans come with support automatically 
+All Citus Cloud plans come with email support included. Premium support including SLA around response time and phone escalation is available on a contract basis for customers that may need a more premium level of support.
 
 Support
 -------
@@ -11,7 +11,14 @@ Email and web based support is available on all Citus Cloud plans. You can open 
 Billing and pricing 
 -------------------
 
-Citus Cloud bills on a per minute basis. We bill for a minimum of 1 hour of usage across all plans. Pricing varies based on the size and configuration of the cluster. The four factors that determine your price are:
+Citus Cloud bills on a per minute basis. We bill for a minimum of 1 hour of usage across all plans. Pricing varies based on the size and configuration of the cluster. The a few factors that determine your price are:
 
 - Size of your primary node
 - Size of your distributed nodes
+- Whether you have high availability enabled, both on the primary node and on distributed nodes
+
+.. raw:: html
+
+  <script type="text/javascript">
+  Intercom('trackEvent', 'docs-cloud-pageview’);
+  </script>
