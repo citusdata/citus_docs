@@ -37,5 +37,5 @@ Citus will use only as many physical cores to process a query as there are logic
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-cloud-pageview’);
+  Intercom('trackEvent', 'docs-cloud-pageview');
   </script>

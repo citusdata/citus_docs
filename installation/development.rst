@@ -19,5 +19,5 @@ edits into Citus and run interesting queries on them.
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-install-dev-pageview’);
+  Intercom('trackEvent', 'docs-install-dev-pageview');
   </script>

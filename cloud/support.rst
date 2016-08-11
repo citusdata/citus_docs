@@ -20,5 +20,5 @@ Citus Cloud bills on a per minute basis. We bill for a minimum of 1 hour of usag
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-cloud-pageview’);
+  Intercom('trackEvent', 'docs-cloud-pageview');
   </script>

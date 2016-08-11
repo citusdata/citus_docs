@@ -159,5 +159,5 @@ cluster, run this to stop the worker and master:
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-hash-tutorial-pageview’);
+  Intercom('trackEvent', 'docs-hash-tutorial-pageview');
   </script>
