@@ -15,3 +15,9 @@ High Availability
 -----------------
 
 In addition to continuous protection which is explained above, high availability is available if your application requires less exposure to downtime. If at provisioning you select high availability we provision stand-bys. This can be for your primary node, or for your distributed nodes.
+
+.. raw:: html
+
+  <script type="text/javascript">
+  Intercom('trackEvent', 'docs-cloud-pageview');
+  </script>

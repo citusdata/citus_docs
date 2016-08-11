@@ -155,3 +155,9 @@ cluster, run this to stop the worker and master:
 
   bin/pg_ctl -D data/master stop
   bin/pg_ctl -D data/worker stop
+
+.. raw:: html
+
+  <script type="text/javascript">
+  Intercom('trackEvent', 'docs-hash-tutorial-pageview');
+  </script>

@@ -11,3 +11,9 @@ use the guide below.
    multi_machine_aws.rst
    production_rhel.rst
    production_deb.rst
+
+.. raw:: html
+
+  <script type="text/javascript">
+  Intercom('trackEvent', 'docs-install-prod-pageview');
+  </script>

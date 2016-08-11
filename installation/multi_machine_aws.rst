@@ -128,3 +128,9 @@ Similarly to restart the database, you can use the command:
 
 .. note::
   You typically want to avoid making changes to resources created by CloudFormation, such as terminating EC2 instances. To shut the cluster down, you can simply delete the stack in the CloudFormation console.
+
+.. raw:: html
+
+  <script type="text/javascript">
+  Intercom('trackEvent', 'docs-install-aws-pageview');
+  </script>
