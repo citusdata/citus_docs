@@ -7,46 +7,47 @@ Over the last few years we've helped many different kinds of clients use Citus a
 a technical problem many businesses have: running real-time analytics over large streams
 of data.
 
-For example, say you're building an HTTP analytics dashboard. You have enough clients that
-around every millisecond a user hits one of their websites and sends a log record to you.
-You want to ingest all of those records (1000 inserts/sec) and create a dashboard which
-shows your clients things like how many requests to their sites are errors. It's important
-that this data show up with as little latency as possible so your clients can fix problems
-with their sites. It's also useful to show graphs of historical data, however keeping all
-the raw data around forever is prohibitively expensive.
+For example, say you're building and selling an HTTP analytics dashboard. Your business is
+proving pretty popular, so your users' sites generate 1000 requests every second. You want
+to ingest all of those records (1000 inserts/sec) and create a dashboard which shows your
+users things like how many requests to their sites are errors. It's important that this
+data shows up with as little latency as possible so your clients can fix problems with
+their sites. It's also useful to show graphs of historical data, however keeping all the
+raw data around forever is prohibitively expensive.
 
-Or maybe you're building an advertising network and want to show clients clickthrough
-rates on their campaigns. In this example latency is also critical, raw data volume is
-also high, and both historical and live data are important.
+Alternatively, maybe you're building an advertising network and want to show clients
+clickthrough rates on their campaigns. In this example latency is also critical, raw data
+volume is also high, and both historical and live data are important.
 
-In this reference architecture we'll demonstrate how to build part of the first example
+In this reference architecture we'll demonstrate how to build part of the first example,
 but this architecture would work equally well for the second and many other business
 use-cases.
 
 Running It Yourself
 -------------------
 
-There's `a github repo <https://github.com>`_ with scripts and usage instructions. If
-you've gone through our installation instructions for running on either single or multiple
-machines you're ready to try it out. There will be code snippets in this tutorial but they
-don't quite specify a complete system, the github repo has all the details in one place.
+There's `a github repo <https://github.com/citusdata/reference-architecture-resources>`_
+with scripts and usage instructions. If you've gone through our installation instructions
+and have Citus running, whether on a single machine or multiple machines, you're ready to
+try it out. There will be code snippets in this tutorial but they don't quite specify a
+complete system. The github repo has all the details in one place.
 
 Data Model
 ----------
 
-The data we're dealing with is an immutable stream of log data. Here we'll insert directly
-into Citus but it's also common for this data to first be routed through something like
-Kafka. Doing so makes the system a little more resilient to failures, lets the data be
-routed to multiple places (such as a warehouse like redshift), and (once data volumes
-become unmanageably high) makes it a little easier to start pre-aggregating the data
-before inserting.
+The data we're dealing with is an immutable stream of log data. In this example we'll
+insert directly into Citus but it's also common for this data to first be routed through
+something like Kafka. Doing so makes the system a little more resilient to failures, makes
+it easier to pre-aggregate the data before inserting once data volumes become unmanageably
+high, and makes it possible to route the data to multiple places, such as a warehouse like
+redshift.
 
 In this example, the raw data will use the following schema which isn't very realistic as
 far as http analytics go but sufficient for showing off the architecture we have in mind.
 
 .. code-block:: sql
 
-  -- this gets run on the master
+  -- this is run on the master
   CREATE TABLE http_request (
     zone_id INT, -- every customer's site is a different "zone"
     ingest_time TIMESTAMPTZ DEFAULT now(),
@@ -54,11 +55,11 @@ far as http analytics go but sufficient for showing off the architecture we have
     session_id UUID,
     url TEXT,
     request_country TEXT,
-    ip_address CIDR,
+    ip_address INET,
 
     status_code INT,
-    response_time_msec INT,
-  )
+    response_time_msec INT
+  );
   SELECT master_create_distributed_table('http_request', 'zone_id', 'hash');
   SELECT master_create_worker_shards('http_request', 16, 2);
 
@@ -67,17 +68,18 @@ we ask Citus to hash-distribute ``http_request`` using the ``zone_id`` column. T
 that, since the dashboard only looks at a single zone, all dashboard queries will hit a
 single shard.
 
-When we call :ref:`master_create_worker_shards <master_create_worker_shards>` we tell it
-to create 16 shards, and 2 replicas of each shard (for a total of 32 shard replicas).
-:ref:`We recommend <faq_choose_shard_count>` using 2-4x as many shards as cores in your
-cluster. If you use 1x as many shards as cores, any queries you run across the entire
-dataset will run in parallel and take advantage of all your workers. If you use 2-4x as
-many shards, you make it easy to add workers later, but don't add much additional
-overhead.
+When we call :ref:`master_create_worker_shards <master_create_worker_shards>` we tell
+Citus to create 16 shards, and 2 replicas of each shard (for a total of 32 shard
+replicas).  :ref:`We recommend <faq_choose_shard_count>` using 2-4x as many shards as
+cores in your cluster. If you use at least as many shards as cores, any queries you run
+across the entire dataset will run in parallel and take advantage of all your workers. If
+you use 2-4x as many shards, you make it easy to add workers later, but don't add much
+additional overhead.
 
-Using a replication factor of 2 (or any number > 1, really), means every row is written to
-multiple workers. When a worker fails the master will serve queries for any shards that
-worker was responsible for by querying the other replicas so you don't have any downtime.
+Using a replication factor of 2 (or any number greater than 1, really) means every row is
+written to multiple workers. When a worker fails the master will serve queries for any
+shards that worker was responsible for by querying the other replicas so you don't have
+any downtime.
 
 .. NOTE::
 
@@ -93,7 +95,7 @@ queries such as:
 
   INSERT INTO http_request (
       zone_id, session_id, url, request_country,
-      ip_address, status_code, reponse_time_msec
+      ip_address, status_code, response_time_msec
     ) VALUES (
         1, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'http://example.com/path', 'USA',
         cidr '88.250.10.123', 200, 10
@@ -107,7 +109,7 @@ And do some dashboard queries like:
     date_trunc('minute', ingest_time) as minute,
     COUNT(1) AS request_count,
 
-    COUNT(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
+    SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
     request_count - success_count AS error_count,
 
     SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
@@ -130,7 +132,7 @@ Rollups
 -------
 
 In order to fix both problems, we have multiple clients who roll up the raw data into a
-pre-aggregated form. Here, we'll aggregat the raw data into other tables which store
+pre-aggregated form. Here, we'll aggregate the raw data into other tables which store
 summaries of 1-minute, 1-hour, and 1-day intervals. These might correspond to zoom-levels
 in the dashboard. When the user wants request times for the last month the dashboard can
 read and chart the values for each of the last 30 days, no math required! For the rest of
@@ -148,7 +150,7 @@ repo has `DDL <http://github.com>`_ for the other resolutions.
         request_count INT,
         average_response_time_msec INT,
         CHECK (request_count = error_count + success_count)
-  )
+  );
   SELECT master_create_distributed_table('http_requests_1min', 'zone_id', 'hash');
   SELECT master_create_worker_shards('http_requests_1min', 16, 2);
   
@@ -168,7 +170,9 @@ This is called colocation; it makes queries such as joins faster and our rollups
 In order to populate ``http_request_1min`` we're going to periodically run the equivalent
 of an INSERT INTO SELECT. Citus doesn't yet support INSERT INTO SELECT on distributed
 tables, so instead we'll run a function on all the workers which runs INSERT INTO SELECT
-on every matching pair of shards (this is possible because the shards are colocated)
+on every matching pair of shards. This is possible because the shards are colocated: a
+function running on a worker will always be able to access both the shard of raw data and
+the matching shard of aggregated data that it needs.
 
 .. code-block:: plpgsql
 
@@ -179,8 +183,8 @@ on every matching pair of shards (this is possible because the shards are coloca
     v_latest_minute_already_aggregated timestamptz;
     v_new_latest_already_aggregated timestamptz;
   BEGIN
-    PERFORM SET lock_timeout 100;
-    -- since master calls this function every minute, and future invokations will
+    PERFORM SET LOCAL lock_timeout 100;
+    -- since master calls this function every minute, and future invocations will
     -- do any work this function doesn't do, it's safe to quit if we wait too long
     -- for this FOR UPDATE lock which makes sure at most one instance of this function
     -- runs at a time
@@ -192,9 +196,8 @@ on every matching pair of shards (this is possible because the shards are coloca
         '1970-01-01', source_shard::regclass, dest_shard::regclass);
       RETURN;
     END IF;
-    PERFORM RESET lock_timeout;
 
-    EXECUTE format('
+    EXECUTE format($$
       WITH (
         INSERT INTO %I (
             zone_id, ingest_time, request_count,
@@ -212,7 +215,7 @@ on every matching pair of shards (this is possible because the shards are coloca
           GROUP BY zone_id, minute
         ) as inserted_rows
       SELECT max(minute) INTO v_new_latest_already_aggregated FROM inserted_rows;
-    ', dest_shard, source_shard);
+    $$, dest_shard, source_shard);
 
     -- mark how much work we did, so the next invocation picks up where we left off
     PERFORM UPDATE rollup_thresholds
@@ -223,8 +226,9 @@ on every matching pair of shards (this is possible because the shards are coloca
 
 As discussed above, there's a 1-to-1 correspondence between http_request shards and
 ``http_request_1min`` shards. This function accepts the name of the ``http_request`` shard
-to read from and the name of the ``http_request_1min`` shard to write to. It can't figure
-it out itself because that kind of metadata is kept on the master, not the workers.
+to read from and the name of the ``http_request_1min`` shard to write to. The worker can't
+fiture out which shards to use by itself, because that kind of metadata is kept on the
+master, not the workers.
 
 It also uses a local table, to keep track of how much of the raw data has already been
 aggregated:
@@ -239,9 +243,8 @@ aggregated:
         UNIQUE (source_shard, dest_shard)
   );
 
-Since this function is given some metadata from the master, where does the master get that
-metadata from? Every minute it calls its own function which fires off all the
-aggregations:
+Only the master has metadata on the shards, so every minute it runs its own function which
+calls ``rollup_1min`` once for each shard in the ``http_request`` table:
 
 .. code-block:: plpgsql
 
@@ -249,6 +252,10 @@ aggregations:
   CREATE FUNCTION run_rollups(source_table text, dest_table text) RETURNS void
   AS $$
   DECLARE
+    source_shard INT;
+    dest_shard INT;
+    nodename TEXT;
+    nodeport INT;
   BEGIN
     FOR source_shard, dest_shard, nodename, nodeport IN
       SELECT
@@ -296,14 +303,13 @@ it's easy to write a function to expire old data:
 .. code-block:: plpgsql
 
   -- another function for the master
-  CREATE FUNCTION expire_old_request_data RETURNS void
+  CREATE FUNCTION expire_old_request_data() RETURNS void
   AS $$
-    SET citus.all_modification_commutative TO TRUE;
+    SET LOCAL citus.all_modification_commutative TO TRUE;
     SELECT master_modify_multiple_shards(
       'DELETE FROM http_request WHERE ingest_time < now() - interval ''1 hour'';');
     SELECT master_modify_multiple_shards(
       'DELETE FROM http_request_1min WHERE ingest_time < now() - interval ''1 day'';');
-    RESET citus.all_modification_commutative;
   END;
   $$ LANGUAGE 'sql';
 
@@ -321,11 +327,11 @@ it's easy to write a function to expire old data:
 Review, what have we done?
 --------------------------
 
-That's the entire architecture! The next few sections are just extensions for additional
-problems which often pop up. So what makes this better than what it replaced? Well, let's
-look again at the problem it solves. We wanted to enable a dashboard which aggregated:
+That's the entire architecture! The next few sections are solutions to additional problems
+which often pop up. So what makes the rollups better than using raw data? Let's look again
+at the problem it solves. We wanted to enable a dashboard which aggregated:
 
-1. Large amounts of data with
+1. Large amounts of data
 2. Low latency
 
 Where the naive solution struggled with a few problems:
@@ -347,21 +353,20 @@ end. When VACUUM runs it marks a `visibility map
 <https://www.postgresql.org/docs/9.5/static/storage-vm.html>`_ to keep track of which
 pages have already been vacuumed and can be skipped during the next vacuum. Since we never
 UPDATE, the only pages which have that bit reset are the pages of entirely DELETEd rows.
-All VACUUM needs to do is scan through and reclaim those empty pages, is happens very
+All VACUUM needs to do is scan through and reclaim those empty pages, it happens very
 quickly!
 
 Approximate Distinct Counts
 ---------------------------
 
-One kind of query we're particularily proud of is :ref:`approximate distinct counts
-<approx_dist_count>` using HLLs. How many unique visitors visited your site over some time
-period? Answering it requires storing the list of all previously-seen visitors in the
-rollup tables, a prohibitively large amount of data. Rather than answer the query exactly,
-we can answer the query approximately, using a datatype called hyperloglog, or HLL, which
-takes a surprisingly small amount of space to tell you approximately how many unique
-elements are in the set you pass it. Their accuracy can be adjusted, we'll use ones which,
-using only 1280 bytes, will be able to count up to tens of billions of unique visitors
-with at most 2.2% error.
+A common question in http analytics deals with :ref:`approximate distinct counts
+<count_distinct>`: How many unique visitors visited your site over some time period?
+Answering it exactly requires storing the list of all previously-seen visitors in the
+rollup tables, a prohibitively large amount of data. A datatype called hyperloglog, or
+HLL, can answer the query approximately; it takes a surprisingly small amount of space to
+tell you approximately how many unique elements are in a set you pass it. Its accuracy can
+be adjusted, we'll use ones which, using only 1280 bytes, will be able to count up to tens
+of billions of unique visitors with at most 2.2% error.
 
 An equivalent problem appears if you want to run a global query, such has the number of
 unique ip addresses who visited any site over some time period. Without HLLs this query
@@ -444,11 +449,10 @@ This lets us write the above query as:
 More information on HLLs can be found in `their github repo
 <https://github.com/aggregateknowledge/postgresql-hll>`_.
 
-HLLS are an example from the postgresql community, but there are a couple extensions we've
-written ourselves which do the same thing (improve performance and storage requirements)
-for different kinds of queries. This includes `count-min sketch
-<https://github.com/citusdata/cms_topn>`_ for
-top-n queries, and `HDR <https://github.com/citusdata/HDR>`_, for percentile queries.
+Where the HLL extension provides distinct counts, there are a more extensions which do
+a similar thing (improve performance and storage requirements) for other kinds of queries,
+such as `count-min sketch <https://github.com/citusdata/cms_topn>`_ for top-n queries, and
+`HDR <https://github.com/citusdata/HDR>`_, for percentile queries.
 
 Unstructured Data with JSONB
 ----------------------------
@@ -506,4 +510,4 @@ That's everything we wanted to cover. This article has been a little more in-dep
 the rest of our documentation, but it shows a complete system to give you an idea of what
 building a non-trivial application with Citus looks like. We hope it helps you figure out
 how to use Citus for your specific use-case. Have we mentioned there's `a github repo
-<https://github.com>`_ with lots of resources?
+<https://github.com/citusdata/reference-architecture-resources>`_ with lots of resources?
