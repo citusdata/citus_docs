@@ -12,17 +12,13 @@ This section describes the steps needed to set up a multi-node Citus cluster on 
 Steps to be executed on all nodes
 ---------------------------------
 
-**1. Add PGDG repository**
-
-Locate the PostgreSQL 9.5 YUM repository for your Linux distribution in `this list <http://yum.postgresql.org/repopackages.php#pg95>`_. Copy its URL and add the repository:
+**1. Add repository**
 
 ::
 
-  # add repository from URL you previously copied
-  sudo yum install -y <repository-url>
+  # Add Citus repository for package manager
+  curl https://install.citusdata.com/community/rpm.sh | sudo bash
 
-  # e.g on RHEL 7:
-  # sudo yum install -y https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-7-x86_64/pgdg-redhat95-9.5-2.noarch.rpm
 
 **2. Install PostgreSQL + Citus and initialize a database**
 
