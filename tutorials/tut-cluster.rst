@@ -11,9 +11,9 @@ To do the tutorials you'll need a single-machine Citus cluster with a master and
 .. raw:: html 
 
   <ul>
-  <li> OS X Package: <a href="https://packages.citusdata.com/tutorials/citus-tutorial-osx-1.1.0.tar.gz" onclick="trackOutboundLink('https://packages.citusdata.com/tutorials/citus-tutorial-osx-1.1.0.tar.gz'); return false;">Download</a>
+  <li> OS X Package: <a href="https://packages.citusdata.com/tutorials/citus-tutorial-osx-1.2.0.tar.gz" onclick="trackOutboundLink('https://packages.citusdata.com/tutorials/citus-tutorial-osx-1.2.0.tar.gz'); return false;">Download</a>
   </li>
-  <li> Linux Package: <a href="https://packages.citusdata.com/tutorials/citus-tutorial-linux-1.1.0.tar.gz" onclick="trackOutboundLink('https://packages.citusdata.com/tutorials/citus-tutorial-linux-1.1.0.tar.gz'); return false;">Download</a>
+  <li> Linux Package: <a href="https://packages.citusdata.com/tutorials/citus-tutorial-linux-1.2.0.tar.gz" onclick="trackOutboundLink('https://packages.citusdata.com/tutorials/citus-tutorial-linux-1.2.0.tar.gz'); return false;">Download</a>
   </li>
   </ul>
 
