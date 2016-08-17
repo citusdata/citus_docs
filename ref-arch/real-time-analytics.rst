@@ -37,10 +37,8 @@ Data Model
 
 The data we're dealing with is an immutable stream of log data. In this example we'll
 insert directly into Citus but it's also common for this data to first be routed through
-something like Kafka. Doing so makes the system a little more resilient to failures, makes
-it easier to pre-aggregate the data before inserting once data volumes become unmanageably
-high, and makes it possible to route the data to multiple places, such as a warehouse like
-redshift.
+something like Kafka. Doing so has the usual advantages, and makes it easier to
+pre-aggregate the data once data volumes vecome unmanageably high.
 
 In this example, the raw data will use the following schema which isn't very realistic as
 far as http analytics go but sufficient for showing off the architecture we have in mind.
@@ -86,7 +84,7 @@ any downtime.
   In Citus Cloud you must use a replication factor of 1 (instead of the 2 used here). As
   Citus Cloud uses `streaming replication
   <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high
-  availability maintaining shard replicas would be redundant and inneficient.
+  availability maintaining shard replicas would be redundant.
 
 With this, the system is ready to accept data and serve queries! You can run
 queries such as:
@@ -96,10 +94,10 @@ queries such as:
   INSERT INTO http_request (
       zone_id, session_id, url, request_country,
       ip_address, status_code, response_time_msec
-    ) VALUES (
-        1, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'http://example.com/path', 'USA',
-        cidr '88.250.10.123', 200, 10
-    );
+  ) VALUES (
+      1, 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'http://example.com/path', 'USA',
+      cidr '88.250.10.123', 200, 10
+  );
 
 And do some dashboard queries like:
 
@@ -110,16 +108,15 @@ And do some dashboard queries like:
     COUNT(1) AS request_count,
 
     SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
-    request_count - success_count AS error_count,
+    SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
 
     SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
   FROM http_request
-  WHERE zone_id = 1 AND minute = date_trunc('minute', now())
+  WHERE zone_id = 1 AND minute > date_trunc('minute', now()) - interval '5 minutes'
   GROUP BY minute;
 
 We've provided `a data ingest script <http://github.com>`_ you can run to generate example
-data. There are also a few more `example queries <http://github.com>`_ to play around with
-in the github repo.
+data.
 
 The above setup will get you pretty far, but has a few drawbacks:
 
@@ -132,12 +129,11 @@ Rollups
 -------
 
 In order to fix both problems, we have multiple clients who roll up the raw data into a
-pre-aggregated form. Here, we'll aggregate the raw data into other tables which store
-summaries of 1-minute, 1-hour, and 1-day intervals. These might correspond to zoom-levels
-in the dashboard. When the user wants request times for the last month the dashboard can
-read and chart the values for each of the last 30 days, no math required! For the rest of
-this document we'll only talk about the first granularity, the 1-minute one. The github
-repo has `DDL <http://github.com>`_ for the other resolutions.
+pre-aggregated form. Here, we'll aggregate the raw data into a table which stores
+summaries of 1-minute intervals. In a production system, you would probably also want
+something like 1-hour and 1-day intervals, these each correspond to zoom-levels in the
+dashboard. When the user wants request times for the last month the dashboard can simply
+read and chart the values for each of the last 30 days, no aggregation required.
 
 .. code-block:: sql
 
@@ -176,88 +172,51 @@ the matching shard of aggregated data that it needs.
 
 .. code-block:: plpgsql
 
-  -- this should be run on each worker
-  CREATE FUNCTION rollup_1min(source_shard text, dest_shard text) RETURNS void
-  AS $$
-  DECLARE
-    v_latest_minute_already_aggregated timestamptz;
-    v_new_latest_already_aggregated timestamptz;
-  BEGIN
-    PERFORM SET LOCAL lock_timeout 100;
-    -- since master calls this function every minute, and future invocations will
-    -- do any work this function doesn't do, it's safe to quit if we wait too long
-    -- for this FOR UPDATE lock which makes sure at most one instance of this function
-    -- runs at a time
-    SELECT ingest_time INTO v_latest_minute_already_aggregated FROM rollup_thresholds
-      WHERE source_shard = source_shard AND dest_shard = dest_shard
-      FOR UPDATE;
-    IF NOT FOUND THEN
-      INSERT INTO rollup_thresholds VALUES (
-        '1970-01-01', source_shard::regclass, dest_shard::regclass);
-      RETURN;
-    END IF;
+    CREATE FUNCTION rollup_1min(p_source_shard text, p_dest_shard text) RETURNS void
+    AS $$
+    BEGIN
+      -- the dest shard will have a name like: http_request_1min_204566, where 204566 is the
+      -- shard id. We lock using that id, to make sure multiple instances of this function
+      -- never simultaneously write to the same shard.
+      IF pg_try_advisory_xact_lock(29999, split_part(p_dest_shard, '_', 4)::int) = false THEN
+        -- N.B. make sure the int constant (29999) you use here is unique within your system
+        RETURN;
+      END IF;
+    
+      EXECUTE format($insert$
+        INSERT INTO %2$I (
+          zone_id, ingest_time, request_count,
+          error_count, success_count, average_response_time_msec
+        ) SELECT
+          zone_id,
+          date_trunc('minute', ingest_time) as minute,
+          COUNT(1) as request_count,
+          SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
+          SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
+          SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
+        FROM %1$I
+        WHERE
+          date_trunc('minute', ingest_time) > (SELECT max(ingest_time) FROM %2$I)
+          AND date_trunc('minute', ingest_time) < date_trunc('minute', now())
+        GROUP BY zone_id, minute
+        ORDER BY minute ASC;
+      $insert$, p_source_shard, p_dest_shard);
+    END;
+    $$ LANGUAGE 'plpgsql';
 
-    EXECUTE format($$
-      WITH (
-        INSERT INTO %I (
-            zone_id, ingest_time, request_count,
-            error_count, success_count, average_response_time_msec)
-          SELECT
-            zone_id,
-            date_trunc('minute', ingest_time) as minute,
-            COUNT(1) as request_count,
-            COUNT(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
-            request_count - success_count AS error_count,
-            SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
-            -- later sections will show some more clauses that can go here
-          FROM %I
-          WHERE ingest_time > v_latest_minute_already_aggregated
-          GROUP BY zone_id, minute
-        ) as inserted_rows
-      SELECT max(minute) INTO v_new_latest_already_aggregated FROM inserted_rows;
-    $$, dest_shard, source_shard);
+Inside this function you can see the dashboard query from earlier. It's been wrapped in
+some machinery which writes the results into ``http_request_1min`` and allows passing in
+the name of the shards to read and write from. It also takes out an advisory lock, to
+ensure there aren't any concurrency bugs where the same rows are written multiple times.
 
-    -- mark how much work we did, so the next invocation picks up where we left off
-    PERFORM UPDATE rollup_thresholds
-      SET ingest_time = v_new_latest_already_aggregated
-      WHERE source_shard = source_shard AND dest_shard = dest_shard;
-  END;
-  $$ LANGUAGE 'plpgsql';
-
-As discussed above, there's a 1-to-1 correspondence between http_request shards and
-``http_request_1min`` shards. This function accepts the name of the ``http_request`` shard
-to read from and the name of the ``http_request_1min`` shard to write to. The worker can't
-fiture out which shards to use by itself, because that kind of metadata is kept on the
-master, not the workers.
-
-It also uses a local table, to keep track of how much of the raw data has already been
-aggregated:
-
-.. code-block:: sql
-
-  -- every worker should have their own local version of this table
-  CREATE TABLE rollup_thresholds (
-        ingest_time timestamptz,
-        source_shard regclass,
-        dest_shard regclass,
-        UNIQUE (source_shard, dest_shard)
-  );
-
-Only the master has metadata on the shards, so every minute it runs its own function which
-calls ``rollup_1min`` once for each shard in the ``http_request`` table:
+The machinery above which accepts the names of the shards to read and write is necessary
+because only the master has the metadata required to know what the shard pairs are. It has
+its own function to figure that out:
 
 .. code-block:: plpgsql
 
-  -- this should be run on the master
-  CREATE FUNCTION run_rollups(source_table text, dest_table text) RETURNS void
-  AS $$
-  DECLARE
-    source_shard INT;
-    dest_shard INT;
-    nodename TEXT;
-    nodeport INT;
-  BEGIN
-    FOR source_shard, dest_shard, nodename, nodeport IN
+    CREATE FUNCTION colocated_shard_placements(left_table REGCLASS, right_table REGCLASS)
+    RETURNS TABLE (left_shard TEXT, right_shard TEXT, nodename TEXT, nodeport BIGINT) AS $$
       SELECT
         a.logicalrelid::regclass||'_'||a.shardid,
         b.logicalrelid::regclass||'_'||b.shardid,
@@ -265,24 +224,37 @@ calls ``rollup_1min`` once for each shard in the ``http_request`` table:
       FROM pg_dist_shard a
       JOIN pg_dist_shard b USING (shardminvalue)
       JOIN pg_dist_shard_placement p ON (a.shardid = p.shardid)
-      WHERE a.logicalrelid = 'first'::regclass AND b.logicalrelid = 'second'::regclass;
-    LOOP
-      SELECT * FROM dblink(
-        format('host=%s port=%d', nodename, nodeport),
-        format('SELECT rollup_1min(%, %s);', source_shard, dest_shard));
-    END LOOP;
-  END;
-  $$ LANGUAGE 'plpgsql';
+      WHERE a.logicalrelid = left_table AND b.logicalrelid = right_table;
+    $$ LANGUAGE 'sql';
+
+Using that metadata, every minute it runs a script which calls ``rollup_1min`` once for
+each pair of shards:
+
+.. code-block:: bash
+
+   #!/usr/bin/env bash
+   
+   QUERY=$(cat <<END
+     SELECT * FROM colocated_shard_placements(
+       'http_request'::regclass, 'http_request_1min'::regclass
+     );
+   END
+   )
+   
+   COMMAND="psql -h \$2 -p \$3 -c \"SELECT rollup_1min('\$0', '\$1')\""
+   
+   psql -tA -F" " -c "$QUERY" | xargs -P32 -n4 sh -c "$COMMAND"
 
 .. NOTE::
 
   There are many ways to make sure the function is called periodically and no answer that
   works well for every system. If you're able to run cron on the same machine as the
-  master, you can do something as simple as this:
+  master, and assuming you named the above script ``run_rollups.sh``, you can do something
+  as simple as this:
 
   .. code-block:: bash
   
-    * * * * * psql -c "SELECT run_rollups('http_requests', 'http_requests_1min');"
+     * * * * * /some/path/run_rollups.sh
 
 The dashboard query from earlier is now a lot nicer:
 
@@ -291,7 +263,7 @@ The dashboard query from earlier is now a lot nicer:
   SELECT
     request_count, success_count, error_count, average_response_time_msec
   FROM http_request_1min
-  WHERE zone_id = 1 AND minute = date_trunc('minute', now());
+  WHERE zone_id = 1 AND minute > date_trunc('minute', now()) - interval '5 minutes';
 
 Expiring Old Data
 -----------------
