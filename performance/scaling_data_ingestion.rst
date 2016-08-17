@@ -63,7 +63,7 @@ COPY can be used to load data directly from an application using COPY .. FROM ST
 
 ::
 
-    COPY counters FROM STDIN WTIH (FORMAT CSV);
+    COPY counters FROM STDIN WITH (FORMAT CSV);
 
 In psql, the \\COPY command can be used to load data from the local machine. The \\COPY command actually sends a COPY .. FROM STDIN command to the server before sending the local data, as would an application that loads data directly.
 
