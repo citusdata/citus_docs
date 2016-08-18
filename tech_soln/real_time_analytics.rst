@@ -19,14 +19,14 @@ Alternatively, maybe you're building an advertising network and want to show cli
 clickthrough rates on their campaigns. In this example latency is also critical, raw data
 volume is also high, and both historical and live data are important.
 
-In this reference architecture we'll demonstrate how to build part of the first example,
+In this technical solution we'll demonstrate how to build part of the first example,
 but this architecture would work equally well for the second and many other business
 use-cases.
 
 Running It Yourself
 -------------------
 
-There's `a github repo <https://github.com/citusdata/reference-architecture-resources>`_
+There's `a github repo <https://github.com/citusdata/technical-solution-resources>`_
 with scripts and usage instructions. If you've gone through our installation instructions
 and have Citus running, whether on a single machine or multiple machines, you're ready to
 try it out. There will be code snippets in this tutorial but they don't quite specify a
@@ -482,4 +482,4 @@ That's everything we wanted to cover. This article has been a little more in-dep
 the rest of our documentation, but it shows a complete system to give you an idea of what
 building a non-trivial application with Citus looks like. We hope it helps you figure out
 how to use Citus for your specific use-case. Have we mentioned there's `a github repo
-<https://github.com/citusdata/reference-architecture-resources>`_ with lots of resources?
+<https://github.com/citusdata/technical-solution-resources>`_ with lots of resources?

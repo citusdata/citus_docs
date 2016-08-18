@@ -30,9 +30,9 @@ topics.
    installation/production.rst
 
 .. toctree::
-   :caption: Reference Architecture
+   :caption: Technical Solutions
 
-   ref-arch/real-time-analytics.rst
+   tech_soln/real_time_analytics.rst
 
 .. toctree::
    :maxdepth: 1
