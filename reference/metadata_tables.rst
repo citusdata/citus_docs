@@ -51,8 +51,8 @@ The pg_dist_shard table stores metadata about individual shards of a table. This
 | shardstorage   |            char      | | Type of storage used for this shard. Different storage types are        |
 |                |                      | | discussed in the table below.                                           |
 +----------------+----------------------+---------------------------------------------------------------------------+
-|  shardalias    |            text      | | Determines the name used on the worker PostgreSQL database to refer     |
-|                |                      | | to this shard. If NULL, the default name is "tablename_shardid".        |
+|  shardalias    |            text      | | Deprecated. This column doesn't do anything and will be removed in a    |
+|                |                      | | future release.                                                         |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | shardminvalue  |            text      | | For append distributed tables, minimum value of the distribution column |
 |                |                      | | in this shard (inclusive).                                              |
