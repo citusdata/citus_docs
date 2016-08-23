@@ -147,9 +147,8 @@ This script showed a data layout which many Citus users choose. One
 table stored a stream of events while another table stored some
 aggregations of those events and made queries over them quick.
 
-That's all for now. To learn more about Citus continue to the
-:ref:`next tutorial <tut_append>`, or, if you're done with the
-cluster, run this to stop the worker and master:
+We hope you enjoyed working through this tutorial. Once you're ready
+to stop the cluster run these commands:
 
 ::
 

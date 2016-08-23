@@ -20,7 +20,6 @@ topics.
 
    tutorials/tut-cluster.rst
    tutorials/tut-hash-distribution.rst
-   tutorials/tut-append-distribution.rst
 
 .. toctree::
    :caption: Installation
