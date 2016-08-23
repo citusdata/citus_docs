@@ -32,7 +32,7 @@ topics.
 .. toctree::
    :caption: Technical Solutions
 
-   tech_soln/real_time_analytics.rst
+   tech_soln/real_time_dashboards.rst
 
 .. toctree::
    :maxdepth: 1

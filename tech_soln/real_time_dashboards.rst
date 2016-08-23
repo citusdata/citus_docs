@@ -1,17 +1,18 @@
 .. _introduction:
 
-Real Time Analytics
+Real Time Dashboards
 #####################
 
-One workload Citus is commonly used for involves running real-time analytics over large
-streams of data.
+Citus provides real-time queries over large datasets. One workload we commonly see at
+Citus involves powering real-time dashboards of event data.
 
-For example, say you're a cloud services provider selling a dashboard for HTTP traffic.
-Every time one of your clients receives an HTTP request your service receives a log
-record. You provide your clients insights such as the number of HTTP errors their site
-served. It's important that this data shows up with as little latency as possible, so your
-clients can quickly notice problems with their sites. It's also important that clients are
-able to see graphs of historical trends.
+For example, you could be a cloud services provider helping other businesses monitor their
+HTTP traffic. Every time one of your clients receives an HTTP request your service
+receives a log record. You want to ingest all those records and create an HTTP analytics
+dashboard which gives your clients insights such as the number HTTP errors their sites
+served. It's important that this data shows up with as little latency as possible so your
+clients can fix problems with their sites. It's also important for the dashboard to show
+graphs of historical trends.
 
 Alternatively, maybe you're building an advertising network and want to show clients
 clickthrough rates on their campaigns. In this example latency is also critical, raw data
@@ -24,7 +25,7 @@ Running It Yourself
 -------------------
 
 There will be code snippets in this tutorial but they don't specify a complete system.
-There's `a github repo <https://github.com/citusdata/technical-solution-resources>`_ with
+There's `a github repo <https://github.com/citusdata/realtime-dashboards-resources>`_ with
 all the details in one place. If you've followed our installation instructions for running
 Citus on either a single or multiple machines you're ready to try it out.
 
@@ -62,7 +63,7 @@ all the data for a particular site will live in the same shard.
 
 When we call :ref:`master_create_worker_shards <master_create_worker_shards>` we tell
 Citus to create 16 shards and 2 replicas of each shard (for a total of 32 shard replicas).
-:ref:`We recommend <faq_choose_shard_count>` using 2-4x as many shards as CPU cores in
+We recommend :ref:`using 2-4x as many shards <faq_choose_shard_count>` as CPU cores in
 your cluster. Using this many shards lets you rebalance data across your cluster after
 adding new worker nodes.
 
@@ -79,7 +80,7 @@ using the other replicas.
 
 With this, the system is ready to accept data and serve queries! We've provided `a data
 ingest script
-<https://github.com/citusdata/technical-solution-resources/blob/master/ingest_example_data.sql>`
+<https://github.com/citusdata/realtime-dashboards-resources/blob/master/ingest_example_data.sql>`_
 you can run to generate example data. Once you've ingested data, you can run dashboard
 queries such as:
 
@@ -151,6 +152,7 @@ on every matching pair of shards. This is possible because the tables are coloca
 
 .. code-block:: plpgsql
 
+    -- this function is created on the workers
     CREATE FUNCTION rollup_1min(p_source_shard text, p_dest_shard text) RETURNS void
     AS $$
     BEGIN
@@ -194,6 +196,7 @@ its own function to figure that out:
 
 .. code-block:: plpgsql
 
+    -- this function is created on the master
     CREATE FUNCTION colocated_shard_placements(left_table REGCLASS, right_table REGCLASS)
     RETURNS TABLE (left_shard TEXT, right_shard TEXT, nodename TEXT, nodeport BIGINT) AS $$
       SELECT
@@ -259,7 +262,7 @@ keep raw data for one day and 1-minute aggregations for one month.
   AS $$
     SET LOCAL citus.all_modification_commutative TO TRUE;
     SELECT master_modify_multiple_shards(
-      'DELETE FROM http_request WHERE ingest_time < now() - interval ''1 dat'';');
+      'DELETE FROM http_request WHERE ingest_time < now() - interval ''1 day'';');
     SELECT master_modify_multiple_shards(
       'DELETE FROM http_request_1min WHERE ingest_time < now() - interval ''1 month'';');
   END;
@@ -305,7 +308,7 @@ to enable it:
 
 .. code-block:: sql
 
-  -- this part must be run on all workers
+  -- this part must be run on all nodes
   CREATE EXTENSION hll;
 
   -- this part runs on the master
@@ -356,7 +359,6 @@ You can then compute distinct ip counts over a time period with the following qu
 
 .. code-block:: sql
 
-  -- working version of the above query
   SELECT
     hll_cardinality(SUM(distinct_ip_addresses))
   FROM http_request_1min
@@ -364,11 +366,6 @@ You can then compute distinct ip counts over a time period with the following qu
 
 You can find more information on HLLs `in the project's GitHub repository
 <https://github.com/aggregateknowledge/postgresql-hll>`_.
-
-Where the HLL extension provides distinct counts, there are more extensions which do a
-similar thing (improve performance and storage requirements) for other kinds of queries,
-such as `count-min sketch <https://github.com/citusdata/cms_topn>`_ for top-n queries, and
-`HDR <https://github.com/citusdata/HDR>`_, for percentile queries.
 
 Unstructured Data with JSONB
 ----------------------------
@@ -421,5 +418,5 @@ Resources
 
 This article shows a complete system to give you an idea of what building a non-trivial
 application with Citus looks like. Again, there's `a github repo
-<https://github.com/citusdata/technical-solution-resources>`_ with all the scripts
+<https://github.com/citusdata/realtime-dashboards-resources>`_ with all the scripts
 mentioned here.
