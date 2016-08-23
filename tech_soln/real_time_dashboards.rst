@@ -93,7 +93,7 @@ queries such as:
     SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
     SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
   FROM http_request
-  WHERE zone_id = 1 AND minute > date_trunc('minute', now()) - interval '5 minutes'
+  WHERE site_id = 1 AND date_trunc('minute', ingest_time) > now() - interval '5 minutes'
   GROUP BY minute;
  
 The setup described above works, but has two drawbacks:
@@ -126,14 +126,14 @@ for each of the last 30 days.
         request_count INT,
         average_response_time_msec INT,
         CHECK (request_count = error_count + success_count),
-        CHECK (ingest_time = date_trunc('minute', ingest_time)),
+        CHECK (ingest_time = date_trunc('minute', ingest_time))
   );
-  SELECT master_create_distributed_table('http_requests_1min', 'site_id', 'hash');
-  SELECT master_create_worker_shards('http_requests_1min', 16, 2);
+  SELECT master_create_distributed_table('http_request_1min', 'site_id', 'hash');
+  SELECT master_create_worker_shards('http_request_1min', 16, 2);
   
   -- indexes aren't automatically created by Citus
   -- this will create the index on all shards
-  CREATE INDEX ON http_requests_1min (zone_id, ingest_time);
+  CREATE INDEX http_request_1min_idx ON http_request_1min (site_id, ingest_time);
 
 This looks a lot like the previous code block. Most importantly: It also shards on
 ``site_id`` and it also uses 16 shards with 2 replicas of each. Because all three of
@@ -166,10 +166,10 @@ on every matching pair of shards. This is possible because the tables are coloca
     
       EXECUTE format($insert$
         INSERT INTO %2$I (
-          zone_id, ingest_time, request_count,
+          site_id, ingest_time, request_count,
           error_count, success_count, average_response_time_msec
         ) SELECT
-          zone_id,
+          site_id,
           date_trunc('minute', ingest_time) as minute,
           COUNT(1) as request_count,
           SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
@@ -179,7 +179,7 @@ on every matching pair of shards. This is possible because the tables are coloca
         WHERE
           date_trunc('minute', ingest_time) > (SELECT max(ingest_time) FROM %2$I)
           AND date_trunc('minute', ingest_time) < date_trunc('minute', now())
-        GROUP BY zone_id, minute
+        GROUP BY site_id, minute
         ORDER BY minute ASC;
       $insert$, p_source_shard, p_dest_shard);
     END;
@@ -245,7 +245,7 @@ The dashboard query from earlier is now a lot nicer:
   SELECT
     request_count, success_count, error_count, average_response_time_msec
   FROM http_request_1min
-  WHERE zone_id = 1 AND minute > date_trunc('minute', now()) - interval '5 minutes';
+  WHERE site_id = 1 AND minute > date_trunc('minute', now()) - interval '5 minutes';
 
 Expiring Old Data
 -----------------
@@ -312,7 +312,7 @@ to enable it:
   CREATE EXTENSION hll;
 
   -- this part runs on the master
-  ALTER TABLE http_requests_1min ADD COLUMN distinct_ip_addresses (hll);
+  ALTER TABLE http_request_1min ADD COLUMN distinct_ip_addresses (hll);
 
 When doing our rollups, we can now aggregate sessions into an hll column with queries
 like this:
@@ -320,11 +320,11 @@ like this:
 .. code-block:: sql
 
   SELECT
-    zone_id, date_trunc('minute', ingest_time) as minute,
+    site_id, date_trunc('minute', ingest_time) as minute,
     hll_add_agg(hll_hash_text(ip_address)) AS distinct_ip_addresses
   WHERE minute = date_trunc('minute', now())
   FROM http_request
-  GROUP BY zone_id, minute;
+  GROUP BY site_id, minute;
 
 Now dashboard queries are a little more complicated, you have to read out the distinct
 number of ip addresses by calling the ``hll_Cardinality`` function:
@@ -335,7 +335,7 @@ number of ip addresses by calling the ``hll_Cardinality`` function:
     request_count, success_count, error_count, average_response_time_msec,
     hll_cardinality(distinct_ip_addresses) AS distinct_ip_address_count
   FROM http_request_1min
-  WHERE zone_id = 1 AND minute = date_trunc('minute', now());
+  WHERE site_id = 1 AND minute = date_trunc('minute', now());
 
 HLLs aren't just faster, they let you do things you couldn't previously. Say we did our
 rollups, but instead of using HLLs we saved the exact unique counts. This works fine, but
@@ -383,24 +383,24 @@ First, add the new column to our rollup table:
 
 .. code-block:: sql
 
-  ALTER TABLE http_requests_1min ADD COLUMN country_counters (JSONB);
+  ALTER TABLE http_request_1min ADD COLUMN country_counters (JSONB);
 
 Next, include it in the rollups by adding a clause like this to the rollup function:
 
 .. code-block:: sql
 
   SELECT
-    zone_id, minute,
+    site_id, minute,
     jsonb_object_agg(request_country, country_count)
   FROM (
     SELECT
-      zone_id, date_trunc('minute', ingest_time) as minute,
+      site_id, date_trunc('minute', ingest_time) as minute,
       request_country,
       count(1) AS country_count
     FROM http_request
-    GROUP BY zone_id, minute, request_country
+    GROUP BY site_id, minute, request_country
   )
-  GROUP BY zone_id, minute;
+  GROUP BY site_id, minute;
 
 Now, if you want to get the number of requests which came from america in your dashboard,
 your can modify the dashboard query to look like this:
@@ -411,7 +411,7 @@ your can modify the dashboard query to look like this:
     request_count, success_count, error_count, average_response_time_msec,
     country_counters->'USA' AS american_visitors
   FROM http_request_1min
-  WHERE zone_id = 1 AND minute = date_trunc('minute', now());
+  WHERE site_id = 1 AND minute = date_trunc('minute', now());
 
 Resources
 ---------
