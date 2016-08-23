@@ -73,6 +73,11 @@ topics.
 
    faq/faq.rst
 
+.. toctree::
+   :caption: Timeseries
+
+   time_distribution/append.rst
+
 .. raw:: html
 
   <script type="text/javascript">
