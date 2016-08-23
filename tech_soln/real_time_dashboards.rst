@@ -177,7 +177,8 @@ on every matching pair of shards. This is possible because the tables are coloca
           SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
         FROM %1$I
         WHERE
-          date_trunc('minute', ingest_time) > (SELECT max(ingest_time) FROM %2$I)
+          date_trunc('minute', ingest_time)
+            > (SELECT COALESCE(max(ingest_time), timestamp '10-10-1901') FROM %2$I)
           AND date_trunc('minute', ingest_time) < date_trunc('minute', now())
         GROUP BY site_id, minute
         ORDER BY minute ASC;
