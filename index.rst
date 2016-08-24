@@ -66,16 +66,12 @@ topics.
    reference/user_defined_functions.rst
    reference/metadata_tables.rst
    reference/configuration.rst
+   reference/append.rst
 
 .. toctree::
    :caption: FAQ
 
    faq/faq.rst
-
-.. toctree::
-   :caption: Timeseries
-
-   time_distribution/append.rst
 
 .. raw:: html
 
