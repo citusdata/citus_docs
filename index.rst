@@ -16,9 +16,8 @@ topics.
    aboutcitus/introduction_to_citus.rst
 
 .. toctree::
-   :caption: Tutorials
+   :caption: Tutorial
 
-   tutorials/tut-cluster.rst
    tutorials/tut-hash-distribution.rst
 
 .. toctree::
