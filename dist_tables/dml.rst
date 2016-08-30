@@ -1,7 +1,9 @@
 .. _dml:
 
-Data Manipulation
-#################
+Ingesting, Modifying Data (DML)
+###############################
+
+The following code snippets use the distributed tables :ref:`dist_tables_dataset`.
 
 Inserting Data
 --------------

@@ -35,6 +35,7 @@ topics.
    dist_tables/ddl.rst
    dist_tables/dml.rst
    dist_tables/querying.rst
+   dist_tables/extensions.rst
 
 .. toctree::
    :caption: Performance

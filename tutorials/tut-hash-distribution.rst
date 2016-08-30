@@ -144,8 +144,7 @@ should be distributed tables, stored across the cluster.
 
 These say to store each table as a collection of shards, each responsible for
 holding a different subset of the data. The shard a particular row belongs in
-will be computed by hashing the ``editor`` column. The page on :ref:`hash_distribution`
-goes into more detail.
+will be computed by hashing the ``editor`` column. The page on :ref:`working_with_distributed_tables` goes into more detail.
 
 Finally, create the shards:
 

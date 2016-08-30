@@ -1,7 +1,12 @@
 .. _ddl:
 
-Data Definition
-###############
+Creating Distributed Tables (DDL)
+#################################
+
+.. _dist_tables_dataset:
+
+Example Dataset
+---------------
 
 .. note::
     The instructions below assume that the PostgreSQL installation is in your path. If not, you will need to add it to your PATH environment variable. For example:
@@ -18,7 +23,7 @@ We use the github events dataset to illustrate the commands below. You can downl
     gzip -d github_events-2015-01-01-*.gz
 
 Creating And Distributing Tables
----------------------------------
+--------------------------------
 
 To create a distributed table, you need to first define the table schema. To do so, you can define a table using the `CREATE TABLE <http://www.postgresql.org/docs/9.5/static/sql-createtable.html>`_ statement in the same way as you would do with a regular PostgreSQL table.
 
@@ -64,5 +69,5 @@ Dropping Tables
 You can use the standard PostgreSQL DROP TABLE command to remove your distributed tables. As with regular tables, DROP TABLE removes any indexes, rules, triggers, and constraints that exist for the target table. In addition, it also drops the shards on the worker nodes and cleans up their metadata.
 
 ::
-    
+
     DROP TABLE github_events;

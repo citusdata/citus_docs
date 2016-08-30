@@ -1,16 +1,7 @@
 .. _working_with_distributed_tables:
 
-Concepts
-########
-
-Citus provides distributed functionality by extending PostgreSQL using the hook and extension APIs. This allows users to benefit from the features that come with the rich PostgreSQL ecosystem. These features include, but aren’t limited to, support for a wide range of `data types <http://www.postgresql.org/docs/9.5/static/datatype.html>`_ (including semi-structured data types like jsonb and hstore), `operators and functions <http://www.postgresql.org/docs/9.5/static/functions.html>`_, full text search, and other extensions such as `PostGIS <http://postgis.net/>`_ and `HyperLogLog <https://github.com/aggregateknowledge/postgresql-hll>`_. Further, proper use of the extension APIs enable compatibility with standard PostgreSQL tools such as `pgAdmin <http://www.pgadmin.org/>`_, `pg_backup <http://www.postgresql.org/docs/9.5/static/backup.html>`_, and `pg_upgrade <http://www.postgresql.org/docs/9.5/static/pgupgrade.html>`_.
-
-Citus users can leverage standard PostgreSQL interfaces with minimal modifications to enable distributed behavior. This includes commands for creating tables, loading data, updating rows, and also for querying. You can find a full reference of the PostgreSQL constructs `here <http://www.postgresql.org/docs/9.5/static/sql-commands.html>`_. We also discuss the relevant commands in our documentation as needed. Before we dive into the syntax for these commands, we briefly discuss an important concept which must be decided during distributed table creation: the "distribution column" whose values determine the destination shard for each row.
-
-.. _distribution_column_method:
-
-Distribution Column
--------------------
+Picking a Distribution Column
+#############################
 
 Every distributed table in Citus has exactly one column which is chosen as the distribution column. This informs the database to maintain statistics about the distribution column in each shard. Citus’s distributed query optimizer then leverages these statistics to determine how best a query should be executed.
 
