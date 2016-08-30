@@ -5,11 +5,6 @@ Scaling Out Data Ingestion
 
 Citus lets you scale out data ingestion to very high rates, but there are several trade-offs to consider in terms of the throughput, durability, consistency and latency. In this section, we discuss several approaches to data ingestion and give examples of how to use them.
 
-Hash Distributed Tables
-$$$$$$$$$$$$$$$$$$$$$$$
-
-Hash distributed tables support ingestion using standard single row INSERT and UPDATE commands, as well as bulk ingestion through COPY.
-
 Real-time Inserts (0-50k/s)
 ---------------------------
 

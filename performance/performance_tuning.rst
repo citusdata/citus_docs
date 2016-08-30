@@ -3,12 +3,7 @@
 Query Performance Tuning
 $$$$$$$$$$$$$$$$$$$$$$$$$$
 
-In this section, we describe how you can tune your Citus cluster to get
-maximum performance. We begin by explaining how choosing the
-right distribution column and method affect performance. We then describe how
-you can first tune your database for high performance on one PostgreSQL server and
-then scale it out across all the CPUs in the cluster. In this section, we also discuss
-several performance related configuration parameters wherever relevant.
+In this section, we describe how you can tune your Citus cluster to get maximum performance. We begin by explaining how choosing the right distribution column affects performance. We then describe how you can first tune your database for high performance on one PostgreSQL server and then scale it out across all the CPUs in the cluster. In this section, we also discuss several performance related configuration parameters wherever relevant.
 
 .. _table_distribution_shards:
 
