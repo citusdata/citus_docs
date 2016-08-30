@@ -3,6 +3,12 @@
 Append Distribution
 ###################
 
+.. note::
+
+  Append distribution is a specialized technique which requires
+  care to use efficiently. Hash distribution is a better choice
+  for most situations.
+
 While Citus' most common use cases involve hash data distribution,
 it can also distribute timeseries data across a variable number of
 shards by their order in time. This section provides a short reference
