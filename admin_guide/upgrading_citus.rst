@@ -49,7 +49,7 @@ Please set appropriate values for data location like below. This makes accessing
 
 **3. Stop loading data on to that instance**
 
-If you are upgrading the master, then you should stop all data-loading/appending and staging before copying out the metadata. If data-loading continues after step 4 below, then the metadata will be out of date.
+If you are upgrading the master, then you should stop all data inserts/updates/deletes or COPY operations before copying out the metadata. If data-loading continues after step 4 below, then the metadata will be out of date.
 
 **4. Copy out pg_dist catalog metadata from the Citus 4 server (Only needed for master)**
 ::
