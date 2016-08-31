@@ -16,6 +16,20 @@ High Availability
 
 In addition to continuous protection which is explained above, high availability is available if your application requires less exposure to downtime. If at provisioning you select high availability we provision stand-bys. This can be for your primary node, or for your distributed nodes.
 
+Security
+--------
+
+Encryption
+~~~~~~~~~~
+
+All data within Citus Cloud is encrypted at rest both on the instance as well as all backups for disaster recovery. We also require that you connect to your database with TLS. 
+
+2 Factor authentication
+~~~~~~~~~~~~~~~~~~~~~~~
+
+We support two factor authentication for all Citus accounts. You can enable it from within your Citus Cloud account. We support google authenticator and authy as two primary apps for setting up your two factor authentication.
+
+
 .. raw:: html
 
   <script type="text/javascript">
