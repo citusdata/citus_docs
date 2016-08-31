@@ -42,8 +42,6 @@ Sets the commit protocol to use when performing COPY on a hash distributed table
 
 * **2pc:** The transactions in which COPY is performed on the shard placements are first prepared using PostgreSQL's `two-phase commit <http://www.postgresql.org/docs/current/static/sql-prepare-transaction.html>`_ and then committed. Failed commits can be manually recovered or aborted using COMMIT PREPARED or ROLLBACK PREPARED, respectively. When using 2pc, `max_prepared_transactions <http://www.postgresql.org/docs/current/static/runtime-config-resource.html>`_ should be increased on all the workers, typically to the same value as max_connections.
 
-This parameter is not used for COPY into append distributed tables, since COPY into an append distributed table always creates new shards, which will not become visible if a failure occurs.
-
 citus.shard_replication_factor (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

@@ -16,11 +16,9 @@ topics.
    aboutcitus/introduction_to_citus.rst
 
 .. toctree::
-   :caption: Tutorials
+   :caption: Tutorial
 
-   tutorials/tut-cluster.rst
    tutorials/tut-hash-distribution.rst
-   tutorials/tut-append-distribution.rst
 
 .. toctree::
    :caption: Installation
@@ -35,7 +33,6 @@ topics.
 
    dist_tables/working_with_distributed_tables.rst
    dist_tables/hash_distribution.rst
-   dist_tables/append_distribution.rst
    dist_tables/querying.rst
    dist_tables/postgresql_extensions.rst
 
@@ -69,6 +66,7 @@ topics.
    reference/user_defined_functions.rst
    reference/metadata_tables.rst
    reference/configuration.rst
+   reference/append.rst
 
 .. toctree::
    :caption: FAQ
