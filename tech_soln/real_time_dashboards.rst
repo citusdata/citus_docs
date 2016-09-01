@@ -49,7 +49,7 @@ to demonstrate the overall architecture; a real system might use additional colu
 
     url TEXT,
     request_country TEXT,
-    ip_address INET,
+    ip_address TEXT,
 
     status_code INT,
     response_time_msec INT
@@ -167,7 +167,7 @@ on every matching pair of shards. This is possible because the tables are coloca
       EXECUTE format($insert$
         INSERT INTO %2$I (
           site_id, ingest_time, request_count,
-          error_count, success_count, average_response_time_msec
+          success_count, error_count, average_response_time_msec
         ) SELECT
           site_id,
           date_trunc('minute', ingest_time) as minute,
@@ -246,7 +246,7 @@ The dashboard query from earlier is now a lot nicer:
   SELECT
     request_count, success_count, error_count, average_response_time_msec
   FROM http_request_1min
-  WHERE site_id = 1 AND minute > date_trunc('minute', now()) - interval '5 minutes';
+  WHERE site_id = 1 AND date_trunc('minute', ingest_time) > date_trunc('minute', now()) - interval '5 minutes';
 
 Expiring Old Data
 -----------------
@@ -313,7 +313,7 @@ to enable it:
   CREATE EXTENSION hll;
 
   -- this part runs on the master
-  ALTER TABLE http_request_1min ADD COLUMN distinct_ip_addresses (hll);
+  ALTER TABLE http_request_1min ADD COLUMN distinct_ip_addresses hll;
 
 When doing our rollups, we can now aggregate sessions into an hll column with queries
 like this:
@@ -323,12 +323,12 @@ like this:
   SELECT
     site_id, date_trunc('minute', ingest_time) as minute,
     hll_add_agg(hll_hash_text(ip_address)) AS distinct_ip_addresses
-  WHERE minute = date_trunc('minute', now())
   FROM http_request
+  WHERE date_trunc('minute', ingest_time) = date_trunc('minute', now())
   GROUP BY site_id, minute;
 
 Now dashboard queries are a little more complicated, you have to read out the distinct
-number of ip addresses by calling the ``hll_Cardinality`` function:
+number of ip addresses by calling the ``hll_cardinality`` function:
 
 .. code-block:: sql
 
@@ -384,7 +384,7 @@ First, add the new column to our rollup table:
 
 .. code-block:: sql
 
-  ALTER TABLE http_request_1min ADD COLUMN country_counters (JSONB);
+  ALTER TABLE http_request_1min ADD COLUMN country_counters JSONB;
 
 Next, include it in the rollups by adding a clause like this to the rollup function:
 
@@ -395,12 +395,12 @@ Next, include it in the rollups by adding a clause like this to the rollup funct
     jsonb_object_agg(request_country, country_count)
   FROM (
     SELECT
-      site_id, date_trunc('minute', ingest_time) as minute,
+      site_id, date_trunc('minute', ingest_time) AS minute,
       request_country,
       count(1) AS country_count
     FROM http_request
     GROUP BY site_id, minute, request_country
-  )
+  ) AS subquery
   GROUP BY site_id, minute;
 
 Now, if you want to get the number of requests which came from america in your dashboard,
