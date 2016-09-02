@@ -11,3 +11,7 @@ To generate HTML version:
 
     # open _build/index.html in your browser
     ```
+
+---
+
+**Sphinx Installation Note:** If you're on OSX you might want to install the Python from homebrew - then a simple `pip install sphinx` does the trick.
