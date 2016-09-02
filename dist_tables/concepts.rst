@@ -1,4 +1,4 @@
-.. _working_with_distributed_tables:
+.. _distributed_tables:
 
 Picking a Distribution Column
 #############################
