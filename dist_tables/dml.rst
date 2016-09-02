@@ -3,7 +3,7 @@
 Ingesting, Modifying Data (DML)
 ###############################
 
-The following code snippets use the distributed tables :ref:`dist_tables_dataset`.
+The following code snippets use the distributed tables example dataset, see :ref:`ddl`.
 
 Inserting Data
 --------------

@@ -3,11 +3,6 @@
 Creating Distributed Tables (DDL)
 #################################
 
-.. _dist_tables_dataset:
-
-Example Dataset
----------------
-
 .. note::
     The instructions below assume that the PostgreSQL installation is in your path. If not, you will need to add it to your PATH environment variable. For example:
 
