@@ -30,11 +30,6 @@ topics.
    installation/production.rst
 
 .. toctree::
-   :caption: Technical Solutions
-
-   tech_soln/real_time_dashboards.rst
-
-.. toctree::
    :maxdepth: 1
    :caption: Distributed Tables
 
@@ -58,6 +53,11 @@ topics.
    cloud/index.rst
    cloud/features.rst
    cloud/support.rst
+
+.. toctree::
+   :caption: Technical Solutions
+
+   tech_soln/real_time_dashboards.rst
 
 .. toctree::
    :maxdepth: 1
