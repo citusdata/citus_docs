@@ -52,6 +52,11 @@ topics.
    cloud/support.rst
 
 .. toctree::
+   :caption: Technical Solutions
+
+   tech_soln/real_time_dashboards.rst
+
+.. toctree::
    :maxdepth: 1
    :caption: Administration
 

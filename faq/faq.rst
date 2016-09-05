@@ -63,6 +63,7 @@ It is important to note that you can still run all of those queries on regular P
 
 How do I choose the shard count when I hash-partition my data?
 --------------------------------------------------------------
+.. _faq_choose_shard_count:
 
 Optimal shard count is related to the total number of cores on the workers. Citus partitions an incoming query into its fragment queries which run on individual worker shards. Hence, the degree of parallelism for each query is governed by the number of shards the query hits. To ensure maximum parallelism, you should create enough shards on each node such that there is at least one shard per CPU core.
 
