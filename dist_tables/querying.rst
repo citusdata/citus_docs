@@ -1,7 +1,7 @@
 .. _querying:
 
-Querying Distributed Tables
-$$$$$$$$$$$$$$$$$$$$$$$$$$$
+Querying Distributed Tables (SQL)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 As discussed in the previous sections, Citus is an extension which extends the latest PostgreSQL for distributed execution. This means that you can use standard PostgreSQL `SELECT <http://www.postgresql.org/docs/9.5/static/sql-select.html>`_ queries on the Citus master for querying. Citus will then parallelize the SELECT queries involving complex selections, groupings and orderings, and JOINs to speed up the query performance. At a high level, Citus partitions the SELECT query into smaller query fragments, assigns these query fragments to workers, oversees their execution, merges their results (and orders them if needed), and returns the final result to the user.
 
