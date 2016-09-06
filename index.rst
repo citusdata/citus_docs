@@ -31,10 +31,11 @@ topics.
    :maxdepth: 1
    :caption: Distributed Tables
 
-   dist_tables/working_with_distributed_tables.rst
-   dist_tables/hash_distribution.rst
+   dist_tables/concepts.rst
+   dist_tables/ddl.rst
+   dist_tables/dml.rst
    dist_tables/querying.rst
-   dist_tables/postgresql_extensions.rst
+   dist_tables/extensions.rst
 
 .. toctree::
    :caption: Performance
