@@ -108,59 +108,6 @@ In such cases the table(s) to be partitioned are determined by the query optimiz
 
 In general, colocated joins are more efficient than repartition joins as repartition joins require shuffling of data. So, you should try to distribute your tables by the common join keys whenever possible.
 
-.. _data_warehousing_queries:
-
-Data Warehousing Queries
-########################
-
-Citus's current version works well for real-time analytics use cases. We are continuously working to increase SQL coverage to better support data warehousing use-cases. In the mean-time, since Citus is an extension on top of PostgreSQL, we can usually offer workarounds that work well for a number of use cases. So, if you can't find documentation for a SQL construct or run into an unsupported feature, please send us an email at engage@citusdata.com.
-
-Here, we would like to illustrate one such example which works well when queries have restrictive filters i.e. when very few results need to be transferred to the master. In such cases, it is possible to run unsupported queries in two steps by storing the results of the inner queries in regular PostgreSQL tables on the master. Then, the next step can be executed on the master like a regular PostgreSQL query.
-
-For example, currently Citus does not have out of the box support for window functions on queries involving distributed tables. Suppose you have a query on the github_events table that has a window function like the following:
-
-
-::
-
-    SELECT
-        repo_id, actor->'id', count(*)
-    OVER
-        (PARTITION BY repo_id)
-    FROM
-        github_events
-    WHERE
-        repo_id = 1 OR repo_id = 2;
-
-You can re-write the query like below:
-
-Statement 1:
-
-::
-
-    CREATE TEMP TABLE results AS 
-    (SELECT
-        repo_id, actor->'id' as actor_id
-    FROM
-        github_events
-    WHERE
-    	repo_id = 1 OR repo_id = 2
-    );
-
-Statement 2:
-
-::
-
-    SELECT
-        repo_id, actor_id, count(*)
-    OVER
-        (PARTITION BY repo_id)
-    FROM
-        results;
-
-Similar workarounds can be found for other data warehousing queries involving unsupported constructs.
-
-Note: The above query is a simple example intended at showing how meaningful workarounds exist around the lack of support for a few query types. Over time, we intend to support these commands out of the box within Citus.
-
 .. _query_performance:
 
 Query Performance

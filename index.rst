@@ -64,6 +64,7 @@ topics.
    :caption: Reference
 
    reference/citus_sql_reference.rst
+   reference/sql_workarounds.rst
    reference/user_defined_functions.rst
    reference/metadata_tables.rst
    reference/configuration.rst
