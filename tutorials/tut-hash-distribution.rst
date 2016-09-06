@@ -142,10 +142,10 @@ should be distributed tables, stored across the cluster.
     'wikipedia_editors', 'editor', 'hash'
   );
 
-These say to store each table as a collection of shards, each responsible for
-holding a different subset of the data. The shard a particular row belongs in
-will be computed by hashing the ``editor`` column. The page on :ref:`hash_distribution`
-goes into more detail.
+These say to store each table as a collection of shards, each
+responsible for holding a different subset of the data. The shard
+a particular row belongs in will be computed by hashing the ``editor``
+column. The page on :ref:`distributed_tables` goes into more detail.
 
 Finally, create the shards:
 

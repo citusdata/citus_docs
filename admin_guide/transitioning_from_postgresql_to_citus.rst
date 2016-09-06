@@ -3,7 +3,7 @@
 Transitioning From PostgreSQL to Citus
 #########################################
 
-As Citus is a PostgreSQL extension, PostgreSQL users can start using Citus by simply installing the extension on their existing PostgreSQL database. Once you create the extension, you can create and use distributed tables through standard PostgreSQL interfaces while maintaining compatibility with existing PostgreSQL tools. Please look at :ref:`working_with_distributed_tables` for specific instructions.
+As Citus is a PostgreSQL extension, PostgreSQL users can start using Citus by simply installing the extension on their existing PostgreSQL database. Once you create the extension, you can create and use distributed tables through standard PostgreSQL interfaces while maintaining compatibility with existing PostgreSQL tools. Please look at :ref:`ddl` for specific instructions.
 
 To move your data from a PostgreSQL table to a distributed table, you can copy
 out the data into a csv file and then use the \\copy command to load it into a
