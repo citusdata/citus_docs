@@ -10,14 +10,20 @@ Citus extends the underlying database rather than forking it, which gives develo
 When to Use Citus
 -----------------
 
-Citus provides users real-time responsiveness over large datasets, most commonly seen in rapidly growing event systems or with time series data. Example use cases include:
+There are two situations where Citus particularly excels. The first is supporting real-time queries over large datasets. Commonly these queries occur in rapidly growing event systems or systems with time series data. Example use cases include:
 
 * Analytic dashboards with subsecond response times
 * Exploratory queries on unfolding events
 * Large dataset archival and reporting
 * Analyzing sessions with funnel, segmentation, and cohort queries
 
-For concrete examples check out our customer `use cases <https://www.citusdata.com/solutions/case-studies>`_. Typical Citus workloads involve ingesting large volumes of data and running analytic queries on that data in real-time.
+Citus' benefits here are its ability to parallelize query execution and scale linearly with the number of worker databases in a cluster. However as analytical queries must aggregate data across a distributed system some up-front modeling is required for optimal performance and not all SQL guarantees can be enforced.
+
+The second situation is managing the data for multi-tenant applications. These are applications where a single database cluster serves multiple tenants (typically companies), each of whose data is private from the other tenants. For a thorough overview of this type of application and its challenges, see Microsoft's paper `Multi-Tenant Data Architecture <https://msdn.microsoft.com/en-us/library/aa479086.aspx>`_. Citus uses the "shared schema" approach described in the paper, but isolates tenant information in separate shards. Citus routes individual tenant queries to the appropriate shard, where there is full-featured SQL support.
+
+Existing schemas and queries typically require little adjustment during migration to the multi-tenant architecture. However the localized single-tenant queries lose the chance for parallelism found in the real-time use case. Additionally multi-tenant apps with few -- or very large -- tenants will not see a significant performance improvement.
+
+For concrete examples check out our customer `use cases <https://www.citusdata.com/solutions/case-studies>`_.
 
 Considerations for Use
 ----------------------
