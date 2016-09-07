@@ -50,6 +50,7 @@ topics.
 
    cloud/index.rst
    cloud/features.rst
+   cloud/logging.rst
    cloud/support.rst
 
 .. toctree::
