@@ -61,6 +61,16 @@ Each created shard is assigned a unique shard id and all its replicas have the s
 
 You are now ready to insert data into the distributed table and run queries on it. You can also learn more about the UDF used in this section in the :ref:`user_defined_functions` of our documentation.
 
+.. note::
+
+  After creating a distributed table Citus does not automatically copy pre-existing table data into the shards. To move your data from a PostgreSQL table to a distributed table, you can copy the data into a csv file and then use the \\copy command to load it into a distributed table. Alternatively, you could copy data from the local table and pipe it directly to a copy into the distributed table. For example:
+
+  ::
+
+    psql -c "COPY local_table TO STDOUT" | psql -c "COPY distributed_table FROM STDIN"
+
+  One thing to note as you transition from a single node to multiple nodes is that you should create your extensions, operators, user defined functions, and custom data types on all nodes.
+
 Dropping Tables
 ---------------
 
