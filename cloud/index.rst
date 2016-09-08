@@ -10,10 +10,10 @@ Once you've created your account at `https://console.citusdata.com <https://cons
 
 .. image:: ../images/cloud_provisioning.png
 
-Configuring your plan
+Configuring Your Plan
 ---------------------
 
-Citus Cloud plans can vary based on the size of your primary node, size of your distributed nodes, how many distributed nodes and whether you have high availability or not. From within the Citus console you can configure you plan or you can preview what it might look like within the `pricing calculator <https://console.citusdata.com>`_. 
+Citus Cloud plans vary based on the size of your primary node, size of your distributed nodes, number of distributed nodes and whether you have high availability or not. From within the Citus console you can configure your plan or you can preview what it might look like within the `pricing calculator <https://console.citusdata.com/pricing>`_.
 
 The key items you'll care about for each node:
 
@@ -24,12 +24,10 @@ The key items you'll care about for each node:
 High Availability
 ~~~~~~~~~~~~~~~~~
 
-By enabling high availability for your cluster we automatically provision stand-bys. These stand-bys receive streaming updates directly from each of the leader nodes. We continuously monitor the leader nodes to ensure they're available and healthy, in the event of a failure we automatically fail you over. 
+The high availability option on a cluster automatically provisions instance stand-bys. These stand-bys receive streaming updates directly from each of the leader nodes. We continuously monitor the leader nodes to ensure they're available and healthy. In the event of a failure we automatically switch to the stand-bys.
 
-If you're application needs higher uptime requirements high availability will provide more uptime. Both with and without high availability enabled your data is replicated to S3 so disaster recovery is possible–reducing any risk of data loss. While we do not offer a SLA on uptime; The rough guideline we encourage is that: if an issues occurs and your instance fails and you cannot suffer up to 1 hr of downtime then high availability is encouraged.
+Note that your data is replicated to S3 with and without enabling high availability. This allows disaster recovery and reduces the risk of data loss. Although the data is safe either way, we suggest enabling high availability if you cannot tolerate up to one hour of downtime in the rare occurrence of an instance failure. We do not offer a SLA on uptime.
 
-
-Custom plans
 .. raw:: html
 
   <script type="text/javascript">
