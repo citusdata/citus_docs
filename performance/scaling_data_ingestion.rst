@@ -76,7 +76,7 @@ Masterless Citus (50k/s-500k/s)
 
 .. note::
 
-    This section is currently experimental and not a guide to setup masterless clusters in production. We are working on providing official support for masterless clusters including replication and automated fail-over solutions. Please contact us at engage@citusdata.com if your use-case requires multiple masters.
+    This section is currently experimental and not a guide to setup masterless clusters in production. We are working on providing official support for masterless clusters including replication and automated fail-over solutions. Please `contact us <https://www.citusdata.com/about/contact_us>`_ if your use-case requires multiple masters.
 
 It is technically possible to create the distributed table on every node in the cluster. The big advantage is that all  queries on distributed tables can be performed at a very high rate by spreading the queries across the workers. In this case, the replication factor should always be 1 to ensure consistency, which causes data to become unavailable when a node goes down. All nodes should have a hot standby and automated fail-over to ensure high availability.
 
