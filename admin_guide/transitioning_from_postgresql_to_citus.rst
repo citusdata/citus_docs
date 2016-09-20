@@ -16,4 +16,4 @@ directly pipe it to a copy into the distributed table. For example:
 
 One thing to note as you transition from a single node to multiple nodes is that you should create your extensions, operators, user defined functions, and custom data types on all nodes.
 
-If you have any questions or require assistance in scaling out your existing PostgreSQL installation, please get in touch with us at engage@citusdata.com.
+If you have any questions or require assistance in scaling out your existing PostgreSQL installation, please `get in touch with us <https://www.citusdata.com/about/contact_us>`_.
