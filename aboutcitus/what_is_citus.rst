@@ -33,6 +33,12 @@ Another Citus use case is managing the data for multi-tenant applications. These
 
 All tenants share a common schema and Citus distributes their data across shards. Citus routes individual tenant queries to the appropriate shard, each of which acts like a standalone database with full-featured SQL support.
 
+Example use cases include:
+
+* Foo
+* Bar
+* Baz
+
 Considerations for Use
 ----------------------
 
