@@ -33,20 +33,14 @@ Another Citus use case is managing the data for multi-tenant applications. These
 
 All tenants share a common schema and Citus distributes their data across shards. Citus routes individual tenant queries to the appropriate shard, each of which acts like a standalone database with full-featured SQL support.
 
-Example use cases include:
-
-* Foo
-* Bar
-* Baz
+This allows you to scale out your tenants across several machines and CPU cores, adding more memory and processing power for parallelism. Sharing a schema and cluster infrastructure among multiple tenants also uses hardware efficiently and reduces maintenance costs compared with a one-tenant-per-database instance model.
 
 Considerations for Use
 ----------------------
 
 Citus extends PostgreSQL with distributed functionality, but it is not a drop-in replacement that scales out all workloads. A performant Citus cluster involves thinking about the data model, tooling, and choice of SQL features used.
 
-For queries involving multiple shards, data models that have few (<10) tables work much better than those that have hundreds of tables. This is a property of distributed systems: the more tables, the more distributed dependencies.
-
-For tools and SQL features, a good way to think about them is the following: if your workload aligns with use-cases noted in the :ref:`when_to_use_citus` section and you happen to run into an unsupported tool or query, then there’s usually a good workaround.
+A good way to think about tools and SQL features is the following: if your workload aligns with use-cases noted in the :ref:`when_to_use_citus` section and you happen to run into an unsupported tool or query, then there’s usually a good workaround.
 
 When Citus is Inappropriate
 ---------------------------
