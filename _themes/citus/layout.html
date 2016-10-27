@@ -192,6 +192,25 @@
 
 </script>
 <script>
+
+/**
+* Workaround to ensure its argument *is* called within opt_timeout
+* of this function returning it for use in a callback.
+* This applies to Analytics callbacks which are thwarted by an
+* ad blocker.
+*/
+var createFunctionWithTimeout = function(callback, opt_timeout) {
+  var called = false;
+  function fn() {
+    if (!called) {
+      called = true;
+      callback();
+    }
+  }
+  setTimeout(fn, opt_timeout || 1000);
+  return fn;
+}
+
 /**
 * Function that tracks a click on an outbound link in Analytics.
 * This function takes a valid URL string as an argument, and uses that URL string
@@ -199,10 +218,10 @@
 * using 'navigator.sendBeacon' in browser that support it.
 */
 var trackOutboundLink = function(url) {
-   ga('send', 'event', 'outbound', 'click', url, {
-     'transport': 'beacon',
-     'hitCallback': function(){document.location = url;}
-   });
+  ga('send', 'event', 'outbound', 'click', url, {
+    'transport': 'beacon',
+    'hitCallback': createFunctionWithTimeout(function(){document.location = url;}, 500)
+  });
 }
 </script>
 
