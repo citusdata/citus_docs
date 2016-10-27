@@ -220,7 +220,7 @@ var createFunctionWithTimeout = function(callback, opt_timeout) {
 var trackOutboundLink = function(url) {
   ga('send', 'event', 'outbound', 'click', url, {
     'transport': 'beacon',
-    'hitCallback': createFunctionWithTimeout(function(){document.location = url;})
+    'hitCallback': createFunctionWithTimeout(function(){document.location = url;}, 500)
   });
 }
 </script>
