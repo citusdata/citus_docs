@@ -72,13 +72,13 @@ The pg_dist_shard table stores metadata about individual shards of a table. This
 ::
 
     SELECT * from pg_dist_shard;
-    logicalrelid  | shardid | shardstorage | shardminvalue | shardmaxvalue 
-    ---------------+---------+--------------+---------------+---------------
-    github_events |  102026 | t            | 268435456     | 402653183
-    github_events |  102027 | t            | 402653184     | 536870911
-    github_events |  102028 | t            | 536870912     | 671088639
-    github_events |  102029 | t            | 671088640     | 805306367
-    (4 rows)
+     logicalrelid  | shardid | shardstorage | shardminvalue | shardmaxvalue 
+     ---------------+---------+--------------+---------------+---------------
+     github_events |  102026 | t            | 268435456     | 402653183
+     github_events |  102027 | t            | 402653184     | 536870911
+     github_events |  102028 | t            | 536870912     | 671088639
+     github_events |  102029 | t            | 671088640     | 805306367
+     (4 rows)
 
 
 Shard Storage Types
