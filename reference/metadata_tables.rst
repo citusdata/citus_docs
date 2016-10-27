@@ -25,7 +25,8 @@ The pg_dist_partition table stores metadata about which tables in the database a
 |                |                      | | number, type and other relevant information.                            |
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   colocationid |         integer      | | Co-location group to which this table belongs. Tables in the same group |
-|                |                      | | allow co-located joins and distributed rollups.                         |
+|                |                      | | allow co-located joins and distributed rollups among other              |
+|                |                      | | optimizations.                                                          |
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   repmodel     |         char         | | The method used for data replication. The values of this column         |
 |                |                      | | corresponding to different replication methods are :-                   |   
@@ -37,7 +38,7 @@ The pg_dist_partition table stores metadata about which tables in the database a
 
     SELECT * from pg_dist_partition;
      logicalrelid  | partmethod |                                                        partkey                                                         | colocationid | repmodel 
-     ---------------+------------+------------------------------------------------------------------------------------------------------------------------+--------------+----------
+    ---------------+------------+------------------------------------------------------------------------------------------------------------------------+--------------+----------
      github_events | h          | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location -1} |            2 | c
      (1 row)
 
@@ -73,7 +74,7 @@ The pg_dist_shard table stores metadata about individual shards of a table. This
 
     SELECT * from pg_dist_shard;
      logicalrelid  | shardid | shardstorage | shardminvalue | shardmaxvalue 
-     ---------------+---------+--------------+---------------+---------------
+    ---------------+---------+--------------+---------------+---------------
      github_events |  102026 | t            | 268435456     | 402653183
      github_events |  102027 | t            | 402653184     | 536870911
      github_events |  102028 | t            | 536870912     | 671088639
@@ -127,22 +128,22 @@ The pg_dist_shard_placement table tracks the location of shard replicas on worke
 | nodeport       |            int       | | Port number on which the worker node PostgreSQL server hosting this     |
 |                |                      | | shard placement is listening.                                           |
 +----------------+----------------------+---------------------------------------------------------------------------+
+| placementid    |        bigint        | | Unique auto-generated identifier for each individual placement.         |
++----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
     SELECT * from pg_dist_shard_placement;
-     shardid | shardstate | shardlength | nodename  | nodeport
-    ---------+------------+-------------+-----------+----------
-      102065 |      	1 | 	7307264 | localhost | 	9701
-      102065 |      	1 | 	7307264 | localhost | 	9700
-      102066 |      	1 | 	5890048 | localhost | 	9700
-      102066 |      	1 | 	5890048 | localhost | 	9701
-      102067 |      	1 | 	5242880 | localhost | 	9701
-      102067 |      	1 | 	5242880 | localhost | 	9700
-      102068 |      	1 | 	3923968 | localhost | 	9700
-      102068 |      	1 | 	3923968 | localhost | 	9701
+      shardid | shardstate | shardlength | nodename  | nodeport | placementid 
+     ---------+------------+-------------+-----------+----------+-------------
+       102008 |          1 |           0 | localhost |    12345 |           1
+       102008 |          1 |           0 | localhost |    12346 |           2
+       102009 |          1 |           0 | localhost |    12346 |           3
+       102009 |          1 |           0 | localhost |    12347 |           4
+       102010 |          1 |           0 | localhost |    12347 |           5
+       102010 |          1 |           0 | localhost |    12345 |           6
+       102011 |          1 |           0 | localhost |    12345 |           7
 
-    (8 rows)
 
 Shard Placement States
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
