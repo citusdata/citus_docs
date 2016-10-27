@@ -10,23 +10,37 @@ Citus extends the underlying database rather than forking it, which gives develo
 When to Use Citus
 -----------------
 
-Citus provides users real-time responsiveness over large datasets, most commonly seen in rapidly growing event systems or with time series data. Example use cases include:
+There are two situations where Citus particularly excels: real-time analytics and multi-tenant applications.
+
+Real-Time Analytics
+~~~~~~~~~~~~~~~~~~~
+
+Citus supports real-time queries over large datasets. Commonly these queries occur in rapidly growing event systems or systems with time series data. Example use cases include:
 
 * Analytic dashboards with subsecond response times
 * Exploratory queries on unfolding events
 * Large dataset archival and reporting
 * Analyzing sessions with funnel, segmentation, and cohort queries
 
-For concrete examples check out our customer `use cases <https://www.citusdata.com/solutions/case-studies>`_. Typical Citus workloads involve ingesting large volumes of data and running analytic queries on that data in real-time.
+Citus' benefits here are its ability to parallelize query execution and scale linearly with the number of worker databases in a cluster.
+
+For concrete examples check out our customer `use cases <https://www.citusdata.com/solutions/case-studies>`_.
+
+Multi-Tenant Applications
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Another Citus use case is managing the data for multi-tenant applications. These are applications where a single database cluster serves multiple tenants (typically companies), each of whose data is private from the other tenants.
+
+All tenants share a common schema and Citus distributes their data across shards. Citus routes individual tenant queries to the appropriate shard, each of which acts like a standalone database with full-featured SQL support.
+
+This allows you to scale out your tenants across several machines and CPU cores, adding more memory and processing power for parallelism. Sharing a schema and cluster infrastructure among multiple tenants also uses hardware efficiently and reduces maintenance costs compared with a one-tenant-per-database instance model.
 
 Considerations for Use
 ----------------------
 
 Citus extends PostgreSQL with distributed functionality, but it is not a drop-in replacement that scales out all workloads. A performant Citus cluster involves thinking about the data model, tooling, and choice of SQL features used.
 
-Data models that have fewer tables (<10) work much better than those that have hundreds of tables. This is a property of distributed systems: the more tables, the more distributed dependencies.
-
-For tools and SQL features, a good way to think about them is the following: if your workload aligns with use-cases noted in the :ref:`when_to_use_citus` section and you happen to run into an unsupported tool or query, then there’s usually a good workaround.
+A good way to think about tools and SQL features is the following: if your workload aligns with use-cases noted in the :ref:`when_to_use_citus` section and you happen to run into an unsupported tool or query, then there’s usually a good workaround.
 
 When Citus is Inappropriate
 ---------------------------
