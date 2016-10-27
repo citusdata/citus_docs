@@ -50,15 +50,13 @@ The pg_dist_shard table stores metadata about individual shards of a table. This
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
 +================+======================+===========================================================================+
-| logicalrelid   |           oid        | | Distributed table to which this shard belongs. This value references the|
+| logicalrelid   |         regclass     | | Distributed table to which this shard belongs. This value references the|
 |                |                      | | relfilenode column in the pg_class system catalog table.                |
 +----------------+----------------------+---------------------------------------------------------------------------+
 |    shardid     |         bigint       | | Globally unique identifier assigned to this shard.                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | shardstorage   |            char      | | Type of storage used for this shard. Different storage types are        |
 |                |                      | | discussed in the table below.                                           |
-+----------------+----------------------+---------------------------------------------------------------------------+
-|  shardalias    |            text      | | Deprecated and unused column. Will be removed in a future release.      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | shardminvalue  |            text      | | For append distributed tables, minimum value of the distribution column |
 |                |                      | | in this shard (inclusive).                                              |
@@ -74,13 +72,12 @@ The pg_dist_shard table stores metadata about individual shards of a table. This
 ::
 
     SELECT * from pg_dist_shard;
-     logicalrelid | shardid | shardstorage | shardalias | shardminvalue | shardmaxvalue
-    --------------+---------+--------------+------------+---------------+---------------
-           488843 |  102065 | t        	   |        	| 27        	| 14995004
-           488843 |  102066 | t        	   |        	| 15001035  	| 25269705
-           488843 |  102067 | t            |        	| 25273785  	| 28570113
-           488843 |  102068 | t        	   |        	| 28570150  	| 28678869
-
+    logicalrelid  | shardid | shardstorage | shardminvalue | shardmaxvalue 
+    ---------------+---------+--------------+---------------+---------------
+    github_events |  102026 | t            | 268435456     | 402653183
+    github_events |  102027 | t            | 402653184     | 536870911
+    github_events |  102028 | t            | 536870912     | 671088639
+    github_events |  102029 | t            | 671088640     | 805306367
     (4 rows)
 
 
