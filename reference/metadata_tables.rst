@@ -172,3 +172,37 @@ Citus manages shard health on a per-placement basis and automatically marks a pl
 |                |                      | | subsequent background activity.                                         |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
+
+Worker Nodes Table
+---------------------------------------
+
+The pg_dist_node table contains information about the worker nodes in the cluster. 
+
++----------------+----------------------+---------------------------------------------------------------------------+
+|      Name      |         Type         |       Description                                                         |
++================+======================+===========================================================================+
+| nodeid         |         int          | | Auto-generated identifier for an individual node.                       |
++----------------+----------------------+---------------------------------------------------------------------------+
+| groupid        |         int          | | Identifier used to denote a group of 1 primary and 0 or more            |
+|                |                      | | secondaries, when the streaming replication model is used. By default   |
+|                |                      | | it is the same as the nodeid.                                           | 
++----------------+----------------------+---------------------------------------------------------------------------+
+|  nodename      |         text         | | DNS host name of the worker node PostgreSQL server hosting this shard   |
+|                |                      | | placement.                                                              |
++----------------+----------------------+---------------------------------------------------------------------------+
+| nodeport       |         int          | | Port number on which the worker node PostgreSQL server hosting this     |
+|                |                      | | shard placement is listening.                                           |
++----------------+----------------------+---------------------------------------------------------------------------+
+| noderack       |        text          | | Rack placement information for the worker node (if available).          |
++----------------+----------------------+---------------------------------------------------------------------------+
+
+::
+
+    SELECT * from pg_dist_node;
+     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata 
+    --------+---------+-----------+----------+----------+-------------
+          1 |       1 | localhost |    12345 | default  | f
+          2 |       2 | localhost |    12346 | default  | f
+          3 |       3 | localhost |    12347 | default  | f
+    (3 rows)
+
