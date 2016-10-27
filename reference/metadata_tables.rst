@@ -13,26 +13,33 @@ The pg_dist_partition table stores metadata about which tables in the database a
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
 +================+======================+===========================================================================+
-| logicalrelid   |           oid        | | Distributed table to which this row corresponds. This value references  | 
+| logicalrelid   |         regclass     | | Distributed table to which this row corresponds. This value references  | 
 |                |                      | | the relfilenode column in the pg_class system catalog table.            |
 +----------------+----------------------+---------------------------------------------------------------------------+   
-|  partmethod    |            char      | | The method used for partitioning / distribution. The values of this     |
+|  partmethod    |         char         | | The method used for partitioning / distribution. The values of this     |
 |                |                      | | column corresponding to different distribution methods are :-           |
 |                |                      | | append: 'a'                                                             |
 |                |                      | | hash: 'h'                                                               |
 +----------------+----------------------+---------------------------------------------------------------------------+
-|   partkey      |            text      | | Detailed information about the distribution column including column     |
+|   partkey      |         text         | | Detailed information about the distribution column including column     |
 |                |                      | | number, type and other relevant information.                            |
++----------------+----------------------+---------------------------------------------------------------------------+
+|   colocationid |         integer      | | Co-location group to which this table belongs. Tables in the same group |
+|                |                      | | allow co-located joins and distributed rollups.                         |
++----------------+----------------------+---------------------------------------------------------------------------+
+|   repmodel     |         char         | | The method used for data replication. The values of this column         |
+|                |                      | | corresponding to different replication methods are :-                   |   
+|                |                      | | citus statement-based replication: 'c'                                  |
+|                |                      | | postgresql streaming replication:  's'                                  |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
     SELECT * from pg_dist_partition;
-     logicalrelid | partmethod |                                                     	partkey                                                    	 
-    --------------+------------+-------------------------------------------------------------------------------------------------------------------------
-           488843 |     r      | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location 232}
-
-    (1 row)
+     logicalrelid  | partmethod |                                                        partkey                                                         | colocationid | repmodel 
+     ---------------+------------+------------------------------------------------------------------------------------------------------------------------+--------------+----------
+     github_events | h          | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location -1} |            2 | c
+     (1 row)
 
 
 Shard table
