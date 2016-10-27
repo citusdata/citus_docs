@@ -26,7 +26,8 @@ The pg_dist_partition table stores metadata about which tables in the database a
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   colocationid |         integer      | | Co-location group to which this table belongs. Tables in the same group |
 |                |                      | | allow co-located joins and distributed rollups among other              |
-|                |                      | | optimizations.                                                          |
+|                |                      | | optimizations. This value references the colocationid column in the     |
+|                |                      | | pg_dist_colocation table.                                               |
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   repmodel     |         char         | | The method used for data replication. The values of this column         |
 |                |                      | | corresponding to different replication methods are :-                   |   
@@ -173,7 +174,7 @@ Citus manages shard health on a per-placement basis and automatically marks a pl
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 
-Worker Nodes Table
+Worker Nodes table
 ---------------------------------------
 
 The pg_dist_node table contains information about the worker nodes in the cluster. 
@@ -205,4 +206,32 @@ The pg_dist_node table contains information about the worker nodes in the cluste
           2 |       2 | localhost |    12346 | default  | f
           3 |       3 | localhost |    12347 | default  | f
     (3 rows)
+
+
+Colocation information table
+---------------------------------------
+
+The pg_dist_colocation table contains information about which tables are physically co-located together. When creating tables, the user can specify a table to be co-located physically with another one. Citus then ensures physical co-location of the shards, and can perform optimizations like co-located joins without data shuffling and support features like distributed rollups and enforcing foreign-key constraints. Co-location can also be inferred if the shard-counts, replication factor and partition-column types are the same for two different tables.
+
++------------------------+----------------------+---------------------------------------------------------------------------+
+|      Name              |         Type         |       Description                                                         |
++========================+======================+===========================================================================+
+| colocationid           |         int          | | Unique identifier for a given co-location group.                        |
++------------------------+----------------------+---------------------------------------------------------------------------+
+| shardcount             |         int          | | Shard count for all tables in the given co-location group.              |
++------------------------+----------------------+---------------------------------------------------------------------------+
+| replicationfactor      |         int          | | Replication factor for all tables in the given co-location group.       |
++------------------------+----------------------+---------------------------------------------------------------------------+
+| distributioncolumntype |         oid          | | The type of the distribution column for all tables in the given         |
+|                        |                      | | co-location group                                                       |
++------------------------+----------------------+---------------------------------------------------------------------------+
+
+::
+
+    select * from pg_dist_colocation;
+      colocationid | shardcount | replicationfactor | distributioncolumntype 
+     --------------+------------+-------------------+------------------------
+                 2 |         32 |                 2 |                     20
+      (1 row)
+
 
