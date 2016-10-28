@@ -8,6 +8,70 @@ This section contains reference information for the User Defined Functions provi
 Table and Shard DDL
 -------------------
 
+create_distributed_table
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+.. _create_distributed_table:
+
+The create_distributed_table() function is used to define a distributed table
+and create its shards if its a hash-partitioned table. This function takes in a
+table name, the distribution column and distribution method and inserts
+appropriate metadata to mark the table as distributed. If the table is
+hash-partitioned, the function also creates worker shards based on the shard
+count configuration value. This function replaces usage of
+master_create_distributed_table() followed by master_create_worker_shards(). 
+
+Arguments
+************************
+
+**table_name:** Name of the table which needs to be distributed.
+
+**distribution_column:** The column on which the table is to be distributed.
+
+**distribution_method:** The method according to which the table is to be distributed. Permissible values are append or hash.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+This example informs the database that the github_events table should be distributed by hash on the repo_id column.
+
+::
+
+	SELECT create_distributed_table('github_events', 'repo_id', 'hash');
+
+create_reference_table
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+.. _create_reference_table:
+
+The create_reference_table() function is used to define a small reference or
+dimension table. This function takes in a table name, and creates a distributed
+table with just one shard, and replication factor equal to the value specified
+in the GUC. The partition column is unimportant since the UDF only creates one
+shard for the table.
+
+Arguments
+************************
+
+**table_name:** Name of the small dimension or reference table which needs to be distributed.
+
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+This example informs the database that the nation table should be defined as a
+reference table
+
+::
+
+	SELECT create_reference_table('nation');
+
 master_create_distributed_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. _master_create_distributed_table:
