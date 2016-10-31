@@ -43,15 +43,6 @@ The above commands will give you warnings about trust authentication. Those
 will become important when you're setting up a production instance of Citus but
 for now you can safely ignore them.
 
-The master needs to know where it can find the worker. To tell it you can run:
-
-::
-
-  echo "localhost 9701" >> data/master/pg_worker_list.conf
-
-We assume that ports 9700 (for the master) and 9701 (for the worker) are
-available on your machine. Feel free to use different ports if they are in use.
-
 Citus is a Postgres extension. To tell Postgres to use this extension,
 you'll need to add it to a configuration variable called
 ``shared_preload_libraries``:
@@ -73,6 +64,9 @@ And initialize them::
   bin/createdb -p 9700 $(whoami)
   bin/createdb -p 9701 $(whoami)
 
+We assume that ports 9700 (for the master) and 9701 (for the worker) are
+available on your machine. Feel free to use different ports if they are in use.
+
 Above you added Citus to ``shared_preload_libraries``. That lets it hook into some
 deep parts of Postgres, swapping out the query planner and executor.  Here, we
 load the user-facing side of Citus (such as the functions you'll soon call):
@@ -81,6 +75,12 @@ load the user-facing side of Citus (such as the functions you'll soon call):
 
   bin/psql -p 9700 -c "CREATE EXTENSION citus;"
   bin/psql -p 9701 -c "CREATE EXTENSION citus;"
+
+Finally, the master needs to know where it can find the worker. To tell it you can run:
+
+::
+
+  bin/psql -p 9700 -c "SELECT master_add_node('localhost', 9701);"
 
 Ingest Data
 ===========
