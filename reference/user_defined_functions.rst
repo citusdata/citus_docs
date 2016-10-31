@@ -345,7 +345,9 @@ Example
 master_get_active_worker_nodes
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The master_get_active_worker_nodes() function returns a list of active worker host names and port numbers. Currently, the function assumes that all the worker nodes in pg_worker_list.conf are active.
+The master_get_active_worker_nodes() function returns a list of active worker
+host names and port numbers. Currently, the function assumes that all the worker
+nodes in the pg_dist_node catalog table are active.
 
 Arguments
 ************************
