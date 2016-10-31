@@ -132,21 +132,22 @@ Attempting to execute a JOIN between a local and a distributed table causes an e
 
   ERROR: cannot plan queries that include both regular and partitioned relations
 
-In Citus Community and Enterprise editions there is a workaround. You can replicate the local table to a single shard on every worker and push the join query down to the workers. Suppose we want to join tables *here* and *there*, where *there* is already distributed but *here* is on the master database.
+In Citus Community and Enterprise editions there is a workaround. You can
+replicate the local table to a single shard on every worker and push the join
+query down to the workers. We do this by defining the table as a 'reference'
+table using a different table creation API. Suppose we want to join tables *here* and *there*, where *there* is already distributed but *here* is on the master database.
 
 .. code-block:: sql
 
-  -- Allow "here" to be distributed
-  -- (presuming a primary key called "here_id")
-  SELECT master_create_distributed_table('here', 'here_id', 'hash');
+  -- First get the number of current active worker nodes
+  SELECT count(1) FROM master_get_active_worker_nodes();
+  
+  SET citus.shard_replication_factor = <number of nodes>
+  
+  SELECT create_reference_table('here');
 
-  -- Now make a full copy into a shard on every worker
-  SELECT master_create_worker_shards(
-    'here', 1,
-    (SELECT count(1) from master_get_active_worker_nodes())::integer
-  );
-
-Now Citus will accept a join query between *here* and *there*, and each worker will have all the information it needs to work efficiently.
+This will create a table with a single shard (non-distributed), but will
+replicate that shard to every node in the cluster. Now Citus will accept a join query between *here* and *there*, and each worker will have all the information it needs to work efficiently.
 
 .. note::
 

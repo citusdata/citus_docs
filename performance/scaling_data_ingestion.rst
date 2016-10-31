@@ -16,8 +16,7 @@ When processing an INSERT, Citus first finds the right shard placements based on
 
     -- Set up a distributed table containing counters
     CREATE TABLE counters (c_key text, c_date date, c_value int, primary key (c_key, c_date));
-    SELECT master_create_distributed_table('counters', 'c_key', 'hash');
-    SELECT master_create_worker_shards('counters', 128, 2);
+    SELECT create_distributed_table('counters', 'c_key', 'hash');
 
     -- Enable timing to see reponse times
     \timing on
