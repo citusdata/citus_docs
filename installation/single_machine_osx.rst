@@ -31,15 +31,6 @@ Let's create directories for those nodes to store their data. For convenience we
   initdb -D citus/worker1
   initdb -D citus/worker2
 
-The master needs to know where it can find the workers. To tell it you can run:
-
-::
-
-  echo "localhost 9701" >> citus/master/pg_worker_list.conf
-  echo "localhost 9702" >> citus/master/pg_worker_list.conf
-
-We will configure the PostgreSQL instances to use ports 9700 (for the master) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
-
 Citus is a Postgres extension, to tell Postgres to use this extension you'll need to add it to a configuration variable called ``shared_preload_libraries``:
 
 ::
@@ -62,6 +53,8 @@ And initialize them::
   createdb -p 9701 $(whoami)
   createdb -p 9702 $(whoami)
 
+We will configure the PostgreSQL instances to use ports 9700 (for the master) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
+
 Above you added Citus to ``shared_preload_libraries``. That lets it hook into some deep parts of Postgres, swapping out the query planner and executor.  Here, we load the user-facing side of Citus (such as the functions you'll soon call):
 
 ::
@@ -69,6 +62,13 @@ Above you added Citus to ``shared_preload_libraries``. That lets it hook into so
   psql -p 9700 -c "CREATE EXTENSION citus;"
   psql -p 9701 -c "CREATE EXTENSION citus;"
   psql -p 9702 -c "CREATE EXTENSION citus;"
+
+The master needs to know where it can find the workers. To tell it you can run:
+
+::
+
+  psql -p 9700 -c "SELECT master_add_node('localhost', 9701);"
+  psql -p 9700 -c "SELECT master_add_node('localhost', 9702);"
 
 **4. Verify that installation has succeeded**
 
