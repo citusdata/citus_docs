@@ -135,10 +135,13 @@ should be distributed tables, stored across the cluster.
 
 .. code-block:: sql
 
-  SELECT master_create_distributed_table(
+  SET citus.shard_count = 16;
+  SET citus.shard_replication_factor = 1;
+
+  SELECT create_distributed_table(
     'wikipedia_changes', 'editor', 'hash'
   );
-  SELECT master_create_distributed_table(
+  SELECT create_distributed_table(
     'wikipedia_editors', 'editor', 'hash'
   );
 
@@ -146,13 +149,6 @@ These say to store each table as a collection of shards, each
 responsible for holding a different subset of the data. The shard
 a particular row belongs in will be computed by hashing the ``editor``
 column. The page on :ref:`distributed_tables` goes into more detail.
-
-Finally, create the shards:
-
-.. code-block:: sql
-
-  SELECT master_create_worker_shards('wikipedia_editors', 16, 1);
-  SELECT master_create_worker_shards('wikipedia_changes', 16, 1);
 
 This tells Citus to create 16 shards for each table, and save 1 replica of
 each. You can ask Citus to store multiple copies of each shard, which allows it
