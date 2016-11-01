@@ -280,6 +280,8 @@ Example
 Metadata / Configuration Information
 ------------------------------------------------------------------------
 
+.. _master_add_node:
+
 master_add_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
