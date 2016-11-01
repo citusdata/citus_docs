@@ -8,7 +8,7 @@ Creating Distributed Tables (DDL)
 
     ::
 
-        export PATH=/usr/lib/postgresql/9.5/:$PATH
+        export PATH=/usr/lib/postgresql/9.6/:$PATH
 
 We use the github events dataset to illustrate the commands below. You can download that dataset by running:
 
@@ -20,7 +20,7 @@ We use the github events dataset to illustrate the commands below. You can downl
 Creating And Distributing Tables
 --------------------------------
 
-To create a distributed table, you need to first define the table schema. To do so, you can define a table using the `CREATE TABLE <http://www.postgresql.org/docs/9.5/static/sql-createtable.html>`_ statement in the same way as you would do with a regular PostgreSQL table.
+To create a distributed table, you need to first define the table schema. To do so, you can define a table using the `CREATE TABLE <http://www.postgresql.org/docs/9.6/static/sql-createtable.html>`_ statement in the same way as you would do with a regular PostgreSQL table.
 
 ::
 

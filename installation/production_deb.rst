@@ -24,12 +24,12 @@ Steps to be executed on all nodes
 ::
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-9.5-citus
+  sudo apt-get -y install postgresql-9.6-citus
 
   # preload citus extension
-  sudo pg_conftool 9.5 main set shared_preload_libraries citus
+  sudo pg_conftool 9.6 main set shared_preload_libraries citus
 
-This installs centralized configuration in `/etc/postgresql/9.5/main`, and creates a database in `/var/lib/postgresql/9.5/main`.
+This installs centralized configuration in `/etc/postgresql/9.6/main`, and creates a database in `/var/lib/postgresql/9.6/main`.
 
 **3. Configure connection and authentication**
 
@@ -37,11 +37,11 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo pg_conftool 9.5 main set listen_addresses '*'
+  sudo pg_conftool 9.6 main set listen_addresses '*'
 
 ::
 
-  sudo vi /etc/postgresql/9.5/main/pg_hba.conf
+  sudo vi /etc/postgresql/9.6/main/pg_hba.conf
 
 ::
 
@@ -54,7 +54,7 @@ Before starting the database let's change its access permissions. By default the
   host    all             all             ::1/128                 trust
 
 .. note::
-  Your DNS settings may differ. Also these settings are too permissive for some environments. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/9.5/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
+  Your DNS settings may differ. Also these settings are too permissive for some environments. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/9.6/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
 
 **4. Start database servers, create Citus extension**
 
@@ -85,8 +85,8 @@ We need to inform the master about its workers. To add this information, we appe
 
 ::
 
-  echo "worker-101 5432" | sudo -u postgres tee -a /var/lib/postgresql/9.5/main/pg_worker_list.conf
-  echo "worker-102 5432" | sudo -u postgres tee -a /var/lib/postgresql/9.5/main/pg_worker_list.conf
+  echo "worker-101 5432" | sudo -u postgres tee -a /var/lib/postgresql/9.6/main/pg_worker_list.conf
+  echo "worker-102 5432" | sudo -u postgres tee -a /var/lib/postgresql/9.6/main/pg_worker_list.conf
 
 Note that you can also add this information by editing the file using your favorite editor.
 

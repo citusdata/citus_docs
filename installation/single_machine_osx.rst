@@ -7,7 +7,7 @@ OS X
 
 This section will show you how to create a Citus cluster on a single OS X machine.
 
-**1. Install PostgreSQL 9.5 and the Citus extension**
+**1. Install PostgreSQL 9.6 and the Citus extension**
 
 Use our `Homebrew <http://brew.sh/>`_ package to extend PostgreSQL with Citus.
 

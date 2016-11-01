@@ -110,7 +110,7 @@ At this step, you have completed the installation process and are ready to use t
 
 ::
 
-	/usr/pgsql-9.5/bin/psql -h localhost -d postgres
+	/usr/pgsql-9.6/bin/psql -h localhost -d postgres
 	select * from master_get_active_worker_nodes();
 
 
@@ -124,7 +124,7 @@ Similarly to restart the database, you can use the command:
 
 ::
 
-	/usr/pgsql-9.5/bin/pg_ctl -D /data/base -l logfile restart
+	/usr/pgsql-9.6/bin/pg_ctl -D /data/base -l logfile restart
 
 .. note::
   You typically want to avoid making changes to resources created by CloudFormation, such as terminating EC2 instances. To shut the cluster down, you can simply delete the stack in the CloudFormation console.

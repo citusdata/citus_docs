@@ -3,9 +3,9 @@
 Configuration Reference
 #######################
 
-There are various configuration parameters that affect the behaviour of Citus. These include both standard PostgreSQL parameters and Citus specific parameters. To learn more about PostgreSQL configuration parameters, you can visit the `run time configuration <http://www.postgresql.org/docs/9.5/static/runtime-config.html>`_ section of PostgreSQL documentation.
+There are various configuration parameters that affect the behaviour of Citus. These include both standard PostgreSQL parameters and Citus specific parameters. To learn more about PostgreSQL configuration parameters, you can visit the `run time configuration <http://www.postgresql.org/docs/9.6/static/runtime-config.html>`_ section of PostgreSQL documentation.
 
-The rest of this reference aims at discussing Citus specific configuration parameters. These parameters can be set similar to PostgreSQL parameters by modifying postgresql.conf or `by using the SET command <http://www.postgresql.org/docs/9.5/static/config-setting.html>`_.
+The rest of this reference aims at discussing Citus specific configuration parameters. These parameters can be set similar to PostgreSQL parameters by modifying postgresql.conf or `by using the SET command <http://www.postgresql.org/docs/9.6/static/config-setting.html>`_.
 
 Node configuration
 ---------------------------------------

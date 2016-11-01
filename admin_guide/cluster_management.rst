@@ -75,7 +75,7 @@ On seeing such warnings, the first step would be to remove the failed worker fro
     
     ::
         
-        export PGDATA=/usr/lib/postgresql/9.5/data
+        export PGDATA=/usr/lib/postgresql/9.6/data
 
 Then, you can reload the configuration so that the master picks up the desired configuration changes.
 
@@ -108,7 +108,7 @@ master node fails, the standby can be promoted to the primary automatically to
 serve queries to your cluster. For details on setting this up, please refer to the `PostgreSQL wiki <https://wiki.postgresql.org/wiki/Streaming_Replication>`_.
 
 2. Since the metadata tables are small, users can use EBS volumes, or `PostgreSQL
-backup tools <http://www.postgresql.org/docs/9.5/static/backup.html>`_ to backup the metadata. Then, they can easily
+backup tools <http://www.postgresql.org/docs/9.6/static/backup.html>`_ to backup the metadata. Then, they can easily
 copy over that metadata to new nodes to resume operation.
 
 3. Citus's metadata tables are simple and mostly contain text columns which
