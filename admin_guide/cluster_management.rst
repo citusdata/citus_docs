@@ -22,15 +22,14 @@ Adding a worker
 
 Citus stores all the data for distributed tables on the worker nodes. Hence, if you want to scale out your cluster by adding more computing power, you can do so by adding a worker.
 
-To add a new node to the cluster, you first need to add the DNS name of that node to the pg_worker_list.conf file in your data directory on the master node.
-
-Next, you can call the pg_reload_conf UDF to cause the master to reload its configuration.
+To add a new node to the cluster, you first need to add the DNS name of that
+node and port in the pg_dist_node catalog table. You can do so using the
+:ref:`master_add_node` UDF.
+Example:
 
 ::
 
-	select pg_reload_conf();
-
-After this point, Citus will automatically start assigning new shards to that worker.
+   SELECT master_add_node('node-name', 5432);
 
 In addition to the above, if you want to move existing shards to the newly added worker, Citus Enterprise provides an additional rebalance_table_shards function to make this easier. This function will move the shards of the given table to make them evenly distributed among the workers.
 
@@ -64,36 +63,42 @@ Citus can easily tolerate worker node failures because of its logical sharding-b
 
     WARNING:  could not connect to node localhost:9700
 
-On seeing such warnings, the first step would be to remove the failed worker from the pg_worker_list.conf file in the data directory.
+On seeing such warnings, the first step would be to log into the failed node and
+inspect the cause of the failure.
+
+Citus will automatically re-route the work to the healthy workers. Also, if Citus is not able to connect to a worker, it will assign that task to another node having a copy of that shard. If the failure occurs mid-query, Citus does not re-run the whole query but assigns only the failed query fragments leading to faster responses in face of failures.
+
+Once the node is brought back up, Citus will automatically continue connecting to it and
+using the data. 
+
+If the node suffers a permanent failure then you may wish to retain the same
+level of replication so that your application can tolerate more failures. To
+make this simpler, Citus enterprise provides a replicate_table_shards UDF which
+can be called after. This function copies the shards of a table across the
+healthy nodes so they all reach the configured replication factor.
+
+First, you should mark all shard placements on that node as invalid (if they are
+not already so) using the following query:
 
 ::
 
-    vi $PGDATA/pg_worker_list.conf
+   UPDATE pg_dist_shard_placement set shardstate = 3 where nodename = 'bad-node-name' and nodeport = 5432;
 
-.. note::
-    The instruction above assumes that the data directory is in the PGDATA environment variable. If not, you will need to set it. For example:
-    
-    ::
-        
-        export PGDATA=/usr/lib/postgresql/9.5/data
-
-Then, you can reload the configuration so that the master picks up the desired configuration changes.
+Then, you can remove the node using master_remove_node, as shown below:
 
 ::
+   
+   select master_remove_node('bad-node-name', 5432);
 
-	SELECT pg_reload_conf();
-
-After this step, Citus will stop assigning tasks or storing data on the failed node. Then, you can log into the failed node and inspect the cause of the failure.
-
-Once you remove the failed worker from pg_worker_list.conf, Citus will then automatically re-route the work to the healthy workers. Also, if Citus is not able to connect to a worker, it will assign that task to another node having a copy of that shard. If the failure occurs mid-query, Citus does not re-run the whole query but assigns only the failed query fragments leading to faster responses in face of failures.
-
-Once the node is back up, you can add it to the pg_worker_list.conf and reload the configuration. If you want to add a new node to the cluster to replace the failed node, you can follow the instructions described in the :ref:`adding_worker_node` section.
-
-While the node is down, you may wish to retain the same level of replication so that your application can tolerate more failures. To make this simpler, Citus enterprise provides a replicate_table_shards UDF which can be called after removing the failed worker from pg_worker_list.conf. This function copies the shards of a table across the healthy nodes so they all reach the configured replication factor.
+If you want to add a new node to the cluster to replace the
+failed node, you can follow the instructions described in the
+:ref:`adding_worker_node` section. Finally, you can use the function provided in
+Citus Enterprise to replicate the invalid shards and maintain the replication factor.
 
 ::
 
     select replicate_table_shards('github_events');
+
 
 .. _master_node_failures:
 
