@@ -25,7 +25,7 @@ The pg_dist_partition table stores metadata about which tables in the database a
 |                |                      | | number, type and other relevant information.                            |
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   colocationid |         integer      | | Co-location group to which this table belongs. Tables in the same group |
-|                |                      | | allow co-located joins and distributed rollups among other              |
+|                |                      | | allow colocated joins and distributed rollups among other               |
 |                |                      | | optimizations. This value references the colocationid column in the     |
 |                |                      | | pg_dist_colocation table.                                               |
 +----------------+----------------------+---------------------------------------------------------------------------+
@@ -123,8 +123,8 @@ The pg_dist_shard_placement table tracks the location of shard replicas on worke
 |                |                      | | worker node in bytes.                                                   |
 |                |                      | | For hash distributed tables, zero.                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
-|  nodename      |            text      | | DNS host name of the worker node PostgreSQL server hosting this shard   |
-|                |                      | | placement.                                                              |
+|  nodename      |            text      | | Host name or IP address of the worker node PostgreSQL server hosting    |
+|                |                      | | this shard placement.                                                   |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | nodeport       |            int       | | Port number on which the worker node PostgreSQL server hosting this     |
 |                |                      | | shard placement is listening.                                           |
@@ -174,7 +174,7 @@ Citus manages shard health on a per-placement basis and automatically marks a pl
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 
-Worker Nodes table
+Worker node table
 ---------------------------------------
 
 The pg_dist_node table contains information about the worker nodes in the cluster. 
@@ -184,17 +184,17 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 +================+======================+===========================================================================+
 | nodeid         |         int          | | Auto-generated identifier for an individual node.                       |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| groupid        |         int          | | Identifier used to denote a group of 1 primary and 0 or more            |
-|                |                      | | secondaries, when the streaming replication model is used. By default   |
-|                |                      | | it is the same as the nodeid.                                           | 
+| groupid        |         int          | | Identifier used to denote a group of one primary server and zero or more|
+|                |                      | | secondary servers, when the streaming replication model is used. By     |
+|                |                      | | default it is the same as the nodeid.                                   | 
 +----------------+----------------------+---------------------------------------------------------------------------+
-|  nodename      |         text         | | DNS host name of the worker node PostgreSQL server hosting this shard   |
-|                |                      | | placement.                                                              |
+| nodename       |         text         | | Host Name or IP Address of the PostgreSQL worker node.                  |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| nodeport       |         int          | | Port number on which the worker node PostgreSQL server hosting this     |
-|                |                      | | shard placement is listening.                                           |
+| nodeport       |         int          | | Port number on which the PostgreSQL worker node is listening.           |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| noderack       |        text          | | Rack placement information for the worker node (if available).          |
+| noderack       |        text          | | (Optional) Rack placement information for the worker node.              |
++----------------+----------------------+---------------------------------------------------------------------------+
+| hasmetadata    |        boolean       | | Reserved for internal use.                                              |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
@@ -208,27 +208,27 @@ The pg_dist_node table contains information about the worker nodes in the cluste
     (3 rows)
 
 
-Colocation information table
+Colocation group table
 ---------------------------------------
 
-The pg_dist_colocation table contains information about which tables are physically co-located together. When creating tables, the user can specify a table to be co-located physically with another one. Citus then ensures physical co-location of the shards, and can perform optimizations like co-located joins without data shuffling and support features like distributed rollups and enforcing foreign-key constraints. Co-location can also be inferred if the shard-counts, replication factor and partition-column types are the same for two different tables.
+The pg_dist_colocation table contains information about which tables' shards should be placed together, or *colocated*. When two tables are in the same colocation group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard colocation is inferred when the shard counts, replication factors, and partition column types all match between two tables; however, a custom colocation group may be specified when creating a distributed table, if so desired.
 
 +------------------------+----------------------+---------------------------------------------------------------------------+
 |      Name              |         Type         |       Description                                                         |
 +========================+======================+===========================================================================+
-| colocationid           |         int          | | Unique identifier for a given co-location group.                        |
+| colocationid           |         int          | | Unique identifier for the colocation group this row corresponds to.     |
 +------------------------+----------------------+---------------------------------------------------------------------------+
-| shardcount             |         int          | | Shard count for all tables in the given co-location group.              |
+| shardcount             |         int          | | Shard count for all tables in this colocation group                     |
 +------------------------+----------------------+---------------------------------------------------------------------------+
-| replicationfactor      |         int          | | Replication factor for all tables in the given co-location group.       |
+| replicationfactor      |         int          | | Replication factor for all tables in this colocation group.             |
 +------------------------+----------------------+---------------------------------------------------------------------------+
-| distributioncolumntype |         oid          | | The type of the distribution column for all tables in the given         |
-|                        |                      | | co-location group                                                       |
+| distributioncolumntype |         oid          | | The type of the distribution column for all tables in this              |
+|                        |                      | | colocation group.                                                       |
 +------------------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
-    select * from pg_dist_colocation;
+    SELECT * from pg_dist_colocation;
       colocationid | shardcount | replicationfactor | distributioncolumntype 
      --------------+------------+-------------------+------------------------
                  2 |         32 |                 2 |                     20
