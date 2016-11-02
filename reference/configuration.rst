@@ -52,8 +52,8 @@ citus.shard_count (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Sets the shard count for hash-partitioned tables and defaults to 32. This value is used by
-the create_distributed_table() UDF when creating hash-partitioned tables. This
-parameter can be set at run-time and is effective on the master. 
+the :ref:`create_distributed_table <create_distributed_table>` UDF when creating
+hash-partitioned tables. This parameter can be set at run-time and is effective on the master. 
 
 citus.shard_max_size (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
