@@ -135,7 +135,11 @@ Attempting to execute a JOIN between a local and a distributed table causes an e
 In Citus Community and Enterprise editions there is a workaround. You can
 replicate the local table to a single shard on every worker and push the join
 query down to the workers. We do this by defining the table as a 'reference'
-table using a different table creation API. Suppose we want to join tables *here* and *there*, where *there* is already distributed but *here* is on the master database.
+table using a different table creation API and setting
+citus.shard_replication_factor to the current number of worker nodes. Suppose we
+want to join tables *here* and *there*, where *there* is already distributed but
+*here* is on the master database.
+
 
 .. code-block:: sql
 
