@@ -13,26 +13,35 @@ The pg_dist_partition table stores metadata about which tables in the database a
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
 +================+======================+===========================================================================+
-| logicalrelid   |           oid        | | Distributed table to which this row corresponds. This value references  | 
+| logicalrelid   |         regclass     | | Distributed table to which this row corresponds. This value references  | 
 |                |                      | | the relfilenode column in the pg_class system catalog table.            |
 +----------------+----------------------+---------------------------------------------------------------------------+   
-|  partmethod    |            char      | | The method used for partitioning / distribution. The values of this     |
+|  partmethod    |         char         | | The method used for partitioning / distribution. The values of this     |
 |                |                      | | column corresponding to different distribution methods are :-           |
 |                |                      | | append: 'a'                                                             |
 |                |                      | | hash: 'h'                                                               |
 +----------------+----------------------+---------------------------------------------------------------------------+
-|   partkey      |            text      | | Detailed information about the distribution column including column     |
+|   partkey      |         text         | | Detailed information about the distribution column including column     |
 |                |                      | | number, type and other relevant information.                            |
++----------------+----------------------+---------------------------------------------------------------------------+
+|   colocationid |         integer      | | Colocation group to which this table belongs. Tables in the same group |
+|                |                      | | allow colocated joins and distributed rollups among other               |
+|                |                      | | optimizations. This value references the colocationid column in the     |
+|                |                      | | pg_dist_colocation table.                                               |
++----------------+----------------------+---------------------------------------------------------------------------+
+|   repmodel     |         char         | | The method used for data replication. The values of this column         |
+|                |                      | | corresponding to different replication methods are :-                   |   
+|                |                      | | citus statement-based replication: 'c'                                  |
+|                |                      | | postgresql streaming replication:  's'                                  |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
     SELECT * from pg_dist_partition;
-     logicalrelid | partmethod |                                                     	partkey                                                    	 
-    --------------+------------+-------------------------------------------------------------------------------------------------------------------------
-           488843 |     r      | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location 232}
-
-    (1 row)
+     logicalrelid  | partmethod |                                                        partkey                                                         | colocationid | repmodel 
+    ---------------+------------+------------------------------------------------------------------------------------------------------------------------+--------------+----------
+     github_events | h          | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location -1} |            2 | c
+     (1 row)
 
 
 Shard table
@@ -43,15 +52,13 @@ The pg_dist_shard table stores metadata about individual shards of a table. This
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
 +================+======================+===========================================================================+
-| logicalrelid   |           oid        | | Distributed table to which this shard belongs. This value references the|
+| logicalrelid   |         regclass     | | Distributed table to which this shard belongs. This value references the|
 |                |                      | | relfilenode column in the pg_class system catalog table.                |
 +----------------+----------------------+---------------------------------------------------------------------------+
 |    shardid     |         bigint       | | Globally unique identifier assigned to this shard.                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | shardstorage   |            char      | | Type of storage used for this shard. Different storage types are        |
 |                |                      | | discussed in the table below.                                           |
-+----------------+----------------------+---------------------------------------------------------------------------+
-|  shardalias    |            text      | | Deprecated and unused column. Will be removed in a future release.      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | shardminvalue  |            text      | | For append distributed tables, minimum value of the distribution column |
 |                |                      | | in this shard (inclusive).                                              |
@@ -67,14 +74,13 @@ The pg_dist_shard table stores metadata about individual shards of a table. This
 ::
 
     SELECT * from pg_dist_shard;
-     logicalrelid | shardid | shardstorage | shardalias | shardminvalue | shardmaxvalue
-    --------------+---------+--------------+------------+---------------+---------------
-           488843 |  102065 | t        	   |        	| 27        	| 14995004
-           488843 |  102066 | t        	   |        	| 15001035  	| 25269705
-           488843 |  102067 | t            |        	| 25273785  	| 28570113
-           488843 |  102068 | t        	   |        	| 28570150  	| 28678869
-
-    (4 rows)
+     logicalrelid  | shardid | shardstorage | shardminvalue | shardmaxvalue 
+    ---------------+---------+--------------+---------------+---------------
+     github_events |  102026 | t            | 268435456     | 402653183
+     github_events |  102027 | t            | 402653184     | 536870911
+     github_events |  102028 | t            | 536870912     | 671088639
+     github_events |  102029 | t            | 671088640     | 805306367
+     (4 rows)
 
 
 Shard Storage Types
@@ -117,28 +123,28 @@ The pg_dist_shard_placement table tracks the location of shard replicas on worke
 |                |                      | | worker node in bytes.                                                   |
 |                |                      | | For hash distributed tables, zero.                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
-|  nodename      |            text      | | DNS host name of the worker node PostgreSQL server hosting this shard   |
-|                |                      | | placement.                                                              |
+|  nodename      |            text      | | Host name or IP address of the worker node PostgreSQL server hosting    |
+|                |                      | | this shard placement.                                                   |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | nodeport       |            int       | | Port number on which the worker node PostgreSQL server hosting this     |
 |                |                      | | shard placement is listening.                                           |
++----------------+----------------------+---------------------------------------------------------------------------+
+| placementid    |        bigint        | | Unique auto-generated identifier for each individual placement.         |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
     SELECT * from pg_dist_shard_placement;
-     shardid | shardstate | shardlength | nodename  | nodeport
-    ---------+------------+-------------+-----------+----------
-      102065 |      	1 | 	7307264 | localhost | 	9701
-      102065 |      	1 | 	7307264 | localhost | 	9700
-      102066 |      	1 | 	5890048 | localhost | 	9700
-      102066 |      	1 | 	5890048 | localhost | 	9701
-      102067 |      	1 | 	5242880 | localhost | 	9701
-      102067 |      	1 | 	5242880 | localhost | 	9700
-      102068 |      	1 | 	3923968 | localhost | 	9700
-      102068 |      	1 | 	3923968 | localhost | 	9701
+      shardid | shardstate | shardlength | nodename  | nodeport | placementid 
+     ---------+------------+-------------+-----------+----------+-------------
+       102008 |          1 |           0 | localhost |    12345 |           1
+       102008 |          1 |           0 | localhost |    12346 |           2
+       102009 |          1 |           0 | localhost |    12346 |           3
+       102009 |          1 |           0 | localhost |    12347 |           4
+       102010 |          1 |           0 | localhost |    12347 |           5
+       102010 |          1 |           0 | localhost |    12345 |           6
+       102011 |          1 |           0 | localhost |    12345 |           7
 
-    (8 rows)
 
 Shard Placement States
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -166,4 +172,66 @@ Citus manages shard health on a per-placement basis and automatically marks a pl
 |                |                      | | moved to this state. Users can then delete these shards as a            |
 |                |                      | | subsequent background activity.                                         |
 +----------------+----------------------+---------------------------------------------------------------------------+
+
+
+Worker node table
+---------------------------------------
+
+The pg_dist_node table contains information about the worker nodes in the cluster. 
+
++----------------+----------------------+---------------------------------------------------------------------------+
+|      Name      |         Type         |       Description                                                         |
++================+======================+===========================================================================+
+| nodeid         |         int          | | Auto-generated identifier for an individual node.                       |
++----------------+----------------------+---------------------------------------------------------------------------+
+| groupid        |         int          | | Identifier used to denote a group of one primary server and zero or more|
+|                |                      | | secondary servers, when the streaming replication model is used. By     |
+|                |                      | | default it is the same as the nodeid.                                   | 
++----------------+----------------------+---------------------------------------------------------------------------+
+| nodename       |         text         | | Host Name or IP Address of the PostgreSQL worker node.                  |
++----------------+----------------------+---------------------------------------------------------------------------+
+| nodeport       |         int          | | Port number on which the PostgreSQL worker node is listening.           |
++----------------+----------------------+---------------------------------------------------------------------------+
+| noderack       |        text          | | (Optional) Rack placement information for the worker node.              |
++----------------+----------------------+---------------------------------------------------------------------------+
+| hasmetadata    |        boolean       | | Reserved for internal use.                                              |
++----------------+----------------------+---------------------------------------------------------------------------+
+
+::
+
+    SELECT * from pg_dist_node;
+     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata 
+    --------+---------+-----------+----------+----------+-------------
+          1 |       1 | localhost |    12345 | default  | f
+          2 |       2 | localhost |    12346 | default  | f
+          3 |       3 | localhost |    12347 | default  | f
+    (3 rows)
+
+
+Colocation group table
+---------------------------------------
+
+The pg_dist_colocation table contains information about which tables' shards should be placed together, or *colocated*. When two tables are in the same colocation group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard colocation is inferred when the shard counts, replication factors, and partition column types all match between two tables; however, a custom colocation group may be specified when creating a distributed table, if so desired.
+
++------------------------+----------------------+---------------------------------------------------------------------------+
+|      Name              |         Type         |       Description                                                         |
++========================+======================+===========================================================================+
+| colocationid           |         int          | | Unique identifier for the colocation group this row corresponds to.     |
++------------------------+----------------------+---------------------------------------------------------------------------+
+| shardcount             |         int          | | Shard count for all tables in this colocation group                     |
++------------------------+----------------------+---------------------------------------------------------------------------+
+| replicationfactor      |         int          | | Replication factor for all tables in this colocation group.             |
++------------------------+----------------------+---------------------------------------------------------------------------+
+| distributioncolumntype |         oid          | | The type of the distribution column for all tables in this              |
+|                        |                      | | colocation group.                                                       |
++------------------------+----------------------+---------------------------------------------------------------------------+
+
+::
+
+    SELECT * from pg_dist_colocation;
+      colocationid | shardcount | replicationfactor | distributioncolumntype 
+     --------------+------------+-------------------+------------------------
+                 2 |         32 |                 2 |                     20
+      (1 row)
+
 
