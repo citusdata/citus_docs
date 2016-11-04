@@ -136,7 +136,7 @@ for each of the last 30 days.
 
 This looks a lot like the previous code block. Most importantly: It also shards on
 ``site_id`` and uses the same default configuration for shard count and
-replication factor.. Because all three of those match, there's a 1-to-1
+replication factor. Because all three of those match, there's a 1-to-1
 correspondence between ``http_request`` shards and ``http_request_1min`` shards,
 and Citus will place matching shards on the same worker. This is called
 colocation; it makes queries such as joins faster and our rollups possible.

@@ -47,14 +47,14 @@ distribution column and create the worker shards.
 
 This function informs Citus that the github_events table should be distributed
 on the repo_id column (by hashing the column value). The function also creates
-shards on the worker nodes using the shard_count and shard_replication_factor
-configuration values.
+shards on the worker nodes using the citus.shard_count and
+citus.shard_replication_factor configuration values.
 
 This example would create a total of citus.shard_count number of shards where each
 shard owns a portion of a hash token space and gets replicated based on the
 default citus.shard_replication_factor configuration value. The shard replicas
-created on the worker has the same table schema, index, and constraint
-definitions as the table on the master. Once the replica is created, this
+created on the worker have the same table schema, index, and constraint
+definitions as the table on the master. Once the replicas are created, this
 function saves all distributed metadata on the master.
 
 Each created shard is assigned a unique shard id and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. You can connect to the worker postgres instances to view or run commands on individual shards.
