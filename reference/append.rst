@@ -81,11 +81,11 @@ To create an append distributed table, you need to first define the table schema
     	created_at timestamp
     );
 
-Next, you can use the master_create_distributed_table() function to mark the table as an append distributed table and specify its distribution column.
+Next, you can use the create_distributed_table() function to mark the table as an append distributed table and specify its distribution column.
 
 ::
 
-    SELECT master_create_distributed_table('github_events', 'created_at', 'append');
+    SELECT create_distributed_table('github_events', 'created_at', 'append');
 
 This function informs Citus that the github_events table should be distributed by append on the created_at column. Note that this method doesn't enforce a particular distribution; it merely tells the database to keep minimum and maximum values for the created_at column in each shard which are later used by the database for optimizing queries.
 
@@ -216,7 +216,7 @@ To ingest data into an append distributed table, you can use the `COPY <http://w
 
     -- Set up the events table
     CREATE TABLE events (time timestamp, data jsonb);
-    SELECT master_create_distributed_table('events', 'time', 'append');
+    SELECT create_distributed_table('events', 'time', 'append');
 
     -- Add data into a new staging table
     \COPY events FROM 'path-to-csv-file' WITH CSV
@@ -339,7 +339,7 @@ For example, assume we have the following table schema and want to load the comp
         org jsonb,
         created_at timestamp
     );
-    SELECT master_create_distributed_table('github_events', 'created_at', 'append');
+    SELECT create_distributed_table('github_events', 'created_at', 'append');
 
 
 To load the data, we can download the data, decompress it, filter out unsupported rows, and extract the fields in which we are interested into a staging table using 3 commands:

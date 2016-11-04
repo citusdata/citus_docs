@@ -54,18 +54,17 @@ to demonstrate the overall architecture; a real system might use additional colu
     status_code INT,
     response_time_msec INT
   );
-  SELECT master_create_distributed_table('http_request', 'site_id', 'hash');
-  SELECT master_create_worker_shards('http_request', 16, 2);
 
-When we call :ref:`master_create_distributed_table <master_create_distributed_table>`
+  SELECT create_distributed_table('http_request', 'site_id');
+
+When we call :ref:`create_distributed_table <create_distributed_table>`
 we ask Citus to hash-distribute ``http_request`` using the ``site_id`` column. That means
 all the data for a particular site will live in the same shard.
 
-When we call :ref:`master_create_worker_shards <master_create_worker_shards>` we tell
-Citus to create 16 shards and 2 replicas of each shard (for a total of 32 shard replicas).
-We recommend :ref:`using 2-4x as many shards <faq_choose_shard_count>` as CPU cores in
-your cluster. Using this many shards lets you rebalance data across your cluster after
-adding new worker nodes.
+The UDF uses the default configuration values for shard count and replication
+factor. We recommend :ref:`using 2-4x as many shards <faq_choose_shard_count>`
+as CPU cores in your cluster. Using this many shards lets you rebalance data
+across your cluster after adding new worker nodes.
 
 Using a replication factor of 2 means every shard is held on multiple workers. When a
 worker fails the master will prevent downtime by serving queries for that worker's shards
@@ -128,18 +127,19 @@ for each of the last 30 days.
         CHECK (request_count = error_count + success_count),
         CHECK (ingest_time = date_trunc('minute', ingest_time))
   );
-  SELECT master_create_distributed_table('http_request_1min', 'site_id', 'hash');
-  SELECT master_create_worker_shards('http_request_1min', 16, 2);
+
+  SELECT create_distributed_table('http_request_1min', 'site_id');
   
   -- indexes aren't automatically created by Citus
   -- this will create the index on all shards
   CREATE INDEX http_request_1min_idx ON http_request_1min (site_id, ingest_time);
 
 This looks a lot like the previous code block. Most importantly: It also shards on
-``site_id`` and it also uses 16 shards with 2 replicas of each. Because all three of
-those match, there's a 1-to-1 correspondence between ``http_request`` shards and
-``http_request_1min`` shards, and Citus will place matching shards on the same worker.
-This is called colocation; it makes queries such as joins faster and our rollups possible.
+``site_id`` and uses the same default configuration for shard count and
+replication factor. Because all three of those match, there's a 1-to-1
+correspondence between ``http_request`` shards and ``http_request_1min`` shards,
+and Citus will place matching shards on the same worker. This is called
+colocation; it makes queries such as joins faster and our rollups possible.
 
 .. image:: /images/colocation.png
   :alt: colocation in citus
