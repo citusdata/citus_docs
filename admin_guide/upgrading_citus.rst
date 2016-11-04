@@ -10,7 +10,7 @@ Major Update from 4 to 5
 
 This section describes how you can upgrade your existing Citus installation to Citus 5.
 
-If you are upgrading from CitusDB 4 to Citus 5, you can use the standard `PostgreSQL pg_upgrade <http://www.postgresql.org/docs/9.6/static/pgupgrade.html>`_ utility. pg_upgrade uses the fact that the on-disk representation of the data has probably not changed, and copies over the disk files as is, thus making the upgrade process faster.
+If you are upgrading from CitusDB 4 to Citus 5, you can use the standard `PostgreSQL pg_upgrade <http://www.postgresql.org/docs/9.5/static/pgupgrade.html>`_ utility. pg_upgrade uses the fact that the on-disk representation of the data has probably not changed, and copies over the disk files as is, thus making the upgrade process faster.
 
 Apart from running pg_upgrade, there are 3 manual steps to be accounted for in order to update Citus.
 
@@ -24,14 +24,14 @@ We discuss the step by step process of upgrading the cluster below. Please note 
 
 **1. Download and install Citus 5**
 
-Follow the :ref:`installation instructions<requirements>` appropriate for your situation (e.g. single-machine or multi-machine). These instructions use the Citus package for your operating system, which includes PostgreSQL 9.6 as a dependency.
+Follow the :ref:`installation instructions<requirements>` appropriate for your situation (e.g. single-machine or multi-machine). These instructions use the Citus package for your operating system, which includes PostgreSQL 9.5 as a dependency.
 
 .. note::
     The instructions below assume that the PostgreSQL installation is in your path. If not, you will need to add it to your PATH environment variable. For example:
 
     ::
 
-        export PATH=/usr/lib/postgresql/9.6/:$PATH
+        export PATH=/usr/lib/postgresql/9.5/:$PATH
 
 Note that the Citus 5 extension will be installed at the PostgreSQL install location.
 
@@ -42,7 +42,7 @@ Please set appropriate values for data location like below. This makes accessing
 ::
 
     # this location differs by operating system
-    export PGDATA5=/usr/lib/postgresql/9.6/data
+    export PGDATA5=/usr/lib/postgresql/9.5/data
 
     export PGDATA4=/opt/citusdb/4.0/data
 
@@ -62,7 +62,7 @@ If you are upgrading the master, then you should stop all data inserts/updates/d
 
 :: 
 
-	pg_upgrade -b /opt/citusdb/4.0/bin/ -B /usr/lib/postgresql/9.6/bin/ -d $PGDATA4 -D $PGDATA5 --check
+	pg_upgrade -b /opt/citusdb/4.0/bin/ -B /usr/lib/postgresql/9.5/bin/ -d $PGDATA4 -D $PGDATA5 --check
 
 This should return **Clusters are compatible**. If this doesn't return that message, you need to stop and check what the error is.
 
@@ -84,7 +84,7 @@ This should return **Clusters are compatible**. If this doesn't return that mess
 
 ::
 
-    pg_upgrade -b /opt/citusdb/4.0/bin/ -B /usr/lib/postgresql/9.6/bin/ -d $PGDATA4 -D $PGDATA5 
+    pg_upgrade -b /opt/citusdb/4.0/bin/ -B /usr/lib/postgresql/9.5/bin/ -d $PGDATA4 -D $PGDATA5 
 
 **8. Copy over pg_worker_list.conf (Only needed for master)**
 
@@ -125,7 +125,7 @@ Make sure **citus** is the first extension if there are more extensions you want
     create extension citus;
 
 
-**13. Copy over pg_dist catalog tables to the new server using the PostgreSQL 9.6.x psql client (Only needed for master)**
+**13. Copy over pg_dist catalog tables to the new server using the PostgreSQL 9.5.x psql client (Only needed for master)**
 
 ::
 
@@ -184,13 +184,13 @@ Step 1. Update Citus Package
 ::
 
   sudo apt-get update
-  sudo apt-get upgrade postgresql-9.6-citus
+  sudo apt-get upgrade postgresql-9.5-citus
 
 **Fedora, CentOS, or Red Hat**
 
 ::
 
-  sudo yum update citus_96
+  sudo yum update citus_95
 
 .. _upgrading_citus_minor_extension:
 
