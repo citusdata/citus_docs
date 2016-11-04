@@ -145,8 +145,8 @@ responsible for holding a different subset of the data. The shard
 a particular row belongs in will be computed by hashing the ``editor``
 column. The page on :ref:`distributed_tables` goes into more detail.
 
-This tells Citus to create citus.shard_count shards for each table, and save 1
-replica of each. You can ask Citus to store multiple copies of each shard, which
+In addition, these UDF's create citus.shard_count shards for each table, and save one
+replica of each shard. You can ask Citus to store multiple copies of each shard, which
 allows it to recover from worker failures without losing data or dropping queries.
 However, in this example cluster we only have 1 worker, so Citus would error
 out if we asked it to store any more than 1 replica.

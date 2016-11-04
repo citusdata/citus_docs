@@ -13,11 +13,11 @@ create_distributed_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The create_distributed_table() function is used to define a distributed table
-and create its shards if its a hash-partitioned table. This function takes in a
+and create its shards if its a hash-distributed table. This function takes in a
 table name, the distribution column and an optional distribution method and inserts
 appropriate metadata to mark the table as distributed. The function defaults to
 'hash' distribution if no distribution method is specified. If the table is
-hash-partitioned, the function also creates worker shards based on the shard
+hash-distributed, the function also creates worker shards based on the shard
 count and shard replication factor configuration values. This function replaces
 usage of master_create_distributed_table() followed by
 master_create_worker_shards(). 
@@ -52,8 +52,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 The create_reference_table() function is used to define a small reference or
 dimension table. This function takes in a table name, and creates a distributed
 table with just one shard, and replication factor equal to the value specified
-in the GUC. The partition column is unimportant since the UDF only creates one
-shard for the table.
+in the citus.shard_replication_factor configuration variable. The distribution
+column is unimportant since the UDF only creates one shard for the table.
 
 Arguments
 ************************
@@ -78,6 +78,9 @@ reference table
 master_create_distributed_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. _master_create_distributed_table:
+
+.. note::
+   This function is deprecated, and replaced by :ref:`create_distributed_table <create_distributed_table>`.
 
 The master_create_distributed_table() function is used to define a distributed
 table. This function takes in a table name, the distribution column and
@@ -107,12 +110,13 @@ This example informs the database that the github_events table should be distrib
 
 	SELECT master_create_distributed_table('github_events', 'repo_id', 'hash');
 
-.. note::
-   This function is deprecated, and replaced by :ref:`create_distributed_table <create_distributed_table>`.
 
 master_create_worker_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. _master_create_worker_shards:
+
+.. note::
+   This function is deprecated, and replaced by :ref:`create_distributed_table <create_distributed_table>`.
 
 The master_create_worker_shards() function creates a specified number of worker shards with the desired replication factor for a *hash* distributed table. While doing so, the function also assigns a portion of the hash token space (which spans between -2 Billion and 2 Billion) to each shard. Once all shards are created, this function saves all distributed metadata on the master.
 
@@ -138,8 +142,6 @@ This example usage would create a total of 16 shards for the github_events table
 
 	SELECT master_create_worker_shards('github_events', 16, 2);
 
-.. note::
-   This function is deprecated, and replaced by :ref:`create_distributed_table <create_distributed_table>`.
 
 master_create_empty_shard
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
