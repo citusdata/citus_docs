@@ -190,7 +190,7 @@ Step 1. Update Citus Package
 
 ::
 
-  sudo yum update citus_95
+  sudo yum update citus_96
 
 .. _upgrading_citus_minor_extension:
 
