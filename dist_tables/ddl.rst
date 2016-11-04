@@ -38,25 +38,28 @@ To create a distributed table, you need to first define the table schema. To do 
     	created_at timestamp
     );
 
-Next, you can use the master_create_distributed_table() function to specify the table distribution column.
+Next, you can use the create_distributed_table() function to specify the table
+distribution column and create the worker shards.
 
 ::
 
-    SELECT master_create_distributed_table('github_events', 'repo_id', 'hash');
+    SELECT create_distributed_table('github_events', 'repo_id');
 
-This function informs Citus that the github_events table should be distributed on the repo_id column (by hashing the column value).
+This function informs Citus that the github_events table should be distributed
+on the repo_id column (by hashing the column value). The function also creates
+shards on the worker nodes using the citus.shard_count and
+citus.shard_replication_factor configuration values.
 
-Then, you can create shards for the distributed table on the worker nodes using the master_create_worker_shards() UDF.
-
-::
-
-    SELECT master_create_worker_shards('github_events', 16, 1);
-
-This UDF takes two arguments in addition to the table name; shard count and the replication factor. This example would create a total of sixteen shards where each shard owns a portion of a hash token space and gets replicated on one worker. The shard replica created on the worker has the same table schema, index, and constraint definitions as the table on the master. Once the replica is created, this function saves all distributed metadata on the master.
+This example would create a total of citus.shard_count number of shards where each
+shard owns a portion of a hash token space and gets replicated based on the
+default citus.shard_replication_factor configuration value. The shard replicas
+created on the worker have the same table schema, index, and constraint
+definitions as the table on the master. Once the replicas are created, this
+function saves all distributed metadata on the master.
 
 Each created shard is assigned a unique shard id and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. You can connect to the worker postgres instances to view or run commands on individual shards.
 
-After creating the worker shard, you are ready to insert data into the distributed table and run queries on it. You can also learn more about the UDFs used in this section in the :ref:`user_defined_functions` of our documentation.
+You are now ready to insert data into the distributed table and run queries on it. You can also learn more about the UDF used in this section in the :ref:`user_defined_functions` of our documentation.
 
 Dropping Tables
 ---------------
