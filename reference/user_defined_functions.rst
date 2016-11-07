@@ -298,8 +298,8 @@ Arguments
 Return Value
 ******************************
 
-A tuple which represents a row from pg_dist_node table. See the metadata table
-reference section for more information on the table.
+A tuple which represents a row from :ref:`pg_dist_node
+<pg_dist_node>` table.
 
 
 Example

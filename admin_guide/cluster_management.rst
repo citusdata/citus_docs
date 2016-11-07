@@ -23,8 +23,8 @@ Adding a worker
 Citus stores all the data for distributed tables on the worker nodes. Hence, if you want to scale out your cluster by adding more computing power, you can do so by adding a worker.
 
 To add a new node to the cluster, you first need to add the DNS name of that
-node and port in the pg_dist_node catalog table. You can do so using the
-:ref:`master_add_node` UDF.
+node and port (on which PostgreSQL is running) in the pg_dist_node catalog
+table. You can do so using the :ref:`master_add_node` UDF.
 Example:
 
 ::
@@ -66,7 +66,7 @@ Citus can easily tolerate worker node failures because of its logical sharding-b
 On seeing such warnings, the first step would be to log into the failed node and
 inspect the cause of the failure.
 
-Citus will automatically re-route the work to the healthy workers. Also, if Citus is not able to connect to a worker, it will assign that task to another node having a copy of that shard. If the failure occurs mid-query, Citus does not re-run the whole query but assigns only the failed query fragments leading to faster responses in face of failures.
+In the meanwhile, Citus will automatically re-route the work to the healthy workers. Also, if Citus is not able to connect to a worker, it will assign that task to another node having a copy of that shard. If the failure occurs mid-query, Citus does not re-run the whole query but assigns only the failed query fragments leading to faster responses in face of failures.
 
 Once the node is brought back up, Citus will automatically continue connecting to it and
 using the data. 
@@ -77,8 +77,9 @@ make this simpler, Citus enterprise provides a replicate_table_shards UDF which
 can be called after. This function copies the shards of a table across the
 healthy nodes so they all reach the configured replication factor.
 
-First, you should mark all shard placements on that node as invalid (if they are
-not already so) using the following query:
+To remove a permanently failed node from the list of workers, you should first
+mark all shard placements on that node as invalid (if they are not already so)
+using the following query:
 
 ::
 
