@@ -54,6 +54,9 @@ you'll need to add it to a configuration variable called
 
 **3. Start the master and worker**
 
+We assume that ports 9700 (for the master) and 9701 (for the worker) are
+available on your machine. Feel free to use different ports if they are in use.
+
 Let's start the databases::
 
   bin/pg_ctl -D data/master -o "-p 9700" -l master_logfile start
@@ -63,9 +66,6 @@ And initialize them::
 
   bin/createdb -p 9700 $(whoami)
   bin/createdb -p 9701 $(whoami)
-
-We assume that ports 9700 (for the master) and 9701 (for the worker) are
-available on your machine. Feel free to use different ports if they are in use.
 
 Above you added Citus to ``shared_preload_libraries``. That lets it hook into some
 deep parts of Postgres, swapping out the query planner and executor.  Here, we

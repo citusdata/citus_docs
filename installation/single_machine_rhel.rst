@@ -49,13 +49,14 @@ Citus is a Postgres extension, to tell Postgres to use this extension you'll nee
 
 **3. Start the master and workers**
 
+We will configure the PostgreSQL instances to use ports 9700 (for the master) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
+
 Let's start the databases::
 
   pg_ctl -D citus/master -o "-p 9700" -l master_logfile start
   pg_ctl -D citus/worker1 -o "-p 9701" -l worker1_logfile start
   pg_ctl -D citus/worker2 -o "-p 9702" -l worker2_logfile start
 
-We will configure the PostgreSQL instances to use ports 9700 (for the master) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
 
 Above you added Citus to ``shared_preload_libraries``. That lets it hook into some deep parts of Postgres, swapping out the query planner and executor.  Here, we load the user-facing side of Citus (such as the functions you'll soon call):
 
@@ -65,7 +66,7 @@ Above you added Citus to ``shared_preload_libraries``. That lets it hook into so
   psql -p 9701 -c "CREATE EXTENSION citus;"
   psql -p 9702 -c "CREATE EXTENSION citus;"
 
-The master needs to know where it can find the workers. To tell it you can run:
+Finally, the master needs to know where it can find the workers. To tell it you can run:
 
 ::
 
