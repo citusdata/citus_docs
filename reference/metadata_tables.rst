@@ -24,7 +24,7 @@ The pg_dist_partition table stores metadata about which tables in the database a
 |   partkey      |         text         | | Detailed information about the distribution column including column     |
 |                |                      | | number, type and other relevant information.                            |
 +----------------+----------------------+---------------------------------------------------------------------------+
-|   colocationid |         integer      | | Colocation group to which this table belongs. Tables in the same group |
+|   colocationid |         integer      | | Colocation group to which this table belongs. Tables in the same group  |
 |                |                      | | allow colocated joins and distributed rollups among other               |
 |                |                      | | optimizations. This value references the colocationid column in the     |
 |                |                      | | pg_dist_colocation table.                                               |
