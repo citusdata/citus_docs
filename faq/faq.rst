@@ -10,7 +10,8 @@ Currently Citus imposes primary key constraint only if the distribution column i
 How do I add nodes to an existing Citus cluster?
 ------------------------------------------------
 
-You can add nodes to a Citus cluster by adding the DNS host name and port of the new node to the pg_worker_list.conf configuration file in the data directory. After adding a node to an existing cluster, it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, the Citus Enterprise edition provides a shard rebalancer utility. You can find more information about shard rebalancing in the :ref:`cluster_management` section
+You can add nodes to a Citus cluster by calling the master_add_node UDF with the
+hostname and port number of the new node. After adding a node to an existing cluster, it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, the Citus Enterprise edition provides a shard rebalancer utility. You can find more information about shard rebalancing in the :ref:`cluster_management` section.
 
 How do I change the shard count for a hash partitioned table?
 -------------------------------------------------------------
