@@ -10,20 +10,6 @@ The rest of this reference aims at discussing Citus specific configuration param
 Node configuration
 ---------------------------------------
 
-pg_worker_list.conf
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-The Citus master needs to have information about the worker nodes in the cluster so that it can communicate with them. This information is stored in the pg_worker_list.conf file in the data directory on the master. To add this information, you need to append the DNS names and port numbers of the workers to this file. You can then call pg_reload_conf() or restart the master to allow it to refresh its worker membership list.
-
-The example below adds worker-101 and worker-102 as worker nodes in the pg_worker_list.conf file on the master.
-
-::
-
-	vi $PGDATA/pg_worker_list.conf
-	# HOSTNAME 	[PORT] 	[RACK]
-	worker-101
-	worker-102
-
 citus.max_worker_nodes_tracked (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

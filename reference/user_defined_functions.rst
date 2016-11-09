@@ -280,10 +280,76 @@ Example
 Metadata / Configuration Information
 ------------------------------------------------------------------------
 
+.. _master_add_node:
+
+master_add_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The master_add_node() function registers a new node addition in the cluster in
+the Citus metadata table pg_dist_node.
+
+Arguments
+************************
+
+**node_name:** DNS name of the new node to be added.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+A tuple which represents a row from :ref:`pg_dist_node
+<pg_dist_node>` table.
+
+
+Example
+***********************
+
+::
+
+    select * from master_add_node('new-node', 12345);
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata 
+    --------+---------+----------+----------+----------+-------------
+          7 |       7 | new-node |    12345 | default  | f
+    (1 row)
+
+master_remove_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The master_remove_node() function removes the specified node from the
+pg_dist_node metadata table. This function will error out if there are existing
+shard placements on this node in pg_dist_shard_placement. Thus, before using
+this function, the shards will need to be moved off that node.
+
+Arguments
+************************
+
+**node_name:** DNS name of the node to be removed.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+N/A
+
+Example
+***********************
+
+::
+
+    select master_remove_node('new-node', 12345);
+     master_remove_node 
+    --------------------
+     
+    (1 row)
+
 master_get_active_worker_nodes
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The master_get_active_worker_nodes() function returns a list of active worker host names and port numbers. Currently, the function assumes that all the worker nodes in pg_worker_list.conf are active.
+The master_get_active_worker_nodes() function returns a list of active worker
+host names and port numbers. Currently, the function assumes that all the worker
+nodes in the pg_dist_node catalog table are active.
 
 Arguments
 ************************

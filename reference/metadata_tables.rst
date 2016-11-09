@@ -176,6 +176,7 @@ Citus manages shard health on a per-placement basis and automatically marks a pl
 
 Worker node table
 ---------------------------------------
+.. _pg_dist_node:
 
 The pg_dist_node table contains information about the worker nodes in the cluster. 
 
