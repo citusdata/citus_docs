@@ -80,7 +80,7 @@ Finally, the master needs to know where it can find the worker. To tell it you c
 
 ::
 
-  bin/psql -p 9700 -c "SELECT master_add_node('localhost', 9701);"
+  bin/psql -p 9700 -c "SELECT * from master_add_node('localhost', 9701);"
 
 Ingest Data
 ===========

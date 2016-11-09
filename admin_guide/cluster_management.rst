@@ -29,7 +29,7 @@ Example:
 
 ::
 
-   SELECT master_add_node('node-name', 5432);
+   SELECT * from master_add_node('node-name', 5432);
 
 In addition to the above, if you want to move existing shards to the newly added worker, Citus Enterprise provides an additional rebalance_table_shards function to make this easier. This function will move the shards of the given table to make them evenly distributed among the workers.
 

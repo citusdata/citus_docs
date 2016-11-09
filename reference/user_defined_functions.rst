@@ -307,10 +307,10 @@ Example
 
 ::
 
-    select master_add_node('new-node', 12345);
-            master_add_node         
-    --------------------------------
-     (5,5,new-node,12345,default,f)
+    select * from master_add_node('new-node', 12345);
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata 
+    --------+---------+----------+----------+----------+-------------
+          7 |       7 | new-node |    12345 | default  | f
     (1 row)
 
 master_remove_node

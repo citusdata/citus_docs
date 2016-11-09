@@ -41,7 +41,7 @@ Citus is a Postgres extension, to tell Postgres to use this extension you'll nee
 
 **3. Start the master and workers**
 
-We will configure the PostgreSQL instances to use ports 9700 (for the master) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
+We will start the PostgreSQL instances on ports 9700 (for the master) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
 
 Let's start the databases::
 
@@ -67,8 +67,8 @@ Finally, the master needs to know where it can find the workers. To tell it you 
 
 ::
 
-  psql -p 9700 -c "SELECT master_add_node('localhost', 9701);"
-  psql -p 9700 -c "SELECT master_add_node('localhost', 9702);"
+  psql -p 9700 -c "SELECT * from master_add_node('localhost', 9701);"
+  psql -p 9700 -c "SELECT * from master_add_node('localhost', 9702);"
 
 **4. Verify that installation has succeeded**
 

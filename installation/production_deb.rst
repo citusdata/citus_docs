@@ -88,8 +88,8 @@ worker-102). Add the workers' DNS names and server ports to the table.
 
 ::
 
-  sudo -i -u postgres psql -c "SELECT master_add_node('worker-101', 5432);"
-  sudo -i -u postgres psql -c "SELECT master_add_node('worker-102', 5432);" 
+  sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-101', 5432);"
+  sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-102', 5432);" 
 
 Note that you can also add this information by editing the file using your favorite editor.
 
