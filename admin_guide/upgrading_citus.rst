@@ -3,7 +3,7 @@
 Upgrading Citus
 $$$$$$$$$$$$$$$
 
-.. _upgrading_citus_major:
+.. _upgrading_citus:
 
 Upgrading Citus Versions
 ########################
@@ -11,7 +11,7 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 then installing it in each of your database instances. The first step varies by
 operating system.
 
-.. _upgrading_citus_minor_package:
+.. _upgrading_citus_package:
 
 Step 1. Update Citus Package
 ----------------------------
@@ -36,7 +36,7 @@ Step 1. Update Citus Package
 
   sudo yum update citus_95
 
-.. _upgrading_citus_minor_extension:
+.. _upgrading_citus_extension:
 
 Step 2. Apply Update in DB
 --------------------------
@@ -60,14 +60,14 @@ the extension on all database instances in your cluster.
 
 
 
-.. _upgrading_citus_minor:
+.. _upgrading_postgres:
 
 Upgrading PostgreSQL version from 9.5 to 9.6
 ############################################
 
 Citus v6.0 is compatible with PostgreSQL 9.5.x and 9.6.x. If you are running
-PostgreSQL versions 9.5 and wish to upgrade to version 9.6, Please `contact us
-<https://www.citusdata.com/about/contact_us>`_ for upgrade steps.
+Citus on PostgreSQL versions 9.5 and wish to upgrade to version 9.6, Please
+`contact us <https://www.citusdata.com/about/contact_us>`_ for upgrade steps.
 
 .. note::
   PostgreSQL 9.6 requires using Citus 6.0.
