@@ -25,13 +25,13 @@ Steps to be executed on all nodes
 ::
 
   # install PostgreSQL with Citus extension
-  sudo yum install -y citus_95
+  sudo yum install -y citus_96
   # initialize system database (using RHEL 6 vs 7 method as necessary)
-  sudo service postgresql-9.5 initdb || sudo /usr/pgsql-9.5/bin/postgresql95-setup initdb
+  sudo service postgresql-9.6 initdb || sudo /usr/pgsql-9.6/bin/postgresql96-setup initdb
   # preload citus extension
-  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/9.5/data/postgresql.conf
+  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/9.6/data/postgresql.conf
 
-PostgreSQL adds version-specific binaries in `/usr/pgsql-9.5/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
+PostgreSQL adds version-specific binaries in `/usr/pgsql-9.6/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
 
 **3. Configure connection and authentication**
 
@@ -39,7 +39,7 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo vi /var/lib/pgsql/9.5/data/postgresql.conf
+  sudo vi /var/lib/pgsql/9.6/data/postgresql.conf
 
 ::
 
@@ -48,7 +48,7 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo vi /var/lib/pgsql/9.5/data/pg_hba.conf
+  sudo vi /var/lib/pgsql/9.6/data/pg_hba.conf
 
 ::
 
@@ -61,16 +61,16 @@ Before starting the database let's change its access permissions. By default the
   host    all             all             ::1/128                 trust
 
 .. note::
-  Your DNS settings may differ. Also these settings are too permissive for some environments. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/9.5/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
+  Your DNS settings may differ. Also these settings are too permissive for some environments. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/9.6/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
 
 **4. Start database servers, create Citus extension**
 
 ::
 
   # start the db server
-  sudo service postgresql-9.5 restart
+  sudo service postgresql-9.6 restart
   # and make it start automatically when computer does
-  sudo chkconfig postgresql-9.5 on
+  sudo chkconfig postgresql-9.6 on
 
 You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
 
@@ -97,6 +97,8 @@ worker-102). Add the workers' DNS names and server ports to the table.
 
   sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-101', 5432);"
   sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-102', 5432);" 
+  echo "worker-101 5432" | sudo -u postgres tee -a /var/lib/pgsql/9.6/data/pg_worker_list.conf
+  echo "worker-102 5432" | sudo -u postgres tee -a /var/lib/pgsql/9.6/data/pg_worker_list.conf
 
 Note that you can also add this information by editing the file using your favorite editor.
 

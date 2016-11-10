@@ -3,7 +3,7 @@
 Requirements
 ############
 
-Citus works with modern 64-bit Linux and most Unix based operating systems. Citus 5.2 requires PostgreSQL 9.5 or later versions.
+Citus works with modern 64-bit Linux and most Unix based operating systems. Citus 6.0 requires PostgreSQL 9.5 or later versions.
 
 Before setting up a Citus cluster, you should ensure that the network and firewall settings are configured to allow:
 
