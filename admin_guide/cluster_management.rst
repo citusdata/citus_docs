@@ -77,13 +77,6 @@ make this simpler, Citus enterprise provides a replicate_table_shards UDF which
 can be called after. This function copies the shards of a table across the
 healthy nodes so they all reach the configured replication factor.
 
-.. note::
-    The instruction above assumes that the data directory is in the PGDATA environment variable. If not, you will need to set it. For example:
-    
-    ::
-        
-        export PGDATA=/usr/lib/postgresql/9.6/data
-
 To remove a permanently failed node from the list of workers, you should first
 mark all shard placements on that node as invalid (if they are not already so)
 using the following query:
