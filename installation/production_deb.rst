@@ -89,11 +89,7 @@ worker-102). Add the workers' DNS names and server ports to the table.
 ::
 
   sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-101', 5432);"
-  sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-102', 5432);" 
-  echo "worker-101 5432" | sudo -u postgres tee -a /var/lib/postgresql/9.6/main/pg_worker_list.conf
-  echo "worker-102 5432" | sudo -u postgres tee -a /var/lib/postgresql/9.6/main/pg_worker_list.conf
-
-Note that you can also add this information by editing the file using your favorite editor.
+  sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-102', 5432);"
 
 **2. Verify that installation has succeeded**
 
