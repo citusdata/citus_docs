@@ -87,16 +87,26 @@ The steps listed below must be executed **only** on the master node after the pr
 
 **1. Add worker node information**
 
-We need to inform the master about its workers. To add this information, we append the worker database names and server ports to the `pg_worker_list.conf` file in the data directory. For our example, we assume that there are two workers (named worker-101, worker-102). Add the workers' DNS names and server ports to the list.
+We need to inform the master about its workers. To add this information, we call
+a UDF which adds the node information to the pg_dist_node catalog table, which
+the master uses to get the list of worker nodes. For our
+example, we assume that there are two workers (named worker-101,
+worker-102). Add the workers' DNS names and server ports to the table.
 
 ::
 
+  sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-101', 5432);"
+  sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-102', 5432);" 
   echo "worker-101 5432" | sudo -u postgres tee -a /var/lib/pgsql/9.6/data/pg_worker_list.conf
   echo "worker-102 5432" | sudo -u postgres tee -a /var/lib/pgsql/9.6/data/pg_worker_list.conf
 
 Note that you can also add this information by editing the file using your favorite editor.
 
-**2. Reload master database settings**
+**2. Verify that installation has succeeded**
+
+To verify that the installation has succeeded, we check that the master node has
+picked up the desired worker configuration. This command when run in the psql
+shell should output the worker nodes we added to the pg_dist_node table above.
 
 ::
 

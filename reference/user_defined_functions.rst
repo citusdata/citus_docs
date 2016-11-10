@@ -7,12 +7,86 @@ This section contains reference information for the User Defined Functions provi
 
 Table and Shard DDL
 -------------------
+.. _create_distributed_table:
+
+create_distributed_table
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The create_distributed_table() function is used to define a distributed table
+and create its shards if its a hash-distributed table. This function takes in a
+table name, the distribution column and an optional distribution method and inserts
+appropriate metadata to mark the table as distributed. The function defaults to
+'hash' distribution if no distribution method is specified. If the table is
+hash-distributed, the function also creates worker shards based on the shard
+count and shard replication factor configuration values. This function replaces
+usage of master_create_distributed_table() followed by
+master_create_worker_shards(). 
+
+Arguments
+************************
+
+**table_name:** Name of the table which needs to be distributed.
+
+**distribution_column:** The column on which the table is to be distributed.
+
+**distribution_method:** (Optional) The method according to which the table is
+to be distributed. Permissible values are append or hash, and defaults to 'hash'.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+This example informs the database that the github_events table should be distributed by hash on the repo_id column.
+
+::
+
+	SELECT create_distributed_table('github_events', 'repo_id');
+
+create_reference_table
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+.. _create_reference_table:
+
+The create_reference_table() function is used to define a small reference or
+dimension table. This function takes in a table name, and creates a distributed
+table with just one shard, and replication factor equal to the value specified
+in the citus.shard_replication_factor configuration variable. The distribution
+column is unimportant since the UDF only creates one shard for the table.
+
+Arguments
+************************
+
+**table_name:** Name of the small dimension or reference table which needs to be distributed.
+
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+This example informs the database that the nation table should be defined as a
+reference table
+
+::
+
+	SELECT create_reference_table('nation');
 
 master_create_distributed_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. _master_create_distributed_table:
 
-The master_create_distributed_table() function is used to define a distributed table. This function takes in a table name, the distribution column and distribution method and inserts appropriate metadata to mark the table as distributed.
+.. note::
+   This function is deprecated, and replaced by :ref:`create_distributed_table <create_distributed_table>`.
+
+The master_create_distributed_table() function is used to define a distributed
+table. This function takes in a table name, the distribution column and
+distribution method and inserts appropriate metadata to mark the table as
+distributed.
+
 
 Arguments
 ************************
@@ -41,6 +115,9 @@ master_create_worker_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. _master_create_worker_shards:
 
+.. note::
+   This function is deprecated, and replaced by :ref:`create_distributed_table <create_distributed_table>`.
+
 The master_create_worker_shards() function creates a specified number of worker shards with the desired replication factor for a *hash* distributed table. While doing so, the function also assigns a portion of the hash token space (which spans between -2 Billion and 2 Billion) to each shard. Once all shards are created, this function saves all distributed metadata on the master.
 
 Arguments
@@ -64,6 +141,7 @@ This example usage would create a total of 16 shards for the github_events table
 ::
 
 	SELECT master_create_worker_shards('github_events', 16, 2);
+
 
 master_create_empty_shard
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -202,10 +280,76 @@ Example
 Metadata / Configuration Information
 ------------------------------------------------------------------------
 
+.. _master_add_node:
+
+master_add_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The master_add_node() function registers a new node addition in the cluster in
+the Citus metadata table pg_dist_node.
+
+Arguments
+************************
+
+**node_name:** DNS name of the new node to be added.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+A tuple which represents a row from :ref:`pg_dist_node
+<pg_dist_node>` table.
+
+
+Example
+***********************
+
+::
+
+    select * from master_add_node('new-node', 12345);
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata 
+    --------+---------+----------+----------+----------+-------------
+          7 |       7 | new-node |    12345 | default  | f
+    (1 row)
+
+master_remove_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The master_remove_node() function removes the specified node from the
+pg_dist_node metadata table. This function will error out if there are existing
+shard placements on this node in pg_dist_shard_placement. Thus, before using
+this function, the shards will need to be moved off that node.
+
+Arguments
+************************
+
+**node_name:** DNS name of the node to be removed.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+N/A
+
+Example
+***********************
+
+::
+
+    select master_remove_node('new-node', 12345);
+     master_remove_node 
+    --------------------
+     
+    (1 row)
+
 master_get_active_worker_nodes
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The master_get_active_worker_nodes() function returns a list of active worker host names and port numbers. Currently, the function assumes that all the worker nodes in pg_worker_list.conf are active.
+The master_get_active_worker_nodes() function returns a list of active worker
+host names and port numbers. Currently, the function assumes that all the worker
+nodes in the pg_dist_node catalog table are active.
 
 Arguments
 ************************

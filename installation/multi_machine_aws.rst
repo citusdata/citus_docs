@@ -106,7 +106,7 @@ Once the cluster creation completes, you can immediately connect to the master n
 
 **7. Ready to use the cluster**
 
-At this step, you have completed the installation process and are ready to use the Citus cluster. You can now login to the master node and start executing commands. The command below, when run in the psql shell, should output the worker nodes mentioned in the pg_worker_list.conf.
+At this step, you have completed the installation process and are ready to use the Citus cluster. You can now login to the master node and start executing commands. The command below, when run in the psql shell, should output the worker nodes mentioned in the pg_dist_node.
 
 ::
 

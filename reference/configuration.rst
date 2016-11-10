@@ -10,20 +10,6 @@ The rest of this reference aims at discussing Citus specific configuration param
 Node configuration
 ---------------------------------------
 
-pg_worker_list.conf
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-The Citus master needs to have information about the worker nodes in the cluster so that it can communicate with them. This information is stored in the pg_worker_list.conf file in the data directory on the master. To add this information, you need to append the DNS names and port numbers of the workers to this file. You can then call pg_reload_conf() or restart the master to allow it to refresh its worker membership list.
-
-The example below adds worker-101 and worker-102 as worker nodes in the pg_worker_list.conf file on the master.
-
-::
-
-	vi $PGDATA/pg_worker_list.conf
-	# HOSTNAME 	[PORT] 	[RACK]
-	worker-101
-	worker-102
-
 citus.max_worker_nodes_tracked (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -47,6 +33,13 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Sets the replication factor for shards i.e. the number of nodes on which shards will be placed and defaults to 2. This parameter can be set at run-time and is effective on the master.
 The ideal value for this parameter depends on the size of the cluster and rate of node failure. For example, you may want to increase this replication factor if you run large clusters and observe node failures on a more frequent basis.
+
+citus.shard_count (integer)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Sets the shard count for hash-partitioned tables and defaults to 32. This value is used by
+the :ref:`create_distributed_table <create_distributed_table>` UDF when creating
+hash-partitioned tables. This parameter can be set at run-time and is effective on the master. 
 
 citus.shard_max_size (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
