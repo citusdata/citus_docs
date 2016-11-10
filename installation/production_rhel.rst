@@ -110,14 +110,6 @@ shell should output the worker nodes we added to the pg_dist_node table above.
 
 ::
 
-  sudo service postgresql-9.6 reload
-
-**3. Verify that installation has succeeded**
-
-To verify that the installation has succeeded, we check that the master node has picked up the desired worker configuration. This command when run in the psql shell should output the worker nodes mentioned in the `pg_worker_list.conf` file.
-
-::
-
   sudo -i -u postgres psql -c "SELECT * FROM master_get_active_worker_nodes();"
 
 **Ready to use Citus**
