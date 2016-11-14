@@ -99,17 +99,6 @@ Interpolate the list of ids into a new query
    where page_id in (2,3,5,7,13)
   group by page_id
 
-INSERT INTO ... SELECT
-----------------------
-
-Citus does not support directly inserting the results of a query into a distributed table. One workaround is to use two database connections to stream the query results to master and then distribute them to the shards.
-
-.. code-block:: bash
-
-  psql -c "COPY (query) TO STDOUT" | psql -c "COPY table FROM STDIN"
-
-This does incur network cost. If this workaround is too slow please contact Citus Data support. We can assist you in parallelizing the table insertion across all workers using a more complicated technique.
-
 SELECT DISTINCT
 ---------------
 
