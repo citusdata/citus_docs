@@ -413,7 +413,7 @@ your can modify the dashboard query to look like this:
     request_count, success_count, error_count, average_response_time_msec,
     country_counters->'USA' AS american_visitors
   FROM http_request_1min
-  WHERE site_id = 1 AND minute = date_trunc('minute', now());
+  WHERE site_id = 1 AND ingest_time = date_trunc('minute', now());
 
 Resources
 ---------
