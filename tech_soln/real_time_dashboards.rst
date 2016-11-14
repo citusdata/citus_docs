@@ -145,9 +145,7 @@ colocation; it makes queries such as joins faster and our rollups possible.
   :alt: colocation in citus
 
 In order to populate ``http_request_1min`` we're going to periodically run the equivalent
-of an INSERT INTO SELECT. Citus `doesn't yet support
-<https://github.com/citusdata/citus/issues/508>`_ INSERT INTO SELECT on distributed
-tables, so instead we'll run a function on all the workers which runs INSERT INTO SELECT
+of an INSERT INTO SELECT. We'll run a function on all the workers which runs INSERT INTO SELECT
 on every matching pair of shards. This is possible because the tables are colocated.
 
 .. code-block:: plpgsql
