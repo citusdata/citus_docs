@@ -34,14 +34,12 @@ As the Citus master node is similar to a standard PostgreSQL server, regular Pos
 How do I ingest the results of a query into a distributed table?
 ----------------------------------------------------------------
 
-Citus currently doesn't support the INSERT / SELECT syntax for copying the results of a query into a distributed table. As a simple workaround, you could use
+Citus now supports the INSERT / SELECT syntax for copying the results of a query
+on a distributed table into a distributed table, when the tables are colocated.
 
-::
-
-  psql -c "COPY (query) TO STDOUT" | \
-  psql -c "COPY table FROM STDIN"
-
-In addition to the above, there are other workarounds which are more complex to implement but are more efficient. Please contact us if your use-case demands such ingest workflows.
+If your tables are not colocated, or you are using append distribution, there
+are workarounds which are more complex to implement. Please contact us if your
+use-case demands such ingest workflows.
 
 Can I join distributed and non-distributed tables together in the same query?
 -----------------------------------------------------------------------------
