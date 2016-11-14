@@ -335,7 +335,7 @@ number of ip addresses by calling the ``hll_cardinality`` function:
     request_count, success_count, error_count, average_response_time_msec,
     hll_cardinality(distinct_ip_addresses) AS distinct_ip_address_count
   FROM http_request_1min
-  WHERE site_id = 1 AND minute = date_trunc('minute', now());
+  WHERE site_id = 1 AND ingest_time = date_trunc('minute', now());
 
 HLLs aren't just faster, they let you do things you couldn't previously. Say we did our
 rollups, but instead of using HLLs we saved the exact unique counts. This works fine, but
