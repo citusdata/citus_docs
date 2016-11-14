@@ -334,7 +334,7 @@ number of ip addresses by calling the ``hll_cardinality`` function:
     request_count, success_count, error_count, average_response_time_msec,
     hll_cardinality(distinct_ip_addresses) AS distinct_ip_address_count
   FROM http_request_1min
-  WHERE site_id = 1 AND minute = date_trunc('minute', now());
+  WHERE site_id = 1 AND ingest_time = date_trunc('minute', now());
 
 HLLs aren't just faster, they let you do things you couldn't previously. Say we did our
 rollups, but instead of using HLLs we saved the exact unique counts. This works fine, but
@@ -349,9 +349,11 @@ aggregate function and its semantics. You do this by running the following:
   -- this should be run on the workers and master
   CREATE AGGREGATE sum (hll)
   (
-    sfunc = hll_union_agg,
+    sfunc = hll_union_trans,
     stype = internal,
+    finalfunc = hll_pack
   );
+
 
 Now, when you call SUM over a collection of HLLs, PostgreSQL will return the HLL for us.
 You can then compute distinct ip counts over a time period with the following query:
@@ -410,7 +412,7 @@ your can modify the dashboard query to look like this:
     request_count, success_count, error_count, average_response_time_msec,
     country_counters->'USA' AS american_visitors
   FROM http_request_1min
-  WHERE site_id = 1 AND minute = date_trunc('minute', now());
+  WHERE site_id = 1 AND ingest_time = date_trunc('minute', now());
 
 Resources
 ---------
