@@ -350,9 +350,11 @@ aggregate function and its semantics. You do this by running the following:
   -- this should be run on the workers and master
   CREATE AGGREGATE sum (hll)
   (
-    sfunc = hll_union_agg,
+    sfunc = hll_union_trans,
     stype = internal,
+    finalfunc = hll_pack
   );
+
 
 Now, when you call SUM over a collection of HLLs, PostgreSQL will return the HLL for us.
 You can then compute distinct ip counts over a time period with the following query:
