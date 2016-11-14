@@ -257,15 +257,16 @@ keep raw data for one day and 1-minute aggregations for one month.
 .. code-block:: plpgsql
 
   -- another function for the master
-  CREATE FUNCTION expire_old_request_data() RETURNS void
+  CREATE OR REPLACE FUNCTION expire_old_request_data() RETURNS void
   AS $$
-    SET LOCAL citus.all_modification_commutative TO TRUE;
-    SELECT master_modify_multiple_shards(
-      'DELETE FROM http_request WHERE ingest_time < now() - interval ''1 day'';');
-    SELECT master_modify_multiple_shards(
-      'DELETE FROM http_request_1min WHERE ingest_time < now() - interval ''1 month'';');
+  BEGIN
+    SET citus.all_modification_commutative TO TRUE;
+    PERFORM master_modify_multiple_shards(
+              'DELETE FROM http_request WHERE ingest_time < now() - interval ''1 day'';');
+    PERFORM master_modify_multiple_shards(
+              'DELETE FROM http_request_1min WHERE ingest_time < now() - interval ''1 month'';');
   END;
-  $$ LANGUAGE 'sql';
+  $$ LANGUAGE 'plpgsql';
 
 .. NOTE::
 
