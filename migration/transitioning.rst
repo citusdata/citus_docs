@@ -76,16 +76,17 @@ The first way is to add and a store_id column to regions, change the primary key
 
 In addition to the schema change, you'll need to duplicate each row of the regions table, once for each store. To use the altered regions table in a join query, add a clause to match on store_id, for instance:
 
-.. code:: diff
+.. code-block:: sql
 
     -- Find adjusted purchase price with sales tax
     -- for purchase number 1337
 
-    select price + sales_tax
-      from purchases, regions
-     where purchases.id = 1337
-       and purchases.region_id = regions.id
-  +    and purchases.store_id = regions.store_id
+    SELECT price + sales_tax
+      FROM purchases, regions
+     WHERE purchases.id = 1337
+       AND purchases.region_id = regions.id
+       -- include this condition:
+       AND purchases.store_id = regions.store_id
 
 This will run an efficient co-located join on the worker holding the shard for this store id.
 
