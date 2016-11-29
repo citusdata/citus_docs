@@ -2,12 +2,12 @@
 
 Migrating an existing single-node PostgreSQL database to Citus sometimes requires adjusting the schema and queries for optimal performance. Citus extends PostgreSQL with distributed functionality, but it is not a drop-in replacement that scales out all workloads. A performant Citus cluster involves thinking about the data model, tooling, and choice of SQL features used.
 
-Migration tactics differ between the two main Citus use cases of multi-tenant applications and real-time analytics. The former is requires fewer data model changes so we'll begin there.
+Migration tactics differ between the two main Citus use cases of multi-tenant applications and real-time analytics. The former requires fewer data model changes so we'll begin there.
 
 Multi-tenant Data Model
 =======================
 
-Citus is well suited to hosting B2B multi-tenant application data. In this model application tenants share a Citus cluster and a schema and Citus keeps each tenant's data private. Each tenant's table data is stored in its own shard determined by a configurable tenant id column. Citus pushes queries down to run directly on the relevant tenant shard in the cluster, spreading out the computation. Once queries are routed this way they can be executed without concern for the rest of the cluster. These queries can use the full features of SQL, including joins and transactions, without running into the inherent limitations of a distributed system.
+Citus is well suited to hosting B2B multi-tenant application data. In this model application tenants share a Citus cluster and a schema. Each tenant's table data is stored in a shard determined by a configurable tenant id column. Citus pushes queries down to run directly on the relevant tenant shard in the cluster, spreading out the computation. Once queries are routed this way they can be executed without concern for the rest of the cluster. These queries can use the full features of SQL, including joins and transactions, without running into the inherent limitations of a distributed system.
 
 This section will explore how to model for the multi-tenant scenario, including necessary adjustments to the schema and queries.
 
@@ -56,7 +56,7 @@ We'll classify the types of tables and learn how to migrate them to Citus.
 Tenant-Specific Tables
 ^^^^^^^^^^^^^^^^^^^^^^
 
-In our example each store is a natural tenant. This is because storefronts benefit from dedicated processing power for their customer data, and stores should not be able to access each other's sales or inventory. The tenant id is in this case the store id. Notice that some tables already have a store id as primary or foreign key. Tables such as these which can join on the tenant id are called *tenant-specific* or *per-tenant* tables. In this example they are stores, products and purchases.
+In our example each store is a natural tenant. This is because storefronts benefit from dedicated processing power for their customer data, and stores do not need to access each other's sales or inventory. The tenant id is in this case the store id. Notice that some tables already have a store id as primary or foreign key. Tables such as these which can join on the tenant id are called *tenant-specific* or *per-tenant* tables. In this example they are stores, products and purchases.
 
 Global and Reference Tables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -90,7 +90,7 @@ In addition to the schema change, you'll need to duplicate each row of the regio
 
 This will run an efficient co-located join on the worker holding the shard for this store id.
 
-The second technique is to remove the regions table and denormalizing the database by embedding the sales_tax property directly into purchases. Duplicating just one property isn't too bad, but the situation isn't as nice for wider reference tables. Note that reference columns can also be stored in a single JSONB column in the denormalized table to prevent the latter from becoming awkwardly wide.
+The second technique is to remove the regions table and denormalizing the database by embedding the sales_tax property directly into purchases. This is a viable solution if your reference tables aren't very wide. Note that reference columns can also be stored in a single JSONB column in the denormalized table to prevent the latter from becoming awkwardly wide.
 
 Query Migration
 ---------------
