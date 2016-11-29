@@ -38,7 +38,7 @@ topics.
    dist_tables/extensions.rst
 
 .. toctree::
-   :caption: Migration
+   :caption: Transitioning to Citus
 
    migration/transitioning.rst
 
