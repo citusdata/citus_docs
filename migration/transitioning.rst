@@ -18,79 +18,26 @@ Migrating from a standalone database instance to a sharded multi-tenant system r
 
 Consider an example multi-tenant application similar to Etsy or Shopify where each tenant is a store. Here's portion of a simplified schema:
 
-.. code::
+.. image:: ../images/erd/mt-before.png
 
-  admins
-    email
-    password
+In our example each store is a natural tenant. This is because storefronts benefit from dedicated processing power for their customer data, and stores do not need to access each other's sales or inventory. The tenant id is in this case the store id. We want to distribute data in the cluster in such a way that rows from the above tables in our schema reside on the same node whenever the rows share a store id.
 
-  stores
-    id
-    owner_email
-    owner_password
-    name
-    url
+The first challenge is distributing the tables. Citus requires that primary keys contain the distribution column, so we must modify the primary keys of these tables and make them compound including a store id. The products table is already in perfect shape. Stores and orders need modification but that's easy. The main hurdle is updating line_items which, being normalized, lacks a store id. We must add that column, and include it in the primary key constraint.
 
-  products
-    id
-    store_id
-    name
-    description
-    category
+When the job is complete our schema will look like this:
 
-  purchases
-    id
-    store_id
-    product_id
-    customer_id
-    region_id
-    price
-    purchased_at
+.. image:: ../images/erd/mt-after.png
 
-  regions
-    id
-    sales_tax
+We call the tables considered so far *per-tenant* because queries for our use case request information about them one tenant at a time. Their rows are distributed across the cluster according to the hashed values of their tenant ids.
 
-We'll classify the types of tables and learn how to migrate them to Citus.
+There are other types of tables to consider during a transition to Citus. Some are system-wide tables such as information about site administrators. They do not participate in join queries with the per-tenant tables and may remain on the coordinator node with no modification.
 
-Tenant-Specific Tables
-^^^^^^^^^^^^^^^^^^^^^^
+Another kind of table are those which join with per-tenant tables but which aren't naturally specific to any one tenant. We call them *reference* tables. One example is shipping regions. We advise that you add a tenant id to these tables and duplicate the original rows, once for each tenant. This ensures that reference data is co-located with per-tenant data and quickly accessible to queries.
 
-In our example each store is a natural tenant. This is because storefronts benefit from dedicated processing power for their customer data, and stores do not need to access each other's sales or inventory. The tenant id is in this case the store id. Notice that some tables already have a store id as primary or foreign key. Tables such as these which can join on the tenant id are called *tenant-specific* or *per-tenant* tables. In this example they are stores, products and purchases.
+Data Migration
+--------------
 
-Global and Reference Tables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The tenant-specific tables do not require modification for use in Citus. During migration you would distribute them through the Citus cluster, sharding by tenant id. The other tables — admins and regions — do require modification.
-
-Consider the admins table first. It is aloof from tenant data, containing information about site administrators for the entire marketplace website, not individual stores. This table will not be involved in any SQL joins with the per-tenant tables. We call tables like these *global*. They usually relate to cross-tenant site operation or analytics. You can leave these tables unchanged, they will live on the Citus cluster master node and do not need to be distributed to worker nodes.
-
-The regions table is a different story. Because it lacks a tenant id but is involved in calculations of sales pricing along with per-tenant tables we call it a *reference* table.
-
-There are two ways to handle reference tables in the Citus multi-tenant use case:
-
-1. Duplicate
-2. Denormalize
-
-The first way is to add and a store_id column to regions, change the primary key from id alone to a composite key of id and store_id, and shard by the store_id column. (Citus requires primary keys and uniqueness constraints to contain the distribution column.)
-
-In addition to the schema change, you'll need to duplicate each row of the regions table, once for each store. To use the altered regions table in a join query, add a clause to match on store_id, for instance:
-
-.. code-block:: sql
-
-    -- Find adjusted purchase price with sales tax
-    -- for purchase number 1337
-
-    SELECT price + sales_tax
-      FROM purchases, regions
-     WHERE purchases.id = 1337
-       AND purchases.region_id = regions.id
-       -- include this condition:
-       AND purchases.store_id = regions.store_id
-
-This will run an efficient co-located join on the worker holding the shard for this store id.
-
-The second technique is to remove the regions table and denormalizing the database by embedding the sales_tax property directly into purchases. This is a viable solution if your reference tables aren't very wide. Note that reference columns can also be stored in a single JSONB column in the denormalized table to prevent the latter from becoming awkwardly wide.
+In the previous section we ensured that per-tenant tables have the tenant id, and that this column is part of the primary key. In tables such as line_items this caused denormalization. Once you're ready to copy data into a Citus cluster from the original line_items table we will need to "backfill" the store ids into new rows.
 
 Query Migration
 ---------------
