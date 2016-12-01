@@ -22,7 +22,7 @@ Schema Migration
 
 Transitioning from a standalone database instance to a sharded multi-tenant system requires identifying and modifying three types of tables which we may term *per-tenant*, *reference*, and *global*. The distinction hinges on whether the tables have (or reference) a column serving as tenant id. The concept of tenant id depends on the application and who exactly are considered its tenants.
 
-Consider an example multi-tenant application similar to Etsy or Shopify where each tenant is a store. Here's portion of a simplified schema:
+Consider an example multi-tenant application similar to Etsy or Shopify where each tenant is a store. Here's a portion of a simplified schema:
 
 .. image:: ../images/erd/mt-before.png
 
@@ -38,7 +38,7 @@ When the job is complete our schema will look like this:
 
 We call the tables considered so far *per-tenant* because querying them for our use case requires information for only one tenant per query. Their rows are distributed across the cluster according to the hashed values of their tenant ids.
 
-There are other types of tables to consider during a transition to Citus. Some are system-wide tables such as information about site administrators. They do not participate in join queries with the per-tenant tables and may remain on the Citus coordinator node unmodified.
+There are other types of tables to consider during a transition to Citus. Some are system-wide tables such as information about site administrators. We call them *global* tables and they do not participate in join queries with the per-tenant tables and may remain on the Citus coordinator node unmodified.
 
 Another kind of table are those which join with per-tenant tables but which aren't naturally specific to any one tenant. We call them *reference* tables. Two examples are shipping regions and product categories. We advise that you add a tenant id to these tables and duplicate the original rows, once for each tenant. This ensures that reference data is co-located with per-tenant data and quickly accessible to queries.
 
