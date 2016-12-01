@@ -31,38 +31,6 @@ $$$$$$$$$$$$$$$$$
 
 The Citus master maintains metadata tables to track all the workers and the locations of the database shards on them. These tables also maintain statistics like size and min/max values about the shards which help Citus’s distributed query planner to optimize the incoming queries. The metadata tables are small (typically a few MBs in size) and can be replicated and quickly restored if the master ever experiences a failure.
 
-You can view the metadata by running the following queries on the Citus master.
-
-::
-
-    SELECT * from pg_dist_partition;
-     logicalrelid | partmethod |                                                     	partkey                                                    	 
-    --------------+------------+-------------------------------------------------------------------------------------------------------------------------
-           488843 | r          | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location 232}
-    (1 row)
-
-    SELECT * from pg_dist_shard;
-     logicalrelid | shardid | shardstorage | shardalias | shardminvalue | shardmaxvalue
-    --------------+---------+--------------+------------+---------------+---------------
-           488843 |  102065 | t        	   |        	| 27        	| 14995004
-           488843 |  102066 | t            |        	| 15001035  	| 25269705
-           488843 |  102067 | t            |        	| 25273785  	| 28570113
-           488843 |  102068 | t            |        	| 28570150  	| 28678869
-    (4 rows)
-
-    SELECT * from pg_dist_shard_placement;
-     shardid | shardstate | shardlength | nodename  | nodeport
-    ---------+------------+-------------+-----------+----------
-      102065 |      	1 | 	7307264 | localhost | 	9701
-      102065 |      	1 | 	7307264 | localhost | 	9700
-      102066 |      	1 | 	5890048 | localhost | 	9700
-      102066 |      	1 | 	5890048 | localhost | 	9701
-      102067 |      	1 | 	5242880 | localhost | 	9701
-      102067 |      	1 | 	5242880 | localhost | 	9700
-      102068 |      	1 | 	3923968 | localhost | 	9700
-      102068 |      	1 | 	3923968 | localhost | 	9701
-    (8 rows)
-
 To learn more about the metadata tables and their schema, please visit the :ref:`metadata_tables` section of our documentation.
 
 Query Processing
