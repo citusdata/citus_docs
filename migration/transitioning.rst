@@ -14,7 +14,7 @@ This section will explore how to model for the multi-tenant scenario, including 
 Schema Migration
 ----------------
 
-Migrating from a standalone database instance to a sharded multi-tenant system requires identifying and modifying three types of tables which we may term *per-tenant*, *reference*, and *global*. The distinction hinges on whether the tables have (or reference) a column serving as tenant id. The concept of tenant id depends on the application and who exactly are considered its tenants.
+Transitioning from a standalone database instance to a sharded multi-tenant system requires identifying and modifying three types of tables which we may term *per-tenant*, *reference*, and *global*. The distinction hinges on whether the tables have (or reference) a column serving as tenant id. The concept of tenant id depends on the application and who exactly are considered its tenants.
 
 Consider an example multi-tenant application similar to Etsy or Shopify where each tenant is a store. Here's portion of a simplified schema:
 
@@ -22,52 +22,65 @@ Consider an example multi-tenant application similar to Etsy or Shopify where ea
 
 In our example each store is a natural tenant. This is because storefronts benefit from dedicated processing power for their customer data, and stores do not need to access each other's sales or inventory. The tenant id is in this case the store id. We want to distribute data in the cluster in such a way that rows from the above tables in our schema reside on the same node whenever the rows share a store id.
 
-The first challenge is distributing the tables. Citus requires that primary keys contain the distribution column, so we must modify the primary keys of these tables and make them compound including a store id. The products table is already in perfect shape. Stores and orders need modification but that's easy. The main hurdle is updating line_items which, being normalized, lacks a store id. We must add that column, and include it in the primary key constraint.
+The first step is preparing the tables for distribution. Citus requires that primary keys contain the distribution column, so we must modify the primary keys of these tables and make them compound including a store id. Making primary keys compound will require modifying the corresponding foreign keys as well.
+
+In our example the products table is already in perfect shape. Stores and orders need slight modification: just updating the primary/foreign keys to include store_id. The line_items table needs the biggest change. Being normalized, it lacks a store id. We must add that column, and include it in the primary key constraint.
 
 When the job is complete our schema will look like this:
 
 .. image:: ../images/erd/mt-after.png
 
-We call the tables considered so far *per-tenant* because queries for our use case request information about them one tenant at a time. Their rows are distributed across the cluster according to the hashed values of their tenant ids.
+We call the tables considered so far *per-tenant* because querying them for our use case requires information for only one tenant per query. Their rows are distributed across the cluster according to the hashed values of their tenant ids.
 
-There are other types of tables to consider during a transition to Citus. Some are system-wide tables such as information about site administrators. They do not participate in join queries with the per-tenant tables and may remain on the coordinator node with no modification.
+There are other types of tables to consider during a transition to Citus. Some are system-wide tables such as information about site administrators. They do not participate in join queries with the per-tenant tables and may remain on the Citus coordinator node unmodified.
 
-Another kind of table are those which join with per-tenant tables but which aren't naturally specific to any one tenant. We call them *reference* tables. One example is shipping regions. We advise that you add a tenant id to these tables and duplicate the original rows, once for each tenant. This ensures that reference data is co-located with per-tenant data and quickly accessible to queries.
+Another kind of table are those which join with per-tenant tables but which aren't naturally specific to any one tenant. We call them *reference* tables. Two examples are shipping regions and product categories. We advise that you add a tenant id to these tables and duplicate the original rows, once for each tenant. This ensures that reference data is co-located with per-tenant data and quickly accessible to queries.
 
 Data Migration
 --------------
 
-In the previous section we ensured that per-tenant tables have the tenant id, and that this column is part of the primary key. In tables such as line_items this caused denormalization. Once you're ready to copy data into a Citus cluster from the original line_items table we will need to "backfill" the store ids into new rows.
+Once the schema is updated and the per-tenant and reference tables are distributed across the cluster it's time to copy data from the original database into Citus. Most per-tenant tables can be copied directly from source tables. However line_items was denormalized with the addition of the  store_id column. We should copy data not from the original line_items table but from the results of a query on the source database:
+
+.. code:: sql
+
+  SELECT orders.store_id AS store_id, line_items.*
+    FROM line_items, orders
+   WHERE line_items.order_id = orders.order_id
+
+We call this *backfilling* the tenant id. To learn how to ingest datasets such as this into a Citus cluster, see :ref:`dml`.
 
 Query Migration
 ---------------
 
-To execute queries efficiently and isolate them within their tenant Citus needs to route them to a specific shard. Thus every query must identify which single tenant it involves. For non-joins this means that the *where* clause must filter by tenant id. In joins at least one of the tables must be filtered by tenant id. For instance:
+To execute queries efficiently for a specific tenant Citus needs to route them to the appropriate node and run them there. Thus every query must identify which tenant it involves. For simple select, update, and delete queries this means that the *where* clause must filter by tenant id.
 
-.. code-block:: sql
+Suppose we want to get the details for an order. It used to suffice to filter by order_id. However once orders are distributed by store_id we must include that in the where filter as well.
 
-  SELECT * FROM t1, t2
-   WHERE t2.t1_id = t1.id
-     AND t1.tenant_id = 43
+.. code:: sql
 
-An over-defensive but effective technique is to add the tenant id filter to any table name mentioned in a join. This is also important in CTEs. Due to a shortcoming in PostgreSQL the query planner cannot examine sibling queries in a CTE. To assist Citus in routing the SQL you need provide a hint.
+  -- before
+  SELECT * FROM orders WHERE order_id = 123;
 
-.. code-block:: sql
+  -- after
+  SELECT * FROM orders WHERE order_id = 123 AND store_id = 42;
 
-  WITH cte1 AS ( Q ),
-       cte2 AS (
-         SELECT * FROM cte1, t3
-          WHERE cte1.t3_id = t3.id
-            AND t3.tenant_id = 42
-       )
-  SELECT * FROM cte2;
-  -- need to filter by cte2.tenant_id out here too
+Likewise insert statements must always include a value for the tenant id column. Citus inspects that value for routing the insert command.
 
-Citus cannot see the filter on tenant_id inside cte2, so you need to add a redundant filter on the outermost query.
+When joining tables make sure they are all filtered by tenant id. For instance here is how to inspect how many awesome wool pants a given store has sold:
+
+.. code:: sql
+
+  SELECT sum(l.quantity)
+    FROM line_items l
+   INNER JOIN products p ON l.product_id = p.product_id
+   WHERE p.name='Awesome Wool Pants'
+     -- notice we filter both tables by store_id
+     AND l.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
+     AND p.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75';
 
 Real-Time Analytics Data Model
 ==============================
 
-In this model multiple worker nodes calculate aggregate data in parallel for applications such as analytic dashboards. This scenario requires greater interaction between Citus nodes than the multi-tenant case and the migration from a standalone database is less straightforward.
+In this model multiple worker nodes calculate aggregate data in parallel for applications such as analytic dashboards. This scenario requires greater interaction between Citus nodes than the multi-tenant case and the transition from a standalone database varies more per application.
 
 In general you can distribute the tables from an existing schema by following the advice in :ref:`performance_tuning`. This will provide a baseline from which you can measure and interatively improve performance. For more migration guidance please `contact us <https://www.citusdata.com/about/contact_us>`_.
