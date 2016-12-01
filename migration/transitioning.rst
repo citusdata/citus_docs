@@ -11,6 +11,12 @@ Citus is well suited to hosting B2B multi-tenant application data. In this model
 
 This section will explore how to model for the multi-tenant scenario, including necessary adjustments to the schema and queries.
 
+The general process is
+
+1. Recreate the schema of the original database on the Citus coordinator node.
+2. Modify the schema for multi-tenant distribution.
+3. Copy the data from the original database to Citus.
+
 Schema Migration
 ----------------
 
