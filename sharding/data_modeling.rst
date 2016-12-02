@@ -2,17 +2,24 @@
 
 Distributed modeling refers to choosing how to distribute information across nodes in a multi-machine database cluster and query it efficiently. There are common use cases for a distributed database with well understood design tradeoffs. It will be helpful for you to identify whether your application falls into one of these categories in order to know what features and performance to expect.
 
-Choosing Distribution Column
-============================
+Choosing a Distribution Column
+==============================
 
-Citus uses the distribution column of a table to determine how data is allocated to the available shards. As data is loaded into the table, the distribution key column is treated as a hash key to allocate the incoming row to a shard. Repeating values are always assigned the same shard. Therefore the distribution column can also be used by the system to find the shard containing a particular value or set of values.
+Citus uses the distribution column of a table to determine how data is allocated to the available shards. As data is loaded into the table, the distribution column is treated as a hash key to allocate the incoming row to a shard. Repeating values are always assigned the same shard. Therefore the distribution column can also be used by the system to find the shard containing a particular value or set of values.
 
-The database administrator, not Citus, designates the distribution column of a table. It is important to choose a column that both distributes data evenly across shards and co-locates rows from multiple tables on the same distributed node when they are used together in queries. Thus for the first point it is best to choose a column with high cardinality. For instance a binary gender field is a poor choice because it assumes at most two values. For the second point, choosing a column on which two tables are typically joined also helps join queries operate more efficiently because table rows to be joined will be co-located in the same shards.
+The database administrator, not Citus, designates the distribution column of a table. It is important to choose a column that both distributes data evenly across shards and co-locates rows from multiple tables on the same distributed node when they are used together in queries.
 
-* [add a picture of evenly distributed data in shards vs uneven]
-* [add a picture of co-location]
+Thus to the first point it is best to choose a column with high cardinality. For instance a binary gender field is a poor choice because it assumes at most two values. These values will not be able to take advantage of a cluster with many shards. The row placement will skew into only two shards:
 
-Citus has two predominant use cases, each with characteristic patterns of distribution columns. They are multi-tenant applications and real time analytic dashboards.
+.. image:: ../images/sharding-poorly-distributed.png
+
+Queries such as analytics aggregations can parallelize across shards. Having an even shard distribution can linearly scale queries with the number of nodes in a Citus cluster.
+
+To the second point, when two tables are joined on a column there is some advantage in distributing both tables by that column. Doing so helps the join queries operate more efficiently because table rows will be co-located in the same shards. In the following illustration the rows related to store_id=1 in the first shard are co-located. Performing a join query for stores, products and purchases for store_id=1 would have all the data it needs on one physical node.
+
+.. image:: ../images/sharding-colocated.png
+
+Bearing in mind the benefits of even data distribution and of co-location, let's turn to how they play out in common use cases.  Citus has two predominant use cases, each with characteristic patterns of distribution columns. They are multi-tenant applications and real time analytic dashboards.
 
 Multi-Tenant Applications
 -------------------------
