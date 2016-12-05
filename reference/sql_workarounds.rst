@@ -3,9 +3,15 @@
 SQL Workarounds
 ===============
 
-Before attempting workarounds consider whether Citus is appropriate for your situation. Citus' current version works well for real-time analytics use cases. We are continuously working to increase SQL coverage to better support other use-cases such as data warehousing queries.
+Before attempting workarounds consider whether Citus is appropriate for your
+situation. Citus' current version works well for :ref:`real-time analytics and
+multi-tenant use cases. <when_to_use_citus>`
 
-Citus supports most, but not all, SQL statements directly. Its SQL support continues to improve. Also many of the unsupported features have workarounds; below are a number of the most useful.
+Citus supports all SQL statements in the multi-tenant use-case. For real-time
+analytics use-cases, with queries which span across nodes, Citus supports a
+subset of SQL statements. We are continuously working to increase SQL coverage
+to better support other use-cases such as data warehousing queries. Also many of
+the unsupported features have workarounds; below are a number of the most useful.
 
 Subqueries in WHERE
 -------------------
