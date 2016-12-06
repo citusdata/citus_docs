@@ -24,7 +24,10 @@ Transitioning from a standalone database instance to a sharded multi-tenant syst
 
 Consider an example multi-tenant application similar to Etsy or Shopify where each tenant is a store. Here's a portion of a simplified schema:
 
-.. image:: ../images/erd/mt-before.png
+.. figure:: ../images/erd/mt-before.png
+   :alt: Schema before migration
+
+   (Underlined items are primary keys, italicized items are foreign keys.)
 
 In our example each store is a natural tenant. This is because storefronts benefit from dedicated processing power for their customer data, and stores do not need to access each other's sales or inventory. The tenant id is in this case the store id. We want to distribute data in the cluster in such a way that rows from the above tables in our schema reside on the same node whenever the rows share a store id.
 
@@ -34,7 +37,10 @@ In our example the products table is already in perfect shape. Stores and orders
 
 When the job is complete our schema will look like this:
 
-.. image:: ../images/erd/mt-after.png
+.. figure:: ../images/erd/mt-after.png
+   :alt: Schema after migration
+
+   (Underlined items are primary keys, italicized items are foreign keys.)
 
 We call the tables considered so far *per-tenant* because querying them for our use case requires information for only one tenant per query. Their rows are distributed across the cluster according to the hashed values of their tenant ids.
 
