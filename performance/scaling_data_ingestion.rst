@@ -46,6 +46,8 @@ Note that this query also takes an exclusive lock on the row in PostgreSQL, whic
 
 When the replication factor is 1, it is always safe to enable citus.all_modifications_commutative. Citus does not do this automatically yet.
 
+.. _bulk_copy:
+
 Bulk Copy (100-200k/s)
 ----------------------
 
@@ -73,38 +75,6 @@ A very powerful feature of COPY for hash distributed tables is that it asynchron
 Masterless Citus (50k/s-500k/s)
 -------------------------------
 
-.. note::
+Masterless Citus (Citus MX) builds on the Citus extension. It gives you the ability to query and write to distributed tables from any node, which allows you to horizontally scale out your write-throughput using PostgreSQL. It also removes the need to interact with a primary node in a Citus cluster for data ingest or queries.
 
-    This section is currently experimental and not a guide to setup masterless clusters in production. We are working on providing official support for masterless clusters including replication and automated fail-over solutions. Please `contact us <https://www.citusdata.com/about/contact_us>`_ if your use-case requires multiple masters.
-
-It is technically possible to create the distributed table on every node in the cluster. The big advantage is that all  queries on distributed tables can be performed at a very high rate by spreading the queries across the workers. In this case, the replication factor should always be 1 to ensure consistency, which causes data to become unavailable when a node goes down. All nodes should have a hot standby and automated fail-over to ensure high availability.
-
-To allow DML commands on the distribute table from any node, first create a distributed table on both the master and the workers:
-
-::
-
-    CREATE TABLE data (key text, value text);
-    SELECT master_create_distributed_table('data','key','hash');
-
-Then on the master, create shards for the distributed table with a replication factor of 1.
-
-::
-
-    -- Create 128 shards with a single replica on the workers
-    SELECT master_create_worker_shards('data', 128, 1);
-
-Finally, you need to copy and convert the shard metadata from the master to the workers. The logicalrelid column in pg_dist_shard may differ per node. If you have the dblink extension installed, then you can run the following commands on the workers to get the metadata from master-node.
-
-::
-
-    INSERT INTO pg_dist_shard SELECT * FROM
-    dblink('host=master-node port=5432',
-           'SELECT logicalrelid::regclass,shardid,shardstorage,shardalias,shardminvalue,shardmaxvalue FROM pg_dist_shard')
-    AS (logicalrelid regclass, shardid bigint, shardstorage char, shardalias text, shardminvalue text, shardmaxvalue text);
-
-    INSERT INTO pg_dist_shard_placement SELECT * FROM
-    dblink('host=master-node port=5432',
-           'SELECT * FROM pg_dist_shard_placement')
-    AS (shardid bigint, shardstate int, shardlength bigint, nodename text, nodeport int);
-
-After these commands, you can connect to any node and perform both SELECT and DML commands on the distributed table. However, DDL commands won't be supported.
+Citus MX is currently available in private beta on Citus Cloud. For more information see :ref:`mx`.
