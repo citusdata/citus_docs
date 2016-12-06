@@ -33,7 +33,7 @@ In our example each store is a natural tenant. This is because storefronts benef
 
 The first step is preparing the tables for distribution. Citus requires that primary keys contain the distribution column, so we must modify the primary keys of these tables and make them compound including a store id. Making primary keys compound will require modifying the corresponding foreign keys as well.
 
-In our example the products table is already in perfect shape. Stores and orders need slight modification: just updating the primary/foreign keys to include store_id. The line_items table needs the biggest change. Being normalized, it lacks a store id. We must add that column, and include it in the primary key constraint.
+In our example the stores and products tables are already in perfect shape. The orders table needs slight modification: updating the primary and foreign keys to include store_id. The line_items table needs the biggest change. Being normalized, it lacks a store id. We must add that column, and include it in the primary key constraint.
 
 When the job is complete our schema will look like this:
 
