@@ -75,6 +75,6 @@ A very powerful feature of COPY for hash distributed tables is that it asynchron
 Masterless Citus (50k/s-500k/s)
 -------------------------------
 
-It is technically possible to create the distributed table on every node in the cluster. The big advantage is that all queries on distributed tables can be performed at a very high rate by spreading the queries across the workers. In this case, the replication factor should always be 1 to ensure consistency, which causes data to become unavailable when a node goes down. All nodes should have a hot standby and automated fail-over to ensure high availability.
+Masterless Citus (Citus MX) builds on the Citus extension. It gives you the ability to query and write to distributed tables from any node, which allows you to horizontally scale out your write-throughput using PostgreSQL. It also removes the need to interact with a primary node in a Citus cluster for data ingest or queries.
 
-Masterless Citus is currently available in private beta on Citus Cloud. For more information see :ref:`mx`.
+Citus MX is currently available in private beta on Citus Cloud. For more information see :ref:`mx`.
