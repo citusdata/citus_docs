@@ -1,0 +1,34 @@
+[stores]
+*store_id
+name
+category
+
+[products]
+*product_id
+*+store_id
+name
+description
+price
+
+[orders]
+*order_id
+*+store_id
+status
+billing_address
+shipping_address
+ordered_at
+
+[line_items]
+*line_item_id
++product_id
+*+store_id
++order_id
+quantity
+line_amount
+
+stores 1--* orders
+stores 1--* products
+
+line_items *--1 products
+line_items *--1 orders
+line_items *--1 stores
