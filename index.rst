@@ -38,6 +38,11 @@ topics.
    dist_tables/extensions.rst
 
 .. toctree::
+   :caption: Transitioning to Citus
+
+   migration/transitioning.rst
+
+.. toctree::
    :caption: Performance
 
    performance/query_processing.rst
@@ -65,7 +70,6 @@ topics.
 
    admin_guide/cluster_management.rst
    admin_guide/upgrading_citus.rst
-   admin_guide/transitioning_from_postgresql_to_citus.rst
 
 .. toctree::
    :caption: Reference
