@@ -110,7 +110,7 @@ Suppose we want to get the details for an order. It used to suffice to filter by
 
 Likewise insert statements must always include a value for the tenant id column. Citus inspects that value for routing the insert command.
 
-When joining tables make sure they are all filtered by tenant id. For instance here is how to inspect how many awesome wool pants a given store has sold:
+When joining tables make sure to filter by tenant id. For instance here is how to inspect how many awesome wool pants a given store has sold:
 
 .. code-block:: sql
 
@@ -118,9 +118,11 @@ When joining tables make sure they are all filtered by tenant id. For instance h
     FROM line_items l
    INNER JOIN products p ON l.product_id = p.product_id
    WHERE p.name='Awesome Wool Pants'
-     -- notice we filter both tables by store_id
+     -- make sure to include this tenant id filter
      AND l.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
-     AND p.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75';
+
+     -- if it simplifies queries in your ORM you can also include
+     -- AND p.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
 
 Real-Time Analytics Data Model
 ==============================
