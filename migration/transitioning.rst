@@ -114,15 +114,27 @@ When joining tables make sure to filter by tenant id. For instance here is how t
 
 .. code-block:: sql
 
+  -- One way is to include store_id in the join and also
+  -- filter by it in one of the queries
+
+  SELECT sum(l.quantity)
+    FROM line_items l
+   INNER JOIN products p
+      ON l.product_id = p.product_id
+     AND l.store_id = p.store_id
+   WHERE p.name='Awesome Wool Pants'
+     AND l.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
+
+  -- Equivalently you omit store_id from the join condition
+  -- but filter both tables by it. This may be useful if
+  -- building the query in an ORM
+
   SELECT sum(l.quantity)
     FROM line_items l
    INNER JOIN products p ON l.product_id = p.product_id
    WHERE p.name='Awesome Wool Pants'
-     -- make sure to include this tenant id filter
      AND l.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
-
-     -- if it simplifies queries in your ORM you can also include
-     -- AND p.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
+     AND p.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
 
 Real-Time Analytics Data Model
 ==============================
