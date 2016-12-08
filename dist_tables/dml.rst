@@ -38,6 +38,23 @@ For example:
 
     If COPY fails to open a connection for a shard placement then it behaves in the same way as INSERT, namely to mark the placement(s) as inactive unless there are no more active placements. If any other failure occurs after connecting, the transaction is rolled back and thus no metadata changes are made.
 
+INSERT INTO ... SELECT
+$$$$$$$$$$$$$$$$$$$$$$
+
+Citus is commonly used to scale out event data pipelines and populate real-time dashboards. Typically users are interested in quickly querying predefined aggregations of incoming data. To speed up their queries, people with high data volumes store pre-aggregated data. This is called "rolling up" the data and it avoids the cost of processing raw data at run-time. Rolling up timeseries data into hourly or daily statistics not only increaes query speed, it can also save space. In some cases old raw data can be deleted after rollup, while new data can be retained in its entirety.
+
+Materialized views are one simple way to accomplish time-interval rollups, but refreshing materialized views requires re-scanning all raw data. A more flexible approach is :code:`INSERT INTO ... SELECT`, whereby the results of a select query are inserted into a table. It allows incremental updates, plus under certain conditions Citus can parallelize execution of the rollup. We'll see more about that later, first some basics.
+
+
+
+
+
+Explain what roll ups are and how they would help
+Talk about the syntax
+Examples
+How it works, running on each shard, how colocation is important
+Gotchas
+
 Single-Shard Updates and Deletion
 ---------------------------------
 
