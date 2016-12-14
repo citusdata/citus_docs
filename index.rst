@@ -60,9 +60,9 @@ topics.
    cloud/support.rst
 
 .. toctree::
-   :caption: Technical Solutions
+   :caption: Reference Architectures
 
-   tech_soln/real_time_dashboards.rst
+   ref_arch/real_time_dashboards.rst
 
 .. toctree::
    :maxdepth: 1
