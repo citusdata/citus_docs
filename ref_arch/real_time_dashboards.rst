@@ -18,8 +18,8 @@ Alternatively, maybe you're building an advertising network and want to show cli
 clickthrough rates on their campaigns. In this example latency is also critical, raw data
 volume is also high, and both historical and live data are important.
 
-In this technical solution we'll demonstrate how to build part of the first example,
-but this architecture would work equally well for the second and many other use-cases.
+In this section we'll demonstrate how to build part of the first example, but this
+architecture would work equally well for the second and many other use-cases.
 
 Running It Yourself
 -------------------
