@@ -27,7 +27,7 @@ The multi-tenant architecture uses a form of hierarchical database modeling to p
 
 The first step is identifying what constitutes a tenant in your app. Common instances include company, account, organization, or customer. The column name will thus be something like :code:`company_id` or :code:`customer_id:`. Examine each of your queries and ask yourself: would it work if it had additional WHERE clauses to restrict all tables involved to rows with the same tenant id? You can visualize these clauses as executing queries *within* a context, such restricting queries on sales or inventory to be within a certain store.
 
-If you're migrating an existing database to the Citus multi-tenant architecture then some of your tables may lack a column for the application-specific tenant id. You will need to add one and fill it with the correct values. This will denormalize your tables slightly, but it's because the multi-tenant model mixes the characteristics of hierarchical and relational data models. For more details and a concrete example of backfilling the tenant id, see our guide to :ref:`transitioning_to_citus`_.
+If you're migrating an existing database to the Citus multi-tenant architecture then some of your tables may lack a column for the application-specific tenant id. You will need to add one and fill it with the correct values. This will denormalize your tables slightly, but it's because the multi-tenant model mixes the characteristics of hierarchical and relational data models. For more details and a concrete example of backfilling the tenant id, see our guide to `Transitioning to Citus`_.
 
 Distributing by Entity ID
 =========================
@@ -49,14 +49,137 @@ Let's examine typical real-time schemas.
 Raw Events Table
 ----------------
 
+In this scenario we ingest high volume sensor measurement events into a single table and distribute it across Citus by the :code:`device_id` of the sensor. Every time the sensor makes a measurement we save that as a single event row with measurement details in a jsonb column for flexibility.
+
+.. code-block:: postgres
+
+  CREATE TABLE events (
+    device_id bigint not null,
+    event_id uuid NOT NULL DEFAULT gen_random_uuid(),
+    event_time timestamptz NOT NULL DEFAULT now(),
+    event_type int NOT NULL DEFAULT 0,
+    payload jsonb,
+    PRIMARY KEY (device_id, event_id)
+  );
+  CREATE INDEX ON events USING BRIN (event_time);
+
+Any query that restricts to a given device is routed directly to a worker node for processing. We call this a *single-shard* query. Here is one to get the ten most recent events:
+
+.. code-block:: postgres
+
+  SELECT event_time, payload
+    FROM events
+    WHERE device_id = 298
+    ORDER BY event_time DESC
+    LIMIT 10;
+
+To take advantage of massive parallelism we can run a *cross-shard* query. For instance, we can find the min, max, and average temperatures per minute across all sensors in the last ten minutes (assuming the json payload includes a :code:`temp` value). We can scale this query to any number of devices by adding worker nodes to the Citus cluster.
+
+.. code-block:: postgres
+
+  SELECT minute,
+    min(temperature)::decimal(10,1) AS min_temperature,
+    avg(temperature)::decimal(10,1) AS avg_temperature,
+    max(temperature)::decimal(10,1) AS max_temperature
+  FROM (
+    SELECT date_trunc('minute', event_time) AS minute,
+           (payload->>'temp')::float AS temperature
+    FROM events
+    WHERE event_t1me >= now() - interval '10 minutes'
+  ) ev
+  GROUP BY minute
+  ORDER BY minute ASC;
+
 Events and Summaries
 --------------------
+
+The previous example calculates statistics at runtime, doing possible recalculation between queries. Another approach is precalculating aggregates. This avoids recalculating raw event data and results in even faster queries. For example, a web analytics dashboard might want a count of views per page per day. The raw events data table looks like this:
+
+.. code-block:: postgres
+
+  CREATE TABLE page_views (
+      tenant_id int,
+      page_id int,
+      host_ip inet,
+      view_time timestamp default now()
+  );
+  CREATE INDEX view_tenant_idx ON page_views (tenant_id);
+  CREATE INDEX view_time_idx ON page_views USING BRIN (view_time);
+
+We will precompute the daily view count in this summary table:
+
+.. code-block:: postgres
+
+  CREATE TABLE daily_page_views (
+    day date,
+    page_id int,
+    view_count bigint,
+    primary key (day, page_id)
+  );
+
+Precomputing aggregates is called *roll-up*. Notice that distributing both tables by :code:`page_id` co-locates their data per-page. Any aggregate functions grouped per page can run in parallel, and this includes aggregates in roll-ups. We can use PostgreSQL `UPSERT <https://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_ to create and update rollups, like this (this SQL takes a parameter for the lower bound timestamp):
+
+.. code-block:: postgres
+
+  INSERT INTO daily_page_views (day, page_id, view_count)
+  SELECT view_time::date AS day, page_id, count(*) AS view_count
+  FROM page_views
+  WHERE view_time >= $1
+  GROUP BY view_time::date, page_id
+  ON CONFLICT (day, page_id) DO UPDATE SET
+    view_count = daily_page_views.view_count + EXCLUDED.view_count;
 
 Updatable Large Table
 ---------------------
 
+(Device table that has characteristics that get updated. Sharded by device id.)
+
 Behavioral Analytics
 --------------------
+
+Whereas the previous examples dealt with a single events table (possibly augmented with precomputed rollups), this example uses two main tables: users and their events. Tracking user behavior is another common Citus use case. In particular consider Wikipedia editors and their edits:
+
+.. code-block:: postgres
+
+  CREATE TABLE wikipedia_editors (
+    editor TEXT UNIQUE,
+    bot BOOLEAN,
+
+    edit_count INT,
+    added_chars INT,
+    removed_chars INT,
+
+    first_seen TIMESTAMPTZ,
+    last_seen TIMESTAMPTZ
+  );
+
+  CREATE TABLE wikipedia_changes (
+    editor TEXT,
+    time TIMESTAMP WITH TIME ZONE,
+
+    wiki TEXT,
+    title TEXT,
+
+    comment TEXT,
+    minor BOOLEAN,
+    type TEXT,
+
+    old_length INT,
+    new_length INT
+  );
+
+These tables can be populated by the Wikipedia API, and we can distribute them in Citus by the :code:`editor` column. Notice that this is a text column. Citus' hash distribution uses PostgreSQL hashing which supports a number of data types.
+
+A co-located JOIN between editors and changes allows aggregates not only by user, but by properties of a user. For instance we can count the difference between the number of newly created pages by bot vs human. The grouping and counting is performed on worker nodes in parallel and the final results are merged on the coordinator node.
+
+.. code-block:: postgres
+
+  SELECT bot, count(*) AS pages_created
+  FROM wikipedia_changes c,
+       wikipedia_editors e
+  WHERE c.editor = e.editor
+    AND type = 'new'
+  GROUP BY bot;
 
 Star Schema
 -----------
