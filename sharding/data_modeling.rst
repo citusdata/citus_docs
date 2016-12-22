@@ -2,41 +2,66 @@
 
 Distributed modeling refers to choosing how to distribute information across nodes in a multi-machine database cluster and query it efficiently. There are common use cases for a distributed database with well understood design tradeoffs. It will be helpful for you to identify whether your application falls into one of these categories in order to know what features and performance to expect.
 
-Choosing a Distribution Column
-==============================
+Citus uses a column in each table to determine how to allocate its rows among the available shards. In particular, as data is loaded into the table, Citus uses this so-called *distribution column* as a hash key to allocate each incoming row to a shard.
 
-Citus uses the distribution column of a table to determine how data is allocated to the available shards. As data is loaded into the table, the distribution column is treated as a hash key to allocate the incoming row to a shard. Repeating values are always assigned the same shard. Therefore the distribution column can also be used by the system to find the shard containing a particular value or set of values.
+The database administrator, not Citus, picks the distribution column of each table. Thus the main task in distributed modeling is choosing the best division of tables and their distribution columns to fit the queries required by an application.
 
-The database administrator, not Citus, designates the distribution column of a table. It is important to choose a column that both distributes data evenly across shards and co-locates rows from multiple tables on the same distributed node when they are used together in queries.
+Determining the Data Model
+==========================
 
-Thus to the first point it is best to choose a column with high cardinality. For instance a binary gender field is a poor choice because it assumes at most two values. These values will not be able to take advantage of a cluster with many shards. The row placement will skew into only two shards:
+As explained in :ref:`when_to_use_citus`, there are two main use cases for Citus. The first is the **multi-tenant architecture** (MT). This is common for the backend of a website that serves other companies, accounts, or organizations. An example of such a site is one which hosts store-fronts and does order processing for other businesses. Sites like these want to continue scaling as they get new tenants without encountering a hard tenant limit. Flexibly pooling the resources of servers in a distributed
+database results in lower operational costs for this use-case than creating separate servers and database installations for each tenant.
+
+There are characteristics of queries and schemas that suggest the multi-tenant architecture. Typical MT queries relate to a single tenant rather than joining information across tenants. This includes the OLTP workload for serving a web clients, and single-tenant OLAP for the site administrator. Having many tables in a database schema is another MT indicator.
+
+The second use case is **real-time analytics**. In this case the database must ingest a large amount of incoming data and summarize it in real-time. Examples include making dashboards for data from the internet of things, or from web traffic. In this use case applications want massive parallelism, coordinating hundreds of cores for fast results to numerical, statistical, or counting queries.
+
+The real-time architecture usually has few tables, often centering around a big table of device-, site- or user-events. It deals with high volume reads and writes, with relatively simple but computationally intensive lookups. Conversely a schema with many tables or using a rich set of SQL commands is less suited for the real-time architecture.
+
+If your situation resembles either of these cases then the next step is to decide how to shard your data in a Citus cluster. As explained in :ref:`introduction_to_citus`, Citus assigns table rows to shards according to the hashed value of the table's distribution column. The database administrator's choice of distribution columns needs to match the access patterns of typical queries to ensure performance.
+
+Distributing by Tenant ID
+=========================
+
+The multi-tenant architecture uses a form of hierarchical database modeling to partition query computations across machines in the distributed cluster. The top of the data hierarchy is known as the *tenant id*, and needs to be stored in a column on each table. Citus inspects queres to see which tenant id they involve and routes the query to a single physical node for processing, specifically the node which holds the data shard associated with the tenant id. Running a query with all relevant data placed on the same node is called *co-location*.
+
+The first step is identifying what constitutes a tenant in your app. Common instances include company, account, organization, or customer. The column name will thus be something like :code:`company_id` or :code:`customer_id:`. Examine each of your queries and ask yourself: would it work if it had additional WHERE clauses to restrict all tables involved to rows with the same tenant id? You can visualize these clauses as executing queries *within* a context, such restricting queries on sales or inventory to be within a certain store.
+
+If you're migrating an existing database to the Citus multi-tenant architecture then some of your tables may lack a column for the application-specific tenant id. You will need to add one and fill it with the correct values. This will denormalize your tables slightly, but it's because the multi-tenant model mixes the characteristics of hierarchical and relational data models. For more details and a concrete example of backfilling the tenant id, see our guide to :ref:`transitioning_to_citus`_.
+
+Distributing by Entity ID
+=========================
+
+  "All multi-tenant databases are alike; each real-time database is sharded in its own way."
+
+While the multi-tenant architecture introduces a hierarchical structure and uses data co-location to parallelize queries between tenants, real-time architectures depend on specific distribution properties of their data to achieve highly parallel processing.
+
+Real-time queries typically ask for numeric aggregates grouped by date or category. Citus sends these queries to each shard for partial results and assembles the final answer on the coordinator node. Hence queries run fastest when as many nodes contribute as possible, and when no individual node bottlenecks.
+
+Thus it is important to choose a column that distributes data evenly across shards. At the least this column should have a high cardinality. For instance a binary gender field is a poor choice because it assumes at most two values. These values will not be able to take advantage of a cluster with many shards. The row placement will skew into only two shards:
 
 .. image:: ../images/sharding-poorly-distributed.png
 
-Queries such as analytics aggregations can parallelize across shards. Having an even shard distribution can linearly scale queries with the number of nodes in a Citus cluster.
+Of columns having high cardinality, it is good additionally to choose those that are frequently used in group-by clauses or as join keys. Distributing by join keys co-locates the joined tables and greatly improves join speed. However schemas with many tables and a variety of joins are typically not well suited to the real-time architecture. Real-time schemas usually have a smaller number of tables, and are generally centered around a big table of quantitative events.
 
-To the second point, when two tables are joined on a column there is some advantage in distributing both tables by that column. Doing so helps the join queries operate more efficiently because table rows will be co-located in the same shards. In the following illustration the rows related to store_id=1 in the first shard are co-located. Performing a join query for stores, products and purchases for store_id=1 would have all the data it needs on one physical node.
+Let's examine typical real-time schemas.
 
-.. image:: ../images/sharding-colocated.png
+Raw Events Table
+----------------
 
-Bearing in mind the benefits of even data distribution and of co-location, let's turn to how they play out in common use cases.  Citus has two predominant use cases, each with characteristic patterns of distribution columns. They are multi-tenant applications and real time analytic dashboards.
+Events and Summaries
+--------------------
 
-Multi-Tenant Applications
--------------------------
+Updatable Large Table
+---------------------
 
-Whether you’re building marketing analytics, a portal for e-commerce sites, or an application to cater to schools, if you’re building an application and your customer is another business then a multi-tenant approach is the norm. The same code runs for all customers, but each customer sees their own private data set, except in some cases of holistic internal reporting.
+Behavioral Analytics
+--------------------
 
-Early in your application’s life customer data has a simple structure which evolves organically. Typically all information relates to a central customer/user/tenant table. With a smaller amount of data (10s of GBs) it’s easy to scale the application by throwing more hardware at it, but what happens when you’ve had enough success that your data no longer fits in memory on a single box, or you need more concurrency? This is where a distributed database helps. You can store customer data on multiple machines.
+Star Schema
+-----------
 
-Except for internal site-wide analytics, most queries in a multi-tenant scenario involve data from one tenant at a time. Tenants do not cross-reference each other's information. Thus by keeping each tenant's data contained within a single node you can route SQL queries to that node and run them there, which keeps operations like JOINs fast because of the co-located data.
+Modeling Concepts
+=================
 
-The technical advantages for keeping each tenant's information together on a distinct node and routing queries to the node are full SQL support and ease of data migration. Each query runs on a single machine which appears like a regular standalone PostgreSQL database. There are no issues shuffling information across nodes, no distributed transaction semantics or network overhead. All queries that work and are efficient on a single machine will continue to work without modification.
 
-However the multi-tenant architecture offers less less capability for parallelism. Since every tenant is processed in at most one node (and several may share a node), few tenants means few utilized nodes. Additionally if some tenants are extraordinarily large compared with others then the nodes for the large tenants will experience higher load, even while some nodes may be under-utilized.
-
-Real-time Analytics
--------------------
-
-Many companies use a real-time dashboard to understand high volume events such as website clicks or sensor measurements. This requires quick aggregate query processing. With proper modeling this use case works well on Citus because balancing the data evenly across the nodes in a distributed database allows massively parallel processing for aggregate SQL queries.
-
-Like the multi-tenant use case, real-time analytics on Citus can take advantage of dynamic scalability on commodity hardware to easily add or remove nodes. Unlike the the multi-tenant use case, it requires greater care to (re)write queries to minimize network overhead between nodes. 
