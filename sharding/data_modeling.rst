@@ -9,11 +9,11 @@ The database administrator, not Citus, picks the distribution column of each tab
 Determining the Data Model
 ==========================
 
-As explained in :ref:`when_to_use_citus`, there are two main use cases for Citus. The first is the **multi-tenant architecture** (MT). This is common for the backend of a website that serves other companies, accounts, or organizations. An example of such a site is one which hosts store-fronts and does order processing for other businesses. Sites like these want to continue scaling whether they have hundreds or thousands of tenants -- horizontal scaling with the multi-tenant architecture imposes no hard tenant limit. Additionally, mixing tenant shards across servers in a distributed database results in lower operational costs for this use-case than creating separate servers and database installations for each tenant.
+As explained in :ref:`when_to_use_citus`, there are two main use cases for Citus. The first is the **multi-tenant architecture** (MT). It supports websites which serve other companies, accounts, or organizations. An example of such a site is one which hosts store-fronts and does order processing for other businesses. Sites like these want to continue scaling whether they have hundreds or thousands of tenants. (Horizontal scaling with the multi-tenant architecture imposes no hard tenant limit.) Additionally, Citus' sharding allows individual nodes to house more than one tenant which improves hardware utilization.
 
 The multi-tenant model as implemented in Citus allows applications to scale with minimal change to their data. It avoids the drastic changes required for alternatives like NoSQL migration and continues to provide the familiar benefits of data normalization, constraints, transactions, joins, and a dedicated query planner. Once data is in the MT architecture it is easy to adjust for a changing application while staying performant. The MT architecture stores all data in the same RDBMS, so changing the data can happen without reconfiguring a constellation of NoSQL services.
 
-There are characteristics of queries and schemas that suggest the multi-tenant architecture. Typical MT queries relate to a single tenant rather than joining information across tenants. This includes the OLTP workload for serving a web clients, and single-tenant OLAP for the site administrator. Having many tables in a database schema is another MT indicator.
+There are characteristics to look for in queries and schemas to determine whether the MT architecture is appropriate. Typical MT queries relate to a single tenant rather than joining information across tenants. This includes the OLTP workload for serving a web clients, and single-tenant OLAP for the site administrator. Having many tables in a database schema is another MT indicator.
 
 The second major Citus use case is **real-time analytics** (RT). The choice of RT vs MT depends on the needs of the application. RT allows the database to ingest a large amount of incoming data and summarize it in real-time. Examples include making dashboards for data from the internet of things, or from web traffic. In this use case applications want massive parallelism, coordinating hundreds of cores for fast results to numerical, statistical, or counting queries.
 
@@ -185,9 +185,9 @@ A co-located JOIN between editors and changes allows aggregates not only by user
 Star Schema
 -----------
 
-So far we've seen the technique of distributing data where every row goes to exactly one shard. However for small tables there is a trick to achieve a kind of universal colocation. We can choose to place all rows into a single shard but replicate that shard to every worker node. It introduces storage and update costs of course, but this can be more than counterbalanced by the performance gains of read queries.
+We've already seen how every row in a distributed table is stored on a shard. However for small tables there is a trick to achieve a kind of universal colocation. We can choose to place all its rows into a single shard but replicate that shard to every worker node. It introduces storage and update costs of course, but this can be more than counterbalanced by the performance gains of read queries.
 
-We call these replicated tables *reference tables.* They usually provide metadata about items in a larger table and are reminiscent of what data warehousing calls dimension tables. For example, suppose we have a large table of phone calls:
+We call tables replicated to all nodes *reference tables.* They usually provide metadata about items in a larger table and are reminiscent of what data warehousing calls dimension tables. For example, suppose we have a large table of phone calls:
 
 .. code-block:: postgres
 
