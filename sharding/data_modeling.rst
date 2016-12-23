@@ -9,12 +9,13 @@ The database administrator, not Citus, picks the distribution column of each tab
 Determining the Data Model
 ==========================
 
-As explained in :ref:`when_to_use_citus`, there are two main use cases for Citus. The first is the **multi-tenant architecture** (MT). This is common for the backend of a website that serves other companies, accounts, or organizations. An example of such a site is one which hosts store-fronts and does order processing for other businesses. Sites like these want to continue scaling as they get new tenants without encountering a hard tenant limit. Flexibly pooling the resources of servers in a distributed
-database results in lower operational costs for this use-case than creating separate servers and database installations for each tenant.
+As explained in :ref:`when_to_use_citus`, there are two main use cases for Citus. The first is the **multi-tenant architecture** (MT). This is common for the backend of a website that serves other companies, accounts, or organizations. An example of such a site is one which hosts store-fronts and does order processing for other businesses. Sites like these want to continue scaling whether they have hundreds or thousands of tenants -- horizontal scaling with the multi-tenant architecture imposes no hard tenant limit. Additionally, mixing tenant shards across servers in a distributed database results in lower operational costs for this use-case than creating separate servers and database installations for each tenant.
+
+The multi-tenant model as implemented in Citus allows applications to scale with minimal change to their data. It avoids the drastic changes required for alternatives like NoSQL migration and continues to provide the familiar benefits of data normalization, constraints, transactions, joins, and a dedicated query planner. Once data is in the MT architecture it is easy to adjust for a changing application while staying performant. The MT architecture stores all data in the same RDBMS, so changing the data can happen without reconfiguring a constellation of NoSQL services.
 
 There are characteristics of queries and schemas that suggest the multi-tenant architecture. Typical MT queries relate to a single tenant rather than joining information across tenants. This includes the OLTP workload for serving a web clients, and single-tenant OLAP for the site administrator. Having many tables in a database schema is another MT indicator.
 
-The second use case is **real-time analytics**. In this case the database must ingest a large amount of incoming data and summarize it in real-time. Examples include making dashboards for data from the internet of things, or from web traffic. In this use case applications want massive parallelism, coordinating hundreds of cores for fast results to numerical, statistical, or counting queries.
+The second major Citus use case is **real-time analytics** (RT). The choice of RT vs MT depends on the needs of the application. RT allows the database to ingest a large amount of incoming data and summarize it in real-time. Examples include making dashboards for data from the internet of things, or from web traffic. In this use case applications want massive parallelism, coordinating hundreds of cores for fast results to numerical, statistical, or counting queries.
 
 The real-time architecture usually has few tables, often centering around a big table of device-, site- or user-events. It deals with high volume reads and writes, with relatively simple but computationally intensive lookups. Conversely a schema with many tables or using a rich set of SQL commands is less suited for the real-time architecture.
 
@@ -117,7 +118,7 @@ We will precompute the daily view count in this summary table:
     primary key (day, page_id)
   );
 
-Precomputing aggregates is called *roll-up*. Notice that distributing both tables by :code:`page_id` co-locates their data per-page. Any aggregate functions grouped per page can run in parallel, and this includes aggregates in roll-ups. We can use PostgreSQL `UPSERT <https://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_ to create and update rollups, like this (this SQL takes a parameter for the lower bound timestamp):
+Precomputing aggregates is called *roll-up*. Notice that distributing both tables by :code:`page_id` co-locates their data per-page. Any aggregate functions grouped per page can run in parallel, and this includes aggregates in roll-ups. We can use PostgreSQL `UPSERT <https://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_ to create and update rollups, like this (the SQL below takes a parameter for the lower bound timestamp):
 
 .. code-block:: postgres
 
@@ -183,6 +184,37 @@ A co-located JOIN between editors and changes allows aggregates not only by user
 
 Star Schema
 -----------
+
+So far we've seen the technique of distributing data where every row goes to exactly one shard. However for small tables there is a trick to achieve a kind of universal colocation. We can choose to place all rows into a single shard but replicate that shard to every worker node. It introduces storage and update costs of course, but this can be more than counterbalanced by the performance gains of read queries.
+
+We call these replicated tables *reference tables.* They usually provide metadata about items in a larger table and are reminiscent of what data warehousing calls dimension tables. For example, suppose we have a large table of phone calls:
+
+.. code-block:: postgres
+
+  CREATE TABLE sales (
+    sale_id uuid NOT NULL DEFAULT gen_random_uuid(),
+    store_id uuid NOT NULL DEFAULT gen_random_uuid(),
+    sold_at timestamptz NOT NULL DEFAULT now(),
+    cost money NOT NULL,
+    PRIMARY KEY (sale_id)
+  );
+
+  CREATE TABLE stores (
+    store_id uuid NOT NULL DEFAULT gen_random_uuid(),
+    address text NOT NULL,
+    region text NOT NULL,
+    country text NOT NULL,
+    PRIMARY KEY (store_id)
+  );
+
+We distribute :code:`sales` by :code:`sale_id` and distribute :ref:`stores` as a reference table across all nodes. At this point we can join these tables efficiently to find, for instance, the top selling regions:
+
+.. code-block:: postgres
+
+  SELECT region, sum(cost) AS total
+  FROM sales, stores
+  WHERE sales.store_id = stores.store_id
+  GROUP BY region;
 
 Modeling Concepts
 =================
