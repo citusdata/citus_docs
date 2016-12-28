@@ -32,6 +32,8 @@ Arguments
 **distribution_method:** (Optional) The method according to which the table is
 to be distributed. Permissible values are append or hash, and defaults to 'hash'.
 
+**colocate_with:** (Optional) include current table in the colocation group of another table. By default tables distributed by columns of the same type and with the same shard count are in the same colocation group.
+
 Return Value
 ********************************
 
@@ -43,7 +45,11 @@ This example informs the database that the github_events table should be distrib
 
 ::
 
-	SELECT create_distributed_table('github_events', 'repo_id');
+  SELECT create_distributed_table('github_events', 'repo_id');
+
+  -- alternatively, to be more explicit:
+  SELECT create_distributed_table('github_events', 'repo_id',
+                                  colocate_with => 'github_repo');
 
 create_reference_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
