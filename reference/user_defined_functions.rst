@@ -32,7 +32,7 @@ Arguments
 **distribution_method:** (Optional) The method according to which the table is
 to be distributed. Permissible values are append or hash, and defaults to 'hash'.
 
-**colocate_with:** (Optional) include current table in the colocation group of another table. By default tables distributed by columns of the same type and with the same shard count are in the same colocation group.
+**colocate_with:** (Optional) include current table in the colocation group of another table. By default tables distributed by columns of the same type and with the same shard count are co-located. (See :ref:`colocation_groups`.)
 
 Return Value
 ********************************

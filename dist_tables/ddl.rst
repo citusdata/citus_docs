@@ -82,6 +82,45 @@ The above method distributes tables into multiple horizontal shards, but it's al
 
 Other queries, such as one calculating tax for a shopping cart, can join on the :code:`states` table with no network overhead.
 
+.. _colocation_groups:
+
+Co-Location Groups
+------------------
+
+By default two tables are co-located when they are distributed by columns of the same type using the same distribution method and over the same number of shards. Another way to say this is that the tables are in the same *co-location group.*
+
+It is important for performance to have full control over co-location groups. All members of a co-location group support router-executed JOIN queries between one another on their distribution column. They also support foreign key constraints for keys containing the distribution column. Additionally shard rebalancing preserves co-location in new shard placements.
+
+To control co-location groups manually use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. Left unspecified it defaults to the value :code:`default` which uses the behavior described above to lump all tables having the same distribution column type into the same co-location group. These statements are equivalent:
+
+.. code-block:: sql
+
+  SELECT create_distributed_table('github_events', 'repo_id');
+
+  --
+  -- is equivalent to
+  --
+
+  SELECT create_distributed_table('github_events', 'repo_id', colocate_with => 'default');
+
+
+To start a new group and add tables to it use the two other modes of :code:`colocate_with`: the reserved string :code:`none` and the name of another table.
+
+.. code-block:: sql
+
+  -- start a new group
+  SELECT create_distributed_table('products', 'store_id', colocate_with => 'none');
+
+  -- add to the same group as products
+  SELECT create_distributed_table('orders', 'store_id', colocate_with => 'products');
+
+There are a few reasons to create new co-location groups:
+
+* To express that tables distributed by same type of columns using the same shard count should *not* be related. This makes the rebalancer more efficient because it has more flexibility in placing shards.
+* To scale out sets of tables independently, with different choices of shard count.
+* To ensures co-location happens even in situations where a worker failure prevents shard placement and makes two tables seem to have different shard counts.
+* To express data modeling intentions explicitly.
+
 Dropping Tables
 ---------------
 
