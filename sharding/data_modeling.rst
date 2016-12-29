@@ -53,14 +53,16 @@ In this scenario we ingest high volume sensor measurement events into a single t
 .. code-block:: postgres
 
   CREATE TABLE events (
-    device_id bigint not null,
-    event_id uuid NOT NULL DEFAULT gen_random_uuid(),
-    event_time timestamptz NOT NULL DEFAULT now(),
-    event_type int NOT NULL DEFAULT 0,
+    device_id bigint NOT NULL,
+    event_id uuid NOT NULL,
+    event_time timestamptz NOT NULL,
+    event_type int NOT NULL,
     payload jsonb,
     PRIMARY KEY (device_id, event_id)
   );
   CREATE INDEX ON events USING BRIN (event_time);
+
+  SELECT create_distributed_table('events', 'device_id');
 
 Any query that restricts to a given device is routed directly to a worker node for processing. We call this a *single-shard* query. Here is one to get the ten most recent events:
 
@@ -97,13 +99,13 @@ The previous example calculates statistics at runtime, doing possible recalculat
 .. code-block:: postgres
 
   CREATE TABLE page_views (
-      tenant_id int,
-      page_id int,
-      host_ip inet,
-      view_time timestamp default now()
+    page_id int PRIMARY KEY,
+    host_ip inet,
+    view_time timestamp default now()
   );
-  CREATE INDEX view_tenant_idx ON page_views (tenant_id);
   CREATE INDEX view_time_idx ON page_views USING BRIN (view_time);
+
+  SELECT create_distributed_table('page_views', 'page_id');
 
 We will precompute the daily view count in this summary table:
 
@@ -113,8 +115,11 @@ We will precompute the daily view count in this summary table:
     day date,
     page_id int,
     view_count bigint,
-    primary key (day, page_id)
+    PRIMARY KEY (day, page_id)
   );
+
+  SELECT create_distributed_table('daily_page_views', 'page_id',
+                                  colocate_with => 'page_views');
 
 Precomputing aggregates is called *roll-up*. Notice that distributing both tables by :code:`page_id` co-locates their data per-page. Any aggregate functions grouped per page can run in parallel, and this includes aggregates in roll-ups. We can use PostgreSQL `UPSERT <https://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_ to create and update rollups, like this (the SQL below takes a parameter for the lower bound timestamp):
 
@@ -169,6 +174,10 @@ Let's look at a simplified example. Whereas the previous examples dealt with a s
     new_length INT
   );
 
+  SELECT create_distributed_table('wikipedia_editors', 'editor');
+  SELECT create_distributed_table('wikipedia_changes', 'editor',
+                                  colocate_with => 'wikipedia_editors');
+
 These tables can be populated by the Wikipedia API, and we can distribute them in Citus by the :code:`editor` column. Notice that this is a text column. Citus' hash distribution uses PostgreSQL hashing which supports a number of data types.
 
 A co-located JOIN between editors and changes allows aggregates not only by editor, but by properties of an editor. For instance we can count the difference between the number of newly created pages by bot vs human. The grouping and counting is performed on worker nodes in parallel and the final results are merged on the coordinator node.
@@ -192,20 +201,23 @@ We call tables replicated to all nodes *reference tables.* They usually provide 
 .. code-block:: postgres
 
   CREATE TABLE sales (
-    sale_id uuid NOT NULL DEFAULT gen_random_uuid(),
-    store_id uuid NOT NULL DEFAULT gen_random_uuid(),
-    sold_at timestamptz NOT NULL DEFAULT now(),
+    sale_id uuid NOT NULL,
+    store_id uuid NOT NULL,
+    sold_at timestamptz NOT NULL,
     cost money NOT NULL,
     PRIMARY KEY (sale_id)
   );
 
   CREATE TABLE stores (
-    store_id uuid NOT NULL DEFAULT gen_random_uuid(),
+    store_id uuid NOT NULL,
     address text NOT NULL,
     region text NOT NULL,
     country text NOT NULL,
     PRIMARY KEY (store_id)
   );
+
+  SELECT create_distributed_table('sales', 'sale_id');
+  SELECT create_reference_table('stores');
 
 We distribute :code:`sales` by :code:`sale_id` and distribute :ref:`stores` as a reference table across all nodes. At this point we can join these tables efficiently to find, for instance, the top selling regions:
 
