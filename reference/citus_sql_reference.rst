@@ -3,7 +3,7 @@
 Citus SQL Language Reference
 ###############################
 
-As Citus provides distributed functionality by extending PostgreSQL, it is compatible with PostgreSQL constructs. This means that users can use the tools and features that come with the rich and extensible PostgreSQL ecosystem for distributed tables created with Citus. These features include but are not limited to :-
+As Citus provides distributed functionality by extending PostgreSQL, it is compatible with PostgreSQL constructs. This means that users can use the tools and features that come with the rich and extensible PostgreSQL ecosystem for distributed tables created with Citus. These features include but are not limited to:
 
 * support for wide range of `data types <http://www.postgresql.org/docs/9.6/static/datatype.html>`_ (including support for semi-structured data types like `jsonb <http://www.postgresql.org/docs/9.6/static/datatype-json.html>`_, `hstore <http://www.postgresql.org/docs/9.6/static/hstore.html>`_)
 
