@@ -22,10 +22,7 @@ Adding a worker
 
 Citus stores all the data for distributed tables on the worker nodes. Hence, if you want to scale out your cluster by adding more computing power, you can do so by adding a worker.
 
-To add a new node to the cluster, you first need to add the DNS name of that
-node and port (on which PostgreSQL is running) in the pg_dist_node catalog
-table. You can do so using the :ref:`master_add_node` UDF.
-Example:
+To add a new node to the cluster, you first need to add the DNS name or IP address of that node and port (on which PostgreSQL is running) in the pg_dist_node catalog table. You can do so using the :ref:`master_add_node` UDF. Example:
 
 ::
 
