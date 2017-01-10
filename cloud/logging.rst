@@ -58,5 +58,5 @@ We likely also support other providers that can receive syslog. Please reach out
 .. raw:: html
 
   <script type="text/javascript">
-  analytics.track('page_view', 'docs-cloud-logging-pageview');
+  analytics.page('key-docs', 'cloud-logging');
   </script>

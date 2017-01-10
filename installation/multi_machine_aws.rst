@@ -132,5 +132,5 @@ Similarly to restart the database, you can use the command:
 .. raw:: html
 
   <script type="text/javascript">
-  analytics.track('page_view', 'docs-install-aws-pageview');
+  analytics.page('key-docs', 'install-aws');
   </script>

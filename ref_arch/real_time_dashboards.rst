@@ -423,7 +423,8 @@ application with Citus looks like. Again, there's `a github repo
 <https://github.com/citusdata/realtime-dashboards-resources>`_ with all the scripts
 mentioned here.
 
+.. raw:: html
 
-<script type="text/javascript">
-analytics.track('page_view', 'docs-ref-real-time-pageview');
-</script>
+  <script type="text/javascript">
+  analytics.page('key-docs', 'ref-real-time');
+  </script>

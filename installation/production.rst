@@ -15,5 +15,5 @@ use the guide below.
 .. raw:: html
 
   <script type="text/javascript">
-  analytics.track('page_view', 'docs-install-prod-pageview');
+  analytics.page('key-docs', 'install-prod');
   </script>
