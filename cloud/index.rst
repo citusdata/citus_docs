@@ -31,5 +31,5 @@ Note that your data is replicated to S3 with and without enabling high availabil
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-cloud-pageview');
+  analytics.track('Doc', {page: 'overview', section: 'cloud'});
   </script>

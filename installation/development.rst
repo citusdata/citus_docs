@@ -15,5 +15,5 @@ If you are a developer looking to try Citus out on your machine, the guides belo
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-install-dev-pageview');
+  analytics.track('Doc', {page: 'dev', section: 'install'});
   </script>

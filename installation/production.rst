@@ -15,5 +15,5 @@ use the guide below.
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-install-prod-pageview');
+  analytics.track('Doc', {page: 'prod', section: 'install'});
   </script>
