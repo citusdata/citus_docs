@@ -422,3 +422,8 @@ This article shows a complete system to give you an idea of what building a non-
 application with Citus looks like. Again, there's `a github repo
 <https://github.com/citusdata/realtime-dashboards-resources>`_ with all the scripts
 mentioned here.
+
+
+<script type="text/javascript">
+analytics.track('page_view', 'docs-ref-real-time-pageview');
+</script>

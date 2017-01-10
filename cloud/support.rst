@@ -23,5 +23,5 @@ You can see pricing of various configurations directly within our `pricing calcu
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-cloud-pageview');
+  analytics.track('page_view', 'docs-support-pageview');
   </script>

@@ -56,5 +56,5 @@ These constraints come from the fact that Citus operates across many nodes (as c
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-whatis-pageview');
+  analytics.track('page_view', 'docs-whatis-pageview');
   </script>
