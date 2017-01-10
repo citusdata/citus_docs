@@ -143,7 +143,7 @@ should be distributed tables, stored across the cluster.
 These say to store each table as a collection of shards, each
 responsible for holding a different subset of the data. The shard
 a particular row belongs in will be computed by hashing the ``editor``
-column. The page on :ref:`distributed_data_modeling` goes into more detail.
+column. The page on :ref:`ddl` goes into more detail.
 
 In addition, these UDF's create citus.shard_count shards for each table, and save one
 replica of each shard. You can ask Citus to store multiple copies of each shard, which
