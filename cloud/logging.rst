@@ -58,5 +58,5 @@ We likely also support other providers that can receive syslog. Please reach out
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-cloud-pageview');
+  analytics.track('Doc', {page: 'logging', section: 'cloud'});
   </script>
