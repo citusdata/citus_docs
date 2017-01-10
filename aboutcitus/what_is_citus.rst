@@ -56,5 +56,5 @@ These constraints come from the fact that Citus operates across many nodes (as c
 .. raw:: html
 
   <script type="text/javascript">
-  analytics.page('key-docs', 'what-is-citus');
+  analytics.track('doc', {page: 'what-is-citus', section: 'about'});
   </script>

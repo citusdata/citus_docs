@@ -234,5 +234,5 @@ to stop the cluster run these commands:
 .. raw:: html
 
   <script type="text/javascript">
-  analytics.page('key-docs', 'hash-tutorial');
+  analytics.track('doc', {page: 'hash', section: 'tutorial'});
   </script>

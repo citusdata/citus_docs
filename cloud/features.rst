@@ -33,5 +33,5 @@ We support two factor authentication for all Citus accounts. You can enable it f
 .. raw:: html
 
   <script type="text/javascript">
-  analytics.page('key-docs', 'cloud-features');
+  analytics.track('doc', {page: 'features', section: 'cloud'});
   </script>
