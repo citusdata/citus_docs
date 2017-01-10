@@ -234,5 +234,5 @@ to stop the cluster run these commands:
 .. raw:: html
 
   <script type="text/javascript">
-  Intercom('trackEvent', 'docs-hash-tutorial-pageview');
+  analytics.track('Doc', {page: 'hash', section: 'tutorial'});
   </script>
