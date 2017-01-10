@@ -23,5 +23,5 @@ You can see pricing of various configurations directly within our `pricing calcu
 .. raw:: html
 
   <script type="text/javascript">
-  analytics.track('doc', {page: 'support', section: 'cloud'});
+  analytics.track('Doc', {page: 'support', section: 'cloud'});
   </script>

@@ -15,5 +15,5 @@ use the guide below.
 .. raw:: html
 
   <script type="text/javascript">
-  analytics.track('doc', {page: 'prod', section: 'install'});
+  analytics.track('Doc', {page: 'prod', section: 'install'});
   </script>

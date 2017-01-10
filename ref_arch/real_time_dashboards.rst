@@ -426,5 +426,5 @@ mentioned here.
 .. raw:: html
 
   <script type="text/javascript">
-  analytics.track('doc', {page: 'real-time', section: 'ref'});
+  analytics.track('Doc', {page: 'real-time', section: 'ref'});
   </script>
