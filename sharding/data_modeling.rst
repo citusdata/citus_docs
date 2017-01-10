@@ -1,10 +1,10 @@
 .. _distributed_data_modeling:
 
-Distributed modeling refers to choosing how to distribute information across nodes in a multi-machine database cluster and query it efficiently. There are common use cases for a distributed database with well understood design tradeoffs. It will be helpful for you to identify whether your application falls into one of these categories in order to know what features and performance to expect.
+Distributed data modeling refers to choosing how to distribute information across nodes in a multi-machine database cluster and query it efficiently. There are common use cases for a distributed database with well understood design tradeoffs. It will be helpful for you to identify whether your application falls into one of these categories in order to know what features and performance to expect.
 
 Citus uses a column in each table to determine how to allocate its rows among the available shards. In particular, as data is loaded into the table, Citus uses the *distribution column* as a hash key to allocate each row to a shard.
 
-The database administrator picks the distribution column of each table. Thus the main task in distributed modeling is choosing the best division of tables and their distribution columns to fit the queries required by an application.
+The database administrator picks the distribution column of each table. Thus the main task in distributed data modeling is choosing the best division of tables and their distribution columns to fit the queries required by an application.
 
 Determining the Data Model
 ==========================
@@ -26,27 +26,28 @@ Distributing by Tenant ID
 
 The multi-tenant architecture uses a form of hierarchical database modeling to distribute queries across nodes in the distributed cluster. The top of the data hierarchy is known as the *tenant id*, and needs to be stored in a column on each table. Citus inspects queres to see which tenant id they involve and routes the query to a single physical node for processing, specifically the node which holds the data shard associated with the tenant id. Running a query with all relevant data placed on the same node is called *co-location*.
 
-The first step is identifying what constitutes a tenant in your app. Common instances include company, account, organization, or customer. The column name will thus be something like :code:`company_id` or :code:`customer_id`. Examine each of your queries and ask yourself: would it work if it had additional WHERE clauses to restrict all tables involved to rows with the same tenant id? Queries in the multi-tenant model are scoped to search within a tenant, for instance queries on sales or inventory would be scoped within a certain store.
+The first step is identifying what constitutes a tenant in your app. Common instances include company, account, organization, or customer. The column name will be something like :code:`company_id` or :code:`customer_id`. Examine each of your queries and ask yourself: would it work if it had additional WHERE clauses to restrict all tables involved to rows with the same tenant id? Queries in the multi-tenant model are usually scoped to a tenant, for instance queries on sales or inventory would be scoped within a certain store.
 
 If you're migrating an existing database to the Citus multi-tenant architecture then some of your tables may lack a column for the application-specific tenant id. You will need to add one and fill it with the correct values. This will denormalize your tables slightly. For more details and a concrete example of backfilling the tenant id, see our guide to `Transitioning to Citus`_.
 
 Distributing by Entity ID
 =========================
 
-While the multi-tenant architecture introduces a hierarchical structure and uses data co-location to parallelize queries between tenants, real-time architectures depend on specific distribution properties of their data to achieve highly parallel processing. We use "entity id" as a term for distribution columns in the real-time model, as opposed to tenant ids in the multi-tenant model. Typical entites are users, devices, or events.
+While the multi-tenant architecture introduces a hierarchical structure and uses data co-location to parallelize queries between tenants, real-time architectures depend on specific distribution properties of their data to achieve highly parallel processing. We use "entity id" as a term for distribution columns in the real-time model, as opposed to tenant ids in the multi-tenant model. Typical entites are users, hosts, or devices.
 
-Real-time queries typically ask for numeric aggregates grouped by date or category. Citus sends these queries to each shard for partial results and assembles the final answer on the coordinator node. Hence queries run fastest when as many nodes contribute as possible, and when no individual node bottlenecks.
+Real-time queries typically ask for numeric aggregates grouped by date or category. Citus sends these queries to each shard for partial results and assembles the final answer on the coordinator node. Queries run fastest when as many nodes contribute as possible, and when no individual node bottlenecks.
 
-Hence the more evenly a choice of entity id distributes data to shards the better. At the least the column should have a high cardinality. For comparison, a binary gender field is a poor choice because it assumes at most two values. These values will not be able to take advantage of a cluster with many shards. The row placement will skew into only two shards:
+The more evenly a choice of entity id distributes data to shards the better. At the least the column should have a high cardinality. For comparison, a binary gender field is a poor choice because it assumes at most two values. These values will not be able to take advantage of a cluster with many shards. The row placement will skew into only two shards:
 
 .. image:: ../images/sharding-poorly-distributed.png
 
 Of columns having high cardinality, it is good additionally to choose those that are frequently used in group-by clauses or as join keys. Distributing by join keys co-locates the joined tables and greatly improves join speed. Real-time schemas usually have few tables, and are generally centered around a big table of quantitative events.
 
-Let's examine typical real-time schemas.
+Typical Real-Time Schemas
+-------------------------
 
-Raw Events Table
-----------------
+Events Table
+~~~~~~~~~~~~
 
 In this scenario we ingest high volume sensor measurement events into a single table and distribute it across Citus by the :code:`device_id` of the sensor. Every time the sensor makes a measurement we save that as a single event row with measurement details in a jsonb column for flexibility.
 
@@ -91,8 +92,8 @@ To take advantage of massive parallelism we can run a *cross-shard* query. For i
   GROUP BY minute
   ORDER BY minute ASC;
 
-Events and Summaries
---------------------
+Events with Roll-Ups
+~~~~~~~~~~~~~~~~~~~~
 
 The previous example calculates statistics at runtime, doing possible recalculation between queries. Another approach is precalculating aggregates. This avoids recalculating raw event data and results in even faster queries. For example, a web analytics dashboard might want a count of views per page per day. The raw events data table looks like this:
 
@@ -118,8 +119,7 @@ We will precompute the daily view count in this summary table:
     PRIMARY KEY (day, page_id)
   );
 
-  SELECT create_distributed_table('daily_page_views', 'page_id',
-                                  colocate_with => 'page_views');
+  SELECT create_distributed_table('daily_page_views', 'page_id');
 
 Precomputing aggregates is called *roll-up*. Notice that distributing both tables by :code:`page_id` co-locates their data per-page. Any aggregate functions grouped per page can run in parallel, and this includes aggregates in roll-ups. We can use PostgreSQL `UPSERT <https://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_ to create and update rollups, like this (the SQL below takes a parameter for the lower bound timestamp):
 
@@ -133,13 +133,8 @@ Precomputing aggregates is called *roll-up*. Notice that distributing both table
   ON CONFLICT (day, page_id) DO UPDATE SET
     view_count = daily_page_views.view_count + EXCLUDED.view_count;
 
-Updatable Large Table
----------------------
-
-(Device table that has characteristics that get updated. Sharded by device id.)
-
-Behavioral Analytics
---------------------
+Events and Entities
+~~~~~~~~~~~~~~~~~~~
 
 Behavioral analytics seeks to understand users, from the website/product features they use to how they progress through funnels, to the effectiveness of marketing campaigns. Doing analysis tends to involve "unknown unknowns" which are uncovered by iterative experiments. It is hard to know initially what information about user activity will be relevant to future experiments, so analysts generally try to record everything they can. Using a distributed database like Citus allows them to query the accumulated data flexibly and quickly.
 
@@ -175,8 +170,7 @@ Let's look at a simplified example. Whereas the previous examples dealt with a s
   );
 
   SELECT create_distributed_table('wikipedia_editors', 'editor');
-  SELECT create_distributed_table('wikipedia_changes', 'editor',
-                                  colocate_with => 'wikipedia_editors');
+  SELECT create_distributed_table('wikipedia_changes', 'editor');
 
 These tables can be populated by the Wikipedia API, and we can distribute them in Citus by the :code:`editor` column. Notice that this is a text column. Citus' hash distribution uses PostgreSQL hashing which supports a number of data types.
 
@@ -191,8 +185,8 @@ A co-located JOIN between editors and changes allows aggregates not only by edit
     AND type = 'new'
   GROUP BY bot;
 
-Star Schema
------------
+Events and Reference Tables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We've already seen how every row in a distributed table is stored on a shard. However for small tables there is a trick to achieve a kind of universal colocation. We can choose to place all its rows into a single shard but replicate that shard to every worker node. It introduces storage and update costs of course, but this can be more than counterbalanced by the performance gains of read queries.
 
@@ -227,8 +221,3 @@ We distribute :code:`sales` by :code:`sale_id` and distribute :ref:`stores` as a
   FROM sales, stores
   WHERE sales.store_id = stores.store_id
   GROUP BY region;
-
-Modeling Concepts
-=================
-
-
