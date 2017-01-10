@@ -41,11 +41,11 @@ For example:
 INSERT INTO ... SELECT
 $$$$$$$$$$$$$$$$$$$$$$
 
-Citus is commonly used to scale out event data pipelines and populate real-time dashboards. These applications require fast queries across predefined aggregations of incoming data. To achieve sufficient speed with high-volume data, it helps to pre-aggregated data. This is called "rolling up" the data and it avoids the cost of processing raw data at run-time. As an extra benefit rolling up timeseries data into hourly or daily statistics can also save space. When the full details of old data are no longer needed and aggregates suffice then old data may be deleted.
+Citus is commonly used to scale out event data pipelines and populate real-time dashboards. These applications require fast queries across predefined aggregations of incoming data. One way to make these queries fast is calculating and saving aggregates ahead of time. This is called "rolling up" the data and it avoids the cost of processing raw data at run-time. As an extra benefit, rolling up timeseries data into hourly or daily statistics can also save space. Old data may be deleted when its full details are no longer needed and aggregates suffice.
 
 It is important to be able to update rollups *incrementally*, that is, without re-scanning all data. Both the rolling up and updating can be accomplished with :code:`INSERT INTO ... SELECT`, whereby the results of a select query are inserted into a table. A full reference for this feature is available in the PostgreSQL `docs <https://www.postgresql.org/docs/current/static/sql-insert.html>`_. It works well on Citus because it is parallelizable under certain conditions. We'll see more about that later.
 
-First some basics. Insert into select uses the results of a select query to populate a table. For instance consider a simple select statement which counts the number of web page views per page per day.
+First some basics. INSERT INTO SELECT uses the results of a select query to populate a table. For instance consider a simple select statement which counts the number of web page views per page per day.
 
 .. code-block:: postgres
 
@@ -70,7 +70,7 @@ We can create a rollup table :code:`daily_page_views` to hold these results and 
     FROM page_views
     GROUP BY view_time::date, page_id;
 
-We can use PostgreSQL's upsert feature to incrementally update certain parts of the rollup table. For instance suppose we have already rolled up visits happening before a certain timestamp (we'll call it :code:`$1`) and want to update the rollups to include more recent views. Just add a WHERE clause and specify "ON CONFLICT." The latter is PostgreSQL's technique for doing `upserts <https://www.postgresql.org/docs/9.5/static/sql-insert.html#SQL-ON-CONFLICT>`_.
+PostgreSQL's upsert feature can incrementally update certain parts of a rollup table. For instance suppose we have already rolled up visits happening before a certain timestamp (we'll call it :code:`$1`) and want to update the rollups to include more recent views. To do this we add a WHERE clause to select visits after the timestamp and specify "ON CONFLICT" to adjust any daily view aggregates the new data affects. The latter is PostgreSQL's technique for doing `upserts <https://www.postgresql.org/docs/9.5/static/sql-insert.html#SQL-ON-CONFLICT>`_.
 
 .. code-block:: postgres
 
@@ -82,13 +82,13 @@ We can use PostgreSQL's upsert feature to incrementally update certain parts of 
     ON CONFLICT (day, page_id) DO UPDATE SET
       view_count = daily_page_views.view_count + EXCLUDED.view_count;
 
-These are the basics of using insert into select on a single node database. Using it effectively in Citus for real-time analytics requires more understanding of Citus' distributed query execution. Citus implements insert into select by pushing down the select query to each shard. When the destination table for inserted values is distributed by an analogous column as the table being selected then the inserting and selecting can be "co-located" together on each shard. This minimizes network traffic between nodes and allows highly parallel execution.
+These are the basics of using INSERT INTO SELECT on a single node database. Using it effectively in Citus for real-time analytics requires more understanding of Citus' distributed query execution. Citus implements INSERT INTO SELECT by pushing down the select query to each shard. When the destination table for inserted values is distributed by an analogous column as the table being selected then the inserting and selecting can be "co-located" together on each shard. This minimizes network traffic between nodes and allows highly parallel execution.
 
 For fast execution ensure that:
 
 - The tables queried and inserted are distributed on analogous columns
 - The select query includes the distribution column
-- The insert statement includes the distribution column value
+- The insert statement includes the distribution column
 - GROUP BY includes the distribution column
 
 The example query shown above will work well if :code:`page_views` and :code:`daily_page_views` are distributed by :code:`page_id` column. Distributing our data by page allows rollup to scale linearly with the number of cores.
@@ -98,9 +98,9 @@ The example query shown above will work well if :code:`page_views` and :code:`da
   SELECT create_distributed_table('page_views', 'page_id');
   SELECT create_distributed_table('daily_page_views', 'page_id');
 
-There are a few things to be aware of when running distributed insert into selects. First, Citus takes locks to ensure consistency when the :ref:`replication_factor` is greater than one. In this situation if you know your inserts are not going to affect an ongoing rollup, you can set :code:`SET LOCAL citus.all_modifications_commutative TO on;`. This avoids strict locking and provides better throughput.
+There are a few things to be aware of when running distributed INSERT INTO SELECTs. First, Citus takes locks to ensure consistency when the :ref:`replication_factor` is greater than one. Specifying :code:`SET LOCAL citus.all_modifications_commutative TO on;` avoids strict locking and provides better throughput. It is only prudent to enable this setting when inserts are known to have no effect on an ongoing rollup.
 
-Next bear in mind that any functions in the select statement for insertion must be immutable. Stable functions are not allowed, and volatile functions are certainly not allowed. The PostgreSQL docs explain the difference between these `volatility categories <https://www.postgresql.org/docs/current/static/xfunc-volatility.html>`_. Consider what would happen with replication factor greater than one. If you run :code:`now()` on the workers, the two replicas would differ. One surprising way that stable functions can sneak in is using timestamps with timezones (:code:`timestamptz`). Functions dealing with timezones rely implicitly on the timezone configuration parameter and hence are marked stable rather than immutable.
+Next, bear in mind that any functions in the select statement for insertion must be immutable. Stable functions are not allowed, and volatile functions are certainly not allowed. The PostgreSQL docs explain the difference between these `volatility categories <https://www.postgresql.org/docs/current/static/xfunc-volatility.html>`_. For example, inserting the value :code:`now()` across workers with replication factor greater than one would occur at different times across the replicas. One surprising way that stable functions can sneak in is through timestamps with timezones (:code:`timestamptz`). Functions dealing with timezones rely implicitly on the timezone configuration parameter and hence are marked stable rather than immutable.
 
 Single-Shard Updates and Deletion
 ---------------------------------
