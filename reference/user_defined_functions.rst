@@ -291,7 +291,7 @@ the Citus metadata table pg_dist_node.
 Arguments
 ************************
 
-**node_name:** DNS name of the new node to be added.
+**node_name:** DNS name or IP address of the new node to be added.
 
 **node_port:** The port on which PostgreSQL is listening on the worker node.
 
