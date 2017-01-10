@@ -81,10 +81,11 @@ The steps listed below must be executed **only** on the master node after the pr
 
 **1. Add worker node information**
 
-We need to inform the master about its workers. To add this information, we call
-a UDF which adds the node information to the pg_dist_node catalog table. For our
-example, we assume that there are two workers (named worker-101,
-worker-102). Add the workers' DNS names and server ports to the table.
+We need to inform the master about its workers. To add this information,
+we call a UDF which adds the node information to the pg_dist_node
+catalog table. For our example, we assume that there are two workers
+(named worker-101, worker-102). Add the workers' DNS names (or IP
+addresses) and server ports to the table.
 
 ::
 
