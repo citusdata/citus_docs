@@ -7,7 +7,7 @@ Hash-Distributed Data
 Start Demo Cluster
 ==================
 
-To do the tutorial you'll need a single-machine Citus cluster with a master and two worker PostgreSQL instances. Follow these instructions to create a temporary installation which is quick to try and easy to remove.
+To do the tutorial you'll need a single-machine Citus cluster with a master and worker PostgreSQL instances. Follow these instructions to create a temporary installation which is quick to try and easy to remove.
 
 **1. Download the package**
 
