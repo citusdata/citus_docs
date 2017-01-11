@@ -28,10 +28,14 @@ topics.
    installation/production.rst
 
 .. toctree::
+   :caption: Distributed Data Modeling
+
+   sharding/data_modeling.rst
+
+.. toctree::
    :maxdepth: 1
    :caption: Distributed Tables
 
-   dist_tables/concepts.rst
    dist_tables/ddl.rst
    dist_tables/dml.rst
    dist_tables/querying.rst
