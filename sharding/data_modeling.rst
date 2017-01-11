@@ -136,7 +136,7 @@ Precomputing aggregates is called *roll-up*. Notice that distributing both table
 Events and Entities
 ~~~~~~~~~~~~~~~~~~~
 
-Behavioral analytics seeks to understand users, from the website/product features they use to how they progress through funnels, to the effectiveness of marketing campaigns. Doing analysis tends to involve "unknown unknowns" which are uncovered by iterative experiments. It is hard to know initially what information about user activity will be relevant to future experiments, so analysts generally try to record everything they can. Using a distributed database like Citus allows them to query the accumulated data flexibly and quickly.
+Behavioral analytics seeks to understand users, from the website/product features they use to how they progress through funnels, to the effectiveness of marketing campaigns. Doing analysis tends to involve unforseen factors which are uncovered by iterative experiments. It is hard to know initially what information about user activity will be relevant to future experiments, so analysts generally try to record everything they can. Using a distributed database like Citus allows them to query the accumulated data flexibly and quickly.
 
 Let's look at a simplified example. Whereas the previous examples dealt with a single events table (possibly augmented with precomputed rollups), this one uses two main tables: users and their events. In particular, Wikipedia editors and their changes:
 
@@ -190,34 +190,4 @@ Events and Reference Tables
 
 We've already seen how every row in a distributed table is stored on a shard. However for small tables there is a trick to achieve a kind of universal colocation. We can choose to place all its rows into a single shard but replicate that shard to every worker node. It introduces storage and update costs of course, but this can be more than counterbalanced by the performance gains of read queries.
 
-We call tables replicated to all nodes *reference tables.* They usually provide metadata about items in a larger table and are reminiscent of what data warehousing calls dimension tables. For example, suppose we have a large table of phone calls:
-
-.. code-block:: postgres
-
-  CREATE TABLE sales (
-    sale_id uuid NOT NULL,
-    store_id uuid NOT NULL,
-    sold_at timestamptz NOT NULL,
-    cost money NOT NULL,
-    PRIMARY KEY (sale_id)
-  );
-
-  CREATE TABLE stores (
-    store_id uuid NOT NULL,
-    address text NOT NULL,
-    region text NOT NULL,
-    country text NOT NULL,
-    PRIMARY KEY (store_id)
-  );
-
-  SELECT create_distributed_table('sales', 'sale_id');
-  SELECT create_reference_table('stores');
-
-We distribute :code:`sales` by :code:`sale_id` and distribute :code:`stores` as a reference table across all nodes. At this point we can join these tables efficiently to find, for instance, the top selling regions:
-
-.. code-block:: postgres
-
-  SELECT region, sum(cost) AS total
-  FROM sales, stores
-  WHERE sales.store_id = stores.store_id
-  GROUP BY region;
+We call tables replicated to all nodes *reference tables.* They usually provide metadata about items in a larger table and are reminiscent of what data warehousing calls dimension tables.

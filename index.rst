@@ -28,7 +28,7 @@ topics.
    installation/production.rst
 
 .. toctree::
-   :caption: Distributed Modeling
+   :caption: Distributed Data Modeling
 
    sharding/data_modeling.rst
 
