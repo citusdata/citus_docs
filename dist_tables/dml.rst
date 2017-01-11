@@ -82,6 +82,8 @@ PostgreSQL's upsert feature can incrementally update certain parts of a rollup t
     ON CONFLICT (day, page_id) DO UPDATE SET
       view_count = daily_page_views.view_count + EXCLUDED.view_count;
 
+.. image:: ../images/rollup.png
+
 These are the basics of using INSERT INTO SELECT on a single node database. Using it effectively in Citus for real-time analytics requires more understanding of Citus' distributed query execution. Citus implements INSERT INTO SELECT by pushing down the select query to each shard. When the destination table for inserted values is distributed by an analogous column as the table being selected then the inserting and selecting can be "co-located" together on each shard. This minimizes network traffic between nodes and allows highly parallel execution.
 
 For fast execution ensure that:
