@@ -87,22 +87,14 @@ Other queries, such as one calculating tax for a shopping cart, can join on the 
 Co-Location Groups
 ------------------
 
-By default two tables are co-located when they are distributed by columns of the same type using the same distribution method and over the same number of shards. Another way to say this is that the tables are in the same *co-location group.*
+Table rows are stored in shards across a Citus cluster. When all rows needed by a query are available in a single shard then the tables named by the query are said to be *co-located for the query*. (Tables which are co-located for the majority of queries in an application are simply called co-located tables.) Queries with co-located tables excute faster because Citus doesn't need to shuffle data over the network.
 
-It is important for performance to have full control over co-location groups. All members of a co-location group support router-executed JOIN queries between one another on their distribution column. They also support foreign key constraints for keys containing the distribution column. Additionally shard rebalancing preserves co-location in new shard placements.
+When the database administrator changes the number of worker nodes in a cluster, they run the Citus shard rebalancer to redistribute shards evenly. It's important to preserve table co-location during this process to
+keep queries fast. Because tables are co-located with respect to particular queries there is no one-size-fits-all algorithm to preserve co-location, and Citus' shard rebalancer uses a cautious heuristic. It keeps rows together when there is even a possibility that their distribution columns might be joined. Specifically it keeps them together when their distribution columns have the same data type and their distribution method is the same.
 
-To control co-location groups manually use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. Left unspecified it defaults to the value :code:`default` which uses the behavior described above to lump all tables having the same distribution column type into the same co-location group. These statements are equivalent:
+Shard rebalancing must take table locks for any tables it decides must stay together. The default heuristic can result in false-positives, causing unnecessary locking and slower rebalancing. Citus allows the database administrator to customize which tables should maintain co-location -- and importantly which tables should not.
 
-.. code-block:: sql
-
-  SELECT create_distributed_table('github_events', 'repo_id');
-
-  --
-  -- is equivalent to
-  --
-
-  SELECT create_distributed_table('github_events', 'repo_id', colocate_with => 'default');
-
+To control co-location groups manually use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. Left unspecified it defaults to the value :code:`default` which lumps all tables having the same distribution column type into the same co-location group.
 
 To start a new group and add tables to it use the two other modes of :code:`colocate_with`: the reserved string :code:`none` and the name of another table.
 
@@ -113,13 +105,6 @@ To start a new group and add tables to it use the two other modes of :code:`colo
 
   -- add to the same group as products
   SELECT create_distributed_table('orders', 'store_id', colocate_with => 'products');
-
-There are a few reasons to create new co-location groups:
-
-* To express that tables distributed by same type of columns using the same shard count should *not* be related. This makes the rebalancer more efficient because it has more flexibility in placing shards.
-* To scale out sets of tables independently, with different choices of shard count.
-* To ensures co-location happens even in situations where a worker failure prevents shard placement and makes two tables seem to have different shard counts.
-* To express data modeling intentions explicitly.
 
 Dropping Tables
 ---------------
