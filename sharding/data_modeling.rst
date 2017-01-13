@@ -51,17 +51,6 @@ In this example (partially explained by the diagram above), the Account table is
     image_url text NOT NULL
   );
 
-  CREATE TABLE campaigns (
-    id integer NOT NULL,
-    account_id integer NOT NULL,
-    name text NOT NULL,
-    budget_remaining money,
-    blacklisted_site_urls character varying[],
-
-    PRIMARY KEY (account_id, id),
-    FOREIGN KEY (account_id) REFERENCES accounts
-  );
-
   CREATE TABLE ads (
     id integer NOT NULL,
     account_id integer NOT NULL,
@@ -74,8 +63,6 @@ In this example (partially explained by the diagram above), the Account table is
 
     PRIMARY KEY (account_id, id),
     FOREIGN KEY (account_id) REFERENCES accounts,
-    FOREIGN KEY (account_id, campaign_id)
-      REFERENCES campaigns (account_id, id)
   );
 
   CREATE TABLE clicks (
@@ -94,10 +81,9 @@ In this example (partially explained by the diagram above), the Account table is
       REFERENCES ads (account_id, id)
   );
 
-  SELECT create_distributed_table('accounts',  'id');
-  SELECT create_distributed_table('campaigns', 'account_id');
-  SELECT create_distributed_table('ads',       'account_id');
-  SELECT create_distributed_table('clicks',    'account_id');
+  SELECT create_distributed_table('accounts', 'id');
+  SELECT create_distributed_table('ads',      'account_id');
+  SELECT create_distributed_table('clicks',   'account_id');
 
 JOINs and complex queries are supported within a tenant. For instance to count newly arriving clicks per campaign for account id=1 we can join, group, and count.
 
