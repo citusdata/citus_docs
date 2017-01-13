@@ -26,9 +26,90 @@ Distributing by Tenant ID
 
 The multi-tenant architecture uses a form of hierarchical database modeling to distribute queries across nodes in the distributed cluster. The top of the data hierarchy is known as the *tenant id*, and needs to be stored in a column on each table. Citus inspects queres to see which tenant id they involve and routes the query to a single physical node for processing, specifically the node which holds the data shard associated with the tenant id. Running a query with all relevant data placed on the same node is called :ref:`colocation`.
 
+Two tables co-located for queries joining on account id:
+
+.. figure:: ../images/mt-colocation.png
+   :alt: co-located tables in multi-tenant architecture
+
 The first step is identifying what constitutes a tenant in your app. Common instances include company, account, organization, or customer. The column name will be something like :code:`company_id` or :code:`customer_id`. Examine each of your queries and ask yourself: would it work if it had additional WHERE clauses to restrict all tables involved to rows with the same tenant id? Queries in the multi-tenant model are usually scoped to a tenant, for instance queries on sales or inventory would be scoped within a certain store.
 
 If you're migrating an existing database to the Citus multi-tenant architecture then some of your tables may lack a column for the application-specific tenant id. You will need to add one and fill it with the correct values. This will denormalize your tables slightly. For more details and a concrete example of backfilling the tenant id, see our guide to :ref:`Multi-Tenant Migration <transitioning_mt>`.
+
+Typical Multi-Tenant Scenario
+-----------------------------
+
+Advertising Analytics
+~~~~~~~~~~~~~~~~~~~~~
+
+In this example (partially explained by the diagram above), the Account table is chosen as the unit of tenancy. Imagine a web advertising analytics platform-as-a-service, where each customer has an account and tracks advertising clicks for various campaigns.
+
+.. code-block:: postgres
+
+  CREATE TABLE accounts (
+    id integer PRIMARY KEY,
+    name text NOT NULL,
+    image_url text NOT NULL
+  );
+
+  CREATE TABLE campaigns (
+    id integer NOT NULL,
+    account_id integer NOT NULL,
+    name text NOT NULL,
+    budget_remaining money,
+    blacklisted_site_urls character varying[],
+
+    PRIMARY KEY (account_id, id),
+    FOREIGN KEY (account_id) REFERENCES accounts
+  );
+
+  CREATE TABLE ads (
+    id integer NOT NULL,
+    account_id integer NOT NULL,
+    campaign_id integer NOT NULL,
+    name text NOT NULL,
+    image_url text NOT NULL,
+    target_url text NOT NULL,
+    impressions_count bigint DEFAULT 0 NOT NULL,
+    clicks_count bigint DEFAULT 0 NOT NULL,
+
+    PRIMARY KEY (account_id, id),
+    FOREIGN KEY (account_id) REFERENCES accounts,
+    FOREIGN KEY (account_id, campaign_id)
+      REFERENCES campaigns (account_id, id)
+  );
+
+  CREATE TABLE clicks (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    account_id integer NOT NULL,
+    ad_id integer NOT NULL,
+    clicked_at timestamp without time zone NOT NULL,
+    site_url text NOT NULL,
+    cost_per_click_usd numeric(20,10),
+    user_ip inet NOT NULL,
+    user_data jsonb NOT NULL,
+
+    PRIMARY KEY (account_id, id),
+    FOREIGN KEY (account_id) REFERENCES accounts,
+    FOREIGN KEY (account_id, ad_id)
+      REFERENCES ads (account_id, id)
+  );
+
+  SELECT create_distributed_table('accounts',  'id');
+  SELECT create_distributed_table('campaigns', 'account_id');
+  SELECT create_distributed_table('ads',       'account_id');
+  SELECT create_distributed_table('clicks',    'account_id');
+
+JOINs and complex queries are supported within a tenant. For instance to count newly arriving clicks per campaign for account id=1 we can join, group, and count.
+
+.. code-block:: postgres
+
+  SELECT ads.campaign_id, COUNT(*)
+    FROM ads
+    JOIN clicks c ON (ads.id = ad_id AND ads.account_id = c.account_id)
+   WHERE ads.account_id = 1
+     AND clicked_at > now()::date
+   GROUP BY ads.campaign_id
+
 
 Distributing by Entity ID
 =========================
