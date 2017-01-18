@@ -114,7 +114,6 @@ In summary, INSERT INTO SELECT on Citus requires that:
 - The tables queried and inserted are distributed by analogous columns
 - The select query includes the distribution column
 - The insert statement includes the distribution column
-- GROUP BY includes the distribution column
 
 Rollups keep statistics queries fast but do require upkeep. New items must be periodically added or existing entries updated. In order that this periodic update be fast we need to do it *incrementally*, meaning without having to re-scan the entire underlying dataset (as, for instance, a materialized view would require). PostgreSQL's upsert feature is what we need.
 
