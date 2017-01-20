@@ -51,8 +51,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The create_reference_table() function is used to define a small reference or
 dimension table. This function takes in a table name, and creates a distributed
-table with just one shard, and replication factor equal to the value specified
-in the citus.shard_replication_factor configuration variable. The distribution
+table with just one shard, replicated to every worker node. The distribution
 column is unimportant since the UDF only creates one shard for the table.
 
 Arguments

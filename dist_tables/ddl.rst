@@ -61,6 +61,27 @@ Each created shard is assigned a unique shard id and all its replicas have the s
 
 You are now ready to insert data into the distributed table and run queries on it. You can also learn more about the UDF used in this section in the :ref:`user_defined_functions` of our documentation.
 
+Reference Tables
+~~~~~~~~~~~~~~~~
+
+The above method distributes tables into multiple horizontal shards, but it's also possible to distribute tables into a single shard and replicate it to every worker node. Tables distributed this way are called *reference tables.*  They are typically small non-partitioned tables which we want to locally join with other tables on any worker. One US-centric example is information about states.
+
+.. code-block:: postgresql
+
+  -- a reference table
+
+  CREATE TABLE states (
+    code char(2) PRIMARY KEY,
+    full_name text NOT NULL,
+    general_sales_tax numeric(4,3)
+  );
+
+  -- distribute it to all workers
+
+  SELECT create_reference_table('states');
+
+Other queries, such as one calculating tax for a shopping cart, can join on the :code:`states` table with no network overhead.
+
 Dropping Tables
 ---------------
 
