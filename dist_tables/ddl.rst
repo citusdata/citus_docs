@@ -82,8 +82,6 @@ The above method distributes tables into multiple horizontal shards, but it's al
 
 Other queries, such as one calculating tax for a shopping cart, can join on the :code:`states` table with no network overhead.
 
-Creating a reference table can be thought of as a distribution method like :code:`hash` or :code:`append` partitioning. Unlike these it replicates the whole table to every worker rather than sharding by the value of any particular column.
-
 Dropping Tables
 ---------------
 
