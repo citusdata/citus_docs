@@ -30,8 +30,7 @@ all the details in one place. If you've followed our installation instructions f
 Citus on either a single or multiple machines you're ready to try it out.
 
 Data Model
-----------
-
+---------- 
 The data we're dealing with is an immutable stream of log data. We'll insert directly into
 Citus but it's also common for this data to first be routed through something like Kafka.
 Doing so has the usual advantages, and makes it easier to pre-aggregate the data once data
@@ -43,6 +42,7 @@ to demonstrate the overall architecture; a real system might use additional colu
 .. code-block:: sql
 
   -- this is run on the master
+
   CREATE TABLE http_request (
     site_id INT,
     ingest_time TIMESTAMPTZ DEFAULT now(),
@@ -55,16 +55,18 @@ to demonstrate the overall architecture; a real system might use additional colu
     response_time_msec INT
   );
 
+  SET citus.shard_replication_factor = 2;
+
   SELECT create_distributed_table('http_request', 'site_id');
 
 When we call :ref:`create_distributed_table <create_distributed_table>`
 we ask Citus to hash-distribute ``http_request`` using the ``site_id`` column. That means
 all the data for a particular site will live in the same shard.
 
-The UDF uses the default configuration values for shard count and replication
-factor. We recommend :ref:`using 2-4x as many shards <faq_choose_shard_count>`
-as CPU cores in your cluster. Using this many shards lets you rebalance data
-across your cluster after adding new worker nodes.
+The UDF uses the default configuration values for shard count. We
+recommend :ref:`using 2-4x as many shards <faq_choose_shard_count>` as
+CPU cores in your cluster. Using this many shards lets you rebalance
+data across your cluster after adding new worker nodes.
 
 Using a replication factor of 2 means every shard is held on multiple workers. When a
 worker fails the master will prevent downtime by serving queries for that worker's shards
