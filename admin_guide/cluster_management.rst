@@ -54,7 +54,14 @@ In this sub-section, we discuss how you can deal with node failures without incu
 Worker Node Failures
 --------------------
 
-Citus can easily tolerate worker node failures because of its logical sharding-based architecture. While loading data, Citus allows you to specify the replication factor to provide desired availability for your data. In face of worker node failures, Citus automatically switches to these replicas to serve your queries. It also issues warnings like below on the master so that users can take note of node failures and take actions accordingly.
+Citus can easily tolerate worker node failures because of its logical sharding-based architecture. While loading data, Citus allows you to specify the replication factor to provide desired availability for your data. The replication factor has a value of one by default, but can be set to two or higher for fault tolerance.
+
+.. code-block:: postgresql
+
+  SET citus.shard_replication_factor = 2;
+
+In face of worker node failures, Citus automatically switches to these replicas to serve your queries.
+It also issues warnings like below on the master so that users can take note of node failures and take actions accordingly.
 
 ::
 
@@ -74,6 +81,7 @@ make this simpler, Citus enterprise provides a replicate_table_shards UDF which
 can be called after. This function copies the shards of a table across the
 healthy nodes so they all reach the configured replication factor.
 
+
 To remove a permanently failed node from the list of workers, you should first
 mark all shard placements on that node as invalid (if they are not already so)
 using the following query:
@@ -85,7 +93,7 @@ using the following query:
 Then, you can remove the node using master_remove_node, as shown below:
 
 ::
-   
+
    select master_remove_node('bad-node-name', 5432);
 
 If you want to add a new node to the cluster to replace the
