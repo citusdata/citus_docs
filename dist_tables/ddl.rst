@@ -84,7 +84,7 @@ Other queries, such as one calculating tax for a shopping cart, can join on the 
 
 .. _colocation_groups:
 
-Co-Location Groups
+Co-Locating Tables
 ------------------
 
 Co-location is the practice of dividing data tactically, keeping related information on the same machines to enable efficient relational operations, while taking advantage of the horizontal scalability for the whole dataset.
