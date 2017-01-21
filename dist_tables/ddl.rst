@@ -87,24 +87,64 @@ Other queries, such as one calculating tax for a shopping cart, can join on the 
 Co-Location Groups
 ------------------
 
-Table rows are stored in shards across a Citus cluster. When all rows needed by a query are available in a single shard then the tables named by the query are said to be *co-located for the query*. (Tables which are co-located for the majority of queries in an application are simply called co-located tables.) Queries with co-located tables excute faster because Citus doesn't need to shuffle data over the network.
+Co-location is the practice of dividing data tactically, keeping related information on the same machines to enable efficient relational operations, while taking advantage of the horizontal scalability for the whole dataset.
 
-When the database administrator changes the number of worker nodes in a cluster, they run the Citus shard rebalancer to redistribute shards evenly. It's important to preserve table co-location during this process to
-keep queries fast. Because tables are co-located with respect to particular queries there is no one-size-fits-all algorithm to preserve co-location, and Citus' shard rebalancer uses a cautious heuristic. It keeps rows together when there is even a possibility that their distribution columns might be joined. Specifically it keeps them together when their distribution columns have the same data type and their distribution method is the same.
+The principle of data co-location is that all tables in the database have a common distribution column and are sharded across machines in the same way such that rows with the same distribution column value are always on the same machine, even across different tables. As long as the distribution column provides a meaningful grouping of data, relational operations can be performed within the groups.
 
-Shard rebalancing must take table locks for any tables it decides must stay together. The default heuristic can result in false-positives, causing unnecessary locking and slower rebalancing. Citus allows the database administrator to customize which tables should maintain co-location -- and importantly which tables should not.
+The "meaningful grouping of data" is relative to the queries needed for a given application. In a :ref:`multi-tenant application model <transitioning_mt>` for instance, where all queries are restricted to a single tenant, tables distributed by the tenant id are automatically co-located. Queries with co-located tables excute faster because Citus doesn't need to shuffle data over the network.
 
-To control co-location groups manually use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. Left unspecified it defaults to the value :code:`default` which lumps all tables having the same distribution column type into the same co-location group.
+To control co-location manually use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. If you don't care about a table's co-location, then omit this parameter. It defaults to the value :code:`'default'`, which co-locates the table with any other default co-location table having the same distribution column type and shard count.
 
-To start a new group and add tables to it use the two other modes of :code:`colocate_with`: the reserved string :code:`none` and the name of another table.
+.. code-block:: postgresql
 
-.. code-block:: sql
+  -- by not specifying colocate_with, these tables are implicitly co-located
+
+  SELECT create_distributed_table('A', 'some_int_col');
+  SELECT create_distributed_table('B', 'other_int_col');
+
+If you would prefer a table to be in its own co-location group, specify :code:`'none'`.
+
+.. code-block:: postgresql
+
+  -- not co-located with other tables
+
+  SELECT create_distributed_table('A', 'foo', colocate_with => 'none');
+
+To co-locate a number of tables, create one in its own group, then add the others.
+
+.. code-block:: postgresql
 
   -- start a new group
-  SELECT create_distributed_table('products', 'store_id', colocate_with => 'none');
+  SELECT create_distributed_table('A', 'foo', colocate_with => 'none');
 
-  -- add to the same group as products
-  SELECT create_distributed_table('orders', 'store_id', colocate_with => 'products');
+  -- add to the same group as A
+  SELECT create_distributed_table('B', 'bar', colocate_with => 'A');
+  SELECT create_distributed_table('C', 'baz', colocate_with => 'A');
+
+Information about co-location groups is stored in :code:`pg_dist_colocation`, and :code:`pg_dist_partition` reveals which tables are assigned to which groups:
+
+::
+
+  Table "pg_catalog.pg_dist_colocation"
+  ┌────────────────────────┬─────────┬───────────┐
+  │         Column         │  Type   │ Modifiers │
+  ├────────────────────────┼─────────┼───────────┤
+  │ colocationid           │ integer │ not null  │
+  │ shardcount             │ integer │ not null  │
+  │ replicationfactor      │ integer │ not null  │
+  │ distributioncolumntype │ oid     │ not null  │
+  └────────────────────────┴─────────┴───────────┘
+
+  Table "pg_catalog.pg_dist_partition"
+  ┌──────────────┬──────────┬──────────────────────────────┐
+  │    Column    │   Type   │          Modifiers           │
+  ├──────────────┼──────────┼──────────────────────────────┤
+  │ logicalrelid │ regclass │ not null                     │
+  │ partmethod   │ "char"   │ not null                     │
+  │ partkey      │ text     │                              │
+  │ colocationid │ integer  │ not null default 0           │
+  │ repmodel     │ "char"   │ not null default 'c'::"char" │
+  └──────────────┴──────────┴──────────────────────────────┘
 
 Dropping Tables
 ---------------
