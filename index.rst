@@ -36,6 +36,8 @@ topics.
    :maxdepth: 1
    :caption: Distributed Tables
 
+   dist_tables/concepts.rst
+   dist_tables/colocation.rst
    dist_tables/ddl.rst
    dist_tables/dml.rst
    dist_tables/querying.rst
