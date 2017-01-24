@@ -13,9 +13,9 @@ The pg_dist_partition table stores metadata about which tables in the database a
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
 +================+======================+===========================================================================+
-| logicalrelid   |         regclass     | | Distributed table to which this row corresponds. This value references  | 
+| logicalrelid   |         regclass     | | Distributed table to which this row corresponds. This value references  |
 |                |                      | | the relfilenode column in the pg_class system catalog table.            |
-+----------------+----------------------+---------------------------------------------------------------------------+   
++----------------+----------------------+---------------------------------------------------------------------------+
 |  partmethod    |         char         | | The method used for partitioning / distribution. The values of this     |
 |                |                      | | column corresponding to different distribution methods are :-           |
 |                |                      | | append: 'a'                                                             |
@@ -24,13 +24,13 @@ The pg_dist_partition table stores metadata about which tables in the database a
 |   partkey      |         text         | | Detailed information about the distribution column including column     |
 |                |                      | | number, type and other relevant information.                            |
 +----------------+----------------------+---------------------------------------------------------------------------+
-|   colocationid |         integer      | | Colocation group to which this table belongs. Tables in the same group  |
-|                |                      | | allow colocated joins and distributed rollups among other               |
+|   colocationid |         integer      | | Co-location group to which this table belongs. Tables in the same group |
+|                |                      | | allow co-located joins and distributed rollups among other              |
 |                |                      | | optimizations. This value references the colocationid column in the     |
 |                |                      | | pg_dist_colocation table.                                               |
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   repmodel     |         char         | | The method used for data replication. The values of this column         |
-|                |                      | | corresponding to different replication methods are :-                   |   
+|                |                      | | corresponding to different replication methods are :-                   |
 |                |                      | | citus statement-based replication: 'c'                                  |
 |                |                      | | postgresql streaming replication:  's'                                  |
 +----------------+----------------------+---------------------------------------------------------------------------+
@@ -209,22 +209,22 @@ The pg_dist_node table contains information about the worker nodes in the cluste
     (3 rows)
 
 
-Colocation group table
+Co-location group table
 ---------------------------------------
 
-The pg_dist_colocation table contains information about which tables' shards should be placed together, or *colocated*. When two tables are in the same colocation group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard colocation is inferred when the shard counts, replication factors, and partition column types all match between two tables; however, a custom colocation group may be specified when creating a distributed table, if so desired.
+The pg_dist_colocation table contains information about which tables' shards should be placed together, or *colocated*. When two tables are in the same co-location group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard co-location is inferred when the shard counts, replication factors, and partition column types all match between two tables; however, a custom co-location group may be specified when creating a distributed table, if so desired.
 
 +------------------------+----------------------+---------------------------------------------------------------------------+
 |      Name              |         Type         |       Description                                                         |
 +========================+======================+===========================================================================+
-| colocationid           |         int          | | Unique identifier for the colocation group this row corresponds to.     |
+| colocationid           |         int          | | Unique identifier for the co-location group this row corresponds to.    |
 +------------------------+----------------------+---------------------------------------------------------------------------+
-| shardcount             |         int          | | Shard count for all tables in this colocation group                     |
+| shardcount             |         int          | | Shard count for all tables in this co-location group                    |
 +------------------------+----------------------+---------------------------------------------------------------------------+
-| replicationfactor      |         int          | | Replication factor for all tables in this colocation group.             |
+| replicationfactor      |         int          | | Replication factor for all tables in this co-location group.            |
 +------------------------+----------------------+---------------------------------------------------------------------------+
 | distributioncolumntype |         oid          | | The type of the distribution column for all tables in this              |
-|                        |                      | | colocation group.                                                       |
+|                        |                      | | co-location group.                                                      |
 +------------------------+----------------------+---------------------------------------------------------------------------+
 
 ::
