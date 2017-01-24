@@ -93,7 +93,9 @@ Tables are co-located in groups. To manually control a table's co-location group
 
 .. code-block:: postgresql
 
-  -- by not specifying colocate_with, these tables are implicitly co-located
+  -- these tables are implicitly co-located by using the same
+  -- distribution column type and shard count with the default
+  -- co-location group
 
   SELECT create_distributed_table('A', 'some_int_col');
   SELECT create_distributed_table('B', 'other_int_col');
@@ -117,7 +119,7 @@ To co-locate a number of tables, create one in its own group, then add the other
   SELECT create_distributed_table('B', 'bar', colocate_with => 'A');
   SELECT create_distributed_table('C', 'baz', colocate_with => 'A');
 
-Information about co-location groups is stored in :code:`pg_dist_colocation`, and :code:`pg_dist_partition` reveals which tables are assigned to which groups:
+Information about co-location groups is stored in :code:`pg_dist_colocation`, while :code:`pg_dist_partition` reveals which tables are assigned to which groups:
 
 ::
 
