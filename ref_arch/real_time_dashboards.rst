@@ -30,7 +30,8 @@ all the details in one place. If you've followed our installation instructions f
 Citus on either a single or multiple machines you're ready to try it out.
 
 Data Model
----------- 
+----------
+
 The data we're dealing with is an immutable stream of log data. We'll insert directly into
 Citus but it's also common for this data to first be routed through something like Kafka.
 Doing so has the usual advantages, and makes it easier to pre-aggregate the data once data

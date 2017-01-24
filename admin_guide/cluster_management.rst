@@ -81,7 +81,6 @@ make this simpler, Citus enterprise provides a replicate_table_shards UDF which
 can be called after. This function copies the shards of a table across the
 healthy nodes so they all reach the configured replication factor.
 
-
 To remove a permanently failed node from the list of workers, you should first
 mark all shard placements on that node as invalid (if they are not already so)
 using the following query:
