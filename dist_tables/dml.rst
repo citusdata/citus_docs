@@ -85,7 +85,7 @@ One disadvantage of repeatedly executing the aggregate query is that it always h
   FROM daily_page_views;
 
 
-However as the numbers of tracked web sites and their pages grow, the aggregate query for populating (or as we'll see later, updating) the rollup table slows down. However we can combine rollup tables and distributed computing to scale the application. Since we GROUP BY each site separately we can parallelize the computation across nodes in a distributed database. Each node in a Citus cluster can hold the data for different web sites and the nodes can each compute rollups locally and write a corresponding part of :code:`daily_page_views`. We distribute both :code:`page_views` and :code:`daily_page_views` so that their rows will stay on the same machine when their :code:`site_id` values match.
+Unfortunately as the numbers of tracked web sites and their pages grow, the aggregate query for populating (or as we'll see later, updating) the rollup table slows down. To compensate we can combine rollup tables and distributed computing to scale the application. Since we GROUP BY each site separately we can parallelize the computation across nodes in a distributed database. Each node in a Citus cluster can hold the data for different web sites and the nodes can each compute rollups locally and write a corresponding part of :code:`daily_page_views`. We distribute both :code:`page_views` and :code:`daily_page_views` so that their rows will stay on the same machine when their :code:`site_id` values match.
 
 .. code-block:: postgresql
 
