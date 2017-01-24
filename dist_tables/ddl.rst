@@ -87,13 +87,9 @@ Other queries, such as one calculating tax for a shopping cart, can join on the 
 Co-Locating Tables
 ------------------
 
-Co-location is the practice of dividing data tactically, keeping related information on the same machines to enable efficient relational operations, while taking advantage of the horizontal scalability for the whole dataset.
+Co-location is the practice of dividing data tactically, keeping related information on the same machines to enable efficient relational operations, while taking advantage of the horizontal scalability for the whole dataset. For more information and examples see :ref:`colocation`.
 
-The principle of data co-location is that all tables in the database have a common distribution column and are sharded across machines in the same way such that rows with the same distribution column value are always on the same machine, even across different tables. As long as the distribution column provides a meaningful grouping of data, relational operations can be performed within the groups.
-
-The "meaningful grouping of data" is relative to the queries needed for a given application. In a :ref:`multi-tenant application model <transitioning_mt>` for instance, where all queries are restricted to a single tenant, tables distributed by the tenant id are automatically co-located. Queries with co-located tables excute faster because Citus doesn't need to shuffle data over the network.
-
-To control co-location manually use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. If you don't care about a table's co-location, then omit this parameter. It defaults to the value :code:`'default'`, which co-locates the table with any other default co-location table having the same distribution column type and shard count.
+Tables are co-located in groups. To manually control a table's co-location group assignment use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. If you don't care about a table's co-location then omit this parameter. It defaults to the value :code:`'default'`, which groups the table with any other default co-location table having the same distribution column type and shard count.
 
 .. code-block:: postgresql
 

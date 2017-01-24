@@ -153,4 +153,4 @@ The full list of Citus features that are unlocked by co-location are:
 * Foreign keys
 * Distributed outer joins
 
-Data co-location is a powerful technique for providing both horizontal scale and supporting relational data models. The cost of migrating or building applications using a distributed database that enables relational operations through co-location is often substantially lower than moving to a restrictive data model (e.g. NoSQL) and unlike a single-node database it can scale out with the size of your business.
+Data co-location is a powerful technique for providing both horizontal scale and supporting relational data models. The cost of migrating or building applications using a distributed database that enables relational operations through co-location is often substantially lower than moving to a restrictive data model (e.g. NoSQL) and unlike a single-node database it can scale out with the size of your business. For more information about migrating an existing database see :ref:`Transitioning to a Multi-Tenant Data Model <transitioning_mt>`.
