@@ -3,9 +3,9 @@
 Table Co-Location
 =================
 
-Relational databases are the first choice of data store for many applications due to their enormous flexibility and reliability. Historically the one knock against relational databases is that they can only run on a single machine, which creates inherent limitations when data storage needs outpace server improvements. The solution to rapidly scaling databases is to distribute them, but this creates a performance problem of its own: relational operations such as joins then need to cross the network boundary. Co-location is the practice of dividing data tactically, where one keeps related information on the same machines to enable efficient relational operations, but takes advantage of the horizontal scalability for the whole dataset.
+Relational databases are the first choice of data store for many applications due to their enormous flexibility and reliability. Historically the one criticism of relational databases is that they can run on only a single machine, which creates inherent limitations when data storage needs outpace server improvements. The solution to rapidly scaling databases is to distribute them, but this creates a performance problem of its own: relational operations such as joins then need to cross the network boundary. Co-location is the practice of dividing data tactically, where one keeps related information on the same machines to enable efficient relational operations, but takes advantage of the horizontal scalability for the whole dataset.
 
-The principle of data co-location is that all tables in the database have a common distribution column and are sharded across machines in the same way such that rows with the same distribution column value are always on the same machine, even across different tables. As long as the distribution column provides a meaningful grouping of data, relational operations can be performed within the groups.
+The principle of data co-location is that all tables in the database have a common distribution column and are sharded across machines in the same way, such that rows with the same distribution column value are always on the same machine, even across different tables. As long as the distribution column provides a meaningful grouping of data, relational operations can be performed within the groups.
 
 Data co-location in Citus for hash-distributed tables
 -----------------------------------------------------
@@ -16,12 +16,12 @@ In Citus a row is stored in a shard if the hash of the value in the distribution
 
 .. image:: ../images/colocation-shards.png
 
-A distribution column that we’ve found to work well in practice is tenant ID in multi-tenant applications. For example, SaaS applications typically have many tenants, but every query they make is specific to a particular tenant. While providing a database or schema for every tenant is one option, it is often costly and impractical as there can be many operations that span across users (data loading, migrations, aggregations, analytics, schema changes, backups, etc.) that becomes harder to manage as the number of tenants grows.
+A distribution column that we’ve found to work well in practice is tenant ID in multi-tenant applications. For example, SaaS applications typically have many tenants, but every query they make is specific to a particular tenant. While one option is providing a database or schema for every tenant, it is often costly and impractical as there can be many operations that span across users (data loading, migrations, aggregations, analytics, schema changes, backups, etc). That becomes harder to manage as the number of tenants grows.
 
 A practical example of co-location
 ----------------------------------
 
-Consider the following tables, that might be part of a multi-tenant web analytics SaaS:
+Consider the following tables which might be part of a multi-tenant web analytics SaaS:
 
 .. code-block:: postgresql
 
@@ -40,7 +40,7 @@ Consider the following tables, that might be part of a multi-tenant web analytic
     primary key (tenant_id, page_id)
   );
 
-Now we want to answer queries that may be issued by a customer-facing dashboard, such as: “Return the number of visits in the past week for all pages starting with ‘/blog’ for tenant 6.”
+Now we want to answer queries that may be issued by a customer-facing dashboard, such as: “Return the number of visits in the past week for all pages starting with ‘/blog’ in tenant six.”
 
 Using Regular PostgreSQL Tables
 -------------------------------
@@ -74,7 +74,7 @@ As the number of tenants and the data stored for each tenant grows, query times 
   SELECT create_distributed_table('event', 'event_id');
   SELECT create_distributed_table('page', 'page_id');
 
-Given that the data is dispersed across different workers, we cannot simply perform a join as we would on a single PostgreSQL node. Instead, we will need to answer this query in two steps:
+Given that the data is dispersed across different workers, we cannot simply perform a join as we would on a single PostgreSQL node. Instead, we will need to issue two queries:
 
 Across all shards of the page table (Q1):
 
@@ -100,9 +100,12 @@ The data required to answer the query is scattered across the shards on the diff
 
 .. image:: ../images/colocation-inefficient-queries.png
 
-In this case, the data distribution creates substantial drawbacks:
+In this case the data distribution creates substantial drawbacks:
 
-Overhead from querying each shard, running multiple queries Overhead of Q1 returning many rows to the client, also causes Q2 to be very large Need to write queries in multiple steps, combine results, requires changes in the application
+* Overhead from querying each shard, running multiple queries
+* Overhead of Q1 returning many rows to the client
+* Q2 becoming very large
+* The need to write queries in multiple steps, combine results, requires changes in the application
 
 A potential upside of the relevant data being dispersed is that the queries can be parallelised, which Citus will do. However, this is only beneficial if the amount of work that the query does is substantially greater than the overhead of querying many shards. It’s generally better to avoid doing such heavy lifting directly from the application, for example by `pre-aggregating <insert_into_select>`_ the data.
 
@@ -125,11 +128,11 @@ In this case, Citus can answer the same query that you would run on a single Pos
 
   SELECT page_id, count(event_id)
   FROM
-    page 
+    page
   LEFT JOIN  (
     SELECT * FROM event
     WHERE (payload->>'time')::timestamptz >= now() - interval '1 week'
-  ) recent 
+  ) recent
   USING (tenant_id, page_id)
   WHERE tenant_id = 6 AND path LIKE '/blog%'
   GROUP BY page_id;
