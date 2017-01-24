@@ -54,56 +54,11 @@ In this sub-section, we discuss how you can deal with node failures without incu
 Worker Node Failures
 --------------------
 
-Citus can easily tolerate worker node failures because of its logical sharding-based architecture. While loading data, Citus allows you to specify the replication factor to provide desired availability for your data. The replication factor has a value of one by default, but can be set to two or higher for fault tolerance.
+Citus supports two modes of replication, allowing it to tolerate worker-node failures. In the first model, we use PostgreSQL's streaming replication to replicate the entire worker-node as-is. In the second model, Citus can replicate data modification statements, thus replicating shards across different worker nodes. They have different advantages depending on the workload and use-case as discussed below:
 
-.. code-block:: postgresql
+1. **PostgreSQL streaming replication.** This option is best for heavy OLTP workloads. It replicates entire worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_ or use :ref:`Citus Cloud <cloud>` which is pre-configured for replication and high-availability.
 
-  SET citus.shard_replication_factor = 2;
-
-In face of worker node failures, Citus automatically switches to these replicas to serve your queries.
-It also issues warnings like below on the master so that users can take note of node failures and take actions accordingly.
-
-::
-
-    WARNING:  could not connect to node localhost:9700
-
-On seeing such warnings, the first step would be to log into the failed node and
-inspect the cause of the failure.
-
-In the meanwhile, Citus will automatically re-route the work to the healthy workers. Also, if Citus is not able to connect to a worker, it will assign that task to another node having a copy of that shard. If the failure occurs mid-query, Citus does not re-run the whole query but assigns only the failed query fragments leading to faster responses in face of failures.
-
-Once the node is brought back up, Citus will automatically continue connecting to it and
-using the data. 
-
-If the node suffers a permanent failure then you may wish to retain the same
-level of replication so that your application can tolerate more failures. To
-make this simpler, Citus enterprise provides a replicate_table_shards UDF which
-can be called after. This function copies the shards of a table across the
-healthy nodes so they all reach the configured replication factor.
-
-To remove a permanently failed node from the list of workers, you should first
-mark all shard placements on that node as invalid (if they are not already so)
-using the following query:
-
-::
-
-   UPDATE pg_dist_shard_placement set shardstate = 3 where nodename = 'bad-node-name' and nodeport = 5432;
-
-Then, you can remove the node using master_remove_node, as shown below:
-
-::
-
-   select master_remove_node('bad-node-name', 5432);
-
-If you want to add a new node to the cluster to replace the
-failed node, you can follow the instructions described in the
-:ref:`adding_worker_node` section. Finally, you can use the function provided in
-Citus Enterprise to replicate the invalid shards and maintain the replication factor.
-
-::
-
-    select replicate_table_shards('github_events');
-
+2. **Citus shard replication.** This option is best suited for an append-only workload. Citus replicates shards across different nodes by automatically replicating DML statements and managing consistency. If a node goes down, the co-ordinator node will continue to serve queries by routing the work to the replicas seamlessly. To enable shard replication simply set :code:`SET citus.shard_replication_factor = 2;` (or higher) before distributing data to the cluster.
 
 .. _master_node_failures:
 
