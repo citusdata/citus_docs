@@ -38,12 +38,12 @@ For example:
 
     If COPY fails to open a connection for a shard placement then it behaves in the same way as INSERT, namely to mark the placement(s) as inactive unless there are no more active placements. If any other failure occurs after connecting, the transaction is rolled back and thus no metadata changes are made.
 
-Inserting from a Query
-$$$$$$$$$$$$$$$$$$$$$$
+Distributed Aggregations
+$$$$$$$$$$$$$$$$$$$$$$$$
 
 Applications like event data pipelines and real-time dashboards require fast queries across predefined aggregations of incoming data. One way to make these queries fast is by calculating and saving aggregates ahead of time. This is called "rolling up" the data and it avoids the cost of processing raw data at run-time. As an extra benefit, rolling up timeseries data into hourly or daily statistics can also save space. Old data may be deleted when its full details are no longer needed and aggregates suffice.
 
-For example, here is a table for tracking page views by url and a query to aggregate views per day.
+For example, here is a distributed table for tracking page views by url:
 
 .. code-block:: postgresql
 
@@ -56,12 +56,22 @@ For example, here is a table for tracking page views by url and a query to aggre
     PRIMARY KEY (site_id, url)
   );
 
-  SELECT view_time::date AS day, site_id, url,
-         count(*) AS view_count
-  FROM page_views
-  GROUP BY view_time::date, site_id, url;
+  SELECT create_distributed_table('page_views', 'site_id');
 
-One disadvantage of repeatedly executing the aggregate query is that it always has to recompute on the whole dataset. It's faster to save the information to a roll up :code:`daily_page_views` table and query that. We create the table and use :code:`INSERT INTO ... SELECT` to populate the table directly from the results of a query:
+Once the table is populated with data, we can run an aggregate query to count page views per URL per day, restricting to a given site and year.
+
+.. code-block:: postgresql
+
+  -- how many views per url per day on site 5?
+  SELECT view_time::date AS day, site_id, url, count(*) AS view_count
+    FROM page_views
+    WHERE site_id = 5 AND
+      view_time >= date '2016-01-01' AND view_time < date '2017-01-01'
+    GROUP BY view_time::date, site_id, url;
+
+The setup described above works, but has two drawbacks. First, when you repeatedly execute the aggregate query, it must go over each related row and recompute the results for the entire data set. If you're using this query to render a dashboard, it's faster to save the aggregated results in a daily page views table and query that table. Second, storage costs will grow proportionally with data volumes and the length of queryable history. In practice, you may want to keep raw events for a short time period and look at historical graphs over a longer time window.
+
+To receive those benefits, we can create a :code:`daily_page_views` table to store the daily statistics.
 
 .. code-block:: postgresql
 
@@ -73,80 +83,58 @@ One disadvantage of repeatedly executing the aggregate query is that it always h
     PRIMARY KEY (site_id, day, url)
   );
 
+  SELECT create_distributed_table('daily_page_views', 'site_id');
+
+In this example, we distributed both :code:`page_views` and :code:`daily_page_views` on the :code:`site_id` column. This ensures that data corresponding to a particular site will be :ref:`co-located <colocation>` on the same node. Keeping the two tables' rows together on each node minimizes network traffic between nodes and enables highly parallel execution.
+
+Once we created this new distributed table, we can then run :code:`INSERT INTO ... SELECT` to roll up raw page views into the aggregated table. In the following, we aggregate page views each day. Citus users often wait for a certain time period after the end of day to run a query like this, to accommodate late arriving data.
+
+.. code-block:: postgresql
+
+  -- roll up yesterday's data
   INSERT INTO daily_page_views (day, site_id, url, view_count)
-    -- this is our original select query
-    SELECT view_time::date AS day, site_id, url,
-           count(*) AS view_count
+    SELECT view_time::date AS day, site_id, url, count(*) AS view_count
     FROM page_views
+    WHERE view_time >= date '2017-01-01' AND view_time < date '2017-01-02'
     GROUP BY view_time::date, site_id, url;
 
   -- now the results are available right out of the table
   SELECT day, site_id, url, view_count
-  FROM daily_page_views;
+    FROM daily_page_views
+    WHERE site_id = 5 AND
+      day >= date '2016-01-01' AND day < date '2017-01-01';
 
-
-Unfortunately as the numbers of tracked web sites and their pages grow, the aggregate query for populating (or as we'll see later, updating) the rollup table slows down. To compensate we can combine rollup tables and distributed computing to scale the application. Since we GROUP BY each site separately we can parallelize the computation across nodes in a distributed database. Each node in a Citus cluster can hold the data for different web sites and the nodes can each compute rollups locally and write a corresponding part of :code:`daily_page_views`. We distribute both :code:`page_views` and :code:`daily_page_views` so that their rows will stay on the same machine when their :code:`site_id` values match.
-
-.. code-block:: postgresql
-
-  -- First distribute the tables. Notice how we're using the
-  -- same distribution column to keep page views and their daily
-  -- summaries on the same machine
-
-  SELECT create_distributed_table('page_views', 'site_id');
-  SELECT create_distributed_table('daily_page_views', 'site_id');
-
-Keeping the tables' information together on each node, i.e. `co-locating <colocation_groups>`_ them, minimizes network traffic between nodes and allows highly parallel execution. In fact for INSERT INTO SELECT to work in Citus, colocation isn't just a good idea, it's the law. Citus requires the source and destination table to be colocated and throws an error if they are not. Citus implements INSERT INTO SELECT by pushing down the select query to each shard. The distributed query execution happens automatically, just use the ordinary SQL command.
-
-.. code-block:: postgresql
-
-  -- Then run the ordinary INSERT INTO SELECT as before
-
-  INSERT INTO daily_page_views (day, site_id, url, view_count)
-    SELECT view_time::date AS day, site_id, url,
-           count(*) AS view_count
-    FROM page_views
-    GROUP BY view_time::date, site_id, url;
-
-
-In summary, INSERT INTO SELECT on Citus requires that:
+It's worth noting that for :code:`INSERT INTO ... SELECT` to work on distributed tables, Citus requires the source and destination table to be co-located. In summary:
 
 - The tables queried and inserted are distributed by analogous columns
 - The select query includes the distribution column
 - The insert statement includes the distribution column
 
-Rollups keep statistics queries fast but do require upkeep. New items must be periodically added or existing entries updated. In order that this periodic update be fast we need to do it *incrementally*, meaning without having to re-scan the entire underlying dataset (as, for instance, a materialized view would require). PostgreSQL's upsert feature is what we need.
+The rollup query above aggregates data from the previous day and inserts it into :code:`daily_page_views`. Running the query once each day means that no rollup tables rows need to be updated, because the new day's data does not affect previous rows.
 
-Suppose we have already rolled up visits happening before a certain timestamp (we'll call it :code:`$1`) and want to update the rollups to include more recent views. To do this we add a WHERE clause to select visits after the timestamp, and specify "ON CONFLICT" to adjust any daily view aggregates the new data affects. The latter is PostgreSQL's technique for doing `upserts <https://www.postgresql.org/docs/9.5/static/sql-insert.html#SQL-ON-CONFLICT>`_.
+The situation changes when dealing with late arriving data, or running the rollup query more than once per day. If any new rows match days already in the rollup table, the matching counts should increase. PostgreSQL can handle this situation with "ON CONFLICT," which is its technique for doing `upserts <https://www.postgresql.org/docs/9.5/static/sql-insert.html#SQL-ON-CONFLICT>`_. Here is an example.
 
 .. code-block:: postgresql
 
+  -- roll up from a given date onward,
+  -- updating daily page views when necessary
   INSERT INTO daily_page_views (day, site_id, url, view_count)
-    SELECT view_time::date AS day, site_id, url,
-           count(*) AS view_count
+    SELECT view_time::date AS day, site_id, url, count(*) AS view_count
     FROM page_views
-    WHERE view_time >= $1
-    GROUP BY view_time::date, site_id, url;
+    WHERE view_time >= date '2017-01-01'
+    GROUP BY view_time::date, site_id, url
     ON CONFLICT (day, url, site_id) DO UPDATE SET
       view_count = daily_page_views.view_count + EXCLUDED.view_count;
-
-Querying the distributed rollup table is easy:
-
-.. code-block:: postgresql
-
-  SELECT day, site_id, url, view_count
-  FROM daily_page_views;
 
 Single-Shard Updates and Deletion
 ---------------------------------
 
-You can also update or delete rows from your tables, using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/9.6/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/9.6/static/sql-delete.html>`_ commands.
+You can update or delete rows from your tables, using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/9.6/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/9.6/static/sql-delete.html>`_ commands.
 
 ::
 
     UPDATE github_events SET org = NULL WHERE repo_id = 24509048;
     DELETE FROM github_events WHERE repo_id = 24509048;
-
 
 Currently, Citus requires that standard UPDATE or DELETE statements involve exactly one shard. This means commands must include a WHERE qualification on the distribution column that restricts the query to a single shard. Such qualifications usually take the form of an equality clause on the table’s distribution column. To update or delete across shards see the section below.
 
