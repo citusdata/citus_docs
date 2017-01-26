@@ -108,41 +108,18 @@ If you would prefer a table to be in its own co-location group, specify :code:`'
 
   SELECT create_distributed_table('A', 'foo', colocate_with => 'none');
 
-To co-locate a number of tables, create one in its own group, then add the others.
+To co-locate a number of tables, create one in its own group, then add the others. For example:
 
 .. code-block:: postgresql
 
   -- start a new group
-  SELECT create_distributed_table('A', 'foo', colocate_with => 'none');
+  SELECT create_distributed_table('stores', 'store_id', colocate_with => 'none');
 
-  -- add to the same group as A
-  SELECT create_distributed_table('B', 'bar', colocate_with => 'A');
-  SELECT create_distributed_table('C', 'baz', colocate_with => 'A');
+  -- add to the same group as stores
+  SELECT create_distributed_table('orders', 'store_id', colocate_with => 'stores');
+  SELECT create_distributed_table('products', 'store_id', colocate_with => 'stores');
 
-Information about co-location groups is stored in :code:`pg_dist_colocation`, while :code:`pg_dist_partition` reveals which tables are assigned to which groups:
-
-::
-
-  Table "pg_catalog.pg_dist_colocation"
-  ┌────────────────────────┬─────────┬───────────┐
-  │         Column         │  Type   │ Modifiers │
-  ├────────────────────────┼─────────┼───────────┤
-  │ colocationid           │ integer │ not null  │
-  │ shardcount             │ integer │ not null  │
-  │ replicationfactor      │ integer │ not null  │
-  │ distributioncolumntype │ oid     │ not null  │
-  └────────────────────────┴─────────┴───────────┘
-
-  Table "pg_catalog.pg_dist_partition"
-  ┌──────────────┬──────────┬──────────────────────────────┐
-  │    Column    │   Type   │          Modifiers           │
-  ├──────────────┼──────────┼──────────────────────────────┤
-  │ logicalrelid │ regclass │ not null                     │
-  │ partmethod   │ "char"   │ not null                     │
-  │ partkey      │ text     │                              │
-  │ colocationid │ integer  │ not null default 0           │
-  │ repmodel     │ "char"   │ not null default 'c'::"char" │
-  └──────────────┴──────────┴──────────────────────────────┘
+Information about co-location groups is stored in the :ref:`pg_dist_colocation <colocation_group_table>` table, while :ref:`pg_dist_partition <partition_table>` reveals which tables are assigned to which groups.
 
 Dropping Tables
 ---------------
