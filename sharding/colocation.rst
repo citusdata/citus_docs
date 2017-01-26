@@ -120,7 +120,7 @@ In Citus, rows with the same distribution column value are guaranteed to be on t
 
   -- create Citus tables, co-locate them by using a common distribution column
   SELECT create_distributed_table('event', 'tenant_id');
-  SELECT create_distributed_table('page', 'tenant_id');
+  SELECT create_distributed_table('page', 'tenant_id', colocate_with => 'event');
 
 In this case, Citus can answer the same query that you would run on a single PostgreSQL node without modification (Q1):
 
