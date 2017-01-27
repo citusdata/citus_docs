@@ -142,14 +142,14 @@ This looks a lot like the previous code block. Most importantly: It also shards 
 replication factor. Because all three of those match, there's a 1-to-1
 correspondence between ``http_request`` shards and ``http_request_1min`` shards,
 and Citus will place matching shards on the same worker. This is called
-colocation; it makes queries such as joins faster and our rollups possible.
+:ref:`co-location <colocation>`; it makes queries such as joins faster and our rollups possible.
 
 .. image:: /images/colocation.png
-  :alt: colocation in citus
+  :alt: co-location in citus
 
 In order to populate ``http_request_1min`` we're going to periodically run the equivalent
 of an INSERT INTO SELECT. We'll run a function on all the workers which runs INSERT INTO SELECT
-on every matching pair of shards. This is possible because the tables are colocated.
+on every matching pair of shards. This is possible because the tables are co-located.
 
 .. code-block:: plpgsql
 

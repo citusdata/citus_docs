@@ -31,6 +31,7 @@ topics.
    :caption: Distributed Data Modeling
 
    sharding/data_modeling.rst
+   sharding/colocation.rst
 
 .. toctree::
    :maxdepth: 1

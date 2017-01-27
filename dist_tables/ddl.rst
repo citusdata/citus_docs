@@ -82,6 +82,45 @@ The above method distributes tables into multiple horizontal shards, but it's al
 
 Other queries, such as one calculating tax for a shopping cart, can join on the :code:`states` table with no network overhead.
 
+.. _colocation_groups:
+
+Co-Locating Tables
+------------------
+
+Co-location is the practice of dividing data tactically, keeping related information on the same machines to enable efficient relational operations, while taking advantage of the horizontal scalability for the whole dataset. For more information and examples see :ref:`colocation`.
+
+Tables are co-located in groups. To manually control a table's co-location group assignment use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. If you don't care about a table's co-location then omit this parameter. It defaults to the value :code:`'default'`, which groups the table with any other default co-location table having the same distribution column type, shard count, and replication factor.
+
+.. code-block:: postgresql
+
+  -- these tables are implicitly co-located by using the same
+  -- distribution column type and shard count with the default
+  -- co-location group
+
+  SELECT create_distributed_table('A', 'some_int_col');
+  SELECT create_distributed_table('B', 'other_int_col');
+
+If you would prefer a table to be in its own co-location group, specify :code:`'none'`.
+
+.. code-block:: postgresql
+
+  -- not co-located with other tables
+
+  SELECT create_distributed_table('A', 'foo', colocate_with => 'none');
+
+To co-locate a number of tables, distribute one and then put the others into its co-location group. For example:
+
+.. code-block:: postgresql
+
+  -- distribute stores
+  SELECT create_distributed_table('stores', 'store_id');
+
+  -- add to the same group as stores
+  SELECT create_distributed_table('orders', 'store_id', colocate_with => 'stores');
+  SELECT create_distributed_table('products', 'store_id', colocate_with => 'stores');
+
+Information about co-location groups is stored in the :ref:`pg_dist_colocation <colocation_group_table>` table, while :ref:`pg_dist_partition <partition_table>` reveals which tables are assigned to which groups.
+
 Dropping Tables
 ---------------
 
