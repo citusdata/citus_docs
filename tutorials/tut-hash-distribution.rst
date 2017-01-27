@@ -135,8 +135,6 @@ should be distributed tables, stored across the cluster.
 
 .. code-block:: sql
 
-  SET citus.shard_replication_factor = 1;
-
   SELECT create_distributed_table('wikipedia_changes', 'editor');
   SELECT create_distributed_table('wikipedia_editors', 'editor');
 

@@ -43,6 +43,7 @@ to demonstrate the overall architecture; a real system might use additional colu
 .. code-block:: sql
 
   -- this is run on the master
+
   CREATE TABLE http_request (
     site_id INT,
     ingest_time TIMESTAMPTZ DEFAULT now(),
@@ -55,16 +56,18 @@ to demonstrate the overall architecture; a real system might use additional colu
     response_time_msec INT
   );
 
+  SET citus.shard_replication_factor = 2;
+
   SELECT create_distributed_table('http_request', 'site_id');
 
 When we call :ref:`create_distributed_table <create_distributed_table>`
 we ask Citus to hash-distribute ``http_request`` using the ``site_id`` column. That means
 all the data for a particular site will live in the same shard.
 
-The UDF uses the default configuration values for shard count and replication
-factor. We recommend :ref:`using 2-4x as many shards <faq_choose_shard_count>`
-as CPU cores in your cluster. Using this many shards lets you rebalance data
-across your cluster after adding new worker nodes.
+The UDF uses the default configuration values for shard count. We
+recommend :ref:`using 2-4x as many shards <faq_choose_shard_count>` as
+CPU cores in your cluster. Using this many shards lets you rebalance
+data across your cluster after adding new worker nodes.
 
 Using a replication factor of 2 means every shard is held on multiple workers. When a
 worker fails the master will prevent downtime by serving queries for that worker's shards
