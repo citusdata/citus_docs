@@ -70,7 +70,7 @@ As the number of tenants and the data stored for each tenant grows, query times 
 
 .. code-block:: postgresql
 
-  -- create Citus tables, naively use event_id and page_id as distribution columns
+  -- naively use event_id and page_id as distribution columns
   SELECT create_distributed_table('event', 'event_id');
   SELECT create_distributed_table('page', 'page_id');
 
@@ -118,7 +118,7 @@ In Citus, rows with the same distribution column value are guaranteed to be on t
 
 .. code-block:: postgresql
 
-  -- create Citus tables, co-locate them by using a common distribution column
+  -- co-locate tables by using a common distribution column
   SELECT create_distributed_table('event', 'tenant_id');
   SELECT create_distributed_table('page', 'tenant_id', colocate_with => 'event');
 
