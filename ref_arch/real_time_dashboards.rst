@@ -139,7 +139,7 @@ This looks a lot like the previous code block. Most importantly: It also shards 
 replication factor. Because all three of those match, there's a 1-to-1
 correspondence between ``http_request`` shards and ``http_request_1min`` shards,
 and Citus will place matching shards on the same worker. This is called
-co-location; it makes queries such as joins faster and our rollups possible.
+:ref:`co-location <colocation>`; it makes queries such as joins faster and our rollups possible.
 
 .. image:: /images/colocation.png
   :alt: co-location in citus

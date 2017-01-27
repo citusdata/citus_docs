@@ -188,6 +188,6 @@ A co-located JOIN between editors and changes allows aggregates not only by edit
 Events and Reference Tables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We've already seen how every row in a distributed table is stored on a shard. However for small tables there is a trick to achieve a kind of universal co-location. We can choose to place all its rows into a single shard but replicate that shard to every worker node. It introduces storage and update costs of course, but this can be more than counterbalanced by the performance gains of read queries.
+We've already seen how every row in a distributed table is stored on a shard. However for small tables there is a trick to achieve a kind of universal :ref:`co-location <colocation>`. We can choose to place all its rows into a single shard but replicate that shard to every worker node. It introduces storage and update costs of course, but this can be more than counterbalanced by the performance gains of read queries.
 
 We call tables replicated to all nodes *reference tables.* They usually provide metadata about items in a larger table and are reminiscent of what data warehousing calls dimension tables.
