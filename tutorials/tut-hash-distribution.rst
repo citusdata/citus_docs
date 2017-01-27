@@ -178,9 +178,10 @@ bots:
   SELECT comment FROM wikipedia_changes c, wikipedia_editors e
   WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
 
-Above, when we created our two tables, we partitioned them along the same
-column and created an equal number of shards for each. Doing this means that
-all data for each editor is kept on the same machine, or, colocated.
+Above, when we created our two tables, we partitioned them along the
+same column and created an equal number of shards for each. Doing this
+means that all data for each editor is kept on the same machine, or,
+:ref:`co-located <colocation>`.
 
 How many pages have been created by bots? By users?
 
@@ -194,7 +195,7 @@ How many pages have been created by bots? By users?
   GROUP BY bot;
 
 Citus can also perform joins where the rows to be joined are not stored on the
-same machine. But, joins involving colocated rows usually run `faster` than
+same machine. But, joins involving co-located rows usually run `faster` than
 their non-distributed versions, because they can run across all machines and
 shards in parallel.
 

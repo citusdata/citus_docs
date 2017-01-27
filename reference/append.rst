@@ -35,7 +35,7 @@ analytics. In this case, Citus will maintain minimum and maximum
 hash ranges for all the created shards. Whenever a row is inserted,
 updated or deleted, Citus will redirect the query to the correct
 shard and issue it locally. This data model is more suited for doing
-colocated joins and for queries involving equality based filters
+co-located joins and for queries involving equality based filters
 on the distribution column.
 
 Citus uses slightly different syntaxes for creation and manipulation
