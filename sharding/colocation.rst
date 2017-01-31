@@ -29,14 +29,14 @@ Consider the following tables which might be part of a multi-tenant web analytic
     event_id bigint,
     tenant_id int,
     page_id int,
-    payload jsonb, 
+    payload jsonb,
     primary key (tenant_id, event_id)
   );
 
   CREATE TABLE page (
     page_id int,
     tenant_id int,
-    path text, 
+    path text,
     primary key (tenant_id, page_id)
   );
 
@@ -51,11 +51,11 @@ If our data was in a single PostgreSQL node, we could easily express our query u
 
   SELECT page_id, count(event_id)
   FROM
-    page 
+    page
   LEFT JOIN  (
     SELECT * FROM event
     WHERE (payload->>'time')::timestamptz >= now() - interval '1 week'
-  ) recent 
+  ) recent
   USING (tenant_id, page_id)
   WHERE tenant_id = 6 AND path LIKE '/blog%'
   GROUP BY page_id;
@@ -87,9 +87,9 @@ Across all shards of the event table (Q2):
 .. code-block:: postgresql
 
   SELECT page_id, count(*) AS count
-  FROM events
-  WHERE page_id IN (ARRAY[...page IDs from first query...]) AND 
-        tenant_id = 6 AND 
+  FROM event
+  WHERE page_id IN (ARRAY[...page IDs from first query...]) AND
+        tenant_id = 6 AND
         payload->>'time' >= now() - interval '1 week'
   GROUP BY page_id ORDER BY count DESC LIMIT 10;
 
