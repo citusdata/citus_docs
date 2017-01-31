@@ -87,7 +87,7 @@ To take advantage of massive parallelism we can run a *cross-shard* query. For i
     SELECT date_trunc('minute', event_time) AS minute,
            (payload->>'temp')::float AS temperature
     FROM events
-    WHERE event_t1me >= now() - interval '10 minutes'
+    WHERE event_time >= now() - interval '10 minutes'
   ) ev
   GROUP BY minute
   ORDER BY minute ASC;
