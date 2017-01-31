@@ -42,6 +42,31 @@ The Citus master only stores metadata about the table shards and does not store 
 
 However, in some write heavy use cases where the master becomes a performance bottleneck, users can add another master. As the metadata tables are small (typically a few MBs in size), it is possible to copy over the metadata onto another node and sync it regularly. Once this is done, users can send their queries to any master and scale out performance. If your setup requires you to use multiple masters, please `contact us <https://www.citusdata.com/about/contact_us>`_.
 
+Multi-tenancy
+#############
+
+Citus provides ways to customize table distribution for the multi-tenant use case. By default Citus assigns table rows to shards using the table's distribution column and method. Many multi-tenant SaaS providers need to override this logic for particular tenants for a few reasons:
+
+* Preferential treatment. Providers may have a large (or important) customer whose data warrants dedicated resources. For instance, they want to ensure that customer_id = 10 gets its premium share.
+* Protection against noisy neighbors. Providers may have a noisy customer whose requests are hurting the performance of other customers assigned to the same shard. Providers would like to ensure the noisy customer receives fewer resources by isolating it on smaller instances.
+* Supporting pre-production testing or internal development. Providers are free to experiment with new queries in an isolated test node in the production cluster. Problems in the test node won't affect customers. Once everything looks good then the changes can be applied throughout the cluster.
+
+Citus Enterprise provides a UDF to override the shard placement for a tenant.
+
+.. code-block:: postgresql
+
+  -- This query creates an isolated shard for the given tenant_id and returns the new shard id.
+  SELECT isolate_tenant_to_new_shard('table_name', tenant_id);
+
+  -- For example
+  SELECT isolate_tenant_to_new_shard('lineitem', 135);
+
+  -- If the given table has co-located tables, the query above errors out and
+  -- advises to use the CASCADE option
+  SELECT isolate_tenant_to_new_shard('lineitem', 135, 'CASCADE');
+
+The CASCADE option isolates a table and all tables :ref:`co-located <colocation>` with it.
+
 .. _dealing_with_node_failures:
 
 Dealing With Node Failures
