@@ -41,7 +41,7 @@ For example:
 Distributed Aggregations
 $$$$$$$$$$$$$$$$$$$$$$$$
 
-Applications like event data pipelines and real-time dashboards require fast queries across predefined aggregations of incoming data. One way to make these queries fast is by calculating and saving aggregates ahead of time. This is called "rolling up" the data and it avoids the cost of processing raw data at run-time. As an extra benefit, rolling up timeseries data into hourly or daily statistics can also save space. Old data may be deleted when its full details are no longer needed and aggregates suffice.
+Applications like event data pipelines and real-time dashboards require sub-second queries on large volumes of data. One way to make these queries fast is by calculating and saving aggregates ahead of time. This is called "rolling up" the data and it avoids the cost of processing raw data at run-time. As an extra benefit, rolling up timeseries data into hourly or daily statistics can also save space. Old data may be deleted when its full details are no longer needed and aggregates suffice.
 
 For example, here is a distributed table for tracking page views by url:
 
@@ -87,7 +87,7 @@ To receive those benefits, we can create a :code:`daily_page_views` table to sto
 
 In this example, we distributed both :code:`page_views` and :code:`daily_page_views` on the :code:`site_id` column. This ensures that data corresponding to a particular site will be :ref:`co-located <colocation>` on the same node. Keeping the two tables' rows together on each node minimizes network traffic between nodes and enables highly parallel execution.
 
-Once we created this new distributed table, we can then run :code:`INSERT INTO ... SELECT` to roll up raw page views into the aggregated table. In the following, we aggregate page views each day. Citus users often wait for a certain time period after the end of day to run a query like this, to accommodate late arriving data.
+Once we create this new distributed table, we can then run :code:`INSERT INTO ... SELECT` to roll up raw page views into the aggregated table. In the following, we aggregate page views each day. Citus users often wait for a certain time period after the end of day to run a query like this, to accommodate late arriving data.
 
 .. code-block:: postgresql
 
