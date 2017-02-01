@@ -82,6 +82,12 @@ The above method distributes tables into multiple horizontal shards, but it's al
 
 Other queries, such as one calculating tax for a shopping cart, can join on the :code:`states` table with no network overhead.
 
+In addition to distributing a table as a single replicated shard, the :code:`create_reference_table` UDF marks it as a reference table in the Citus metadata tables. Citus automatically performs two-phase commits (`2PC <https://en.wikipedia.org/wiki/Two-phase_commit_protocol>`_) for modifications to tables marked this way, which provides strong consistency guarantees. If you have an existing distributed table which has a shard count of one and is replicated across all nodes, you can upgrade it to be a recognized reference table by running
+
+.. code-block:: postgresql
+
+  SELECT upgrade_to_reference_table('table_name');
+
 .. _colocation_groups:
 
 Co-Locating Tables
