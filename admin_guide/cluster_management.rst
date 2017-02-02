@@ -42,31 +42,6 @@ The Citus master only stores metadata about the table shards and does not store 
 
 However, in some write heavy use cases where the master becomes a performance bottleneck, users can add another master. As the metadata tables are small (typically a few MBs in size), it is possible to copy over the metadata onto another node and sync it regularly. Once this is done, users can send their queries to any master and scale out performance. If your setup requires you to use multiple masters, please `contact us <https://www.citusdata.com/about/contact_us>`_.
 
-Multi-tenancy
-#############
-
-Citus provides ways to customize table distribution for the multi-tenant use case. By default Citus assigns table rows to shards using the table's distribution column and method. Many multi-tenant SaaS providers need to override this logic for particular tenants for a few reasons:
-
-* Preferential treatment. Providers may have a large (or important) customer whose data warrants dedicated resources. For instance, they want to ensure that customer_id = 10 gets its premium share.
-* Protection against noisy neighbors. Providers may have a noisy customer whose requests are hurting the performance of other customers assigned to the same shard. Providers would like to ensure the noisy customer receives fewer resources by isolating it on smaller instances.
-* Supporting pre-production testing or internal development. Providers are free to experiment with new queries in an isolated test node in the production cluster. Problems in the test node won't affect customers. Once everything looks good then the changes can be applied throughout the cluster.
-
-Citus Enterprise provides a UDF to override the shard placement for a tenant.
-
-.. code-block:: postgresql
-
-  -- This query creates an isolated shard for the given tenant_id and returns the new shard id.
-  SELECT isolate_tenant_to_new_shard('table_name', tenant_id);
-
-  -- For example
-  SELECT isolate_tenant_to_new_shard('lineitem', 135);
-
-  -- If the given table has co-located tables, the query above errors out and
-  -- advises to use the CASCADE option
-  SELECT isolate_tenant_to_new_shard('lineitem', 135, 'CASCADE');
-
-The CASCADE option isolates a table and all tables :ref:`co-located <colocation>` with it.
-
 .. _dealing_with_node_failures:
 
 Dealing With Node Failures
@@ -107,3 +82,45 @@ place for the master node, users can dynamically reconstruct this metadata from
 shard information available on the worker nodes. To learn more about the metadata
 tables and their schema, you can visit the :ref:`metadata_tables` section of our documentation.
 
+Tenant Isolation
+################
+
+Citus places table rows into worker shards based on the hashed value of the rows' distribution column.  Multiple distribution column values often fall into the same shard. In the Citus multi-tenant use case this means that tenants often share shards.
+
+Many multi-tenant SaaS providers face the problem that some tenants grow much bigger than the others, or require special resource guarantees. In Citus Enterprise Edition large tenants can be *isolated* to their own dedicated shards to better control the resource allocation between small and large tenants.
+
+Every shard is marked in Citus metadata with the range of hashed values it contains (more info in the reference for :ref:`pg_dist_shard <pg_dist_shard>`). The Citus UDF :code:`isolate_tenant_to_new_shard` removes rows with a given distribution value from their current shard placement and creates a shard which will hold them separately from other rows. Furthermore, it takes a :code:`CASCADE` option which isolates not just the table but all tables :ref:`co-located <colocation>` with it.
+
+.. code-block:: postgresql
+
+  -- This query creates an isolated shard for the given tenant_id and
+  -- returns the new shard id.
+
+  SELECT isolate_tenant_to_new_shard('table_name', tenant_id);
+
+  -- For example
+
+  SELECT isolate_tenant_to_new_shard('lineitem', 135);
+
+  -- If the given table has co-located tables, the query above errors out and
+  -- advises to use the CASCADE option
+
+  SELECT isolate_tenant_to_new_shard('lineitem', 135, 'CASCADE');
+
+Once a tenant is isolated to a dedicated shard it can be moved to a separate node in the Citus cluster for true hardware isolation. As mentioned, the :code:`isolate_tenant_to_new_shard` function returns the newly created shard id, and this id can be used to move the shard:
+
+.. code-block:: postgresql
+
+  -- find the node currently holding the new shard
+  SELECT nodename, nodeport
+    FROM pg_dist_shard_placement
+   WHERE shardid = new_shard_id;
+
+  -- list the available worker nodes that could hold the shard
+  SELECT * FROM master_get_active_worker_nodes();
+
+  -- move the shard to your choice of worker
+  SELECT master_move_shard_placement(
+    new_shard_id,
+    'source_host', source_port,
+    'dest_host', dest_port);

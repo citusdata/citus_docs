@@ -45,6 +45,7 @@ The pg_dist_partition table stores metadata about which tables in the database a
      github_events | h          | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location -1} |            2 | c
      (1 row)
 
+.. _pg_dist_shard:
 
 Shard table
 -----------------
