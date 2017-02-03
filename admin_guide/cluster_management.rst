@@ -85,20 +85,32 @@ tables and their schema, you can visit the :ref:`metadata_tables` section of our
 Tenant Isolation
 ################
 
-Citus places table rows into worker shards based on the hashed value of the rows' distribution column.  Multiple distribution column values often fall into the same shard. In the Citus multi-tenant use case this means that tenants often share shards.
+.. note::
+
+  Tenant isolation is a feature of **Citus Enterprise Edition** only.
+
+Citus places table rows into worker shards based on the hashed value of the rows' distribution column. Multiple distribution column values often fall into the same shard. In the Citus multi-tenant use case this means that tenants often share shards.
 
 Many multi-tenant SaaS providers face the problem that some tenants grow much bigger than the others, or require special resource guarantees. In Citus Enterprise Edition large tenants can be *isolated* to their own dedicated shards to better control the resource allocation between small and large tenants.
 
-Every shard is marked in Citus metadata with the range of hashed values it contains (more info in the reference for :ref:`pg_dist_shard <pg_dist_shard>`). The Citus UDF :code:`isolate_tenant_to_new_shard` removes rows with a given distribution value from their current shard placement and creates a shard which will hold them separately from other rows. Furthermore, it takes a :code:`CASCADE` option which isolates not just the table but all tables :ref:`co-located <colocation>` with it.
+Every shard is marked in Citus metadata with the range of hashed values it contains (more info in the reference for :ref:`pg_dist_shard <pg_dist_shard>`). The Citus UDF :code:`isolate_tenant_to_new_shard(table_name, tenant_id)` moves a tenant into a dedicated shard in three steps:
+
+1. Creates a new shard for :code:`table_name` which (a) includes rows whose distribution column has value :code:`tenant_id` and (b) excludes all other rows.
+2. Moves the relevant rows from their current shard to the new shard.
+3. Splits the old shard into two with hash ranges that abut the excision above and below.
+
+Furthermore, the UDF takes a :code:`CASCADE` option which isolates the tenant rows of not just :code:`table_name` but of all tables :ref:`co-located <colocation>` with it. Here is an example:
 
 .. code-block:: postgresql
 
   -- This query creates an isolated shard for the given tenant_id and
   -- returns the new shard id.
 
+  -- General form:
+
   SELECT isolate_tenant_to_new_shard('table_name', tenant_id);
 
-  -- For example
+  -- Specific example:
 
   SELECT isolate_tenant_to_new_shard('lineitem', 135);
 
@@ -107,20 +119,27 @@ Every shard is marked in Citus metadata with the range of hashed values it conta
 
   SELECT isolate_tenant_to_new_shard('lineitem', 135, 'CASCADE');
 
-Once a tenant is isolated to a dedicated shard it can be moved to a separate node in the Citus cluster for true hardware isolation. As mentioned, the :code:`isolate_tenant_to_new_shard` function returns the newly created shard id, and this id can be used to move the shard:
+  ┌─────────────────────────────┐
+  │ isolate_tenant_to_new_shard │
+  ├─────────────────────────────┤
+  │                      102240 │
+  └─────────────────────────────┘
+
+The new shard(s) are created on the same node as the shard(s) from which the tenant was removed. For true hardware isolation they can be moved to a separate node in the Citus cluster. As mentioned, the :code:`isolate_tenant_to_new_shard` function returns the newly created shard id, and this id can be used to move the shard:
 
 .. code-block:: postgresql
 
   -- find the node currently holding the new shard
   SELECT nodename, nodeport
     FROM pg_dist_shard_placement
-   WHERE shardid = new_shard_id;
+   WHERE shardid = 102240;
 
   -- list the available worker nodes that could hold the shard
   SELECT * FROM master_get_active_worker_nodes();
 
   -- move the shard to your choice of worker
+  -- (it will also move any shards created with the CASCADE option)
   SELECT master_move_shard_placement(
-    new_shard_id,
+    102240,
     'source_host', source_port,
     'dest_host', dest_port);
