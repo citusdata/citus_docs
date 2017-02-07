@@ -87,7 +87,7 @@ Tenant Isolation
 
 .. note::
 
-  Tenant isolation is a feature of **Citus Enterprise Edition** and :ref:`Citus Cloud <cloud>` only.
+  Tenant isolation is a feature of **Citus Enterprise Edition** and :ref:`Citus Cloud <cloud_overview>` only.
 
 Citus places table rows into worker shards based on the hashed value of the rows' distribution column. Multiple distribution column values often fall into the same shard. In the Citus multi-tenant use case this means that tenants often share shards.
 
