@@ -1,4 +1,4 @@
-.. _cloud:
+.. _cloud_overview:
 
 Overview
 ========
