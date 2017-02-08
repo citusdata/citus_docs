@@ -10,7 +10,7 @@ Upgrading Citus Versions
 
 Citus adheres to `semantic versioning <http://semver.org/>`_ with patch-, minor-, and major-versions. The upgrade process differs for each, requiring more effort for bigger version jumps.
 
-Upgrading the Citus version requires first obtaining the new Citus extension and then installing it in each of your database instances. Citus uses separate packages for each minor version to ensure that running a default package upgrade will provide bugfixes but never break anything. Let's start by examining patch upgrades, the easiest kind.
+Upgrading the Citus version requires first obtaining the new Citus extension and then installing it in each of your database instances. Citus uses separate packages for each minor version to ensure that running a default package upgrade will provide bug fixes but never break anything. Let's start by examining patch upgrades, the easiest kind.
 
 Patch Version Upgrade
 ---------------------
@@ -37,7 +37,7 @@ Then restart PostgreSQL and the upgrade will be complete.
 Major and Minor Version Upgrades
 --------------------------------
 
-Major and minor version upgrades follow the same steps, but be careful: major upgrades can make backward-incompatible pchanges in the Citus API. It is best to review the Citus `changelog <https://github.com/citusdata/citus/blob/master/CHANGELOG.md>`_ before a major upgrade and look for any changes which may cause problems for your application.
+Major and minor version upgrades follow the same steps, but be careful: major upgrades can make backward-incompatible changes in the Citus API. It is best to review the Citus `changelog <https://github.com/citusdata/citus/blob/master/CHANGELOG.md>`_ before a major upgrade and look for any changes which may cause problems for your application.
 
 Each major and minor version of Citus is published as a package with a separate name. Installing a newer package will automatically remove the older version. Here is how to upgrade from 6.0 to 6.1 for instance:
 
@@ -127,7 +127,7 @@ On the Coordinator Node
 
   You should see a "Clusters are compatible" message. If you do not, fix any errors before proceeding. Please ensure that
 
-  * :code:`NEW_PG_DATA` contains an empty database initialized by new postgresql version
+  * :code:`NEW_PG_DATA` contains an empty database initialized by new PostgreSQL version
   * The Citus extension **IS NOT** created
 
 5. Stop the old server.
@@ -233,7 +233,7 @@ On Worker Nodes
 
   You should see a "Clusters are compatible" message. If you do not, fix any errors before proceeding. Please ensure that
 
-  * :code:`NEW_PG_DATA` contains an empty database initialized by new postgresql version
+  * :code:`NEW_PG_DATA` contains an empty database initialized by new PostgreSQL version
   * The Citus extension **IS NOT** created
 
 3. Stop the old server.
