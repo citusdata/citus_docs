@@ -118,7 +118,9 @@ On the Coordinator Node
 
   * **DO NOT CREATE** Citus extension yet
 
-4. Check upgrade compatibility.
+4. Stop the old and new servers.
+
+5. Check upgrade compatibility.
 
   .. code-block:: bash
 
@@ -129,8 +131,6 @@ On the Coordinator Node
 
   * :code:`NEW_PG_DATA` contains an empty database initialized by new PostgreSQL version
   * The Citus extension **IS NOT** created
-
-5. Stop the old server.
 
 6. Perform the upgrade (like before but without the :code:`--check` option).
 
@@ -224,7 +224,8 @@ On Worker Nodes
 ---------------
 
 1. Install Citus 6.0 onto existing PostgreSQL 9.5 server as outlined in :ref:`major_minor_upgrade`.
-2. Check upgrade compatibility to PostgreSQL 9.6.
+2. Stop the old and new servers.
+3. Check upgrade compatibility to PostgreSQL 9.6.
 
   .. code-block:: bash
 
@@ -235,8 +236,6 @@ On Worker Nodes
 
   * :code:`NEW_PG_DATA` contains an empty database initialized by new PostgreSQL version
   * The Citus extension **IS NOT** created
-
-3. Stop the old server.
 
 4. Perform the upgrade (like before but without the :code:`--check` option).
 
