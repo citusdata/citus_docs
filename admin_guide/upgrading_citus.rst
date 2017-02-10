@@ -194,7 +194,7 @@ On the Coordinator Node
       command := 'create trigger ' || trigger_name || ' after truncate on ' || table_name || ' execute procedure pg_catalog.citus_truncate_trigger()';
       execute command;
       command := 'update pg_trigger set tgisinternal = true where tgname
-     = ' || trigger_name;
+     = ' || quote_literal(trigger_name);
       execute command;
     END;
     $$;
