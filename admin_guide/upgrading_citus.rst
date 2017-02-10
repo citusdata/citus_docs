@@ -22,7 +22,7 @@ To upgrade a Citus version to its latest patch, issue a standard upgrade command
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get upgrade postgresql-9.6-citus-6.1
+  sudo apt-get install --only-upgrade postgresql-9.6-citus-6.1
 
 **Fedora, CentOS, or Red Hat**
 
