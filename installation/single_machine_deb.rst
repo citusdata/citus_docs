@@ -15,7 +15,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
   curl https://install.citusdata.com/community/deb.sh | sudo bash
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-9.6-citus
+  sudo apt-get -y install postgresql-9.6-citus-6.1
 
 
 **2. Initialize the Cluster**
