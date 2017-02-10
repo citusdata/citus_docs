@@ -53,7 +53,7 @@ Restart PostgreSQL:
   psql -c "ALTER EXTENSION citus UPDATE;"
 
   psql -c "\dx"
-  # you should see a newer Citus 6.0 version in the list
+  # you should see a newer Citus 6.1 version in the list
 
 That's all it takes! No further steps are necessary after updating
 the extension on all database instances in your cluster.
@@ -65,9 +65,9 @@ the extension on all database instances in your cluster.
 Upgrading PostgreSQL version from 9.5 to 9.6
 ############################################
 
-Citus v6.0 is compatible with PostgreSQL 9.5.x and 9.6.x. If you are running
+Citus v6.1 is compatible with PostgreSQL 9.5.x and 9.6.x. If you are running
 Citus on PostgreSQL versions 9.5 and wish to upgrade to version 9.6, Please
 `contact us <https://www.citusdata.com/about/contact_us>`_ for upgrade steps.
 
 .. note::
-  PostgreSQL 9.6 requires using Citus 6.0.
+  PostgreSQL 9.6 requires using Citus 6.0 or Citus 6.1.
