@@ -23,14 +23,14 @@ To upgrade a Citus version to its latest patch, issue a standard upgrade command
 
   sudo apt-get update
   sudo apt-get install --only-upgrade postgresql-9.6-citus-6.1
+  sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
   sudo yum update citus61_96
-
-Then restart PostgreSQL and the upgrade will be complete.
+  sudo service postgresql-9.6 restart
 
 .. _major_minor_upgrade:
 
@@ -50,7 +50,7 @@ Step 1. Update Citus Package
 
   sudo apt-get update
   sudo apt-get install postgresql-9.6-citus-6.1
-
+  sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
@@ -58,15 +58,15 @@ Step 1. Update Citus Package
 
   # Fedora, CentOS, or Red Hat
   sudo yum install citus61_96
+  sudo service postgresql-9.6 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After installing the new package, restart PostgreSQL and run the extension upgrade script:
+After installing the new package, run the extension upgrade script:
 
 .. code-block:: bash
 
-  # after restarting postgres
   psql -c 'ALTER EXTENSION citus UPDATE;'
 
   psql -c '\dx'
