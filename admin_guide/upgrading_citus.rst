@@ -57,7 +57,7 @@ Step 1. Update Citus Package
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum install citus61_96
+  sudo yum swap citus60_96 citus61_96
   sudo service postgresql-9.6 restart
 
 Step 2. Apply Update in DB
