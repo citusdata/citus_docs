@@ -24,7 +24,7 @@ Steps to be executed on all nodes
 ::
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-9.6-citus
+  sudo apt-get -y install postgresql-9.6-citus-6.0
 
   # preload citus extension
   sudo pg_conftool 9.6 main set shared_preload_libraries citus
