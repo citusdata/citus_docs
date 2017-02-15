@@ -26,12 +26,11 @@ Distributing by Tenant ID
 
 The multi-tenant architecture uses a form of hierarchical database modeling which allows Citus to execute queries entirely within single worker nodes. This allows greater efficiency, full SQL coverage, and foreign key support. The top of the data hierarchy is known as the *tenant id*, and needs to be stored in a column on each table. Citus inspects each query to see which tenant id it involves and routes the query to a single physical node for processing, specifically the node which holds the data shard associated with the tenant id.
 
-Here is an example of two tables and their shards. Each box is a shard whose color represents which physical node contains it. Green shards are stored together on one physical node, and blue on another.
+Here is an example of two tables and their shards. Each box is a shard whose color represents which physical node contains it. Green shards are stored together on one physical node, and blue on another.  Notice how a join query between Accounts and Campaigns would have all the necessary data together on one node when restricting both tables to the same account_id. Matching the relevant shards of two tables in this way across all nodes is called *table co-location*.
 
 .. figure:: ../images/mt-colocation.png
    :alt: co-located tables in multi-tenant architecture
 
-Notice how a join query between Accounts and Campaigns would have all the necessary data together on one node when restricting both tables to the same account_id. Choosing account_id=1 will read from green shards, and account_id=2 would read from blue. Matching the relevant shards of two tables in this way across all nodes is called *table co-location*.
 
 To apply this design in your own schema the first step is identifying what constitutes a tenant in your application. Common instances include company, account, organization, or customer. The column name will be something like :code:`company_id` or :code:`customer_id`. Examine each of your queries and ask yourself: would it work if it had additional WHERE clauses to restrict all tables involved to rows with the same tenant id? Queries in the multi-tenant model are usually scoped to a tenant, for instance queries on sales or inventory would be scoped within a certain store.
 
@@ -50,17 +49,6 @@ Most SaaS applications already have the notion of tenancy built into their data 
     image_url text NOT NULL
   );
 
-  CREATE TABLE campaigns (
-    id integer NOT NULL,
-    account_id integer NOT NULL,
-    name text NOT NULL,
-    budget integer,
-    blacklisted_site_urls character varying[],
-
-    PRIMARY KEY (account_id, id),
-    FOREIGN KEY (account_id) REFERENCES accounts
-  );
-
   CREATE TABLE ads (
     id integer NOT NULL,
     account_id integer NOT NULL,
@@ -73,7 +61,6 @@ Most SaaS applications already have the notion of tenancy built into their data 
 
     PRIMARY KEY (account_id, id),
     FOREIGN KEY (account_id) REFERENCES accounts,
-    FOREIGN KEY (account_id, campaign_id) REFERENCES campaigns (account_id, id)
   );
 
   CREATE TABLE clicks (
@@ -92,11 +79,10 @@ Most SaaS applications already have the notion of tenancy built into their data 
   );
 
   SELECT create_distributed_table('accounts',  'id');
-  SELECT create_distributed_table('campaigns', 'account_id');
   SELECT create_distributed_table('ads',       'account_id');
   SELECT create_distributed_table('clicks',    'account_id');
 
-JOINs and complex queries are supported within a tenant. For instance to count newly arriving clicks per campaign for account id=9700 we can join, group, and count.
+Citus provides full SQL coverage for queries that include a tenant id. It supports foreign key constraints as long as they include the tenant id column (see for instance the two foreign keys in the :code:`clicks` table above). Full-featured queries involving joins, grouping or aggregate functions work without modification as long as they filter and join by tenant id. For instance here is how to count newly arriving clicks per campaign for account id=9700:
 
 .. code-block:: postgres
 
@@ -107,6 +93,7 @@ JOINs and complex queries are supported within a tenant. For instance to count n
      AND clicked_at > now()::date
    GROUP BY ads.campaign_id
 
+Citus pushes this query down to the node containing tenant 9700 and executes it all in one place.
 
 Distributing by Entity ID
 =========================
