@@ -129,6 +129,19 @@ To co-locate a number of tables, distribute one and then put the others into its
 
 Information about co-location groups is stored in the :ref:`pg_dist_colocation <colocation_group_table>` table, while :ref:`pg_dist_partition <partition_table>` reveals which tables are assigned to which groups.
 
+Using the functions above will distribute tables with the desired co-location. However tables which were distributed using Citus version 5 lack the appropriate entries in :code:`pg_dist_partition`. Citus will refuse to run features like :ref:`dist_agg` on tables not explicitly marked as co-located, even if their shards happen to be placed correctly.
+
+To fix the metadata, simply mark the tables as co-located:
+
+.. code-block:: postgresql
+
+  -- put tables B and C into A's co-location group,
+  -- creating a new group for A if necessary
+
+  SELECT mark_tables_colocated('A', ARRAY['B', 'C']);
+
+This function requires the tables to be distributed with the same method, column type, number of shards, and replication method.
+
 Dropping Tables
 ---------------
 

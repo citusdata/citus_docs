@@ -38,6 +38,8 @@ For example:
 
     If COPY fails to open a connection for a shard placement then it behaves in the same way as INSERT, namely to mark the placement(s) as inactive unless there are no more active placements. If any other failure occurs after connecting, the transaction is rolled back and thus no metadata changes are made.
 
+.. _dist_agg:
+
 Distributed Aggregations
 $$$$$$$$$$$$$$$$$$$$$$$$
 
