@@ -1,32 +1,45 @@
 .. _multi_tenant_tutorial:
 .. highlight:: sql
 
-Multi-tenant application
+Multi-tenant data model
 ########################
 
-In this tutorial, we will use a sample ad-analytics dataset to help you get started on       
-using Citus as the database to power a multi-tenant application.                             
+In this tutorial, we will use a sample ad analytics dataset to demonstrate how you can       
+use Citus to power your multi-tenant application.                             
 
 .. note::
                                                                                              
-    This tutorial assumes that you already have Citus installed and running. If you haven't installed Citus yet,
-    please visit ....
+    This tutorial assumes that you already have Citus installed and running. If you don't have Citus running,
+    you can provision a cluster using `Citus Cloud <https://console.citusdata.com>`_ or setup Citus locally
+    using :ref:`single_machine_docker`.
 
 
 Data model and Schema
 ---------------------
 
 We will demo building the database for an ad-analytics app which companies can use to view, change,
-analyze and manage their ads and campaigns. To represent this data in the data model, we will use three tables:-
-Companies, campaigns and ads.                                                                
+analyze and manage their ads and campaigns (see an `example app <http://citus-example-ad-analytics.herokuapp.com/>`_).
+To represent this data, we will use three Postgres tables:- :code:`companies`, :code:`campaigns` and :code:`ads`.                                                                
+
+Such an application and data model have good characteristics of a typical multi-tenant system. Data from different tenants is stored in a central database, and each tenant has an isolated view of their own data.
                                                                                              
-Such an application and data model have good characteristics of a typical multi-tenant system. Data from different tenants is stored in a central database system, and each tenant has an isolated view of their own data.
-                                                                                             
-To get started, you can connect to the co-ordinator node of the Citus cluster and create tables using standard Postgres CREATE TABLE statements.
+To get started, you can first connect to the Citus co-ordinator using psql.
+
+**If you are running Citus Cloud**, you can connect by specifying the connection string (URL in the formation details):
+    
+::
+    
+    psql connection-string
+
+**If you are running on Docker**, you can connect by running psql with the docker exec command:
 
 ::
+    
+    docker exec -it citus_master psql -U postgres
 
-    psql ......
+Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE` commands.
+
+::
 
     CREATE TABLE companies (                                                                     
         id integer NOT NULL,                                                                     
@@ -61,7 +74,7 @@ To get started, you can connect to the co-ordinator node of the Citus cluster an
         updated_at timestamp without time zone NOT NULL                                          
     );                                                                                           
                                                                                              
-Next, you can create primary key indexes on each of the tables in order to ensure uniqueness and data consistency.
+Next, you can create primary key indexes on each of the tables just like you would do in PostgreSQL
     
 ::
                                                                                          
@@ -72,10 +85,9 @@ Next, you can create primary key indexes on each of the tables in order to ensur
 Distributing tables and loading data
 -------------------------------------
 
-Now, the Postgres tables for distribution. We will now go ahead and      
-tell Citus to shard those tables across the different nodes we have in the cluster. To do so,
-you can run `create_distributed_table` and specify the table you want to shard and the key you want to shard on.
-In this case, we will shard all the tables on the `company_id`.                             
+We will now go ahead and tell Citus to distribute these tables across the different nodes we have in the cluster. To do so,
+you can run :code:`create_distributed_table` and specify the table you want to shard and the column you want to shard on.
+In this case, we will shard all the tables on the :code:`company_id`.                             
                                                                                           
 ::
     
@@ -83,46 +95,49 @@ In this case, we will shard all the tables on the `company_id`.
     SELECT create_distributed_table('campaigns', 'company_id');                               
     SELECT create_distributed_table('ads', 'company_id');                                     
                                                                                           
-Sharding all tables on the company identifier allows Citus to store all data for          
-a single company on a single node and provide full SQL coverage for queries for a particular company.
-To understand the benefits of using this approach, you can visit our blog post here.      
+Sharding all tables on the company identifier allows Citus to `colocate <colocation>`_ all the tables 
+and allow for features like primary keys, foreign keys and complex joins across your cluster.
+You can learn more about the benefits of this approach `here <https://www.citusdata.com/blog/2016/10/03/designing-your-saas-database-for-high-scalability/>`_.
                                                                                           
-We could now go ahead and load data into these tables. You can download sample files for all the tables from:
-a, b and c. Once you have these files, you can go ahead and load them using the standard PostgreSQL `\COPY` command.
+We could now go ahead and load data into these tables. You can download sample files for all the tables here:
+companies, campaigns and ads. Once you have these files, you can go ahead and load them using the standard PostgreSQL :code:`\COPY` command.
 
 ::
                                                                                           
-    \copy companies from 'companies.csv';                                                     
-    \copy campaigns from 'campaigns.csv';                                                     
-    \copy ads from 'ads.csv';
+    \copy companies from 'companies.csv' WITH CSV;                                                     
+    \copy campaigns from 'campaigns.csv' WITH CSV;                                                     
+    \copy ads from 'ads.csv' WITH CSV;
 
 Running queries and modifications
 ---------------------------------
 
-Now that the data is loaded, let's go ahead and run some queries.                         
-                                                                                          
-Lets start with a very simple count query to see how many companies we have.              
+Now that the data is loaded, let's go ahead and run some queries. You could start with a simple count
+query to see how many companies we have data for.              
                                                                                           
 ::
 
     SELECT count(*) from companies;                                                           
                                                                                           
-A more interesting query for a company to run would be to see details about its top 10 campaigns.
-We could do that by running something like the below.                                     
+A more interesting query for a company to run would be to see details about its campaigns with maximum budget.
+We could do that by running the below query.                                     
 
 ::
                                                                                           
-    SELECT name, cost_model, state, monthly_budget FROM campaigns where company_id = 5 ORDER BY monthly_budget LIMIT 10;
+    SELECT name, cost_model, state, monthly_budget
+    FROM campaigns
+    WHERE company_id = 5
+    ORDER BY monthly_budget DESC
+    LIMIT 10;
                                                                                           
-As we sharded the data on company_id, we can also run a join query across multiple table. An example would be the
-query below to see information about your running campaigns which receive the most clicks and impressions.
+Next, we can also run a join query across multiple tables to see information about running campaigns which receive the most clicks and impressions.
 
 ::
                                                                                           
-    SELECT campaigns.id, campaigns.name, campaigns.monthly_budget, sum(impressions_count) as total_impressions, sum(clicks_count) as total_clicks
+    SELECT campaigns.id, campaigns.name, campaigns.monthly_budget,
+           sum(impressions_count) as total_impressions, sum(clicks_count) as total_clicks
     FROM ads, campaigns                                                                       
     WHERE ads.company_id = campaigns.company_id                                               
-    AND campaigns.company_id = 7                                                              
+    AND campaigns.company_id = 5                                                              
     AND campaigns.state = 'running'                                                           
     GROUP BY campaigns.id, campaigns.name, campaigns.monthly_budget                           
     ORDER BY total_impressions, total_clicks;                                                 
@@ -132,18 +147,20 @@ distributed table. For eg. if you want to update your budget for a particular ca
 
 ::                                                                                          
     
-    UPDATE campaigns SET monthly_budget = monthly_budget*2 WHERE id = 1 AND company_id = 5;   
+    UPDATE campaigns
+    SET monthly_budget = monthly_budget*2
+    WHERE id = 40
+    AND company_id = 5;   
                                                                                           
-Because of these features, it becomes easy for ORMs and applications running on Postgres to transition to Citus.
-Another example of such an operation would be the ability to run transactions which span multiple tables. Let's say you
+Another example of such an operation would be to run transactions which span multiple tables. Let's say you
 want to delete a campaign and all its associated ads, you could do it atomically by running.
 
 ::                                                                                          
     
     BEGIN;                                                                                    
-    DELETE from campaigns where id = 1 AND company_id = 5;                                    
-    DELETE from ads where campaign_id = 1 AND company_id = 5;                                 
+    DELETE from campaigns where id = 46 AND company_id = 5;                                    
+    DELETE from ads where campaign_id = 46 AND company_id = 5;                                 
     COMMIT;                                                                                   
                                                                                           
-This brings us to the end of our tutorial. If you'd like to model your own data for multi-tenancy, you can
-refer to []() or contact us for any advise.   
+
+With this, we come to the end of our tutorial. As a next step, you can look at the :ref:`distributing_by_tenant_id` section to see how you can model your own data for multi-tenancy.

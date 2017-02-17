@@ -21,6 +21,8 @@ The real-time architecture usually has few tables, often centering around a big 
 
 If your situation resembles either of these cases then the next step is to decide how to shard your data in a Citus cluster. As explained in :ref:`introduction_to_citus`, Citus assigns table rows to shards according to the hashed value of the table's distribution column. The database administrator's choice of distribution columns needs to match the access patterns of typical queries to ensure performance.
 
+.. _distributing_by_tenant_id:
+
 Distributing by Tenant ID
 =========================
 
