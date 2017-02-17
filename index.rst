@@ -18,7 +18,7 @@ topics.
 .. toctree::
    :caption: Tutorial
 
-   tutorials/tut-hash-distribution.rst
+   tutorials/multi-tenant-tutorial.rst
 
 .. toctree::
    :caption: Installation
