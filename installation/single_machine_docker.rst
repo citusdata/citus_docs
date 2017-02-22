@@ -21,7 +21,7 @@ Citus uses docker-compose to run and connect containers holding the database mas
 
 .. code-block:: bash
 
-  wget https://raw.githubusercontent.com/citusdata/docker/master/docker-compose.yml
+  curl -L https://raw.githubusercontent.com/citusdata/docker/master/docker-compose.yml > docker-compose.yml
   docker-compose -p citus up -d
 
 The first time you start the cluster it builds its containers. Subsequent startups take a matter of seconds.
