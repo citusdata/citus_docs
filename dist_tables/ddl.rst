@@ -129,18 +129,23 @@ To co-locate a number of tables, distribute one and then put the others into its
 
 Information about co-location groups is stored in the :ref:`pg_dist_colocation <colocation_group_table>` table, while :ref:`pg_dist_partition <partition_table>` reveals which tables are assigned to which groups.
 
-Using the functions above will distribute tables with the desired co-location. However tables which were distributed using Citus version 5 lack the appropriate entries in :code:`pg_dist_partition`. Citus will refuse to run features like :ref:`dist_agg` on tables not explicitly marked as co-located, even if their shards happen to be placed correctly.
+.. _marking_colocation:
 
-To fix the metadata, simply mark the tables as co-located:
+Upgrading from Citus 5.x
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Starting with Citus 6.0, we made co-location a first-class concept, and started tracking tables' assignment to co-location groups in pg_dist_colocation. Since Citus 5.x didn't have this concept, tables created with Citus 5 were not explicitly marked as co-located in metadata, even when the tables were physically co-located.
+
+Since Citus uses co-location metadata information for query optimization and pushdown, it becomes critical to inform Citus of this co-location for previously created tables. To fix the metadata, simply mark the tables as co-located:
 
 .. code-block:: postgresql
 
-  -- put tables B and C into A's co-location group,
-  -- creating a new group for A if necessary
+  -- Assume that stores, products and line_items were created in a Citus 5.x database.
 
-  SELECT mark_tables_colocated('A', ARRAY['B', 'C']);
+  -- Put products and line_items into store's co-location group
+  SELECT mark_tables_colocated('stores', ARRAY['products', 'line_items']);
 
-This function requires the tables to be distributed with the same method, column type, number of shards, and replication method.
+This function requires the tables to be distributed with the same method, column type, number of shards, and replication method. It doesn't re-shard or physically move data, it merely updates Citus metadata.
 
 Dropping Tables
 ---------------
