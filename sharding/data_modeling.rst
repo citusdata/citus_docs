@@ -24,9 +24,9 @@ If your situation resembles either of these cases then the next step is to decid
 Distributing by Tenant ID
 =========================
 
-The multi-tenant architecture uses a form of hierarchical database modeling which allows Citus to execute queries entirely within single worker nodes. This allows greater efficiency, full SQL coverage, and foreign key support. The top of the data hierarchy is known as the *tenant id*, and needs to be stored in a column on each table. Citus inspects each query to see which tenant id it involves and routes the query to a single physical node for processing, specifically the node which holds the data shard associated with the tenant id.
+The multi-tenant architecture uses a form of hierarchical database modeling to distribute queries across nodes in the distributed cluster. The top of the data hierarchy is known as the *tenant id*, and needs to be stored in a column on each table. Citus inspects queries to see which tenant id they involve and routes the query to a single physical node for processing, specifically the node which holds the data shard associated with the tenant id. Running a query with all relevant data placed on the same node is called :ref:`colocation`.
 
-Here is an example of two tables and their shards. Each box is a shard whose color represents which physical node contains it. Green shards are stored together on one physical node, and blue on another.  Notice how a join query between Accounts and Campaigns would have all the necessary data together on one node when restricting both tables to the same account_id. Matching the relevant shards of two tables in this way across all nodes is called *table co-location*.
+The following diagram illustrates co-location in the multi-tenant data model. It contains two tables, Accounts and Campaigns, each distributed by :code:`account_id`. The shaded boxes represent shards, each of whose color represents which physical node contains it. Green shards are stored together on one physical node, and blue on another.  Notice how a join query between Accounts and Campaigns would have all the necessary data together on one node when restricting both tables to the same account_id.
 
 .. figure:: ../images/mt-colocation.png
    :alt: co-located tables in multi-tenant architecture
@@ -36,23 +36,23 @@ To apply this design in your own schema the first step is identifying what const
 
 If you're migrating an existing database to the Citus multi-tenant architecture then some of your tables may lack a column for the application-specific tenant id. You will need to add one and fill it with the correct values. This will denormalize your tables slightly. For more details and a concrete example of backfilling the tenant id, see our guide to :ref:`Multi-Tenant Migration <transitioning_mt>`.
 
-Typical Multi-Tenant Scenario
------------------------------
+Typical Multi-Tenant Schema
+---------------------------
 
 Most SaaS applications already have the notion of tenancy built into their data model. In the following, we will look at an example schema from the online advertising space. In this example, a web advertising platform has tenants that it refers to as accounts. Each account holds and tracks advertising clicks across various campaigns.
 
 .. code-block:: postgres
 
   CREATE TABLE accounts (
-    id integer PRIMARY KEY,
+    id bigint PRIMARY KEY,
     name text NOT NULL,
     image_url text NOT NULL
   );
 
   CREATE TABLE ads (
-    id integer NOT NULL,
-    account_id integer NOT NULL,
-    campaign_id integer NOT NULL,
+    id bigint,
+    account_id bigint,
+    campaign_id bigint,
     name text NOT NULL,
     image_url text NOT NULL,
     target_url text NOT NULL,
@@ -60,13 +60,13 @@ Most SaaS applications already have the notion of tenancy built into their data 
     clicks_count bigint DEFAULT 0 NOT NULL,
 
     PRIMARY KEY (account_id, id),
-    FOREIGN KEY (account_id) REFERENCES accounts,
+    FOREIGN KEY (account_id) REFERENCES accounts
   );
 
   CREATE TABLE clicks (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    account_id integer NOT NULL,
-    ad_id integer NOT NULL,
+    id bigint,
+    account_id bigint,
+    ad_id bigint,
     clicked_at timestamp without time zone NOT NULL,
     site_url text NOT NULL,
     cost_per_click_usd numeric(20,10),
@@ -82,18 +82,87 @@ Most SaaS applications already have the notion of tenancy built into their data 
   SELECT create_distributed_table('ads',       'account_id');
   SELECT create_distributed_table('clicks',    'account_id');
 
-Citus provides full SQL coverage for queries that include a tenant id. It supports foreign key constraints as long as they include the tenant id column (see for instance the two foreign keys in the :code:`clicks` table above). Full-featured queries involving joins, grouping or aggregate functions work without modification as long as they filter and join by tenant id. For instance here is how to count newly arriving clicks per campaign for account id=9700:
+Notice how the primary and foreign keys always contain the tenant id (in this case :code:`account_id`). Often this requires them to be compound keys. Whereas enforcing key constraints is generally difficult in distributed databases, the inclusion of the tenant id allows Citus to push DML down to single nodes and successfully enforce the constraint.
+
+Queries including a tenant id enable more than just key constraints. Such queries enjoy full SQL coverage in Citus, including JOINs, transactions, grouping, and aggregates. In the multi-tenant architecture, SQL queries that filter by tenant id work without modification, combining the familiarity of PostgreSQL with the power of horizontal scaling for large numbers of tenants.
+
+Let's look at example queries that span some of these capabilities. First an analytical query to count newly arriving clicks per campaign for an arbitrary account, say account id=9700. Citus pushes this query down to the node containing tenant 9700 and executes it all in one place. Notice the tenant id is included in the join conditions.
 
 .. code-block:: postgres
 
   SELECT ads.campaign_id, COUNT(*)
     FROM ads
-    JOIN clicks c ON (ads.id = ad_id AND ads.account_id = c.account_id)
+    JOIN clicks c
+      ON (ads.id = ad_id AND ads.account_id = c.account_id)
    WHERE ads.account_id = 9700
      AND clicked_at > now()::date
-   GROUP BY ads.campaign_id
+   GROUP BY ads.campaign_id;
 
-Citus pushes this query down to the node containing tenant 9700 and executes it all in one place.
+What's more, Citus gives full ACID guarantees for single-tenant DML. The following query transactionally removes the record of a click (id = 12995) and decrements the click count cache for its associated ad. Notice we include a filter for :code:`account_id` on all the statements to ensure they affect the same tenant.
+
+.. code-block:: sql
+
+  BEGIN;
+
+  -- get the ad id for later update
+  SELECT ad_id
+    FROM clicks
+   WHERE id = 12995
+     AND account_id = 9700;
+
+  -- delete the click
+  DELETE FROM clicks
+   WHERE id = 12995
+     AND account_id = 9700;
+
+  -- decrement the ad click count for the ad we previously found
+  UPDATE ads
+     SET clicks_count = clicks_count - 1
+   WHERE id = <the ad id>
+     AND account_id = 9700;
+
+  COMMIT;
+
+We've seen some of the benefits of Citus for single-tenant queries, but it can also run and parallelize many kinds of queries across tenants, including aggregates. For instance, we can request the total clicks for ads by account:
+
+.. code-block:: sql
+
+  SELECT account_id, sum(clicks_count) AS total_clicks
+    FROM ads GROUP BY account_id
+  ORDER BY total_clicks DESC;
+
+The planner reveals that this query is pushed down to all nodes and the results aggregated on the coordinator node.
+
+::
+
+  ┌────────────────────────────────────────────────────────────────────────────────────┐
+  │                                         QUERY PLAN                                 │
+  ├────────────────────────────────────────────────────────────────────────────────────┤
+  │ Distributed Query into pg_merge_job_0014                                           │
+  │   Executor: Real-Time                                                              │
+  │   Task Count: 32                                                                   │
+  │   Tasks Shown: One of 32                                                           │
+  │   ->  Task                                                                         │
+  │         Node: example.com port=5432 dbname=citus                                   │
+  │         ->  HashAggregate  (cost=17.35..19.85 rows=200 width=40)                   │
+  │               Group Key: account_id                                                │
+  │               ->  Seq Scan on ads_102393 ads  (cost=0.00..14.90 rows=490 width=16) │
+  │ Master Query                                                                       │
+  │   ->  Sort  (cost=0.00..0.00 rows=0 width=0)                                       │
+  │         Sort Key: pg_catalog.sum((pg_catalog.sum(intermediate_column_14_1))) DESC  │
+  │         ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)                        │
+  │               Group Key: intermediate_column_14_0                                  │
+  │               ->  Seq Scan on pg_merge_job_0014  (cost=0.00..0.00 rows=0 width=0)  │
+  └────────────────────────────────────────────────────────────────────────────────────┘
+
+There is even a way to run DML statements on multiple tenants. As long as the update statement references data local to its own tenant it can be applied simultaneously to all tenants with a helper UDF called :code:`master_modify_multiple_shards`. Here is an example of modifying all image urls to use secure connections.
+
+.. code-block:: sql
+
+  SELECT master_modify_multiple_shards(
+    'UPDATE ads SET image_url = replace(image_url, ''http:'', ''https:'')'
+  );
+
 
 Distributing by Entity ID
 =========================
