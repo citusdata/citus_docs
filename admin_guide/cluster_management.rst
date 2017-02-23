@@ -145,3 +145,24 @@ The new shard(s) are created on the same node as the shard(s) from which the ten
     102240,
     'source_host', source_port,
     'dest_host', dest_port);
+
+Database Bloat
+##############
+
+It’s not just user queries which scale in a distributed database, vacuuming does too. In PostgreSQL big busy tables have great potential to bloat, both from lower sensitivity to PostgreSQL's vacuum scale factor, and generally because of the extent of their row churn. Splitting a table into distributed shards means both that individual shards are smaller tables and that auto-vacuum workers can parallelize over different parts of the table on different machines. Ordinarily auto-vacuum can only run one worker per table.
+
+Due to the above, auto-vacuum operations on a Citus cluster are probably good enough for most cases. However for tables with particular workloads, or companies with certain "safe" hours to schedule a vacuum, it might make more sense to manually vacuum a table rather than leaving all the work to auto-vacuum.
+
+To vacuum a table, simply run this on the coordinator node:
+
+.. code-block:: postgresql
+
+  VACUUM my_table;
+
+If :code:`citus.enable_ddl_propagation` is set to :code:`on` (the default value) then using vacuum against a distributed table will send a vacuum command to every one of that table's placements (one connection per placement). This is done in parallel. All options are supported (including the :code:`column_list` parameter) except for :code:`VERBOSE`. The vacuum command also runs on the coordinator, and does so before any workers nodes are notified. Note that unqualified vacuum commands (i.e. those without a table specified) do not propagate to worker nodes.
+
+Analyzing distributes in the same way:
+
+.. code-block:: postgresql
+
+  ANALYZE my_table;
