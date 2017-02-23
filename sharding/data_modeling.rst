@@ -24,9 +24,9 @@ If your situation resembles either of these cases then the next step is to decid
 Distributing by Tenant ID
 =========================
 
-The multi-tenant architecture uses a form of hierarchical database modeling to distribute queries across nodes in the distributed cluster. The top of the data hierarchy is known as the *tenant id*, and needs to be stored in a column on each table. Citus inspects queries to see which tenant id they involve and routes the query to a single physical node for processing, specifically the node which holds the data shard associated with the tenant id. Running a query with all relevant data placed on the same node is called :ref:`colocation`.
+The multi-tenant architecture uses a form of hierarchical database modeling to distribute queries across nodes in the distributed cluster. The top of the data hierarchy is known as the *tenant id*, and needs to be stored in a column on each table. Citus inspects queries to see which tenant id they involve and routes the query to a single worker node for processing, specifically the node which holds the data shard associated with the tenant id. Running a query with all relevant data placed on the same node is called :ref:`colocation`.
 
-The following diagram illustrates co-location in the multi-tenant data model. It contains two tables, Accounts and Campaigns, each distributed by :code:`account_id`. The shaded boxes represent shards, each of whose color represents which physical node contains it. Green shards are stored together on one physical node, and blue on another.  Notice how a join query between Accounts and Campaigns would have all the necessary data together on one node when restricting both tables to the same account_id.
+The following diagram illustrates co-location in the multi-tenant data model. It contains two tables, Accounts and Campaigns, each distributed by :code:`account_id`. The shaded boxes represent shards, each of whose color represents which worker node contains it. Green shards are stored together on one worker node, and blue on another.  Notice how a join query between Accounts and Campaigns would have all the necessary data together on one node when restricting both tables to the same account_id.
 
 .. figure:: ../images/mt-colocation.png
    :alt: co-located tables in multi-tenant architecture
@@ -44,9 +44,11 @@ Most SaaS applications already have the notion of tenancy built into their data 
 .. code-block:: postgres
 
   CREATE TABLE accounts (
-    id bigint PRIMARY KEY,
+    id bigint,
     name text NOT NULL,
-    image_url text NOT NULL
+    image_url text NOT NULL,
+
+    PRIMARY KEY (id)
   );
 
   CREATE TABLE ads (
@@ -82,7 +84,7 @@ Most SaaS applications already have the notion of tenancy built into their data 
   SELECT create_distributed_table('ads',       'account_id');
   SELECT create_distributed_table('clicks',    'account_id');
 
-Notice how the primary and foreign keys always contain the tenant id (in this case :code:`account_id`). Often this requires them to be compound keys. Whereas enforcing key constraints is generally difficult in distributed databases, the inclusion of the tenant id allows Citus to push DML down to single nodes and successfully enforce the constraint.
+Notice how the primary and foreign keys always contain the tenant id (in this case :code:`account_id`). Often this requires them to be compound keys. Enforcing key constraints is generally difficult in distributed databases. For Citus, the inclusion of the tenant id allows the database to push DML down to single nodes and successfully enforce the constraint.
 
 Queries including a tenant id enable more than just key constraints. Such queries enjoy full SQL coverage in Citus, including JOINs, transactions, grouping, and aggregates. In the multi-tenant architecture, SQL queries that filter by tenant id work without modification, combining the familiarity of PostgreSQL with the power of horizontal scaling for large numbers of tenants.
 
@@ -130,30 +132,6 @@ We've seen some of the benefits of Citus for single-tenant queries, but it can a
   SELECT account_id, sum(clicks_count) AS total_clicks
     FROM ads GROUP BY account_id
   ORDER BY total_clicks DESC;
-
-The planner reveals that this query is pushed down to all nodes and the results aggregated on the coordinator node.
-
-::
-
-  ┌────────────────────────────────────────────────────────────────────────────────────┐
-  │                                         QUERY PLAN                                 │
-  ├────────────────────────────────────────────────────────────────────────────────────┤
-  │ Distributed Query into pg_merge_job_0014                                           │
-  │   Executor: Real-Time                                                              │
-  │   Task Count: 32                                                                   │
-  │   Tasks Shown: One of 32                                                           │
-  │   ->  Task                                                                         │
-  │         Node: example.com port=5432 dbname=citus                                   │
-  │         ->  HashAggregate  (cost=17.35..19.85 rows=200 width=40)                   │
-  │               Group Key: account_id                                                │
-  │               ->  Seq Scan on ads_102393 ads  (cost=0.00..14.90 rows=490 width=16) │
-  │ Master Query                                                                       │
-  │   ->  Sort  (cost=0.00..0.00 rows=0 width=0)                                       │
-  │         Sort Key: pg_catalog.sum((pg_catalog.sum(intermediate_column_14_1))) DESC  │
-  │         ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)                        │
-  │               Group Key: intermediate_column_14_0                                  │
-  │               ->  Seq Scan on pg_merge_job_0014  (cost=0.00..0.00 rows=0 width=0)  │
-  └────────────────────────────────────────────────────────────────────────────────────┘
 
 There is even a way to run DML statements on multiple tenants. As long as the update statement references data local to its own tenant it can be applied simultaneously to all tenants with a helper UDF called :code:`master_modify_multiple_shards`. Here is an example of modifying all image urls to use secure connections.
 
