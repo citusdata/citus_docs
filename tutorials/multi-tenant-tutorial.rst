@@ -1,8 +1,8 @@
 .. _multi_tenant_tutorial:
 .. highlight:: sql
 
-Multi-tenant data model
-########################
+Multi-tenant Applications
+#########################
 
 In this tutorial, we will use a sample ad analytics dataset to demonstrate how you can       
 use Citus to power your multi-tenant application.                             
@@ -14,14 +14,32 @@ use Citus to power your multi-tenant application.
     using :ref:`single_machine_docker`.
 
 
-Data model and Schema
----------------------
+Data model and sample data 
+---------------------------
 
 We will demo building the database for an ad-analytics app which companies can use to view, change,
 analyze and manage their ads and campaigns (see an `example app <http://citus-example-ad-analytics.herokuapp.com/>`_).
-To represent this data, we will use three Postgres tables:- :code:`companies`, :code:`campaigns` and :code:`ads`.                                                                
+To represent this data, we will use three Postgres tables:- :code:`companies`, :code:`campaigns` and :code:`ads`.
 
 Such an application and data model have good characteristics of a typical multi-tenant system. Data from different tenants is stored in a central database, and each tenant has an isolated view of their own data.
+
+Before we get started, you can download sample data for all the tables here:
+`companies <https://examples.citusdata.com/tutorial/companies.csv>`_, `campaigns <https://examples.citusdata.com/tutorial/campaigns.csv>`_ and `ads <https://examples.citusdata.com/tutorial/ads.csv>`_.
+
+
+.. note::
+
+    Docker users should then use the :code:`docker cp` command to copy the files into the docker
+    container to make it easy to load data later.
+    
+    .. code-block:: bash
+           
+            docker cp PATH_TO_FILE/companies.csv citus_master:.
+            docker cp PATH_TO_FILE/campaigns.csv citus_master:.
+            docker cp PATH_TO_FILE/ads.csv citus_master:.
+            
+Creating tables 
+---------------
                                                                                              
 To get started, you can first connect to the Citus co-ordinator using psql.
 
@@ -82,8 +100,9 @@ Next, you can create primary key indexes on each of the tables just like you wou
     ALTER TABLE campaigns ADD PRIMARY KEY (id, company_id);                                      
     ALTER TABLE ads ADD PRIMARY KEY (id, company_id);
 
+
 Distributing tables and loading data
--------------------------------------
+------------------------------------
 
 We will now go ahead and tell Citus to distribute these tables across the different nodes we have in the cluster. To do so,
 you can run :code:`create_distributed_table` and specify the table you want to shard and the column you want to shard on.
@@ -95,35 +114,18 @@ In this case, we will shard all the tables on the :code:`company_id`.
     SELECT create_distributed_table('campaigns', 'company_id');                               
     SELECT create_distributed_table('ads', 'company_id');                                     
                                                                                           
-Sharding all tables on the company identifier allows Citus to :ref:`colocate <colocation>` all the tables 
+Sharding all tables on the company identifier allows Citus to :ref:`colocate <colocation>` the tables together
 and allow for features like primary keys, foreign keys and complex joins across your cluster.
 You can learn more about the benefits of this approach `here <https://www.citusdata.com/blog/2016/10/03/designing-your-saas-database-for-high-scalability/>`_.
                                                                                           
-We could now go ahead and load data into these tables. For that, you can download sample data files for all the tables here:
-`companies <https://examples.citusdata.com/tutorial/companies.csv>`_, `campaigns <https://examples.citusdata.com/tutorial/campaigns.csv>`_ and `ads <https://examples.citusdata.com/tutorial/ads.csv>`_.
-
-
-.. note::
-
-    Docker users can then copy the files into the docker container in order to load them.
-    You can do so by running the docker cp command and then connecting back into the server.
-    
-    .. code-block:: bash
-           
-            docker cp PATH_TO_FILE/companies.csv citus_master:.
-            docker cp PATH_TO_FILE/campaigns.csv citus_master:.
-            docker cp PATH_TO_FILE/ads.csv citus_master:.
-            
-            docker exec -it citus_master psql -U postgres
-
-Once you have these files, you can go ahead and load them using the standard PostgreSQL :code:`\COPY` command. Please make sure that you specify the correct file path if you downloaded the file to some other location.
+Then, you can go ahead and load the data we downloaded into the tables using the standard PostgreSQL :code:`\COPY` command.
+Please make sure that you specify the correct file path if you downloaded the file to some other location.
 
 ::
                                                                                           
-    \copy companies from 'companies.csv' WITH CSV;                                                     
-    \copy campaigns from 'campaigns.csv' WITH CSV;                                                     
-    \copy ads from 'ads.csv' WITH CSV;
-
+    \copy companies from 'companies.csv' with csv;                                                     
+    \copy campaigns from 'campaigns.csv' with csv;                                                     
+    \copy ads from 'ads.csv' with csv;
 
 
 Running queries
