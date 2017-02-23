@@ -42,7 +42,7 @@ Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE
 ::
 
     CREATE TABLE companies (                                                                     
-        id integer NOT NULL,                                                                     
+        id bigint NOT NULL,                                                                     
         name text NOT NULL,                                                                      
         image_url text NOT NULL,                                                                 
         created_at timestamp without time zone NOT NULL,                                         
@@ -50,21 +50,21 @@ Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE
     );                                                                                           
                                                                                              
     CREATE TABLE campaigns (                                                                     
-        id integer NOT NULL,                                                                     
-        company_id integer NOT NULL,                                                             
+        id bigint NOT NULL,                                                                     
+        company_id bigint NOT NULL,                                                             
         name text NOT NULL,                                                                      
         cost_model text NOT NULL,                                                                
         state text NOT NULL,                                                                     
-        monthly_budget integer,                                                                  
+        monthly_budget bigint,                                                                  
         blacklisted_site_urls character varying[],                                               
         created_at timestamp without time zone NOT NULL,                                         
         updated_at timestamp without time zone NOT NULL                                          
     );                                                                                           
                                                                                              
     CREATE TABLE ads (                                                                           
-        id integer NOT NULL,                                                                     
-        company_id integer NOT NULL,                                                             
-        campaign_id integer NOT NULL,                                                            
+        id bigint NOT NULL,                                                                     
+        company_id bigint NOT NULL,                                                             
+        campaign_id bigint NOT NULL,                                                            
         name text NOT NULL,                                                                      
         image_url text NOT NULL,                                                                 
         target_url text NOT NULL,                                                                
@@ -95,12 +95,28 @@ In this case, we will shard all the tables on the :code:`company_id`.
     SELECT create_distributed_table('campaigns', 'company_id');                               
     SELECT create_distributed_table('ads', 'company_id');                                     
                                                                                           
-Sharding all tables on the company identifier allows Citus to `colocate <colocation>`_ all the tables 
+Sharding all tables on the company identifier allows Citus to :ref:`colocate <colocation>` all the tables 
 and allow for features like primary keys, foreign keys and complex joins across your cluster.
 You can learn more about the benefits of this approach `here <https://www.citusdata.com/blog/2016/10/03/designing-your-saas-database-for-high-scalability/>`_.
                                                                                           
-We could now go ahead and load data into these tables. You can download sample files for all the tables here:
-companies, campaigns and ads. Once you have these files, you can go ahead and load them using the standard PostgreSQL :code:`\COPY` command.
+We could now go ahead and load data into these tables. For that, you can download sample data files for all the tables here:
+`companies <https://examples.citusdata.com/tutorial/companies.csv>`_, `campaigns <https://examples.citusdata.com/tutorial/campaigns.csv>`_ and `ads <https://examples.citusdata.com/tutorial/ads.csv>`_.
+
+
+.. note::
+
+    Docker users can then copy the files into the docker container in order to load them.
+    You can do so by running the docker cp command and then connecting back into the server.
+    
+    .. code-block:: bash
+           
+            docker cp PATH_TO_FILE/companies.csv citus_master:.
+            docker cp PATH_TO_FILE/campaigns.csv citus_master:.
+            docker cp PATH_TO_FILE/ads.csv citus_master:.
+            
+            docker exec -it citus_master psql -U postgres
+
+Once you have these files, you can go ahead and load them using the standard PostgreSQL :code:`\COPY` command. Please make sure that you specify the correct file path if you downloaded the file to some other location.
 
 ::
                                                                                           
@@ -108,18 +124,41 @@ companies, campaigns and ads. Once you have these files, you can go ahead and lo
     \copy campaigns from 'campaigns.csv' WITH CSV;                                                     
     \copy ads from 'ads.csv' WITH CSV;
 
-Running queries and modifications
----------------------------------
 
-Now that the data is loaded, let's go ahead and run some queries. You could start with a simple count
-query to see how many companies we have data for.              
-                                                                                          
+
+Running queries
+----------------
+
+Now that we have loaded data into the tables, let's go ahead and run some queries. Citus supports standard
+:code:`INSERT`, :code:`UPDATE` and :code:`DELETE` commands for inserting and modifying rows in a distributed table which is the
+typical way of interaction for a user-facing application.
+
+For example, you can insert a new company by running:
+
 ::
 
-    SELECT count(*) from companies;                                                           
+    INSERT INTO companies VALUES (5000, 'New Company', 'https://randomurl/image.png', now(), now());
+
+If you want to double the budget for all the campaigns of a company, you can run an UPDATE command:
+
+::                                                                                          
+    
+    UPDATE campaigns
+    SET monthly_budget = monthly_budget*2
+    WHERE company_id = 5;   
                                                                                           
-A more interesting query for a company to run would be to see details about its campaigns with maximum budget.
-We could do that by running the below query.                                     
+Another example of such an operation would be to run transactions which span multiple tables. Let's
+say you want to delete a campaign and all its associated ads, you could do it atomically by running.
+
+::                                                                                          
+    
+    BEGIN;                                                                                    
+    DELETE from campaigns where id = 46 AND company_id = 5;                                    
+    DELETE from ads where campaign_id = 46 AND company_id = 5;                                 
+    COMMIT;                                                                                   
+                                                                                          
+Other than transactional operations, you can also run analytics queries on this data using standard SQL.
+One interesting query for a company to run would be to see details about its campaigns with maximum budget.
 
 ::
                                                                                           
@@ -129,7 +168,7 @@ We could do that by running the below query.
     ORDER BY monthly_budget DESC
     LIMIT 10;
                                                                                           
-Next, we can also run a join query across multiple tables to see information about running campaigns which receive the most clicks and impressions.
+We can also run a join query across multiple tables to see information about running campaigns which receive the most clicks and impressions.
 
 ::
                                                                                           
@@ -142,25 +181,4 @@ Next, we can also run a join query across multiple tables to see information abo
     GROUP BY campaigns.id, campaigns.name, campaigns.monthly_budget                           
     ORDER BY total_impressions, total_clicks;                                                 
                                                                                           
-Other than being able to run ad-hoc SQL for analytics, you can also run standard UPDATE and DELETE commands on your
-distributed table. For eg. if you want to update your budget for a particular campaign, you can do something like:
-
-::                                                                                          
-    
-    UPDATE campaigns
-    SET monthly_budget = monthly_budget*2
-    WHERE id = 40
-    AND company_id = 5;   
-                                                                                          
-Another example of such an operation would be to run transactions which span multiple tables. Let's say you
-want to delete a campaign and all its associated ads, you could do it atomically by running.
-
-::                                                                                          
-    
-    BEGIN;                                                                                    
-    DELETE from campaigns where id = 46 AND company_id = 5;                                    
-    DELETE from ads where campaign_id = 46 AND company_id = 5;                                 
-    COMMIT;                                                                                   
-                                                                                          
-
-With this, we come to the end of our tutorial. As a next step, you can look at the :ref:`distributing_by_tenant_id` section to see how you can model your own data for multi-tenancy.
+With this, we come to the end of our tutorial on using Citus to power a simple multi-tenant application. As a next step, you can look at the :ref:`distributing_by_tenant_id` section to see how you can model your own data for multi-tenancy.
