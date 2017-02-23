@@ -16,16 +16,16 @@ topics.
    aboutcitus/introduction_to_citus.rst
 
 .. toctree::
-   :caption: Tutorial
-
-   tutorials/multi-tenant-tutorial.rst
-
-.. toctree::
    :caption: Installation
 
    installation/requirements.rst
    installation/development.rst
    installation/production.rst
+
+.. toctree::
+   :caption: Tutorial
+
+   tutorials/multi-tenant-tutorial.rst
 
 .. toctree::
    :caption: Distributed Data Modeling
