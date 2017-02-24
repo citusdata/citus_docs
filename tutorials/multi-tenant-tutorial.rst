@@ -10,8 +10,11 @@ use Citus to power your multi-tenant application.
 .. note::
                                                                                              
     This tutorial assumes that you already have Citus installed and running. If you don't have Citus running,
-    you can provision a cluster using `Citus Cloud <https://console.citusdata.com>`_ or setup Citus locally
-    using :ref:`single_machine_docker`.
+    you can:
+    
+    * Provision a cluster using `Citus Cloud <https://console.citusdata.com>`_, or
+    
+    * Setup Citus locally using :ref:`single_machine_docker`.
 
 
 Data model and sample data 
@@ -19,37 +22,36 @@ Data model and sample data
 
 We will demo building the database for an ad-analytics app which companies can use to view, change,
 analyze and manage their ads and campaigns (see an `example app <http://citus-example-ad-analytics.herokuapp.com/>`_).
-To represent this data, we will use three Postgres tables:- :code:`companies`, :code:`campaigns` and :code:`ads`.
+Such an application has good characteristics of a typical multi-tenant system. Data from different tenants is stored in a central database, and each tenant has an isolated view of their own data.
 
-Such an application and data model have good characteristics of a typical multi-tenant system. Data from different tenants is stored in a central database, and each tenant has an isolated view of their own data.
+To represent this data, we will use three Postgres tables. Before we get started, you will need to download sample data for the tables:
 
-Before we get started, you can download sample data for all the tables here:
-`companies <https://examples.citusdata.com/tutorial/companies.csv>`_, `campaigns <https://examples.citusdata.com/tutorial/campaigns.csv>`_ and `ads <https://examples.citusdata.com/tutorial/ads.csv>`_.
+::
 
+    curl https://examples.citusdata.com/tutorial/companies.csv > companies.csv
+    curl https://examples.citusdata.com/tutorial/campaigns.csv > campaigns.csv
+    curl https://examples.citusdata.com/tutorial/ads.csv > ads.csv
 
-.. note::
+**If you are using Docker**, you should use the :code:`docker cp` command to copy the files into the Docker container. 
 
-    Docker users should then use the :code:`docker cp` command to copy the files into the docker
-    container to make it easy to load data later.
-    
-    .. code-block:: bash
-           
-            docker cp PATH_TO_FILE/companies.csv citus_master:.
-            docker cp PATH_TO_FILE/campaigns.csv citus_master:.
-            docker cp PATH_TO_FILE/ads.csv citus_master:.
+::
+
+    docker cp companies.csv citus_master:.
+    docker cp campaigns.csv citus_master:.
+    docker cp ads.csv citus_master:.
             
 Creating tables 
 ---------------
                                                                                              
 To get started, you can first connect to the Citus co-ordinator using psql.
 
-**If you are running Citus Cloud**, you can connect by specifying the connection string (URL in the formation details):
+**If you are using Citus Cloud**, you can connect by specifying the connection string (URL in the formation details):
     
 ::
     
     psql connection-string
 
-**If you are running on Docker**, you can connect by running psql with the docker exec command:
+**If you are using Docker**, you can connect by running psql with the docker exec command:
 
 ::
     
