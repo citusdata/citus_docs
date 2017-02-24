@@ -24,7 +24,7 @@ We will demo building the database for an ad-analytics app which companies can u
 analyze and manage their ads and campaigns (see an `example app <http://citus-example-ad-analytics.herokuapp.com/>`_).
 Such an application has good characteristics of a typical multi-tenant system. Data from different tenants is stored in a central database, and each tenant has an isolated view of their own data.
 
-To represent this data, we will use three Postgres tables. Before we get started, you will need to download sample data for the tables:
+We will use three Postgres tables to represent this data. To get started, you will need to download sample data for these tables:
 
 ::
 
@@ -43,7 +43,7 @@ To represent this data, we will use three Postgres tables. Before we get started
 Creating tables 
 ---------------
                                                                                              
-To get started, you can first connect to the Citus co-ordinator using psql.
+To start, you can first connect to the Citus co-ordinator using psql.
 
 **If you are using Citus Cloud**, you can connect by specifying the connection string (URL in the formation details):
     
@@ -64,7 +64,7 @@ Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE
     CREATE TABLE companies (                                                                     
         id bigint NOT NULL,                                                                     
         name text NOT NULL,                                                                      
-        image_url text NOT NULL,                                                                 
+        image_url text,                                                                 
         created_at timestamp without time zone NOT NULL,                                         
         updated_at timestamp without time zone NOT NULL                                          
     );                                                                                           
@@ -76,7 +76,7 @@ Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE
         cost_model text NOT NULL,                                                                
         state text NOT NULL,                                                                     
         monthly_budget bigint,                                                                  
-        blacklisted_site_urls character varying[],                                               
+        blacklisted_site_urls text[],                                               
         created_at timestamp without time zone NOT NULL,                                         
         updated_at timestamp without time zone NOT NULL                                          
     );                                                                                           
@@ -86,10 +86,10 @@ Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE
         company_id bigint NOT NULL,                                                             
         campaign_id bigint NOT NULL,                                                            
         name text NOT NULL,                                                                      
-        image_url text NOT NULL,                                                                 
-        target_url text NOT NULL,                                                                
-        impressions_count bigint DEFAULT 0 NOT NULL,                                             
-        clicks_count bigint DEFAULT 0 NOT NULL,                                                  
+        image_url text,                                                                 
+        target_url text,                                                                
+        impressions_count bigint DEFAULT 0,                                             
+        clicks_count bigint DEFAULT 0,                                                  
         created_at timestamp without time zone NOT NULL,                                         
         updated_at timestamp without time zone NOT NULL                                          
     );                                                                                           
