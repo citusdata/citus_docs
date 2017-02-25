@@ -53,6 +53,9 @@ Then run this query:
 
 You should see a row for each worker node including the node name and port.
 
+Once you have the cluster up and running, you can visit our :ref:`multi-tenant tutorial <multi_tenant_tutorial>` to
+get started with a sample dataset on Citus in minutes.
+
 **4. Shut down the cluster when ready**
 
 When you wish to stop the docker containers, use docker-compose:
