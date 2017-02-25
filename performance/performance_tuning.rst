@@ -29,7 +29,7 @@ Tuning the parameters is a matter of experimentation and often takes several att
 
 To begin the tuning process create a Citus cluster and load data in it. From the master node, run the EXPLAIN command on representative queries to inspect performance. Citus extends the EXPLAIN command to provide information about distributed query execution. The EXPLAIN output shows how each worker processes the query and also a little about how the master node combines their results.
 
-Here is an example of explaining the plan for a particular query in :ref:`one of <tut_hash>` our example tutorials.
+Here is an example of explaining the plan for a particular example query.
 
 ::
 
