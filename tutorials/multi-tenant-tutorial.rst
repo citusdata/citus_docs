@@ -51,6 +51,8 @@ To start, you can first connect to the Citus co-ordinator using psql.
     
     psql connection-string
 
+Please note that certain shells may require you to quote the connection string when connecting to Citus Cloud. For example, :code:`psql "connection-string"`.
+
 **If you are using Docker**, you can connect by running psql with the docker exec command:
 
 ::
