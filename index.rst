@@ -74,6 +74,7 @@ topics.
    :caption: Administration
 
    admin_guide/cluster_management.rst
+   admin_guide/table_management.rst
    admin_guide/upgrading_citus.rst
 
 .. toctree::
