@@ -8,8 +8,8 @@ This section describes setting up a Citus cluster on a single machine using dock
 1. Install Docker Engine and docker-compose
 -------------------------------------------
 
-Mac / Windows
-~~~~~~~~~~~~~
+Mac
+~~~
 
 * Install the `Docker Platform <https://www.docker.com/products/overview#/install_the_platform>`_.
 * Start Docker by clicking on the application's icon.
@@ -26,7 +26,7 @@ Linux
   sudo curl -L https://github.com/docker/compose/releases/download/1.11.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   sudo chmod +x /usr/local/bin/docker-compose
 
-(This docker-compose version is fine for running Citus, or you can install the very latest version by following instructions `here <https://github.com/docker/compose/releases/latest>`_.)
+(This docker-compose version is fine for running Citus, or you can install the latest version by following instructions `here <https://github.com/docker/compose/releases/latest>`_.)
 
 2. Start the Citus Cluster
 --------------------------
