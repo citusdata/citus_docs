@@ -72,6 +72,11 @@ After installing the new package, run the extension upgrade script:
   psql -c '\dx'
   # you should see the newer Citus version in the list
 
+Step 3. (upgrade from 5.x only) Add Co-Location Metadata
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When doing a major upgrade from Citus 5.x be sure to create metadata for your implicit table co-location. Read more about that in the :ref:`marking_colocation` section of the co-location page.
+
 .. _upgrading_postgres:
 
 Upgrading PostgreSQL version from 9.5 to 9.6
