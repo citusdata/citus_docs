@@ -3,7 +3,13 @@
 Ingesting, Modifying Data (DML)
 ###############################
 
-The following code snippets use the distributed tables example dataset, see :ref:`ddl`.
+The following code snippets use the distributed tables example, see :ref:`ddl`.
+We also use the github events dataset to illustrate the commands below. You can download that dataset by running:
+
+::
+
+    wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
+    gzip -d github_events-2015-01-01-*.gz
 
 Inserting Data
 --------------

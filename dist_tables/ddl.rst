@@ -10,13 +10,6 @@ Creating Distributed Tables (DDL)
 
         export PATH=/usr/lib/postgresql/9.6/:$PATH
 
-We use the github events dataset to illustrate the commands below. You can download that dataset by running:
-
-::
-
-    wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
-    gzip -d github_events-2015-01-01-*.gz
-
 Creating And Distributing Tables
 --------------------------------
 
