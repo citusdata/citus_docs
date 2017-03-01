@@ -426,6 +426,8 @@ The example below fetches and displays the table metadata for the github_events 
              24180 | t                 | h           | repo_id  |                  2 |    1073741824 |                     2
     (1 row)
 
+.. _get_shard_id:
+
 get_shard_id_for_distribution_column
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

@@ -145,3 +145,32 @@ The new shard(s) are created on the same node as the shard(s) from which the ten
     102240,
     'source_host', source_port,
     'dest_host', dest_port);
+
+Diagnostics
+###########
+
+.. _row_placements:
+
+Finding Row Placements
+----------------------
+
+Each row of a distributed table is assigned to a shard, and that shard is placed on a worker node in the Citus cluster. To determine which worker node contains a specific row, we put together two pieces of information: the :ref:`shard id <get_shard_id>` associated with the row's distribution column value, and the shard placements on workers. We can combine this into a single query. Here is how to find the placement of a row of :code:`my_table` whose distribution column has value 4:
+
+.. code-block:: postgresql
+
+  SELECT *
+    FROM pg_dist_shard_placement
+   WHERE shardid = (
+     SELECT get_shard_id_for_distribution_column('my_table', 4)
+   );
+
+The output contains the host and port of the worker database.
+
+::
+
+  ┌─────────┬────────────┬─────────────┬───────────┬──────────┬─────────────┐
+  │ shardid │ shardstate │ shardlength │ nodename  │ nodeport │ placementid │
+  ├─────────┼────────────┼─────────────┼───────────┼──────────┼─────────────┤
+  │  102009 │          1 │           0 │ localhost │     5433 │           2 │
+  └─────────┴────────────┴─────────────┴───────────┴──────────┴─────────────┘
+
