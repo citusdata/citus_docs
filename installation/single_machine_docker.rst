@@ -11,7 +11,7 @@ This section describes setting up a Citus cluster on a single machine using dock
 Mac
 ~~~
 
-* Install the `Docker Platform <https://www.docker.com/products/overview#/install_the_platform>`_.
+* Install `Docker <https://www.docker.com/community-edition#/download>`_.
 * Start Docker by clicking on the application's icon.
 
 Linux
