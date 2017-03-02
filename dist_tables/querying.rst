@@ -120,3 +120,55 @@ Citus employs a two stage optimizer when planning SQL queries. The first phase i
 Citus’s distributed executor then takes these individual query fragments and sends them to worker PostgreSQL instances. There are several aspects of both the distributed planner and the executor which can be tuned in order to improve performance. When these individual query fragments are sent to the workers, the second phase of query optimization kicks in. The workers are simply running extended PostgreSQL servers and they apply PostgreSQL's standard planning and execution logic to run these fragment SQL queries. Therefore, any optimization that helps PostgreSQL also helps Citus. PostgreSQL by default comes with conservative resource settings; and therefore optimizing these configuration settings can improve query times significantly.
 
 We discuss the relevant performance tuning steps in the :ref:`performance_tuning` section of the documentation.
+
+Controlling Query Propagation
+#############################
+
+When the user issues a query, the Citus master partitions it into smaller query fragments where each query fragment can be run independently on a worker shard. This allows Citus to distribute each query across the cluster.
+
+However the way queries are partitioned into fragments (and which queries are propagated at all) varies by the type of query. In some advanced situations it is useful to manually control this behavior. Citus provides utility functions to propagate SQL to workers, shards, or placements.
+
+Running on all Workers
+----------------------
+
+The least granular level of execution is broadcasting a statement for execution on all workers. This is useful for viewing a properties of entire worker databases or creating UDFs uniformly throughout the cluster. For example:
+
+.. code-block:: postgresql
+
+  -- Make a UDF available on all workers
+  SELECT run_command_on_workers($cmd$ CREATE FUNCTION ..... $cmd$);
+
+  -- List the size of each worker database
+  SELECT *
+    FROM run_command_on_workers($cmd$
+      SELECT pg_size_pretty(pg_database_size('citus'))
+    $cmd$);
+
+Running on all Shards
+---------------------
+
+Each distributed table :code:`foo` has shards across the workers which are each a table with a naming convention of :code:`foo_n` where :code:`n` is a number. In order to run a query against a shard, the query must be run on its containing worker, and the shard name must be interpolated into the query string as an identifier (:code:`%I`).
+
+.. code-block:: postgresql
+
+  -- Get the size of table shards to determine how balanced the cluster
+  -- is. The third argument controls whether the queries are run in
+  -- parallel and defaults to true
+  SELECT *
+    FROM run_command_on_shards(
+      'my_distributed_table',
+      $cmd$ SELECT pg_size_pretty(pg_total_relation_size('%I')) $cmd$,
+      true
+    );
+
+  -- Get the total size of indices from all shards
+  SELECT pg_size_pretty(sum(result::int))
+    FROM run_command_on_shards(
+      'my_distributed_table',
+      $cmd$ SELECT pg_indexes_size('%I') $cmd$
+    );
+
+Running on all Placements
+-------------------------
+
+When Citus- rather than streaming-replication is used for :ref:`dealing_with_node_failures`, each shard has replicas as tables on other workers. A *placement* refers to a shard and its replicas.
