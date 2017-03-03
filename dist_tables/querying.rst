@@ -124,7 +124,7 @@ We discuss the relevant performance tuning steps in the :ref:`performance_tuning
 Controlling Query Propagation
 #############################
 
-When the user issues a query, the Citus master partitions it into smaller query fragments where each query fragment can be run independently on a worker shard. This allows Citus to distribute each query across the cluster.
+When the user issues a query, the Citus coordinator partitions it into smaller query fragments where each query fragment can be run independently on a worker shard. This allows Citus to distribute each query across the cluster.
 
 However the way queries are partitioned into fragments (and which queries are propagated at all) varies by the type of query. In some advanced situations it is useful to manually control this behavior. Citus provides utility functions to propagate SQL to workers, shards, or placements.
 
@@ -144,10 +144,14 @@ The least granular level of execution is broadcasting a statement for execution 
       SELECT pg_size_pretty(pg_database_size('citus'))
     $cmd$);
 
+.. note::
+
+  The :code:`run_command_on_workers` function and other manual propagation commands in this section can run only queries which return a single column and single row.
+
 Running on all Shards
 ---------------------
 
-Each distributed table :code:`foo` has shards across the workers which are each a table with a naming convention of :code:`foo_n` where :code:`n` is a number. In order to run a query against a shard, the query must be run on its containing worker, and the shard name must be interpolated into the query string as an identifier (:code:`%I`).
+Each distributed table :code:`foo` has shards across the workers which are each tables with a naming convention of :code:`foo_n` where :code:`n` is a number. In order to run a query against a shard, the query must be run on its containing worker, and the shard name must be interpolated into the query string as an identifier (:code:`%I`).
 
 .. code-block:: postgresql
 
@@ -171,4 +175,71 @@ Each distributed table :code:`foo` has shards across the workers which are each 
 Running on all Placements
 -------------------------
 
-When Citus- rather than streaming-replication is used for :ref:`dealing_with_node_failures`, each shard has replicas as tables on other workers. A *placement* refers to a shard and its replicas.
+When using Citus- rather than streaming-replication for :ref:`dealing_with_node_failures`, each shard has replicas stored as tables on other workers. Shards and their replicas are all called *placements*. (PostgreSQL streaming replication, on the other hand, works at the database level rather than the shard level, so the notion of shard replica placements is not applicable there.)
+
+Queries that update rows ought to be run on all placements rather than simply all shards. Ordinarily update queries go through the coordinator node which ensures they apply across placements. The functions in this section bypass the normal coordinator logic, so skipping any replicas in a manual update will leave the cluster inconsistent. Conversely, read-only queries should be run on shards rather than placements or they will return duplicate results.
+
+The following are equivalent:
+
+.. code-block:: postgres
+
+  -- ordinary query going through the coordinator
+  UPDATE my_distributed_table
+     SET some_col = some_col + 1;
+
+  -- vs manually updating each placement
+  SELECT run_command_on_placements(
+    'my_distributed_table',
+    $cmd$
+      UPDATE %I SET some_col = some_col + 1
+    $cmd$
+  );
+
+Whereas this next query leads to **inconsistency** for Citus-replication with replication factor greater than one:
+
+.. code-block:: postgres
+
+  -- don't do this
+  SELECT run_command_on_shards(
+    'my_distributed_table',
+    $cmd$
+      UPDATE %I SET some_col = some_col + 1
+    $cmd$
+  );
+
+A useful companion to :code:`run_command_on_placements` is :code:`run_command_on_colocated_placements`. It iterpolates the names of *two* placements of :ref:`co-located <colocation>` distributed tables into a query. The placement pairs are always chosen to be local to the same worker where full SQL coverage is available. Thus we can use advanced SQL features like triggers to relate the tables:
+
+.. code-block:: postgres
+
+  -- Suppose we have two distributed tables
+  CREATE TABLE little_vals (key int, val int);
+  CREATE TABLE big_vals    (key int, val int);
+  SELECT create_distributed_table('little_vals', 'key');
+  SELECT create_distributed_table('big_vals',    'key');
+
+  -- We want to synchronise them so that every time little_vals
+  -- are created, big_vals appear with double the value
+  --
+  -- First we make a trigger function for each placement
+  SELECT run_command_on_placements('big_vals', $cmd$
+    CREATE OR REPLACE FUNCTION embiggen_%1$I() RETURNS TRIGGER AS $$
+      BEGIN
+        IF (TG_OP = 'INSERT') THEN
+          INSERT INTO %1$I (key, val) VALUES (NEW.key, NEW.val*2;
+        END IF;
+
+        RETURN NULL;
+      END;
+    $$ LANGUAGE plpgsql;
+  $cmd$);
+
+  -- Next we relate the co-located tables by the trigger function
+  -- on each co-located placement
+  SELECT run_command_on_colocated_placements(
+    'little_vals',
+    'big_vals',
+    $cmd$
+      CREATE TRIGGER after_insert AFTER INSERT ON %I
+        FOR EACH ROW EXECUTE PROCEDURE insert_fun_%I()
+    $cmd$
+  );
