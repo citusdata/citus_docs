@@ -207,7 +207,7 @@ Whereas this next query leads to **inconsistency** for Citus-replication with re
     $cmd$
   );
 
-A useful companion to :code:`run_command_on_placements` is :code:`run_command_on_colocated_placements`. It iterpolates the names of *two* placements of :ref:`co-located <colocation>` distributed tables into a query. The placement pairs are always chosen to be local to the same worker where full SQL coverage is available. Thus we can use advanced SQL features like triggers to relate the tables:
+A useful companion to :code:`run_command_on_placements` is :code:`run_command_on_colocated_placements`. It interpolates the names of *two* placements of :ref:`co-located <colocation>` distributed tables into a query. The placement pairs are always chosen to be local to the same worker where full SQL coverage is available. Thus we can use advanced SQL features like triggers to relate the tables:
 
 .. code-block:: postgres
 
@@ -225,7 +225,7 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
     CREATE OR REPLACE FUNCTION embiggen_%1$I() RETURNS TRIGGER AS $$
       BEGIN
         IF (TG_OP = 'INSERT') THEN
-          INSERT INTO %1$I (key, val) VALUES (NEW.key, NEW.val*2;
+          INSERT INTO %1$I (key, val) VALUES (NEW.key, NEW.val*2);
         END IF;
 
         RETURN NULL;
@@ -240,6 +240,6 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
     'big_vals',
     $cmd$
       CREATE TRIGGER after_insert AFTER INSERT ON %I
-        FOR EACH ROW EXECUTE PROCEDURE insert_fun_%I()
+        FOR EACH ROW EXECUTE PROCEDURE embiggen_%I()
     $cmd$
   );
