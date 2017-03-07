@@ -79,7 +79,7 @@ Citus is able to enforce a primary key or uniqueness constraint only when the co
 
 This restriction allows Citus to localize a uniqueness check to a single shard and let PostgreSQL on the worker node do the check efficiently.
 
-How do I find which worker nodes contain which rows of a distributed table?
----------------------------------------------------------------------------
+Which shard contains data for a particular tenant?
+--------------------------------------------------
 
-See :ref:`row_placements`.
+Citus provides UDFs and metadata tables to determine the mapping of a distribution column value to a particular shard, and the shard placement on a worker node. See :ref:`row_placements` for more details.

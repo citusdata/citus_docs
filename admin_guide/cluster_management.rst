@@ -151,17 +151,19 @@ Diagnostics
 
 .. _row_placements:
 
-Finding Row Placements
-----------------------
+Finding which shard contains data for a specific tenant
+-------------------------------------------------------
 
-Each row of a distributed table is assigned to a shard, and that shard is placed on a worker node in the Citus cluster. To determine which worker node contains a specific row, we put together two pieces of information: the :ref:`shard id <get_shard_id>` associated with the row's distribution column value, and the shard placements on workers. We can combine this into a single query. Here is how to find the placement of a row of :code:`my_table` whose distribution column has value 4:
+The rows of a distributed table are grouped into shards, and each shard is placed on a worker node in the Citus cluster. In the multi-tenant Citus use case we can determine which worker node contains the rows for a specific tenant by putting together two pieces of information: the :ref:`shard id <get_shard_id>` associated with the tenant id, and the shard placements on workers. The two can be retrieved together in a single query. Suppose our multi-tenant application's tenants and are stores, and we want to find which worker node holds the data for Gap.com (id=4, suppose).
+
+To find the worker node holding the data for store id=4, ask for the placement of rows whose distribution column has value 4:
 
 .. code-block:: postgresql
 
   SELECT *
     FROM pg_dist_shard_placement
    WHERE shardid = (
-     SELECT get_shard_id_for_distribution_column('my_table', 4)
+     SELECT get_shard_id_for_distribution_column('stores', 4)
    );
 
 The output contains the host and port of the worker database.
