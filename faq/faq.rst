@@ -78,3 +78,8 @@ In which situations are uniqueness constraints supported on distributed tables?
 Citus is able to enforce a primary key or uniqueness constraint only when the constrained columns contain the distribution column. In particular this means that if a single column constitutes the primary key then it has to be the distribution column as well.
 
 This restriction allows Citus to localize a uniqueness check to a single shard and let PostgreSQL on the worker node do the check efficiently.
+
+Which shard contains data for a particular tenant?
+--------------------------------------------------
+
+Citus provides UDFs and metadata tables to determine the mapping of a distribution column value to a particular shard, and the shard placement on a worker node. See :ref:`row_placements` for more details.

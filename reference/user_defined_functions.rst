@@ -426,6 +426,38 @@ The example below fetches and displays the table metadata for the github_events 
              24180 | t                 | h           | repo_id  |                  2 |    1073741824 |                     2
     (1 row)
 
+.. _get_shard_id:
+
+get_shard_id_for_distribution_column
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Citus assigns every row of a distributed table to a shard based on the value of the row's distribution column and the table's method of distribution. In most cases the precise mapping is a low-level detail that the database administrator can ignore. However it can be useful to determine a row's shard, either for manual database maintenance tasks or just to satisfy curiosity. The :code:`get_shard_id_for_distribution_column` function provides this info for hash- and range-distributed tables as well as reference tables. It does not work for the append distribution.
+
+Arguments
+************************
+
+**table_name:** The distributed table.
+
+**distribution_value:** The value of the distribution column.
+
+Return Value
+******************************
+
+The shard id Citus associates with the distribution column value for the given table.
+
+Example
+***********************
+
+::
+
+  SELECT get_shard_id_for_distribution_column('my_table', 4);
+
+   get_shard_id_for_distribution_column
+  --------------------------------------
+                                 540007
+  (1 row)
+
+
 .. _cluster_management_functions:
 
 Cluster Management And Repair Functions
