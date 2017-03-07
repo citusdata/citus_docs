@@ -12,7 +12,7 @@ use Citus to power your multi-tenant application.
     This tutorial assumes that you already have Citus installed and running. If you don't have Citus running,
     you can:
     
-    * Provision a cluster using `Citus Cloud <https://console.citusdata.com>`_, or
+    * Provision a cluster using `Citus Cloud <https://console.citusdata.com/users/sign_up>`_, or
     
     * Setup Citus locally using :ref:`single_machine_docker`.
 
