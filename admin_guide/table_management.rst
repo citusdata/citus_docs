@@ -1,5 +1,3 @@
-.. _cluster_management:
-
 Table Management
 $$$$$$$$$$$$$$$$$$
 
