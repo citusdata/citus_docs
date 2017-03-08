@@ -5,7 +5,7 @@ Docker
 
 This section describes setting up a Citus cluster on a single machine using docker-compose.
 
-**1. Install Docker Engine and docker-compose**
+**1. Install Docker Community Edition and Docker Compose**
 
 *On Mac:*
 
@@ -23,11 +23,11 @@ This section describes setting up a Citus cluster on a single machine using dock
   sudo curl -L https://github.com/docker/compose/releases/download/1.11.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   sudo chmod +x /usr/local/bin/docker-compose
 
-(This docker-compose version is fine for running Citus, or you can install the latest version by following instructions `here <https://github.com/docker/compose/releases/latest>`_.)
+The above version of Docker Compose is sufficient for running Citus, or you can install the `latest version <https://github.com/docker/compose/releases/latest>`_.
 
 **2. Start the Citus Cluster**
 
-Citus uses docker-compose to run and connect containers holding the database master node, workers, and a persistent data volume. To create a local cluster download our docker-compose configuration file and run it
+Citus uses Docker Compose to run and connect containers holding the database master node, workers, and a persistent data volume. To create a local cluster download our Docker Compose configuration file and run it
 
 .. code-block:: bash
 
@@ -72,7 +72,7 @@ Once you have the cluster up and running, you can visit our tutorials on :ref:`m
 
 **4. Shut down the cluster when ready**
 
-When you wish to stop the docker containers, use docker-compose:
+When you wish to stop the docker containers, use Docker Compose:
 
 .. code-block:: bash
 
