@@ -55,8 +55,7 @@ To create a distributed events table with a JSONB column and a BRIN index, we ca
     primary key (device_id, event_id)
   );
   CREATE INDEX event_time_idx ON events USING BRIN (event_time);
-  SELECT master_create_distributed_table('events', 'device_id', 'hash');
-  SELECT master_create_worker_shards('events', 120, 1);
+  SELECT create_distributed_table('events', 'device_id');
 
 Once the distributed table is created, we can immediately start using it via the data URL and writes done on one node will immediately be visible from all the other nodes in a consistent way.
 
