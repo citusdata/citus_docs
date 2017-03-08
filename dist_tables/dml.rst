@@ -3,7 +3,7 @@
 Ingesting, Modifying Data (DML)
 ###############################
 
-The following code snippets use the distributed tables example dataset, see :ref:`ddl`.
+The following code snippets use the Github events example, see :ref:`ddl`.
 
 Inserting Data
 --------------
@@ -26,9 +26,17 @@ $$$$$$$$$$$$
 
 Sometimes, you may want to bulk load several rows together into your distributed tables. To bulk load data from a file, you can directly use `PostgreSQL's \\COPY command <http://www.postgresql.org/docs/current/static/app-psql.html#APP-PSQL-META-COMMANDS-COPY>`_.
 
-For example:
+First download our example github_events dataset by running:
 
-::
+.. code-block:: bash
+
+    wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
+    gzip -d github_events-2015-01-01-*.gz
+
+
+Then, you can copy the data using psql:
+
+.. code-block:: postgresql
 
     \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
 
