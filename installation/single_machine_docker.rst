@@ -16,11 +16,11 @@ This section describes setting up a Citus cluster on a single machine using dock
 
 .. code-block:: bash
 
-  curl -sSL https://get.docker.com/ | sudo bash
-  sudo usermod -aG docker $USER && newgrp docker
+  curl -sSL https://get.docker.com/ | sh
+  sudo usermod -aG docker $USER && exec sg docker newgrp `id -gn`
   sudo systemctl start docker
 
-  sudo curl -L https://github.com/docker/compose/releases/download/1.11.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+  sudo curl -sSL https://github.com/docker/compose/releases/download/1.11.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   sudo chmod +x /usr/local/bin/docker-compose
 
 The above version of Docker Compose is sufficient for running Citus, or you can install the `latest version <https://github.com/docker/compose/releases/latest>`_.
@@ -62,9 +62,9 @@ To verify that the installation has succeeded we check that the master node has 
 
 Then run this query:
 
-.. code-block:: bash
+.. code-block:: postgresql
 
-  select * from master_get_active_worker_nodes();
+  SELECT * FROM master_get_active_worker_nodes();
 
 You should see a row for each worker node including the node name and port.
 
