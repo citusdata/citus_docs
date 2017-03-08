@@ -3,7 +3,7 @@
 Ingesting, Modifying Data (DML)
 ###############################
 
-The following code snippets use the distributed tables example, see :ref:`ddl`.
+The following code snippets use the Github events example, see :ref:`ddl`.
 
 Inserting Data
 --------------
