@@ -257,7 +257,7 @@ The first example deletes all the shards for the github_events table since no de
 master_modify_multiple_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The master_modify_multiple_shards() function is used to run a query against all shards which match the criteria specified by the query. As the function uses shard metadata to decide whether or not a shard needs to be updated, it requires the WHERE clause in the query to be on the distribution column. Depending on the value of citus.multi_shard_commit_protocol, the commit can be done in one- or two-phases.
+The master_modify_multiple_shards() function is used to run a query against all shards which match the criteria specified by the query. Depending on the value of citus.multi_shard_commit_protocol, the commit can be done in one- or two-phases.
 
 Limitations:
 
