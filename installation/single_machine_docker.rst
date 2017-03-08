@@ -5,17 +5,14 @@ Docker
 
 This section describes setting up a Citus cluster on a single machine using docker-compose.
 
-1. Install Docker Engine and docker-compose
--------------------------------------------
+**1. Install Docker Engine and docker-compose**
 
-Mac
-~~~
+*On Mac:*
 
 * Install `Docker <https://www.docker.com/community-edition#/download>`_.
 * Start Docker by clicking on the application's icon.
 
-Linux
-~~~~~
+*On Linux:*
 
 .. code-block:: bash
 
@@ -28,8 +25,7 @@ Linux
 
 (This docker-compose version is fine for running Citus, or you can install the latest version by following instructions `here <https://github.com/docker/compose/releases/latest>`_.)
 
-2. Start the Citus Cluster
---------------------------
+**2. Start the Citus Cluster**
 
 Citus uses docker-compose to run and connect containers holding the database master node, workers, and a persistent data volume. To create a local cluster download our docker-compose configuration file and run it
 
@@ -56,8 +52,7 @@ The first time you start the cluster it builds its containers. Subsequent startu
     - ports: ['5432:5432']
     + ports: ['5433:5432']
 
-3. Verify that installation has succeeded
------------------------------------------
+**3. Verify that installation has succeeded**
 
 To verify that the installation has succeeded we check that the master node has picked up the desired worker configuration. First start the psql shell on the master node:
 
@@ -76,8 +71,7 @@ You should see a row for each worker node including the node name and port.
 Once you have the cluster up and running, you can visit our :ref:`multi-tenant tutorial <multi_tenant_tutorial>` to
 get started with a sample dataset on Citus in minutes.
 
-4. Shut down the cluster when ready
------------------------------------
+**4. Shut down the cluster when ready**
 
 When you wish to stop the docker containers, use docker-compose:
 
