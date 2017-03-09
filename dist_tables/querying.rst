@@ -136,13 +136,10 @@ The least granular level of execution is broadcasting a statement for execution 
 .. code-block:: postgresql
 
   -- Make a UDF available on all workers
-  SELECT run_command_on_workers($cmd$ CREATE FUNCTION ..... $cmd$);
+  SELECT run_command_on_workers($cmd$ CREATE FUNCTION ... $cmd$);
 
-  -- List the size of each worker database
-  SELECT *
-    FROM run_command_on_workers($cmd$
-      SELECT pg_size_pretty(pg_database_size('citus'))
-    $cmd$);
+  -- List the work_mem setting of each worker database
+  SELECT run_command_on_workers($cmd$ SHOW work_mem; $cmd$);
 
 .. note::
 
@@ -181,7 +178,7 @@ Queries that update rows ought to be run on all placements rather than simply al
 
 The following are equivalent:
 
-.. code-block:: postgres
+.. code-block:: postgresql
 
   -- ordinary query going through the coordinator
   UPDATE my_distributed_table
@@ -197,7 +194,7 @@ The following are equivalent:
 
 Whereas this next query leads to **inconsistency** for Citus-replication with replication factor greater than one:
 
-.. code-block:: postgres
+.. code-block:: postgresql
 
   -- don't do this
   SELECT run_command_on_shards(
@@ -209,7 +206,7 @@ Whereas this next query leads to **inconsistency** for Citus-replication with re
 
 A useful companion to :code:`run_command_on_placements` is :code:`run_command_on_colocated_placements`. It interpolates the names of *two* placements of :ref:`co-located <colocation>` distributed tables into a query. The placement pairs are always chosen to be local to the same worker where full SQL coverage is available. Thus we can use advanced SQL features like triggers to relate the tables:
 
-.. code-block:: postgres
+.. code-block:: postgresql
 
   -- Suppose we have two distributed tables
   CREATE TABLE little_vals (key int, val int);
