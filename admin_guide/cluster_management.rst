@@ -34,6 +34,19 @@ In addition to the above, if you want to move existing shards to the newly added
 
 	select rebalance_table_shards('github_events');
 
+Adding a worker with :code:`master_add_node` automatically replicates existing reference tables to the new node. For very large reference tables this can be a costly operation. Some users may want to separate "getting the new node on the books" from the copying of reference data to it. Citus provides the :code:`master_add_inactive_node()` function for this scenario. The idea is to create a new node as temporarily inactive, perform custom actions, and then activate the node:
+
+.. code-block:: postgresql
+
+  -- First add the node as inactive. The coordinator will not route any
+  -- queries to this node.
+  SELECT * from master_add_inactive_node('node-name', 5432);
+
+  -- Next do custom tasks, retrying as necessary
+  -- ...
+
+  -- Finally mark the node as active.
+  SELECT * from master_activate_node('node-name', 5432);
 
 Adding a master
 ----------------------
