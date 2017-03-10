@@ -4,7 +4,7 @@
 Real-time Analytics
 ###################
 
-In this tutorial, we will use a sample Github dataset to demonstrate how you can use Citus to ingest events data and run analytical queries on that data in human real-time.
+In this tutorial, we will demonstrate how you can use Citus to ingest events data and run analytical queries on that data in human real-time. For that, we will use a sample Github events dataset.
 
 .. note::
                                                                                              
@@ -91,20 +91,20 @@ Next, you can create indexes on events data just like you would do in PostgreSQL
 Distributing tables and loading data
 ------------------------------------
 
-We will now go ahead and tell Citus to distribute these tables across the different nodes we have in the cluster. To do so,
+We will now go ahead and tell Citus to distribute these tables across the nodes in the cluster. To do so,
 you can run :code:`create_distributed_table` and specify the table you want to shard and the column you want to shard on.
-In this case, we will shard all the tables on the :code:`user_id`.                             
+In this case, we will shard all the tables on :code:`user_id`.                             
                                                                                           
 ::
     
     SELECT create_distributed_table('github_users', 'user_id');                                       
     SELECT create_distributed_table('github_events', 'user_id');                               
                                                                                           
-Sharding all tables on the company identifier allows Citus to :ref:`colocate <colocation>` the tables together
-and allow for efficient joins and distributed roll-ups across your cluster. You can learn more about the benefits of this approach `here <https://www.citusdata.com/blog/2016/11/29/event-aggregation-at-scale-with-postgresql/>`_.
+Sharding all tables on the user identifier allows Citus to :ref:`colocate <colocation>` these tables together,
+and allows for efficient joins and distributed roll-ups. You can learn more about the benefits of this approach `here <https://www.citusdata.com/blog/2016/11/29/event-aggregation-at-scale-with-postgresql/>`_.
                                                                                           
 Then, you can go ahead and load the data we downloaded into the tables using the standard PostgreSQL :code:`\COPY` command.
-Please make sure that you specify the correct file path if you downloaded the file to some other location.
+Please make sure that you specify the correct file path if you downloaded the file to a different location.
 
 ::
                                                                                           
@@ -121,7 +121,7 @@ Now that we have loaded data into the tables, let's go ahead and run some querie
                                                                                           
     SELECT count(*) FROM github_users;
     
-Now, let's look at all Github push events in our data, find the number of distinct commits in each push, and then compute the total number of commits by hour.
+Now, let's analyze Github push events in our data. We will first find the number of distinct commits in push events and then compute the total number of commits by hour.
 
 ::
                                                                                           
@@ -142,6 +142,12 @@ We also have a users table. We can also easily join the users with events, and f
     ON ge.user_id = gu.user_id
     WHERE event_type = 'CreateEvent' AND payload @> '{"ref_type": "repository"}'
     GROUP BY login
-    ORDER BY count(*) DESC;                                                                                          
+    ORDER BY count(*) DESC LIMIT 20;                                                                                          
 
-With this, we come to the end of our tutorial on using Citus. As a next step, you can look at the :ref:`distributing_by_entity_id` section to see how you can model your own data for real-time analytics.
+Citus also supports standard `INSERT`, `UPDATE`, and `DELETE` commands. For example, you can update a user's display login by running the following command:
+
+::
+                                                                                          
+    UPDATE github_users SET display_login = 'no1youknow' WHERE user_id = 24305673;
+
+With this, we come to the end of our tutorial on using Citus. As a next step, you can look at the :ref:`distributing_by_entity_id` section to see how you can model your own data and power real-time analytical applications.
