@@ -33,7 +33,7 @@ We will use two Postgres tables to represent this data. To get started, you will
 ::
 
     docker cp users.csv citus_master:.
-    docker cp eventss.csv citus_master:.
+    docker cp events.csv citus_master:.
             
 Creating tables 
 ---------------
@@ -142,7 +142,7 @@ We also have a users table. We can also easily join the users with events, and f
     ON ge.user_id = gu.user_id
     WHERE event_type = 'CreateEvent' AND payload @> '{"ref_type": "repository"}'
     GROUP BY login
-    ORDER BY count(*) DESC LIMIT 20;                                                                                          
+    ORDER BY count(*) DESC LIMIT 10;                                                                                          
 
 Citus also supports standard `INSERT`, `UPDATE`, and `DELETE` commands. For example, you can update a user's display login by running the following command:
 
