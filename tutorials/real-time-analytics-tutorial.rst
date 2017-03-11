@@ -25,8 +25,8 @@ We will use two Postgres tables to represent this data. To get started, you will
 
 ::
 
-    curl https://examples.citusdata.com/users.csv > users.csv
-    curl https://examples.citusdata.com/events.csv > events.csv
+    curl https://examples.citusdata.com/tutorial/users.csv > users.csv
+    curl https://examples.citusdata.com/tutorial/events.csv > events.csv
 
 **If you are using Docker**, you should use the :code:`docker cp` command to copy the files into the Docker container. 
 
@@ -121,16 +121,16 @@ Now that we have loaded data into the tables, let's go ahead and run some querie
                                                                                           
     SELECT count(*) FROM github_users;
     
-Now, let's analyze Github push events in our data. We will first find the number of distinct commits in push events and then compute the total number of commits by hour.
+Now, let's analyze Github push events in our data. We will first find the number of distinct commits in push events and then compute the total number of commits by each minute.
 
 ::
                                                                                           
-    SELECT date_trunc('hour', created_at) AS hour,
+    SELECT date_trunc('minute', created_at) AS minute,
            sum((payload->>'distinct_size')::int) AS num_commits
     FROM github_events
     WHERE event_type = 'PushEvent'
-    GROUP BY hour
-    ORDER BY hour;                                                                                          
+    GROUP BY minute
+    ORDER BY minute;                                                                                          
 
 We also have a users table. We can also easily join the users with events, and find users who created the most repositories. 
 
