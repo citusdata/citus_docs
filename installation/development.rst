@@ -7,7 +7,6 @@ If you are a developer looking to try Citus out on your machine, the guides belo
 
 .. toctree::
 
-   single_machine_osx.rst
    single_machine_rhel.rst
    single_machine_deb.rst
    single_machine_docker.rst
