@@ -144,7 +144,7 @@ We also have a users table. We can also easily join the users with events, and f
     GROUP BY login
     ORDER BY count(*) DESC LIMIT 10;                                                                                          
 
-Citus also supports standard `INSERT`, `UPDATE`, and `DELETE` commands for ingesting and modifying data. For example, you can update a user's display login by running the following command:
+Citus also supports standard :code:`INSERT`, :code:`UPDATE`, and :code:`DELETE` commands for ingesting and modifying data. For example, you can update a user's display login by running the following command:
 
 ::
                                                                                           
