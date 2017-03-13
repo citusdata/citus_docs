@@ -19,7 +19,7 @@ In this tutorial, we will demonstrate how you can use Citus to ingest events dat
 Data model and sample data 
 ---------------------------
 
-We will demo building the database for a real-time analytics application. This application will insert large volumes of events data and  enable analytical queries on that data with sub-second latencies. In our example, we're going to work with the Github events dataset. This dataset includes all public events on Github, such as commits, forks, pull requests, new issues, and comments on these issues.
+We will demo building the database for a real-time analytics application. This application will insert large volumes of events data and  enable analytical queries on that data with sub-second latencies. In our example, we're going to work with the Github events dataset. This dataset includes all public events on Github, such as commits, forks, new issues, and comments on these issues.
 
 We will use two Postgres tables to represent this data. To get started, you will need to download sample data for these tables:
 
