@@ -10,7 +10,16 @@ Citus extends the underlying database rather than forking it, which gives develo
 When to Use Citus
 -----------------
 
-There are two situations where Citus particularly excels: real-time analytics and multi-tenant applications.
+Citus serves many use cases. Two common ones are scaling multi-tenant (B2B) databases and real-time analytics.
+
+Multi-Tenant Database
+~~~~~~~~~~~~~~~~~~~~~
+
+Most B2B applications already have the notion of a tenant, customer, or account built into their data model. In this model, the database serves many tenants, each of whose data is separate from other tenants.
+
+Citus provides full SQL coverage for this workload, and enables scaling out your relational database to 100K+ tenants. Citus also adds new features for multi-tenancy. For example, Citus supports tenant isolation to provide performance guarantees for large tenants, and has the concept of reference tables to reduce data duplication across tenants.
+
+These capabilities allow you to scale out your tenants data across many machines, and easily add more CPU, memory, and disk resources. Further, sharing the same database schema across multiple tenants makes efficient use of hardware resources and simplifies database management.
 
 Real-Time Analytics
 ~~~~~~~~~~~~~~~~~~~
@@ -25,15 +34,6 @@ Citus supports real-time queries over large datasets. Commonly these queries occ
 Citus' benefits here are its ability to parallelize query execution and scale linearly with the number of worker databases in a cluster.
 
 For concrete examples check out our customer `use cases <https://www.citusdata.com/solutions/case-studies>`_.
-
-Multi-Tenant Applications
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Another Citus use case is managing the data for multi-tenant applications. These are applications where a single database cluster serves multiple tenants (typically companies), each of whose data is private from the other tenants.
-
-All tenants share a common schema and Citus distributes their data across shards. Citus routes individual tenant queries to the appropriate shard, each of which acts like a standalone database with full-featured SQL support.
-
-This allows you to scale out your tenants across several machines and CPU cores, adding more memory and processing power for parallelism. Sharing a schema and cluster infrastructure among multiple tenants also uses hardware efficiently and reduces maintenance costs compared with a one-tenant-per-database instance model.
 
 Considerations for Use
 ----------------------
