@@ -19,7 +19,7 @@ In this tutorial, we will demonstrate how you can use Citus to ingest events dat
 Data model and sample data 
 ---------------------------
 
-We will demo building the database for a real-time analytics application. This application will insert large volumes of events data and  enable analytical queries on that data with sub-second latencies. In our example, we're going to work with Github events, where an event for example represents a repository fork or a commit.
+We will demo building the database for a real-time analytics application. This application will insert large volumes of events data and  enable analytical queries on that data with sub-second latencies. In our example, we're going to work with the Github events dataset. This dataset includes all public events on Github, such as commits, forks, pull requests, new issues, and comments on these issues.
 
 We will use two Postgres tables to represent this data. To get started, you will need to download sample data for these tables:
 
@@ -81,7 +81,7 @@ Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE
         display_login text                                                                       
     );
 
-Next, you can create indexes on events data just like you would do in PostgreSQL.
+Next, you can create indexes on events data just like you would do in PostgreSQL. In this example, we're also going to create a :code:`GIN` index to make querying on :code:`jsonb` fields faster.
     
 ::
                                                                                          
@@ -121,7 +121,7 @@ Now that we have loaded data into the tables, let's go ahead and run some querie
                                                                                           
     SELECT count(*) FROM github_users;
     
-Now, let's analyze Github push events in our data. We will first find the number of distinct commits in push events and then compute the total number of commits by each minute.
+Now, let's analyze Github push events in our data. We will first compute the number of commits per minute by using the number of distinct commits in each push event.
 
 ::
                                                                                           
@@ -132,7 +132,7 @@ Now, let's analyze Github push events in our data. We will first find the number
     GROUP BY minute
     ORDER BY minute;                                                                                          
 
-We also have a users table. We can also easily join the users with events, and find users who created the most repositories. 
+We also have a users table. We can also easily join the users with events, and find the top ten users who created the most repositories. 
 
 ::
                                                                                           
@@ -144,10 +144,10 @@ We also have a users table. We can also easily join the users with events, and f
     GROUP BY login
     ORDER BY count(*) DESC LIMIT 10;                                                                                          
 
-Citus also supports standard `INSERT`, `UPDATE`, and `DELETE` commands. For example, you can update a user's display login by running the following command:
+Citus also supports standard `INSERT`, `UPDATE`, and `DELETE` commands for ingesting and modifying data. For example, you can update a user's display login by running the following command:
 
 ::
                                                                                           
     UPDATE github_users SET display_login = 'no1youknow' WHERE user_id = 24305673;
 
-With this, we come to the end of our tutorial on using Citus. As a next step, you can look at the :ref:`distributing_by_entity_id` section to see how you can model your own data and power real-time analytical applications.
+With this, we come to the end of our tutorial. As a next step, you can look at the :ref:`distributing_by_entity_id` section to see how you can model your own data and power real-time analytical applications.
