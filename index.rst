@@ -26,6 +26,7 @@ topics.
    :caption: Tutorial
 
    tutorials/multi-tenant-tutorial.rst
+   tutorials/real-time-analytics-tutorial.rst
 
 .. toctree::
    :caption: Distributed Data Modeling
