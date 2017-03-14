@@ -143,6 +143,7 @@ There is even a way to run DML statements on multiple tenants. As long as the up
     'UPDATE ads SET image_url = replace(image_url, ''http:'', ''https:'')'
   );
 
+.. _distributing_by_entity_id:
 
 Distributing by Entity ID
 =========================
