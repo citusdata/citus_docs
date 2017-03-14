@@ -117,3 +117,12 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
         FOR EACH ROW EXECUTE PROCEDURE embiggen_%I()
     $cmd$
   );
+
+Limitations
+-----------
+
+* There are no safe-guards against deadlock for multi-statement transactions.
+* There are no safe-guards against mid-query failures and resulting inconsistencies.
+* Query results are cached in memory; these functions can't deal with very big result sets.
+* The functions error out early if they cannot connect to a node.
+* You can do very bad things!
