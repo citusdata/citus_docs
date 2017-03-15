@@ -1,7 +1,7 @@
 .. _single_machine_docker:
 
-Docker
-======
+Docker (Mac or Linux)
+=====================
 
 This section describes setting up a Citus cluster on a single machine using docker-compose.
 
