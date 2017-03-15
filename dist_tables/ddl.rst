@@ -149,32 +149,69 @@ You can use the standard PostgreSQL DROP TABLE command to remove your distribute
 
     DROP TABLE github_events;
 
-DDL Propagation
----------------
+.. _ddl_prop_support:
 
 Modifying Tables
-~~~~~~~~~~~~~~~~
+----------------
 
-  Y Adding a Column
-  Y Removing a Column
-      Except the dist column
-  Y Removing a Constraint
-      N Check Constraints
-          And gives an unpolished error (ERROR:  42704: constraint "http_request_1min_check_102104" of relation "http_request_1min_102104" does not exist)
-        Not-Null Constraints
-        Unique Constraints
-      Y Primary Keys
-      Y Foreign Keys
-  Y Adding a Constraint
-      N Check Constraints
-      Y Not-Null Constraints
-      N Unique Constraints
-      N Primary Keys
-      Y Foreign Keys
-          Watch out for lack of existing uniqueness constraints (ERROR:  42830: there is no unique constraint matching given keys for referenced table "http_request_102008")
-          Uniqueness cannot be propagated after distribution
-      Exclusion Constraints
-  Y Changing a Column's Default Value
-  Y Changing a Column's Data Type (except for dist column)
-  N Renaming a Column
-  N Renaming a Table
+Citus automatically propagates many kinds of DDL statements, which means that modifying a distributed table on the coordinator node will update shards on the workers too. Other DDL statements are unsupported on distributed tables, especially those which would modify a distribution column. Attempting to run unsupoorted DDL will raise an error and leave tables on the coordinator node unchanged. Some constraints like primary keys and uniqueness can only be applied prior to distributing a table.
+
+Here is a reference of the categories of DDL statements and whether the current version of Citus supports their propagation. (Note that automatic propagation can be enabled or disabled with a :ref:`configuration parameter <enable_ddl_prop>`.)
+
+General
+~~~~~~~
+
++------------+-----------------------------------+--------------------------------+
+| Propagates | DDL                               | Notes                          |
++============+===================================+================================+
+| YES        | Adding a Column                   |                                |
++------------+-----------------------------------+--------------------------------+
+| YES        | Removing a Column                 | Except the distribution column |
++------------+-----------------------------------+--------------------------------+
+| YES        | Changing a Column's Default Value |                                |
++------------+-----------------------------------+--------------------------------+
+| YES        | Changing a Column's Data Type     | Except the distribution column |
++------------+-----------------------------------+--------------------------------+
+| NO         | Renaming a Column                 |                                |
++------------+-----------------------------------+--------------------------------+
+| NO         | Renaming a Table                  |                                |
++------------+-----------------------------------+--------------------------------+
+
+Adding Constraints
+~~~~~~~~~~~~~~~~~~
+
++------------+----------------------+-------------------------------------------------+
+| Propagates | DDL                  | Notes                                           |
++============+======================+=================================================+
+| YES        | Not-Null Constraints |                                                 |
++------------+----------------------+-------------------------------------------------+
+| YES        | Foreign Keys         | Must include distribution column.               |
+|            |                      |                                                 |
+|            |                      | Requires unique constraint on target column(s). |
++------------+----------------------+-------------------------------------------------+
+| NO         | Primary Keys         | Must include distribution column.               |
+|            |                      |                                                 |
+|            |                      | Add constraint before distributing!             |
++------------+----------------------+-------------------------------------------------+
+| NO         | Unique Constraints   | Add constraint before distributing!             |
++------------+----------------------+-------------------------------------------------+
+| NO         | Check Constraints    |                                                 |
++------------+----------------------+-------------------------------------------------+
+
+
+Removing Constraints
+~~~~~~~~~~~~~~~~~~~~
+
++------------+----------------------+
+| Propagates | DDL                  |
++============+======================+
+| YES        | Not-Null Constraints |
++------------+----------------------+
+| YES        | Unique Constraints   |
++------------+----------------------+
+| YES        | Primary Keys         |
++------------+----------------------+
+| YES        | Foreign Keys         |
++------------+----------------------+
+| NO         | Check Constraints    |
++------------+----------------------+
