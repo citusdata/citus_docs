@@ -148,3 +148,33 @@ You can use the standard PostgreSQL DROP TABLE command to remove your distribute
 ::
 
     DROP TABLE github_events;
+
+DDL Propagation
+---------------
+
+Modifying Tables
+~~~~~~~~~~~~~~~~
+
+  Y Adding a Column
+  Y Removing a Column
+      Except the dist column
+  Y Removing a Constraint
+      N Check Constraints
+          And gives an unpolished error (ERROR:  42704: constraint "http_request_1min_check_102104" of relation "http_request_1min_102104" does not exist)
+        Not-Null Constraints
+        Unique Constraints
+      Y Primary Keys
+      Y Foreign Keys
+  Y Adding a Constraint
+      N Check Constraints
+      Y Not-Null Constraints
+      N Unique Constraints
+      N Primary Keys
+      Y Foreign Keys
+          Watch out for lack of existing uniqueness constraints (ERROR:  42830: there is no unique constraint matching given keys for referenced table "http_request_102008")
+          Uniqueness cannot be propagated after distribution
+      Exclusion Constraints
+  Y Changing a Column's Default Value
+  Y Changing a Column's Data Type (except for dist column)
+  N Renaming a Column
+  N Renaming a Table
