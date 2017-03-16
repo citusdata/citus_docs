@@ -137,8 +137,8 @@ There is a workaround: you can replicate the local table to a single shard on ev
 This will create a table with a single shard (non-distributed), but will
 replicate that shard to every node in the cluster. Now Citus will accept a join query between *here* and *there*, and each worker will have all the information it needs to work efficiently.
 
-Finding Table Sizes
--------------------
+Find Table Sizes
+----------------
 
 The usual way to find table sizes in PostgreSQL, :code:`pg_total_relation_size`, drastically under-reports the size of distributed tables. All this function does on a Citus cluster is reveal the size of tables on the coordinator node. In reality the data in distributed tables lives on the worker nodes (in shards), not on the coordinator. A true measure of distributed table size is obtained as a sum of shard sizes. This helper function will allow you to easily query for size:
 
