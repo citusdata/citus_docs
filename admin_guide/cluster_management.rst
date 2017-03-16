@@ -176,19 +176,25 @@ The output contains the host and port of the worker database.
   │  102009 │          1 │           0 │ localhost │     5433 │           2 │
   └─────────┴────────────┴─────────────┴───────────┴──────────┴─────────────┘
 
+.. _finding_dist_col:
+
 Finding the distribution column for a table
 -------------------------------------------
 
 Each distributed table in Citus has a "distribution column." For more information about what this is and how it works, see :ref:`Distributed Data Modeling <distributed_data_modeling>`. There are many situations where it is important to know which column it is. Some operations require joining or filtering on the distribution column, and you may encounter error messages with hints like, "add a filter to the distribution column."
 
-The :code:`pg_dist_*` tables on the coordinator node contain diverse metadata about the distributed database. In particular :code:`pg_dist_partition` holds information about the distribution column (formerly called *partition* column) for each table.
+The :code:`pg_dist_*` tables on the coordinator node contain diverse metadata about the distributed database. In particular :code:`pg_dist_partition` holds information about the distribution column (formerly called *partition* column) for each table. You can use a convenient utility function to look up the distribution column name from the low-level details in the metadata. Here's an example and its output:
 
 .. code-block:: postgresql
 
-  -- a list of all tables and their distribution columns
+  -- get distribution column name for products table
 
   SELECT column_to_column_name(logicalrelid, partkey)
-    FROM pg_dist_partition;
+    FROM pg_dist_partition
+   WHERE logicalrelid='products'::regclass;
 
-  -- to search for a specific table add a condition like
-  -- WHERE logicalrelid='<table_name>'::regclass;
+  ┌───────────────────────┐
+  │ column_to_column_name │
+  ├───────────────────────┤
+  │ store_id              │
+  └───────────────────────┘
