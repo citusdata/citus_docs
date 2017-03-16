@@ -83,6 +83,55 @@ If you have an existing distributed table which has a shard count of one, you ca
 
   SELECT upgrade_to_reference_table('table_name');
 
+Distributing Coordinator Data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If an existing PostgreSQL database is converted into the coordinator node for a Citus cluster, the data in its tables can be distributed efficiently and with minimal interruption to an application.
+
+The :code:`create_distributed_table` function described earlier works on both empty and non-empty tables, and for the latter automatically distributes table rows throughout the cluster. You will know if it does this by the presence of the message, "NOTICE:  Copying data from local table..." For example:
+
+.. code-block:: postgresql
+
+  CREATE TABLE series AS SELECT i FROM generate_series(1,1000000) i;
+  SELECT create_distributed_table('series', 'i');
+  NOTICE:  Copying data from local table...
+   create_distributed_table
+   --------------------------
+
+   (1 row)
+
+Writes on the table are blocked while the data is migrated, and pending writes are handled as distributed queries once the function commits. (If the function fails then the queries become local again.) Reads can continue as normal and will become distributed queries once the function commits.
+
+.. note::
+
+  When distributing a number of tables with foreign keys between them, it's best to drop the foreign keys before running :code:`create_distributed_table` and recreating them after distributing the tables. Foreign keys cannot always be enforced when one table is distributed and the other is not.
+
+When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first transfer the data into the coordinator node, then distribute it throughout the cluster:
+
+.. code-block:: postgresql
+
+  -- Suppose we have a CSV file to import, and have a destination table
+  -- on the coordinator with the appropriate schema
+
+  -- First fill the table on the coordinator
+  \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
+
+  -- Then distribute to the workers
+  SELECT create_distributed_table('github_events', 'repo_id');
+  NOTICE:  Copying data from local table...
+   create_distributed_table
+   --------------------------
+
+   (1 row)
+
+Both approaches work, but migrating from an external database to Citus has some drawbacks compared to turning an existing database directly into a Citus coordinator:
+
+* The user needs to turn off writes in the application
+* The user needs to have a machine available with a high bandwidth connection to the Citus coordinator
+* Copying data in an out can take a lot of time
+* Writing the data to a file requires extra storage space
+* In some cases, the distributed tables need to have a different name or schema
+
 .. _colocation_groups:
 
 Co-Locating Tables
