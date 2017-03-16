@@ -193,7 +193,9 @@ Adding Constraints
 |            |                      |                                                 |
 |            |                      | Add constraint before distributing!             |
 +------------+----------------------+-------------------------------------------------+
-| NO         | Unique Constraints   | Add constraint before distributing!             |
+| NO         | Unique Constraints   | Must include distribution column.               |
+|            |                      |                                                 |
+|            |                      | Add constraint before distributing!             |
 +------------+----------------------+-------------------------------------------------+
 | NO         | Check Constraints    |                                                 |
 +------------+----------------------+-------------------------------------------------+
