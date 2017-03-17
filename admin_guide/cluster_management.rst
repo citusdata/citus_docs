@@ -121,6 +121,10 @@ Furthermore, the UDF takes a :code:`CASCADE` option which isolates the tenant ro
 
   SELECT isolate_tenant_to_new_shard('lineitem', 135, 'CASCADE');
 
+Output:
+
+::
+
   ┌─────────────────────────────┐
   │ isolate_tenant_to_new_shard │
   ├─────────────────────────────┤
@@ -176,3 +180,44 @@ The output contains the host and port of the worker database.
   │  102009 │          1 │           0 │ localhost │     5433 │           2 │
   └─────────┴────────────┴─────────────┴───────────┴──────────┴─────────────┘
 
+.. _finding_dist_col:
+
+Finding the distribution column for a table
+-------------------------------------------
+
+Each distributed table in Citus has a "distribution column." For more information about what this is and how it works, see :ref:`Distributed Data Modeling <distributed_data_modeling>`. There are many situations where it is important to know which column it is. Some operations require joining or filtering on the distribution column, and you may encounter error messages with hints like, "add a filter to the distribution column."
+
+The :code:`pg_dist_*` tables on the coordinator node contain diverse metadata about the distributed database. In particular :code:`pg_dist_partition` holds information about the distribution column (formerly called *partition* column) for each table. You can use a convenient utility function to look up the distribution column name from the low-level details in the metadata. Here's an example and its output:
+
+.. code-block:: postgresql
+
+  -- create example table
+
+  CREATE TABLE products (
+    store_id bigint,
+    product_id bigint,
+    name text,
+    price money,
+
+    CONSTRAINT products_pkey PRIMARY KEY (store_id, product_id)
+  );
+
+  -- pick store_id as distribution column
+
+  SELECT create_distributed_table('products', 'store_id');
+
+  -- get distribution column name for products table
+
+  SELECT column_to_column_name(logicalrelid, partkey) AS dist_col_name
+    FROM pg_dist_partition
+   WHERE logicalrelid='products'::regclass;
+
+Output:
+
+::
+
+  ┌───────────────┐
+  │ dist_col_name │
+  ├───────────────┤
+  │ store_id      │
+  └───────────────┘
