@@ -121,6 +121,10 @@ Furthermore, the UDF takes a :code:`CASCADE` option which isolates the tenant ro
 
   SELECT isolate_tenant_to_new_shard('lineitem', 135, 'CASCADE');
 
+Output:
+
+::
+
   ┌─────────────────────────────┐
   │ isolate_tenant_to_new_shard │
   ├─────────────────────────────┤
@@ -207,6 +211,10 @@ The :code:`pg_dist_*` tables on the coordinator node contain diverse metadata ab
   SELECT column_to_column_name(logicalrelid, partkey) AS dist_col_name
     FROM pg_dist_partition
    WHERE logicalrelid='products'::regclass;
+
+Output:
+
+::
 
   ┌───────────────┐
   │ dist_col_name │
