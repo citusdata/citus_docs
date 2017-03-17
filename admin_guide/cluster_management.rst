@@ -187,14 +187,29 @@ The :code:`pg_dist_*` tables on the coordinator node contain diverse metadata ab
 
 .. code-block:: postgresql
 
+  -- create example table
+
+  CREATE TABLE products (
+    store_id bigint,
+    product_id bigint,
+    name text,
+    price money,
+
+    CONSTRAINT products_pkey PRIMARY KEY (store_id, product_id)
+  );
+
+  -- pick store_id as distribution column
+
+  SELECT create_distributed_table('products', 'store_id');
+
   -- get distribution column name for products table
 
-  SELECT column_to_column_name(logicalrelid, partkey)
+  SELECT column_to_column_name(logicalrelid, partkey) AS dist_col_name
     FROM pg_dist_partition
    WHERE logicalrelid='products'::regclass;
 
-  ┌───────────────────────┐
-  │ column_to_column_name │
-  ├───────────────────────┤
-  │ store_id              │
-  └───────────────────────┘
+  ┌───────────────┐
+  │ dist_col_name │
+  ├───────────────┤
+  │ store_id      │
+  └───────────────┘
