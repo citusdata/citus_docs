@@ -137,49 +137,6 @@ There is a workaround: you can replicate the local table to a single shard on ev
 This will create a table with a single shard (non-distributed), but will
 replicate that shard to every node in the cluster. Now Citus will accept a join query between *here* and *there*, and each worker will have all the information it needs to work efficiently.
 
-Find Table Sizes
-----------------
-
-The usual way to find table sizes in PostgreSQL, :code:`pg_total_relation_size`, drastically under-reports the size of distributed tables. All this function does on a Citus cluster is reveal the size of tables on the coordinator node. In reality the data in distributed tables lives on the worker nodes (in shards), not on the coordinator. A true measure of distributed table size is obtained as a sum of shard sizes. This helper function will allow you to easily query for size:
-
-.. code-block:: postgresql
-
-  CREATE OR REPLACE FUNCTION citus_table_size(table_name regclass)
-  RETURNS bigint LANGUAGE plpgsql
-  AS $function$
-  DECLARE
-    table_size bigint;
-  BEGIN
-    PERFORM master_update_shard_statistics(shardid)
-    FROM pg_dist_shard
-    WHERE logicalrelid = table_name;
-
-    SELECT sum(shard_size) INTO table_size
-    FROM (
-      SELECT max(shardlength) AS shard_size
-      FROM pg_dist_shard JOIN pg_dist_shard_placement USING (shardid)
-      WHERE logicalrelid = table_name AND shardstate = 1
-      GROUP BY shardid
-    ) shard_sizes;
-
-    RETURN table_size;
-  END;
-  $function$;
-
-Here is how to use the helper function to list the sizes of all distributed tables:
-
-.. code-block:: postgresql
-
-  SELECT logicalrelid AS name,
-         pg_size_pretty(citus_table_size(logicalrelid)) AS size
-    FROM pg_dist_partition;
-
-  ┌────────────┬────────┐
-  │    name    │  size  │
-  ├────────────┼────────┤
-  │ test_table │ 256 kB │
-  └────────────┴────────┘
-
 .. _data_warehousing_queries:
 
 Data Warehousing Queries

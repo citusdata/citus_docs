@@ -1,6 +1,46 @@
 Table Management
 $$$$$$$$$$$$$$$$$$
 
+Determining Table and Relation Size
+###################################
+
+The usual way to find table sizes in PostgreSQL, :code:`pg_total_relation_size`, drastically under-reports the size of distributed tables. All this function does on a Citus cluster is reveal the size of tables on the coordinator node. In reality the data in distributed tables lives on the worker nodes (in shards), not on the coordinator. A true measure of distributed table size is obtained as a sum of shard sizes. Citus provides helper functions to query this information.
+
++------------------------------------------+----------------------------------------------------------+
+| UDF                                      | Returns                                                  |
++==========================================+==========================================================+
+| citus_total_relation_size(relation_name) | a distributed table and its indexes' total relation size |
++------------------------------------------+----------------------------------------------------------+
+| citus_table_size(relation_name)          | a distributed table's total relation size                |
++------------------------------------------+----------------------------------------------------------+
+| citus_relation_size(relation_name)       | a relation's "main fork" size                            |
+|                                          |                                                          |
+|                                          | (a relation can be the name of a table or an index)      |
++------------------------------------------+----------------------------------------------------------+
+
+Notes about all these functions:
+
+* They only work with streaming replication and add up total sizes on primary nodes.
+* If they can't connect to a node, they error out.
+
+Here is an example of using one of the helper functions to list the sizes of all distributed tables:
+
+.. code-block:: postgresql
+
+  SELECT logicalrelid AS name,
+         pg_size_pretty(citus_table_size(logicalrelid)) AS size
+    FROM pg_dist_partition;
+
+Output:
+
+::
+
+  ┌────────────┬────────┐
+  │    name    │  size  │
+  ├────────────┼────────┤
+  │ test_table │ 256 kB │
+  └────────────┴────────┘
+
 Vacuuming Distributed Tables
 ############################
 
