@@ -25,7 +25,7 @@ Supported operations on the coordinator are: Create/drop distributed table, shar
 
 Supported operations on the data URL are: DML, SELECT, COPY.
 
-If you connect to the data URL using `psql` and run `\\d`, then you will see all the distributed tables and some of the shards. Importantly, distributed tables are the same from all nodes, so it does not matter to which node you are routed when using the data URL when querying distributed tables. When performing a query on a distributed table, the right shard is determined based on the filter conditions and the query is forwarded to the node that stores the shard. If a query spans all the shards, it is parallelised across all the nodes. 
+If you connect to the data URL using `psql` and run `\\d`, then you will see all the distributed tables and some of the shards. Importantly, distributed tables are the same from all nodes, so it does not matter to which node you are routed when using the data URL when querying distributed tables. When performing a query on a distributed table, the right shard is determined based on the filter conditions and the query is forwarded to the node that stores the shard. If a query spans all the shards, it is parallelised across all the nodes.
 
 For some advanced usages, you may want to perform operations on shards directly (e.g. add triggers). In that case, you can connect to each individual worker node rather than using the data URL. You can find the worker nodes hostnames by running `SELECT * FROM master_get_active_worker_nodes()` from any node and use the same credentials as the data URL.
 
@@ -46,7 +46,7 @@ To create a distributed events table with a JSONB column and a BRIN index, we ca
 
 .. code:: sql
 
-  CREATE TABLE events (                                              
+  CREATE TABLE events (
     device_id bigint not null,
     event_id uuid not null default uuid_generate_v4(),
     event_time timestamp not null default now(),
@@ -55,8 +55,7 @@ To create a distributed events table with a JSONB column and a BRIN index, we ca
     primary key (device_id, event_id)
   );
   CREATE INDEX event_time_idx ON events USING BRIN (event_time);
-  SELECT master_create_distributed_table('events', 'device_id', 'hash');
-  SELECT master_create_worker_shards('events', 120, 1);
+  SELECT create_distributed_table('events', 'device_id');
 
 Once the distributed table is created, we can immediately start using it via the data URL and writes done on one node will immediately be visible from all the other nodes in a consistent way.
 
@@ -87,7 +86,7 @@ As with regular Citus, you can also run analytical queries which are parallelize
 
 .. code:: sql
 
-  citus=> 
+  citus=>
   SELECT minute,
          min(temperature)::decimal(10,1) AS min_temperature,
          avg(temperature)::decimal(10,1) AS avg_temperature,
