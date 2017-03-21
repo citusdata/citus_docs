@@ -9,18 +9,23 @@ The usual way to find table sizes in PostgreSQL, :code:`pg_total_relation_size`,
 +------------------------------------------+----------------------------------------------------------+
 | UDF                                      | Returns                                                  |
 +==========================================+==========================================================+
-| citus_total_relation_size(relation_name) | a distributed table and its indexes' total relation size |
-+------------------------------------------+----------------------------------------------------------+
-| citus_table_size(relation_name)          | a distributed table's total relation size                |
-+------------------------------------------+----------------------------------------------------------+
-| citus_relation_size(relation_name)       | a relation's "main fork" size                            |
+| citus_relation_size(relation_name)       | Size of actual data in table (the "main fork").          |
 |                                          |                                                          |
-|                                          | (a relation can be the name of a table or an index)      |
+|                                          | A relation can be the name of a table or an index.       |
++------------------------------------------+----------------------------------------------------------+
+| citus_table_size(relation_name)          | citus_relation_size plus                                 |
+|                                          |                                                          |
+|                                          | * size of free space map                                 |
+|                                          | * size of visibility map                                 |
++------------------------------------------+----------------------------------------------------------+
+| citus_total_relation_size(relation_name) | citus_table_size plus                                    |
+|                                          |                                                          |
+|                                          | * size of indices                                        |
 +------------------------------------------+----------------------------------------------------------+
 
 Notes about all these functions:
 
-* They only work with streaming replication and add up total sizes on primary nodes.
+* They work only when :code:`citus.shard_replication_factor` = 1.
 * If they can't connect to a node, they error out.
 
 Here is an example of using one of the helper functions to list the sizes of all distributed tables:
