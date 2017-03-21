@@ -106,23 +106,29 @@ Writes on the table are blocked while the data is migrated, and pending writes a
 
   When distributing a number of tables with foreign keys between them, it's best to drop the foreign keys before running :code:`create_distributed_table` and recreating them after distributing the tables. Foreign keys cannot always be enforced when one table is distributed and the other is not.
 
-When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first transfer the data into the coordinator node, then distribute it throughout the cluster:
+When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first distribute the Citus table(s), then copy the data into the table.
 
 .. code-block:: postgresql
 
   -- Suppose we have a CSV file to import, and have a destination table
   -- on the coordinator with the appropriate schema
 
-  -- First fill the table on the coordinator
-  \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
-
-  -- Then distribute to the workers
+  -- First distribute the table to the workers
   SELECT create_distributed_table('github_events', 'repo_id');
+
+::
+
   NOTICE:  Copying data from local table...
    create_distributed_table
    --------------------------
 
    (1 row)
+
+.. code-block:: psql
+
+  -- Then fill the table. Rows will automatically distribute to workers.
+  \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
+
 
 Both approaches work, but migrating from an external database to Citus has some drawbacks compared to turning an existing database directly into a Citus coordinator:
 
