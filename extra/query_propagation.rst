@@ -29,21 +29,16 @@ Each distributed table :code:`foo` has shards across the workers which are each 
 
 .. code-block:: postgresql
 
-  -- Get the size of table shards to determine how balanced the cluster
-  -- is. The third argument controls whether the queries are run in
-  -- parallel and defaults to true
-  SELECT *
+  -- Get the estimated row count for a distributed table by summing the
+  -- estimated counts of rows for each shard.
+  SELECT sum(result::bigint) AS estimated_count
     FROM run_command_on_shards(
       'my_distributed_table',
-      $cmd$ SELECT pg_size_pretty(pg_total_relation_size('%I')) $cmd$,
-      true
-    );
-
-  -- Get the total size of indices from all shards
-  SELECT pg_size_pretty(sum(result::int))
-    FROM run_command_on_shards(
-      'my_distributed_table',
-      $cmd$ SELECT pg_indexes_size('%I') $cmd$
+      $cmd$
+        SELECT reltuples
+          FROM pg_class
+         WHERE relname = '%I';
+      $cmd$
     );
 
 Running on all Placements
