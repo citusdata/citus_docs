@@ -154,66 +154,51 @@ You can use the standard PostgreSQL DROP TABLE command to remove your distribute
 Modifying Tables
 ----------------
 
-Citus automatically propagates many kinds of DDL statements, which means that modifying a distributed table on the coordinator node will update shards on the workers too. Other DDL statements are unsupported on distributed tables, especially those which would modify a distribution column. Attempting to run unsupoorted DDL will raise an error and leave tables on the coordinator node unchanged. Some constraints like primary keys and uniqueness can only be applied prior to distributing a table.
+Citus automatically propagates many kinds of DDL statements, which means that modifying a distributed table on the coordinator node will update shards on the workers too. Other DDL statements require manual propagation, and some others are prohibited such as those which would modify a distribution column. Attempting to run DDL that is ineligible for automatic propagation will raise an error and leave tables on the coordinator node unchanged. Additionally, some constraints like primary keys and uniqueness can only be applied prior to distributing a table.
 
-Here is a reference of the categories of DDL statements and whether the current version of Citus supports their propagation. (Note that automatic propagation can be enabled or disabled with a :ref:`configuration parameter <enable_ddl_prop>`.)
+By default Citus performs DDL with a one-phase commit protocol. For greater safety you can enable two-phase commits by setting
 
-General
-~~~~~~~
+.. code-block:: postgresql
 
-+------------+-----------------------------------+--------------------------------+
-| Propagates | DDL                               | Notes                          |
-+============+===================================+================================+
-| YES        | Adding a Column                   |                                |
-+------------+-----------------------------------+--------------------------------+
-| YES        | Removing a Column                 | Except the distribution column |
-+------------+-----------------------------------+--------------------------------+
-| YES        | Changing a Column's Default Value |                                |
-+------------+-----------------------------------+--------------------------------+
-| YES        | Changing a Column's Data Type     | Except the distribution column |
-+------------+-----------------------------------+--------------------------------+
-| NO         | Renaming a Column                 |                                |
-+------------+-----------------------------------+--------------------------------+
-| NO         | Renaming a Table                  |                                |
-+------------+-----------------------------------+--------------------------------+
+  SET citus.multi_shard_commit_protocol = '2pc';
 
-Adding Constraints
-~~~~~~~~~~~~~~~~~~
+Here is a reference of the categories of DDL statements which propagate. Note that automatic propagation can be enabled or disabled with a :ref:`configuration parameter <enable_ddl_prop>`.
 
-+------------+----------------------+-------------------------------------------------+
-| Propagates | DDL                  | Notes                                           |
-+============+======================+=================================================+
-| YES        | Not-Null Constraints |                                                 |
-+------------+----------------------+-------------------------------------------------+
-| YES        | Foreign Keys         | Must include distribution column.               |
-|            |                      |                                                 |
-|            |                      | Requires unique constraint on target column(s). |
-+------------+----------------------+-------------------------------------------------+
-| NO         | Primary Keys         | Must include distribution column.               |
-|            |                      |                                                 |
-|            |                      | Add constraint before distributing!             |
-+------------+----------------------+-------------------------------------------------+
-| NO         | Unique Constraints   | Must include distribution column.               |
-|            |                      |                                                 |
-|            |                      | Add constraint before distributing!             |
-+------------+----------------------+-------------------------------------------------+
-| NO         | Check Constraints    |                                                 |
-+------------+----------------------+-------------------------------------------------+
+* Table Columns
+    * Adding
+    * Changing default value
+    * Removing
+        * except the distribution column
+    * Changing data type
+        * except the distribution column
+    * Renaming
+        * except the distribution column
 
+* Adding/Removing Constraints
+    * Not-null
+    * Foreign keys
+        * must include distribution column
+        * requires uniqueness constraint on target column(s)
+    * Primary keys
+        * must include distribution column
+        * add constraint before distributing
+    * Uniqueness
+        * must include distribution column
+        * add constraint before distributing
 
-Removing Constraints
-~~~~~~~~~~~~~~~~~~~~
+* Indices
+    * Removing
+    * Adding
+        * Does not yet support CONCURRENTLY
 
-+------------+----------------------+
-| Propagates | DDL                  |
-+============+======================+
-| YES        | Not-Null Constraints |
-+------------+----------------------+
-| YES        | Unique Constraints   |
-+------------+----------------------+
-| YES        | Primary Keys         |
-+------------+----------------------+
-| YES        | Foreign Keys         |
-+------------+----------------------+
-| NO         | Check Constraints    |
-+------------+----------------------+
+Manual Modification
+~~~~~~~~~~~~~~~~~~~
+
+If you attempt to alter a table and get an error such as "ERROR:  0A000: cannot create constraint," it means Citus does not yet support auto-propagation for the operation. In this case you can propagate the changes manually using this general four-step outline:
+
+1. Begin a transaction and take an ACCESS EXCLUSIVE lock on coordinator node against the table in question.
+2. In a separate connection, connect to each worker node and apply the operation to all shards.
+3. Disable DDL propagation on the coordinator and run the DDL command there.
+4. Commit the transaction (which will release the lock).
+
+Contact us for guidance about the process, we have internal tools which can make it easier.
