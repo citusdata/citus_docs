@@ -23,7 +23,7 @@ The usual way to find table sizes in PostgreSQL, :code:`pg_total_relation_size`,
 |                                          | * size of indices                                        |
 +------------------------------------------+----------------------------------------------------------+
 
-Notes about all these functions:
+These functions are analogous to three of the standard PostgreSQL `object size functions <https://www.postgresql.org/docs/current/static/functions-admin.html#FUNCTIONS-ADMIN-DBSIZE>`_, with the additional note that
 
 * They work only when :code:`citus.shard_replication_factor` = 1.
 * If they can't connect to a node, they error out.
@@ -40,11 +40,12 @@ Output:
 
 ::
 
-  ┌────────────┬────────┐
-  │    name    │  size  │
-  ├────────────┼────────┤
-  │ test_table │ 256 kB │
-  └────────────┴────────┘
+  ┌───────────────┬───────┐
+  │     name      │ size  │
+  ├───────────────┼───────┤
+  │ github_users  │ 39 MB │
+  │ github_events │ 37 MB │
+  └───────────────┴───────┘
 
 Vacuuming Distributed Tables
 ############################
