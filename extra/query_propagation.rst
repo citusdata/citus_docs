@@ -5,10 +5,12 @@ When the user issues a query, the Citus coordinator partitions it into smaller q
 
 However the way queries are partitioned into fragments (and which queries are propagated at all) varies by the type of query. In some advanced situations it is useful to manually control this behavior. Citus provides utility functions to propagate SQL to workers, shards, or placements.
 
+Manual query propagation bypasses coordinator logic, locking, and any other consistency checks. These functions are available as a last resort to allow statements which Citus otherwise does not run natively. Use them carefully to avoid data inconsistency and deadlocks.
+
 Running on all Workers
 ----------------------
 
-The least granular level of execution is broadcasting a statement for execution on all workers. This is useful for viewing a properties of entire worker databases or creating UDFs uniformly throughout the cluster. For example:
+The least granular level of execution is broadcasting a statement for execution on all workers. This is useful for viewing properties of entire worker databases or creating UDFs uniformly throughout the cluster. For example:
 
 .. code-block:: postgresql
 
@@ -25,7 +27,9 @@ The least granular level of execution is broadcasting a statement for execution 
 Running on all Shards
 ---------------------
 
-Each distributed table :code:`foo` has shards across the workers which are each tables with a naming convention of :code:`foo_n` where :code:`n` is a number. In order to run a query against a shard, the query must be run on its containing worker, and the shard name must be interpolated into the query string as an identifier (:code:`%I`).
+The next level of granularity is running a command across all shards of a particular distributed table. It can be useful, for instance, in reading the properties of a table directly on workers. Queries run locally on a worker node have full access to metadata such as table statistics.
+
+The :code:`run_command_on_shards` function applies a SQL command to each shard, where the shard name is provided for interpolation in the command. Here is an example of estimating the row count for a distributed table by using the pg_class table on each worker to estimate the number of rows for each shard. Notice the :code:`%I` which will be replaced with each shard's name.
 
 .. code-block:: postgresql
 
@@ -44,35 +48,20 @@ Each distributed table :code:`foo` has shards across the workers which are each 
 Running on all Placements
 -------------------------
 
-When using Citus- rather than streaming-replication for :ref:`dealing_with_node_failures`, each shard has replicas stored as tables on other workers. Shards and their replicas are all called *placements*. (PostgreSQL streaming replication, on the other hand, works at the database level rather than the shard level, so the notion of shard replica placements is not applicable there.)
+The most granular level of execution is running a command across all shards and their replicas (aka :ref:`placements <placements>`). It can be useful for running data modification commands, which must apply to every replica to ensure consistency.
 
-Queries that update rows ought to be run on all placements rather than simply all shards. Ordinarily update queries go through the coordinator node which ensures they apply across placements. The functions in this section bypass the normal coordinator logic, so skipping any replicas in a manual update will leave the cluster inconsistent. Conversely, read-only queries should be run on shards rather than placements or they will return duplicate results.
-
-The following are equivalent:
+For example, suppose a distributed table has an :code:`updated_at` field, and we want to "touch" all rows so that they are marked as updated at a certain time. An ordinary UPDATE statement on the coordinator requires a filter by the distribution column, but we can manually propagate the update across all shards and replicas:
 
 .. code-block:: postgresql
 
-  -- ordinary query going through the coordinator
-  UPDATE my_distributed_table
-     SET some_col = some_col + 1;
+  -- note we're using a hard-coded date rather than
+  -- a function such as "now()" because the query will
+  -- run at slightly different times on each replica
 
-  -- vs manually updating each placement
   SELECT run_command_on_placements(
     'my_distributed_table',
     $cmd$
-      UPDATE %I SET some_col = some_col + 1
-    $cmd$
-  );
-
-Whereas this next query leads to **inconsistency** for Citus-replication with replication factor greater than one:
-
-.. code-block:: postgresql
-
-  -- don't do this
-  SELECT run_command_on_shards(
-    'my_distributed_table',
-    $cmd$
-      UPDATE %I SET some_col = some_col + 1
+      UPDATE %I SET updated_at = '2017-01-01';
     $cmd$
   );
 
