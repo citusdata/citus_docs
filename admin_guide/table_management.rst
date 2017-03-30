@@ -1,6 +1,8 @@
 Table Management
 $$$$$$$$$$$$$$$$$$
 
+.. _table_size:
+
 Determining Table and Relation Size
 ###################################
 
