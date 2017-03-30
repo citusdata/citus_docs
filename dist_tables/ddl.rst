@@ -108,36 +108,6 @@ Writes on the table are blocked while the data is migrated, and pending writes a
 
 When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first distribute the Citus table(s), then copy the data into the table.
 
-.. code-block:: postgresql
-
-  -- Suppose we have a CSV file to import, and have a destination table
-  -- on the coordinator with the appropriate schema
-
-  -- First distribute the table to the workers
-  SELECT create_distributed_table('github_events', 'repo_id');
-
-::
-
-  NOTICE:  Copying data from local table...
-   create_distributed_table
-   --------------------------
-
-   (1 row)
-
-.. code-block:: psql
-
-  -- Then fill the table. Rows will automatically distribute to workers.
-  \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
-
-
-Both approaches work, but migrating from an external database to Citus has some drawbacks compared to turning an existing database directly into a Citus coordinator:
-
-* The user needs to turn off writes in the application
-* The user needs to have a machine available with a high bandwidth connection to the Citus coordinator
-* Copying data in an out can take a lot of time
-* Writing the data to a file requires extra storage space
-* In some cases, the distributed tables need to have a different name or schema
-
 .. _colocation_groups:
 
 Co-Locating Tables
