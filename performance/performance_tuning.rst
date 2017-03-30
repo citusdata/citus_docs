@@ -58,7 +58,7 @@ Here is an example of explaining the plan for a particular example query.
               Filter: (event_type = 'PushEvent'::text)
   (13 rows)
 
-This tells you several things. To begin with there are thirty-two shards, and we're using the real-time Citus executor setting:
+This tells you several things. To begin with there are thirty-two shards, and the planner chose the Citus real-time executor to execute this query:
 
 ::
 
@@ -71,12 +71,12 @@ Next it picks one of the workers and shows you more about how the query behaves 
 
   Tasks Shown: One of 32
   ->  Task
+    Node: host=localhost port=5433 dbname=postgres
 
 Distributed EXPLAIN next shows the results of running a normal PostgreSQL EXPLAIN on that worker for the fragment query:
 
 ::
 
-  Node: host=localhost port=5433 dbname=postgres
   ->  HashAggregate  (cost=93.42..98.36 rows=395 width=16)
     Group Key: date_trunc('minute'::text, created_at)
     ->  Seq Scan on github_events_102042 github_events  (cost=0.00..88.20 rows=418 width=503)
