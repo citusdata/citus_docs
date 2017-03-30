@@ -457,6 +457,89 @@ Example
                                  540007
   (1 row)
 
+citus_relation_size
+$$$$$$$$$$$$$$$$$$$
+
+Get the disk space used by all the shards of the specified distributed table. This includes the size of the "main fork," but excludes the visibility map and free space map for the shards.
+
+Arguments
+*********
+
+**logicalrelid:** the name of a distributed table.
+
+Return Value
+************
+
+Size in bytes as a bigint.
+
+Example
+*******
+
+.. code-block:: postgresql
+
+  SELECT citus_relation_size('github_events');
+
+::
+
+  citus_relation_size
+  --------------------
+             23658496
+
+citus_table_size
+$$$$$$$$$$$$$$$$
+
+Get the disk space used by all the shards of the specified distributed table, excluding indexes (but including TOAST, free space map, and visibility map).
+
+Arguments
+*********
+
+**logicalrelid:** the name of a distributed table.
+
+Return Value
+************
+
+Size in bytes as a bigint.
+
+Example
+*******
+
+.. code-block:: postgresql
+
+  SELECT citus_table_size('github_events');
+
+::
+
+  citus_table_size
+  ----------------
+         38625280
+
+citus_total_relation_size
+$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Get the total disk space used by the all the shards of the specified distributed table, including all indexes and TOAST data.
+
+Arguments
+*********
+
+**logicalrelid:** the name of a distributed table.
+
+Return Value
+************
+
+Size in bytes as a bigint.
+
+Example
+*******
+
+.. code-block:: postgresql
+
+  SELECT citus_total_relation_size('github_events');
+
+::
+
+  citus_total_relation_size
+  --------------------------
+                   76161024
 
 .. _cluster_management_functions:
 
