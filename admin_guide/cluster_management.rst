@@ -35,19 +35,19 @@ In addition to the above, if you want to move existing shards to the newly added
 	select rebalance_table_shards('github_events');
 
 
-Adding a master
+Adding a coordinator
 ----------------------
 
-The Citus master only stores metadata about the table shards and does not store any data. This means that all the computation is pushed down to the workers and the master does only final aggregations on the result of the workers. Therefore, it is not very likely that the master becomes a bottleneck for read performance. Also, it is easy to boost up the master by shifting to a more powerful machine.
+The Citus coordinator only stores metadata about the table shards and does not store any data. This means that all the computation is pushed down to the workers and the coordinator does only final aggregations on the result of the workers. Therefore, it is not very likely that the coordinator becomes a bottleneck for read performance. Also, it is easy to boost up the coordinator by shifting to a more powerful machine.
 
-However, in some write heavy use cases where the master becomes a performance bottleneck, users can add another master. As the metadata tables are small (typically a few MBs in size), it is possible to copy over the metadata onto another node and sync it regularly. Once this is done, users can send their queries to any master and scale out performance. If your setup requires you to use multiple masters, please `contact us <https://www.citusdata.com/about/contact_us>`_.
+However, in some write heavy use cases where the coordinator becomes a performance bottleneck, users can add another coordinator. As the metadata tables are small (typically a few MBs in size), it is possible to copy over the metadata onto another node and sync it regularly. Once this is done, users can send their queries to any coordinator and scale out performance. If your setup requires you to use multiple coordinators, please `contact us <https://www.citusdata.com/about/contact_us>`_.
 
 .. _dealing_with_node_failures:
 
 Dealing With Node Failures
 ##########################
 
-In this sub-section, we discuss how you can deal with node failures without incurring any downtime on your Citus cluster. We first discuss how Citus handles worker failures automatically by maintaining multiple replicas of the data. We also briefly describe how users can replicate their shards to bring them to the desired replication factor in case a node is down for a long time. Lastly, we discuss how you can setup redundancy and failure handling mechanisms for the master.
+In this sub-section, we discuss how you can deal with node failures without incurring any downtime on your Citus cluster. We first discuss how Citus handles worker failures automatically by maintaining multiple replicas of the data. We also briefly describe how users can replicate their shards to bring them to the desired replication factor in case a node is down for a long time. Lastly, we discuss how you can setup redundancy and failure handling mechanisms for the coordinator.
 
 .. _worker_node_failures:
 
@@ -62,14 +62,14 @@ Citus supports two modes of replication, allowing it to tolerate worker-node fai
 
 .. _master_node_failures:
 
-Master Node Failures
---------------------
+Coordinator Node Failures
+-------------------------
 
-The Citus master maintains metadata tables to track all of the cluster nodes and the locations of the database shards on those nodes. The metadata tables are small (typically a few MBs in size) and do not change very often. This means that they can be replicated and quickly restored if the node ever experiences a failure. There are several options on how users can deal with master failures.
+The Citus coordinator maintains metadata tables to track all of the cluster nodes and the locations of the database shards on those nodes. The metadata tables are small (typically a few MBs in size) and do not change very often. This means that they can be replicated and quickly restored if the node ever experiences a failure. There are several options on how users can deal with coordinator failures.
 
 1. **Use PostgreSQL streaming replication:** You can use PostgreSQL's streaming
-replication feature to create a hot standby of the master. Then, if the primary
-master node fails, the standby can be promoted to the primary automatically to
+replication feature to create a hot standby of the coordinator. Then, if the primary
+coordinator node fails, the standby can be promoted to the primary automatically to
 serve queries to your cluster. For details on setting this up, please refer to the `PostgreSQL wiki <https://wiki.postgresql.org/wiki/Streaming_Replication>`_.
 
 2. Since the metadata tables are small, users can use EBS volumes, or `PostgreSQL
@@ -78,7 +78,7 @@ copy over that metadata to new nodes to resume operation.
 
 3. Citus's metadata tables are simple and mostly contain text columns which
 are easy to understand. So, in case there is no failure handling mechanism in
-place for the master node, users can dynamically reconstruct this metadata from
+place for the coordinator node, users can dynamically reconstruct this metadata from
 shard information available on the worker nodes. To learn more about the metadata
 tables and their schema, you can visit the :ref:`metadata_tables` section of our documentation.
 

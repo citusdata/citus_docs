@@ -25,10 +25,10 @@ How does Citus handle failure of a worker node?
 If a worker node fails during e.g. a SELECT query, jobs involving shards from that server will automatically fail over to replica shards located on healthy hosts. This means intermittent failures will not require restarting potentially long-running analytical queries, so long as the shards involved can be reached on other healthy hosts.
 You can find more information about Citus' failure handling logic in :ref:`dealing_with_node_failures`.
 
-How does Citus handle failover of the master node?
---------------------------------------------------
+How does Citus handle failover of the coordinator node?
+-------------------------------------------------------
 
-As the Citus master node is similar to a standard PostgreSQL server, regular PostgreSQL synchronous replication and failover can be used to provide higher availability of the master node. Many of our customers use synchronous replication in this way to add resilience against master node failure. You can find more information about handling :ref:`master_node_failures`.
+As the Citus coordinator node is similar to a standard PostgreSQL server, regular PostgreSQL synchronous replication and failover can be used to provide higher availability of the coordinator node. Many of our customers use synchronous replication in this way to add resilience against coordinator node failure. You can find more information about handling :ref:`master_node_failures`.
 
 How do I ingest the results of a query into a distributed table?
 ----------------------------------------------------------------
