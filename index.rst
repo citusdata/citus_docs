@@ -60,7 +60,8 @@ topics.
    :caption: Cloud
 
    cloud/index.rst
-   cloud/features.rst
+   cloud/availability.rst
+   cloud/security.rst
    cloud/logging.rst
    cloud/mx.rst
    cloud/support.rst
