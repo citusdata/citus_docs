@@ -106,7 +106,7 @@ Writes on the table are blocked while the data is migrated, and pending writes a
 
   When distributing a number of tables with foreign keys between them, it's best to drop the foreign keys before running :code:`create_distributed_table` and recreating them after distributing the tables. Foreign keys cannot always be enforced when one table is distributed and the other is not.
 
-When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first distribute the Citus table(s), then copy the data into the table.
+When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table.
 
 .. _colocation_groups:
 
