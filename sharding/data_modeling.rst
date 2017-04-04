@@ -38,6 +38,8 @@ To apply this design in your own schema the first step is identifying what const
 
 If you're migrating an existing database to the Citus multi-tenant architecture then some of your tables may lack a column for the application-specific tenant id. You will need to add one and fill it with the correct values. This will denormalize your tables slightly. For more details and a concrete example of backfilling the tenant id, see our guide to :ref:`Multi-Tenant Migration <transitioning_mt>`.
 
+.. _typical_mt_schema:
+
 Typical Multi-Tenant Schema
 ---------------------------
 
