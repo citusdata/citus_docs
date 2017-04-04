@@ -31,57 +31,59 @@ To begin the tuning process create a Citus cluster and load data in it. From the
 
 Here is an example of explaining the plan for a particular example query.
 
-::
+.. code-block:: postgresql
 
-  explain SELECT comment FROM wikipedia_changes c, wikipedia_editors e
-          WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
-
-  Distributed Query into pg_merge_job_0005
-    Executor: Real-Time
-    Task Count: 16
-    Tasks Shown: One of 16
-    ->  Task
-      Node: host=localhost port=9701 dbname=postgres
-      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
-        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
-          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
-          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
-            Index Cond: (editor = c.editor)
-            Filter: (bot IS TRUE)
-  Master Query
-    ->  Limit  (cost=0.00..0.00 rows=0 width=0)
-      ->  Seq Scan on pg_merge_job_0005  (cost=0.00..0.00 rows=0 width=0)
-  (15 rows)
-
-This tells you several things. To begin with there are sixteen shards, and we're using the real-time Citus executor setting:
+  EXPLAIN
+   SELECT date_trunc('minute', created_at) AS minute,
+          sum((payload->>'distinct_size')::int) AS num_commits
+     FROM github_events
+    WHERE event_type = 'PushEvent'
+    GROUP BY minute
+    ORDER BY minute;
 
 ::
 
-  Distributed Query into pg_merge_job_0005
-    Executor: Real-Time
-    Task Count: 16
+  Sort  (cost=0.00..0.00 rows=0 width=0)
+    Sort Key: minute
+    ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)
+      Group Key: minute
+      ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+        Task Count: 32
+        Tasks Shown: One of 32
+        ->  Task
+          Node: host=localhost port=5433 dbname=postgres
+          ->  HashAggregate  (cost=93.42..98.36 rows=395 width=16)
+            Group Key: date_trunc('minute'::text, created_at)
+            ->  Seq Scan on github_events_102042 github_events  (cost=0.00..88.20 rows=418 width=503)
+              Filter: (event_type = 'PushEvent'::text)
+  (13 rows)
 
-Next it picks one of the workers to and shows you more about how the query behaves there. It indicates the host, port, and database so you can connect to the worker directly if desired:
+This tells you several things. To begin with there are thirty-two shards, and the planner chose the Citus real-time executor to execute this query:
 
 ::
 
-    Tasks Shown: One of 16
-    ->  Task
-      Node: host=localhost port=9701 dbname=postgres
+  ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+    Task Count: 32
+
+Next it picks one of the workers and shows you more about how the query behaves there. It indicates the host, port, and database so you can connect to the worker directly if desired:
+
+::
+
+  Tasks Shown: One of 32
+  ->  Task
+    Node: host=localhost port=5433 dbname=postgres
 
 Distributed EXPLAIN next shows the results of running a normal PostgreSQL EXPLAIN on that worker for the fragment query:
 
 ::
 
-      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
-        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
-          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
-          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
-            Index Cond: (editor = c.editor)
-            Filter: (bot IS TRUE)
+  ->  HashAggregate  (cost=93.42..98.36 rows=395 width=16)
+    Group Key: date_trunc('minute'::text, created_at)
+    ->  Seq Scan on github_events_102042 github_events  (cost=0.00..88.20 rows=418 width=503)
+      Filter: (event_type = 'PushEvent'::text)
 
 
-You can now connect to the worker at 'localhost', port '9701' and tune query performance for the shard wikipedia_changes_102024 using standard PostgreSQL techniques. As you make changes run EXPLAIN again from the master or right on the worker.
+You can now connect to the worker at 'localhost', port '5433' and tune query performance for the shard github_events_102042 using standard PostgreSQL techniques. As you make changes run EXPLAIN again from the master or right on the worker.
 
 The first set of such optimizations relates to configuration settings. PostgreSQL by default comes with conservative resource settings; and among these settings, shared_buffers and work_mem are probably the most important ones in optimizing read performance. We discuss these parameters in brief below. Apart from them, several other configuration settings impact query performance. These settings are covered in more detail in the `PostgreSQL manual <http://www.postgresql.org/docs/9.6/static/runtime-config.html>`_ and are also discussed in the `PostgreSQL 9.0 High Performance book <http://www.amazon.com/PostgreSQL-High-Performance-Gregory-Smith/dp/184951030X>`_.
 
@@ -97,54 +99,50 @@ For write performance, you can use general PostgreSQL configuration tuning to in
 
 Once you have tuned a worker to your satisfaction you will have to manually apply those changes to the other workers as well. To verify that they are all behaving properly, set this configuration variable on the master:
 
-::
+.. code-block:: postgresql
 
   SET citus.explain_all_tasks = 1;
 
 This will cause EXPLAIN to show the the query plan for all tasks, not just one.
 
+.. code-block:: postgresql
+
+  EXPLAIN
+   SELECT date_trunc('minute', created_at) AS minute,
+          sum((payload->>'distinct_size')::int) AS num_commits
+     FROM github_events
+    WHERE event_type = 'PushEvent'
+    GROUP BY minute
+    ORDER BY minute;
+
 ::
 
-  explain SELECT comment FROM wikipedia_changes c, wikipedia_editors e
-          WHERE c.editor = e.editor AND e.bot IS true LIMIT 10;
+   Sort  (cost=0.00..0.00 rows=0 width=0)
+     Sort Key: minute
+     ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)
+       Group Key: minute
+       ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+         Task Count: 32
+         Tasks Shown: All
+         ->  Task
+           Node: host=localhost port=5433 dbname=postgres
+           ->  HashAggregate  (cost=93.42..98.36 rows=395 width=16)
+             Group Key: date_trunc('minute'::text, created_at)
+             ->  Seq Scan on github_events_102042 github_events  (cost=0.00..88.20 rows=418 width=503)
+               Filter: (event_type = 'PushEvent'::text)
+         ->  Task
+           Node: host=localhost port=5434 dbname=postgres
+           ->  HashAggregate  (cost=103.21..108.57 rows=429 width=16)
+             Group Key: date_trunc('minute'::text, created_at)
+             ->  Seq Scan on github_events_102043 github_events  (cost=0.00..97.47 rows=459 width=492)
+               Filter: (event_type = 'PushEvent'::text)
+         --
+         -- ... repeats for all 32 tasks
+         --     alternating between workers one and two
+         --     (running in this case locally on ports 5433, 5434)
+         --
 
-  Distributed Query into pg_merge_job_0003
-    Executor: Real-Time
-    Task Count: 16
-    Tasks Shown: All
-    ->  Task
-      Node: host=localhost port=9701 dbname=postgres
-      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
-        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
-          ->  Seq Scan on wikipedia_changes_102024 c  (cost=0.00..13.90 rows=390 width=64)
-          ->  Index Scan using wikipedia_editors_editor_key_102008 on wikipedia_editors_102008 e  (cost=0.15..0.29 rows=1 width=32)
-            Index Cond: (editor = c.editor)
-            Filter: (bot IS TRUE)
-    ->  Task
-      Node: host=localhost port=9702 dbname=postgres
-      ->  Limit  (cost=0.15..6.87 rows=10 width=32)
-        ->  Nested Loop  (cost=0.15..131.12 rows=195 width=32)
-          ->  Seq Scan on wikipedia_changes_102025 c  (cost=0.00..13.90 rows=390 width=64)
-          ->  Index Scan using wikipedia_editors_editor_key_102009 on wikipedia_editors_102009 e  (cost=0.15..0.29 rows=1 width=32)
-            Index Cond: (editor = c.editor)
-            Filter: (bot IS TRUE)
-    ->  Task
-      Node: host=localhost port=9701 dbname=postgres
-      ->  Limit  (cost=1.13..2.36 rows=10 width=74)
-        ->  Hash Join  (cost=1.13..8.01 rows=56 width=74)
-          Hash Cond: (c.editor = e.editor)
-          ->  Seq Scan on wikipedia_changes_102036 c  (cost=0.00..5.69 rows=169 width=83)
-          ->  Hash  (cost=1.09..1.09 rows=3 width=12)
-            ->  Seq Scan on wikipedia_editors_102020 e  (cost=0.00..1.09 rows=3 width=12)
-              Filter: (bot IS TRUE)
-    --
-    -- ... repeats for all 16 tasks
-    --     alternating between workers one and two
-    --     (running in this case locally on ports 9701, 9702)
-    --
-  Master Query
-    ->  Limit  (cost=0.00..0.00 rows=0 width=0)
-      ->  Seq Scan on pg_merge_job_0003  (cost=0.00..0.00 rows=0 width=0)
+  (199 rows)
 
 Differences in worker execution can be caused by tuning configuration differences, uneven data distribution across shards, or hardware differences between the machines. To get more information about the time it takes the query to run on each shard you can use EXPLAIN ANALYZE.
 
