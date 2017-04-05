@@ -11,18 +11,18 @@ The usual way to find table sizes in PostgreSQL, :code:`pg_total_relation_size`,
 +------------------------------------------+----------------------------------------------------------+
 | UDF                                      | Returns                                                  |
 +==========================================+==========================================================+
-| citus_relation_size(relation_name)       | Size of actual data in table (the "main fork").          |
+| citus_relation_size(relation_name)       | * Size of actual data in table (the "main fork").        |
 |                                          |                                                          |
-|                                          | A relation can be the name of a table or an index.       |
+|                                          | * A relation can be the name of a table or an index.     |
 +------------------------------------------+----------------------------------------------------------+
-| citus_table_size(relation_name)          | citus_relation_size plus                                 |
+| citus_table_size(relation_name)          | * citus_relation_size plus:                              |
 |                                          |                                                          |
-|                                          | * size of free space map                                 |
-|                                          | * size of visibility map                                 |
+|                                          |    * size of `free space map <freemap_>`_                |
+|                                          |    * size of `visibility map <vismap_>`_                 |
 +------------------------------------------+----------------------------------------------------------+
-| citus_total_relation_size(relation_name) | citus_table_size plus                                    |
+| citus_total_relation_size(relation_name) | * citus_table_size plus:                                 |
 |                                          |                                                          |
-|                                          | * size of indices                                        |
+|                                          |    * size of indices                                     |
 +------------------------------------------+----------------------------------------------------------+
 
 These functions are analogous to three of the standard PostgreSQL `object size functions <https://www.postgresql.org/docs/current/static/functions-admin.html#FUNCTIONS-ADMIN-DBSIZE>`_, with the additional note that
@@ -80,3 +80,6 @@ To analyze a table, run this on the coordinator node:
   ANALYZE my_distributed_table;
 
 Citus propagates the ANALYZE command to all worker node placements.
+
+.. _freemap: https://www.postgresql.org/docs/current/static/storage-fsm.html
+.. _vismap: https://www.postgresql.org/docs/current/static/storage-vm.html
