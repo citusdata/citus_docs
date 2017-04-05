@@ -162,18 +162,3 @@ Maximizing Write Performance
 ----------------------------
 
 Both INSERT and UPDATE/DELETE statements can be scaled up to around 50,000 queries per second on large machines. However, to achieve this rate, you will need to use many parallel, long-lived connections and consider how to deal with locking. For more information, you can consult the :ref:`scaling_data_ingestion` section of our documentation.
-
-Running a Query on All Workers
-------------------------------
-
-Broadcasting a statement for execution on all workers is useful for viewing properties of entire worker databases or creating UDFs uniformly throughout the cluster. For example:
-
-.. code-block:: postgresql
-
-  -- Make a UDF available on all workers
-  SELECT run_command_on_workers($cmd$ CREATE FUNCTION ...; $cmd$);
-
-  -- List the work_mem setting of each worker database
-  SELECT run_command_on_workers($cmd$ SHOW work_mem; $cmd$);
-
-The :code:`run_command_on_workers` function can run only queries which return a single column and single row.
