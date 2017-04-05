@@ -88,3 +88,8 @@ I forgot the distribution column of a table, how do I find it?
 --------------------------------------------------------------
 
 The Citus coordinator node metadata tables contain this information. See :ref:`finding_dist_col`.
+
+Why does pg_relation_size report zero bytes for a distributed table?
+--------------------------------------------------------------------
+
+The data in distributed tables lives on the worker nodes (in shards), not on the coordinator. A true measure of distributed table size is obtained as a sum of shard sizes. Citus provides helper functions to query this information. See :ref:`table_size` to learn more.
