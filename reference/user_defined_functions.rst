@@ -477,13 +477,13 @@ Example
 
 .. code-block:: postgresql
 
-  SELECT citus_relation_size('github_events');
+  SELECT pg_size_pretty(citus_relation_size('github_events'));
 
 ::
 
-  citus_relation_size
-  --------------------
-             23658496
+  pg_size_pretty
+  --------------
+  23 MB
 
 citus_table_size
 $$$$$$$$$$$$$$$$
@@ -505,13 +505,13 @@ Example
 
 .. code-block:: postgresql
 
-  SELECT citus_table_size('github_events');
+  SELECT pg_size_pretty(citus_table_size('github_events'));
 
 ::
 
-  citus_table_size
-  ----------------
-         38625280
+  pg_size_pretty
+  --------------
+  37 MB
 
 citus_total_relation_size
 $$$$$$$$$$$$$$$$$$$$$$$$$
@@ -533,13 +533,13 @@ Example
 
 .. code-block:: postgresql
 
-  SELECT citus_total_relation_size('github_events');
+  SELECT pg_size_pretty(citus_total_relation_size('github_events'));
 
 ::
 
-  citus_total_relation_size
-  --------------------------
-                   76161024
+  pg_size_pretty
+  --------------
+  73 MB
 
 .. _cluster_management_functions:
 
