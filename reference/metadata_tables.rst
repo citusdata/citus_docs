@@ -106,6 +106,7 @@ The shardstorage column in pg_dist_shard indicates the type of storage used for 
 +----------------+----------------------+-----------------------------------------------------------------------------+
 
 
+.. _placements:
 
 Shard placement table
 ---------------------------------------
