@@ -1,6 +1,54 @@
 Table Management
 $$$$$$$$$$$$$$$$$$
 
+.. _table_size:
+
+Determining Table and Relation Size
+###################################
+
+The usual way to find table sizes in PostgreSQL, :code:`pg_total_relation_size`, drastically under-reports the size of distributed tables. All this function does on a Citus cluster is reveal the size of tables on the coordinator node. In reality the data in distributed tables lives on the worker nodes (in shards), not on the coordinator. A true measure of distributed table size is obtained as a sum of shard sizes. Citus provides helper functions to query this information.
+
++------------------------------------------+---------------------------------------------------------------+
+| UDF                                      | Returns                                                       |
++==========================================+===============================================================+
+| citus_relation_size(relation_name)       | * Size of actual data in table (the "`main fork <forks_>`_"). |
+|                                          |                                                               |
+|                                          | * A relation can be the name of a table or an index.          |
++------------------------------------------+---------------------------------------------------------------+
+| citus_table_size(relation_name)          | * citus_relation_size plus:                                   |
+|                                          |                                                               |
+|                                          |    * size of `free space map <freemap_>`_                     |
+|                                          |    * size of `visibility map <vismap_>`_                      |
++------------------------------------------+---------------------------------------------------------------+
+| citus_total_relation_size(relation_name) | * citus_table_size plus:                                      |
+|                                          |                                                               |
+|                                          |    * size of indices                                          |
++------------------------------------------+---------------------------------------------------------------+
+
+These functions are analogous to three of the standard PostgreSQL `object size functions <https://www.postgresql.org/docs/current/static/functions-admin.html#FUNCTIONS-ADMIN-DBSIZE>`_, with the additional note that
+
+* They work only when :code:`citus.shard_replication_factor` = 1.
+* If they can't connect to a node, they error out.
+
+Here is an example of using one of the helper functions to list the sizes of all distributed tables:
+
+.. code-block:: postgresql
+
+  SELECT logicalrelid AS name,
+         pg_size_pretty(citus_table_size(logicalrelid)) AS size
+    FROM pg_dist_partition;
+
+Output:
+
+::
+
+  ┌───────────────┬───────┐
+  │     name      │ size  │
+  ├───────────────┼───────┤
+  │ github_users  │ 39 MB │
+  │ github_events │ 37 MB │
+  └───────────────┴───────┘
+
 Vacuuming Distributed Tables
 ############################
 
@@ -32,3 +80,7 @@ To analyze a table, run this on the coordinator node:
   ANALYZE my_distributed_table;
 
 Citus propagates the ANALYZE command to all worker node placements.
+
+.. _freemap: https://www.postgresql.org/docs/current/static/storage-fsm.html
+.. _vismap: https://www.postgresql.org/docs/current/static/storage-vm.html
+.. _forks: https://www.postgresql.org/docs/9.6/static/storage-file-layout.html
