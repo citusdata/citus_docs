@@ -213,8 +213,7 @@ example, check out our `reference app
 <https://github.com/citusdata/citus-example-ad-analytics>`__ that
 showcases a simplified sample SaaS application for ad analytics.
 
-.. figure:: ../images/ad_analytics_screenshot.png
-  :alt: SCreenshot of example app
+.. image:: ../images/ad_analytics_screenshot.png
 
 As you can see in the screenshot, most data is associated to the
 currently logged in customer - even though this is complex analytical
