@@ -73,7 +73,10 @@ After installing the new package and restarting the database, run the extension 
   # you should see the newer Citus version in the list
   psql -c '\dx'
 
-During a major version upgrade Citus will refuse to run distributed queries until ALTER EXTENSION is executed.
+
+.. note::
+
+  During a major version upgrade, from the moment of yum installing a new version, Citus will refuse to run distributed queries until ALTER EXTENSION is executed. This is to protect your data, as Citus object and function definitions are specific to a version. After a yum install you should (a) restart and (b) run alter extension.
 
 Step 3. (upgrade from 5.x only) Add Co-Location Metadata
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
