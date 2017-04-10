@@ -28,7 +28,7 @@ You can find more information about Citus' failure handling logic in :ref:`deali
 How does Citus handle failover of the coordinator node?
 -------------------------------------------------------
 
-As the Citus coordinator node is similar to a standard PostgreSQL server, regular PostgreSQL synchronous replication and failover can be used to provide higher availability of the coordinator node. Many of our customers use synchronous replication in this way to add resilience against coordinator node failure. You can find more information about handling :ref:`master_node_failures`.
+As the Citus coordinator node is similar to a standard PostgreSQL server, regular PostgreSQL synchronous replication and failover can be used to provide higher availability of the coordinator node. Many of our customers use synchronous replication in this way to add resilience against coordinator node failure. You can find more information about handling :ref:`coordinator_node_failures`.
 
 How do I ingest the results of a query into a distributed table?
 ----------------------------------------------------------------

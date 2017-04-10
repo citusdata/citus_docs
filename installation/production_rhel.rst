@@ -78,7 +78,7 @@ You must add the Citus extension to **every database** you would like to use in 
 
   sudo -i -u postgres psql -c "CREATE EXTENSION citus;"
 
-.. _production_rhel_master_node:
+.. _production_rhel_coordinator_node:
 
 Steps to be executed on the coordinator node
 --------------------------------------------

@@ -60,7 +60,7 @@ Citus supports two modes of replication, allowing it to tolerate worker-node fai
 
 2. **Citus shard replication.** This option is best suited for an append-only workload. Citus replicates shards across different nodes by automatically replicating DML statements and managing consistency. If a node goes down, the co-ordinator node will continue to serve queries by routing the work to the replicas seamlessly. To enable shard replication simply set :code:`SET citus.shard_replication_factor = 2;` (or higher) before distributing data to the cluster.
 
-.. _master_node_failures:
+.. _coordinator_node_failures:
 
 Coordinator Node Failures
 -------------------------
