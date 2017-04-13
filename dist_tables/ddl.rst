@@ -272,7 +272,7 @@ Citus supports adding and removing `indices <https://www.postgresql.org/docs/cur
 Manual Modification
 ~~~~~~~~~~~~~~~~~~~
 
-If you attempt to alter a table and get an error such as "ERROR:  0A000: cannot create constraint," it means Citus does not yet support auto-propagation for the operation. In this case you can propagate the changes manually using this general four-step outline:
+Currently other DDL commands are not auto-propagated, however you can propagate the changes manually using this general four-step outline:
 
 1. Begin a transaction and take an ACCESS EXCLUSIVE lock on coordinator node against the table in question.
 2. In a separate connection, connect to each worker node and apply the operation to all shards.
