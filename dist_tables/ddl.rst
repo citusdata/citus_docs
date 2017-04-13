@@ -1,7 +1,7 @@
 .. _ddl:
 
-Creating Distributed Tables (DDL)
-#################################
+Creating and Modifying Distributed Tables (DDL)
+###############################################
 
 .. note::
     The instructions below assume that the PostgreSQL installation is in your path. If not, you will need to add it to your PATH environment variable. For example:
@@ -148,3 +148,135 @@ You can use the standard PostgreSQL DROP TABLE command to remove your distribute
 ::
 
     DROP TABLE github_events;
+
+.. _ddl_prop_support:
+
+Modifying Tables
+----------------
+
+Citus automatically propagates many kinds of DDL statements, which means that modifying a distributed table on the coordinator node will update shards on the workers too. Other DDL statements require manual propagation, and certain others are prohibited such as those which would modify a distribution column. Attempting to run DDL that is ineligible for automatic propagation will raise an error and leave tables on the coordinator node unchanged. Additionally, some constraints like primary keys and uniqueness can only be applied prior to distributing a table.
+
+By default Citus performs DDL with a one-phase commit protocol. For greater safety you can enable two-phase commits by setting
+
+.. code-block:: postgresql
+
+  SET citus.multi_shard_commit_protocol = '2pc';
+
+Here is a reference of the categories of DDL statements which propagate. Note that automatic propagation can be enabled or disabled with a :ref:`configuration parameter <enable_ddl_prop>`.
+
+Adding/Modifying Columns
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Citus propagates most `ALTER TABLE <https://www.postgresql.org/docs/current/static/ddl-alter.html>`_ commands automatically. Adding columns or changing their default values work as they would in a single-machine PostgreSQL database:
+
+.. code-block:: postgresql
+
+  -- Adding a column
+
+  ALTER TABLE products ADD COLUMN description text;
+
+  -- Changing default value
+
+  ALTER TABLE products ALTER COLUMN price SET DEFAULT 7.77;
+
+Significant changes to an existing column are fine too, except for those applying to the :ref:`distribution column <distributed_data_modeling>`. This column determines how table data distributes through the Citus cluster and cannot be modified in a way that would change data distribution.
+
+
+.. code-block:: postgresql
+
+  -- Cannot be executed against a distribution column
+
+  -- Removing a column
+
+  ALTER TABLE products DROP COLUMN description;
+
+  -- Changing column data type
+
+  ALTER TABLE products ALTER COLUMN price TYPE numeric(10,2);
+
+  -- Renaming a column
+
+  ALTER TABLE products RENAME COLUMN product_no TO product_number;
+
+Adding/Removing Constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using Citus allows you to continue to enjoy the safety of a relational database, including database constraints (see the PostgreSQL `docs <https://www.postgresql.org/docs/current/static/ddl-constraints.html>`_). Due to the nature of distributed systems, Citus will not cross-reference uniqueness constraints or referential integrity between worker nodes. Foreign keys must always be declared between :ref:`colocated tables <colocation>`. To do this, use compound foreign keys that include the distribution column.
+
+This example, excerpted from a :ref:`typical_mt_schema`, shows how to create primary and foreign keys on distributed tables.
+
+.. code-block:: postgresql
+
+  --
+  -- Adding a primary key
+  -- --------------------
+
+  -- Ultimately we'll distribute these tables on the account id, so the
+  -- ads and clicks tables use compound keys to include it.
+
+  ALTER TABLE accounts ADD PRIMARY KEY (id);
+  ALTER TABLE ads ADD PRIMARY KEY (account_id, id);
+  ALTER TABLE clicks ADD PRIMARY KEY (account_id, id);
+
+  -- Next distribute the tables
+  -- (primary keys must be created prior to distribution)
+
+  SELECT create_distributed_table('accounts',  'id');
+  SELECT create_distributed_table('ads',       'account_id');
+  SELECT create_distributed_table('clicks',    'account_id');
+
+  --
+  -- Adding foreign keys
+  -- -------------------
+
+  -- Note that this can happen before or after distribution, as long as
+  -- there exists a uniqueness constraint on the target column(s) which
+  -- can only be enforced before distribution.
+
+  ALTER TABLE ads ADD CONSTRAINT ads_account_fk
+    FOREIGN KEY (account_id) REFERENCES accounts (id);
+  ALTER TABLE clicks ADD CONSTRAINT clicks_account_fk
+    FOREIGN KEY (account_id) REFERENCES accounts (id);
+
+Uniqueness constraints, like primary keys, must be added prior to table distribution.
+
+.. code-block:: postgresql
+
+  -- Suppose we want every ad to use a unique image. Notice we can
+  -- enforce it only per account when we distribute by account id.
+
+  ALTER TABLE ads ADD CONSTRAINT ads_unique_image
+    UNIQUE (account_id, image_url);
+
+Not-null constraints can always be applied because they require no lookups between workers.
+
+.. code-block:: postgresql
+
+  ALTER TABLE ads ALTER COLUMN image_url SET NOT NULL;
+
+Adding/Removing Indices
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Citus supports adding and removing `indices <https://www.postgresql.org/docs/current/static/sql-createindex.html>`_, but not with the :code:`CONCURRENTLY` option.
+
+.. code-block:: postgresql
+
+  -- Adding an index (does not support CONCURRENTLY)
+
+  CREATE INDEX clicked_at_idx ON clicks USING BRIN (clicked_at);
+
+  -- Removing an index
+
+  DROP INDEX clicked_at_idx;
+
+Manual Modification
+~~~~~~~~~~~~~~~~~~~
+
+Currently other DDL commands are not auto-propagated, however you can propagate the changes manually using this general four-step outline:
+
+1. Begin a transaction and take an ACCESS EXCLUSIVE lock on coordinator node against the table in question.
+2. In a separate connection, connect to each worker node and apply the operation to all shards.
+3. Disable DDL propagation on the coordinator and run the DDL command there.
+4. Commit the transaction (which will release the lock).
+
+Contact us for guidance about the process, we have internal tools which can make it easier.
