@@ -13,14 +13,16 @@ create_distributed_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The create_distributed_table() function is used to define a distributed table
-and create its shards if its a hash-distributed table. This function takes in a
+and create its shards if it's a hash-distributed table. This function takes in a
 table name, the distribution column and an optional distribution method and inserts
 appropriate metadata to mark the table as distributed. The function defaults to
 'hash' distribution if no distribution method is specified. If the table is
 hash-distributed, the function also creates worker shards based on the shard
-count and shard replication factor configuration values. This function replaces
-usage of master_create_distributed_table() followed by
-master_create_worker_shards(). 
+count and shard replication factor configuration values. If the table contains
+any rows, they are automatically distributed to worker nodes.
+
+This function replaces usage of master_create_distributed_table() followed by
+master_create_worker_shards().
 
 Arguments
 ************************
@@ -50,6 +52,8 @@ This example informs the database that the github_events table should be distrib
   -- alternatively, to be more explicit:
   SELECT create_distributed_table('github_events', 'repo_id',
                                   colocate_with => 'github_repo');
+
+For more examples, see :ref:`ddl`.
 
 create_reference_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
