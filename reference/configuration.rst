@@ -107,14 +107,14 @@ Use the binary copy format to transfer data between master and the workers. When
 DDL
 -------------------------------------------------------------------
 
+.. _enable_ddl_prop:
+
 citus.enable_ddl_propagation (boolean)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Specifies whether to automatically propagate DDL changes from the master to all workers. The default value is true. Because some schema changes require an access exclusive lock on tables and because the automatic propagation applies to all workers sequentially it can make a Citus cluter temporarily less responsive. You may choose to disable this setting and propagate changes manually.
+Specifies whether to automatically propagate DDL changes from the master to all workers. The default value is true. Because some schema changes require an access exclusive lock on tables and because the automatic propagation applies to all workers sequentially it can make a Citus cluster temporarily less responsive. You may choose to disable this setting and propagate changes manually.
 
-.. note::
-
-  Currently CREATE INDEX and ALTER TABLE are the only DDL changes that Citus propagates automatically.
+For a list of DDL propagation support, see :ref:`ddl_prop_support`.
 
 Executor Configuration
 ------------------------------------------------------------
