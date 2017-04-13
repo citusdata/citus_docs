@@ -168,7 +168,7 @@ where you normalize data and split it into many distinct models each
 identified by a single ``id`` column, with multiple ``belongs_to``
 relationships that tie objects back to a tenant or customer:
 
-.. code:: ruby
+.. code-block:: ruby
 
   # typical pattern with multiple belongs_to relationships
 
@@ -226,7 +226,7 @@ the ``id`` of the record:
 
 You should modify that primary key to also include the tenant\_id:
 
-.. code:: sql
+.. code-block:: sql
 
   ALTER TABLE page_views DROP CONSTRAINT page_views_pkey;
   ALTER TABLE page_views ADD PRIMARY KEY(id, customer_id);
@@ -258,7 +258,7 @@ You can get started by including ``gem 'activerecord-multi-tenant'``
 into your Gemfile, running ``bundle install``, and then annotating your
 ActiveRecord models like this:
 
-.. code:: ruby
+.. code-block:: ruby
 
   class PageView < ActiveRecord::Base
     multi_tenant :customer
@@ -281,7 +281,7 @@ including the tenant\_id with all queries.
 In order for that to work, you’ll always need to specify which tenant
 you are accessing, either by specifying it on a per-request basis:
 
-.. code:: ruby
+.. code-block:: ruby
 
   class ApplicationController < ActionController::Base
     # Opt-into the "set_current_tenant" controller helpers by specifying this:
@@ -298,7 +298,7 @@ you are accessing, either by specifying it on a per-request basis:
 Or by wrapping your code in a block, e.g. for background and maintenance
 tasks:
 
-.. code:: ruby
+.. code-block:: ruby
 
   customer = Customer.find(session[:current_customer_id])
   # ...
@@ -316,7 +316,7 @@ Once you are ready to use a distributed multi-tenant database like
 Citus, all you need is a few adjustments to your migrations, and you're
 good to go:
 
-.. code:: ruby
+.. code-block:: ruby
 
   class InitialTables < ActiveRecord::Migration
     def up
