@@ -83,6 +83,31 @@ If you have an existing distributed table which has a shard count of one, you ca
 
   SELECT upgrade_to_reference_table('table_name');
 
+Distributing Coordinator Data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If an existing PostgreSQL database is converted into the coordinator node for a Citus cluster, the data in its tables can be distributed efficiently and with minimal interruption to an application.
+
+The :code:`create_distributed_table` function described earlier works on both empty and non-empty tables, and for the latter automatically distributes table rows throughout the cluster. You will know if it does this by the presence of the message, "NOTICE:  Copying data from local table..." For example:
+
+.. code-block:: postgresql
+
+  CREATE TABLE series AS SELECT i FROM generate_series(1,1000000) i;
+  SELECT create_distributed_table('series', 'i');
+  NOTICE:  Copying data from local table...
+   create_distributed_table
+   --------------------------
+
+   (1 row)
+
+Writes on the table are blocked while the data is migrated, and pending writes are handled as distributed queries once the function commits. (If the function fails then the queries become local again.) Reads can continue as normal and will become distributed queries once the function commits.
+
+.. note::
+
+  When distributing a number of tables with foreign keys between them, it's best to drop the foreign keys before running :code:`create_distributed_table` and recreating them after distributing the tables. Foreign keys cannot always be enforced when one table is distributed and the other is not.
+
+When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table.
+
 .. _colocation_groups:
 
 Co-Locating Tables
