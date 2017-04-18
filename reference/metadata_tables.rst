@@ -201,15 +201,17 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 +----------------+----------------------+---------------------------------------------------------------------------+
 | hasmetadata    |        boolean       | | Reserved for internal use.                                              |
 +----------------+----------------------+---------------------------------------------------------------------------+
+| isactive       |        boolean       | | Whether the node is active accepting shard placements.                  |
++----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
     SELECT * from pg_dist_node;
-     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata 
-    --------+---------+-----------+----------+----------+-------------
-          1 |       1 | localhost |    12345 | default  | f
-          2 |       2 | localhost |    12346 | default  | f
-          3 |       3 | localhost |    12347 | default  | f
+     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata | isactive
+    --------+---------+-----------+----------+----------+-------------+----------
+          1 |       1 | localhost |    12345 | default  | f           | t
+          2 |       2 | localhost |    12346 | default  | f           | t
+          3 |       3 | localhost |    12347 | default  | f           | t
     (3 rows)
 
 .. _colocation_group_table:
