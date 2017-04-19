@@ -48,16 +48,14 @@ If you want to do joins between small dimension tables (regular Postgres tables)
 Are there any PostgreSQL features not supported by Citus?
 ---------------------------------------------------------
 
-Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. This includes the support for wide range of data types (including semi-structured data types like jsonb, hstore), full text search, operators and functions, foreign data wrappers, etc.
+Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. Furthermore, queries that target a single worker node support the entire spectrum of PostgreSQL features. A common case of those kind of queries are those restricted to a single tenant in a multi-tenant application (see :ref:`when_to_use_citus`).
 
-PostgreSQL has a wide SQL coverage; and Citus does not support that entire spectrum out of the box when querying distributed tables that span multiple worker nodes. Some constructs which aren't supported natively in this case are:
+On the other hand, when querying distributed tables that span multiple worker nodes, Citus does not provide all SQL constructs out of the box. Cross-node distributed queries do support many features though, like a wide range of data types (including semi-structured data types like jsonb, hstore), full text search, operators and functions, foreign data wrappers, etc. Some constructs which aren't supported natively in this case are:
 
 * Window Functions
 * CTEs
 * Set operations
 * Transactional semantics for queries that span across multiple shards
-
-Note that these features *are* fully supported for queries which target a single worker. For example, queries restricted to a single tenant in a multi-tenant application. See :ref:`when_to_use_citus`.
 
 How do I choose the shard count when I hash-partition my data?
 --------------------------------------------------------------
