@@ -32,10 +32,10 @@ Let's create directories for those nodes to store their data. For convenience in
   export PATH=$PATH:/usr/pgsql-9.6/bin
 
   cd ~
-  mkdir -p citus/coord citus/worker1 citus/worker2
+  mkdir -p citus/coordinator citus/worker1 citus/worker2
 
   # create three normal postgres instances
-  initdb -D citus/coord
+  initdb -D citus/coordinator
   initdb -D citus/worker1
   initdb -D citus/worker2
 
@@ -43,7 +43,7 @@ Citus is a Postgres extension, to tell Postgres to use this extension you'll nee
 
 ::
 
-  echo "shared_preload_libraries = 'citus'" >> citus/coord/postgresql.conf
+  echo "shared_preload_libraries = 'citus'" >> citus/coordinator/postgresql.conf
   echo "shared_preload_libraries = 'citus'" >> citus/worker1/postgresql.conf
   echo "shared_preload_libraries = 'citus'" >> citus/worker2/postgresql.conf
 
@@ -53,7 +53,7 @@ We will start the PostgreSQL instances on ports 9700 (for the coordinator) and 9
 
 Let's start the databases::
 
-  pg_ctl -D citus/coord -o "-p 9700" -l coord_logfile start
+  pg_ctl -D citus/coordinator -o "-p 9700" -l coordinator_logfile start
   pg_ctl -D citus/worker1 -o "-p 9701" -l worker1_logfile start
   pg_ctl -D citus/worker2 -o "-p 9702" -l worker2_logfile start
 
