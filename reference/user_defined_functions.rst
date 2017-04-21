@@ -295,7 +295,7 @@ master_add_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The master_add_node() function registers a new node addition in the cluster in
-the Citus metadata table pg_dist_node.
+the Citus metadata table pg_dist_node. It also copies reference tables to the new node.
 
 Arguments
 ************************
@@ -317,9 +317,76 @@ Example
 ::
 
     select * from master_add_node('new-node', 12345);
-     nodeid | groupid | nodename | nodeport | noderack | hasmetadata 
-    --------+---------+----------+----------+----------+-------------
-          7 |       7 | new-node |    12345 | default  | f
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive
+    --------+---------+----------+----------+----------+-------------+----------
+          7 |       7 | new-node |    12345 | default  | f           | t
+    (1 row)
+
+.. _master_add_inactive_node:
+
+master_add_inactive_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The :code:`master_add_inactive_node` function, similar to :ref:`master_add_node`,
+registers a new node in :code:`pg_dist_node`. However it marks the new
+node as inactive, meaning no shards will be placed there. Also it does
+*not* copy reference tables to the new node.
+
+Arguments
+************************
+
+**node_name:** DNS name or IP address of the new node to be added.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+A tuple which represents a row from :ref:`pg_dist_node
+<pg_dist_node>` table.
+
+
+Example
+***********************
+
+::
+
+    select * from master_add_inactive_node('new-node', 12345);
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive
+    --------+---------+----------+----------+----------+-------------+----------
+          7 |       7 | new-node |    12345 | default  | f           | f
+    (1 row)
+
+master_activate_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The :code:`master_activate_node` function marks a node as active in the
+Citus metadata table :code:`pg_dist_node` and copies reference tables to
+the node. Useful for nodes added via :ref:`master_add_inactive_node`.
+
+Arguments
+************************
+
+**node_name:** DNS name or IP address of the new node to be added.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+A tuple which represents a row from :ref:`pg_dist_node
+<pg_dist_node>` table.
+
+
+Example
+***********************
+
+::
+
+    select * from master_activate_node('new-node', 12345);
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive
+    --------+---------+----------+----------+----------+-------------+----------
+          7 |       7 | new-node |    12345 | default  | f           | t
     (1 row)
 
 master_remove_node
