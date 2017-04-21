@@ -61,6 +61,8 @@ Each created shard is assigned a unique shard id and all its replicas have the s
 
 You are now ready to insert data into the distributed table and run queries on it. You can also learn more about the UDF used in this section in the :ref:`user_defined_functions` of our documentation.
 
+.. _reference_tables:
+
 Reference Tables
 ~~~~~~~~~~~~~~~~
 
