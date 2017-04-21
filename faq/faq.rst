@@ -43,21 +43,19 @@ ingest workflows.
 Can I join distributed and non-distributed tables together in the same query?
 -----------------------------------------------------------------------------
 
-If you want to do joins between small dimension tables (regular Postgres tables) and large tables (distributed), then you could distribute the small tables by creating 1 shard and N (with N being the number of workers) replicas. Citus will then be able to push the join down to the worker nodes. If the local tables you are referring to are large, we generally recommend to distribute the larger tables to reap the benefits of sharding and parallelization which Citus offers. For a deeper discussion into the way Citus handles joins, please see our :ref:`joins` documentation.
+If you want to do joins between small dimension tables (regular Postgres tables) and large tables (distributed), then you can distribute the small tables as "reference tables." This creates a single shard replicated across all worker nodes. Citus will then be able to push the join down to the worker nodes. If the local tables you are referring to are large, we generally recommend to distribute the larger tables to reap the benefits of sharding and parallelization which Citus offers. For a deeper discussion, see :ref:`reference_tables` and our :ref:`joins` documentation.
 
-Are there any PostgreSQL features not supported by CitusDB?
------------------------------------------------------------
+Are there any PostgreSQL features not supported by Citus?
+---------------------------------------------------------
 
-Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. This includes the support for wide range of data types (including semi-structured data types like jsonb, hstore), full text search, operators and functions, foreign data wrappers, etc.
+Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. It provides full SQL support for queries which access a single node in the database cluster. These queries are common, for instance, in multi-tenant applications where different nodes store different tenants (see :ref:`when_to_use_citus`).
 
-PostgreSQL has a wide SQL coverage; and Citus does not support that entire spectrum out of the box when querying distributed tables. Some constructs which aren't supported natively for distributed tables are:
+Other queries which, by contrast, combine data from multiple nodes, do not support the entire spectrum of PostgreSQL features. However they still enjoy broad SQL coverage, including semi-structured data types (like jsonb, hstore), full text search, operators, functions, and foreign data wrappers. Note that the following constructs aren't supported natively for cross-node queries:
 
 * Window Functions
 * CTEs
 * Set operations
 * Transactional semantics for queries that span across multiple shards
-
-It is important to note that you can still run all of those queries on regular PostgreSQL tables in the Citus cluster. As a result, you can address many use cases through a combination of rewriting the queries and/or adding some extensions. We are working on increasing the distributed SQL coverage for Citus to further simplify these queries. So, if you run into an unsupported construct, please contact us and we will do our best to help you out.
 
 How do I choose the shard count when I hash-partition my data?
 --------------------------------------------------------------
