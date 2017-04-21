@@ -55,7 +55,7 @@ Other queries which, by contrast, combine data from multiple nodes, do not suppo
 * Window Functions
 * CTEs
 * Set operations
-* Transactional semantics
+* Transactional semantics for queries that span across multiple shards
 
 How do I choose the shard count when I hash-partition my data?
 --------------------------------------------------------------
