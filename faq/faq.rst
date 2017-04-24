@@ -91,3 +91,37 @@ Why does pg_relation_size report zero bytes for a distributed table?
 --------------------------------------------------------------------
 
 The data in distributed tables lives on the worker nodes (in shards), not on the coordinator. A true measure of distributed table size is obtained as a sum of shard sizes. Citus provides helper functions to query this information. See :ref:`table_size` to learn more.
+
+Can I insert into a table with serial distribution column?
+----------------------------------------------------------
+
+Yes, with a workaround. Attempting to do it the standard way causes an error:
+
+.. code-block:: postgresql
+
+  -- create a table with serial id column
+  CREATE TABLE example_serial(id serial, name text, created_at timestamp);
+  -- distribute the table by that column
+  SELECT create_distributed_table('example_serial', 'id');
+
+  -- inserting a value causes a problem
+  INSERT INTO example_serial (name, created_at) VALUES ('My test', now());
+  -- ERROR:  values given for the partition column must be constants or constant expressions
+
+As a workaround you can create a sequence on the coordinator node and consult it for the next values to use.
+
+.. code-block:: postgresql
+
+  -- create a sequence 'seq' on the coordinator node
+  CREATE SEQUENCE seq;
+
+The application then performs an insert through two steps:
+
+.. code-block:: postgresql
+
+  -- 1) obtain a new sequence value and save it in the application
+  select nextval('seq');
+
+  -- 2) generate the insert query with that new value (id_val) filled in
+  INSERT INTO example_serial (id, name, created_at)
+    VALUES (id_val, 'My test', now());
