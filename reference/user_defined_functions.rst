@@ -420,6 +420,36 @@ Example
      
     (1 row)
 
+master_disable_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The master_disable_node() function removes the specified node from the
+pg_dist_node metadata table. This function will remove the node regardless
+of whether are existing shard placements on this node in pg_dist_shard_placement.
+
+Arguments
+************************
+
+**node_name:** DNS name of the node to be removed.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+N/A
+
+Example
+***********************
+
+::
+
+    select master_disable_node('new-node', 12345);
+     master_disable_node
+    ---------------------
+     
+    (1 row)
+
 master_get_active_worker_nodes
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
