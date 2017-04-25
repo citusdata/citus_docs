@@ -284,11 +284,11 @@ Not-null constraints can always be applied because they require no lookups betwe
 Adding/Removing Indices
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Citus supports adding and removing `indices <https://www.postgresql.org/docs/current/static/sql-createindex.html>`_, but not with the :code:`CONCURRENTLY` option.
+Citus supports adding and removing `indices <https://www.postgresql.org/docs/current/static/sql-createindex.html>`_:
 
 .. code-block:: postgresql
 
-  -- Adding an index (does not support CONCURRENTLY)
+  -- Adding an index
 
   CREATE INDEX clicked_at_idx ON clicks USING BRIN (clicked_at);
 
