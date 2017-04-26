@@ -161,20 +161,6 @@ Such crashes are a nightmare. But crash recovery is a way to make sure
 you sleep well at night by making sure none of your or your customers
 data is lost and your downtime is minimal.
 
-How High Availability and Disaster Recovery is used for upgrades and side-grades
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Here at Citus, our customers use the same HA and DR plumbing that we
-rely on when we upgrade hardware or sidegrade Citus versions.
-
-A common example of this is when we run upgrades. In these cases we
-create a new “reader” database which will get caught up to the “writer”
-then we’ll pause writes to the “writer”, run the necessary upgrade on
-the “reader” which could be a Citus version upgrade or even a Postgres
-major version upgrade. Once that is completed we then conduct the same
-failover process as we do during HA to turn the “reader” into the
-“writer”.
-
 .. raw:: html
 
   <script type="text/javascript">
