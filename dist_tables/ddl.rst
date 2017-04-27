@@ -284,17 +284,25 @@ Not-null constraints can always be applied because they require no lookups betwe
 Adding/Removing Indices
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Citus supports adding and removing `indices <https://www.postgresql.org/docs/current/static/sql-createindex.html>`_, but not with the :code:`CONCURRENTLY` option.
+Citus supports adding and removing `indices <https://www.postgresql.org/docs/current/static/sql-createindex.html>`_:
 
 .. code-block:: postgresql
 
-  -- Adding an index (does not support CONCURRENTLY)
+  -- Adding an index
 
   CREATE INDEX clicked_at_idx ON clicks USING BRIN (clicked_at);
 
   -- Removing an index
 
   DROP INDEX clicked_at_idx;
+
+Adding an index takes a write lock, which can be undesirable in a multi-tenant "system-of-record." To minimize application downtime, create the index `concurrently <https://www.postgresql.org/docs/current/static/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY>`_ instead. This method requires more total work than a standard index build and takes significantly longer to complete. However, since it allows normal operations to continue while the index is built, this method is useful for adding new indexes in a production environment.
+
+.. code-block:: postgresql
+
+  -- Adding an index without locking table writes
+
+  CREATE INDEX CONCURRENTLY clicked_at_idx ON clicks USING BRIN (clicked_at);
 
 Manual Modification
 ~~~~~~~~~~~~~~~~~~~
