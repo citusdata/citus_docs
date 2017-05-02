@@ -99,6 +99,8 @@ To join two large tables efficiently, it is advised that you distribute them on 
 .. note::
   In order to benefit most from co-located joins, you should hash distribute your tables on the join key and use the same number of shards for both tables. If you do this, each shard will join with exactly one shard of the other table. Also, the shard creation logic will ensure that shards with the same distribution key ranges are on the same workers. This means no data needs to be transferred between the workers, leading to faster joins.
 
+.. _repartition_joins:
+
 Repartition joins
 ----------------------------
 

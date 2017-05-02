@@ -165,6 +165,33 @@ Broadcasting a statement for execution on all workers is useful for viewing prop
 
 The :code:`run_command_on_workers` function can run only queries which return a single column and single row.
 
+Worker Security
+###############
+
+For your convenience getting started, our multi-node installation instructions direct you to set up the :code:`pg_hba.conf` on the workers with its `authentication method <https://www.postgresql.org/docs/current/static/auth-methods.html>`_ set to "trust" for local network connections. This is also the default configuration on Citus Cloud. It offers reasonable security, but more may be desired.
+
+For instance, requiring roles and passwords for connection ensures that users must connect as only the roles permitted to them. This allows having users with read-only access, or hiding tables with sensitive information.
+
+To require that all connections supply a hashed password, update the PostgreSQL :code:`pg_hba.conf` on every worker node with something like this:
+
+.. code-block:: bash
+
+  # Require password access to nodes in the local network. The following ranges
+  # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
+  host    all             all             10.0.0.0/8              md5
+
+  # Require passwords when the host connects to itself as well
+  host    all             all             127.0.0.1/32            md5
+  host    all             all             ::1/128                 md5
+
+The coordinator node needs to know roles' passwords in order to communicate with the workers. Add a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file to the postgres user's home directory, with a line for each combination of worker address and role:
+
+.. code-block:: ini
+
+  hostname:port:database:username:password
+
+Sometimes workers need to connect to one another, such as during :ref:`repartition joins <repartition_joins>`. Thus each worker node requires a copy of the .pgpass file as well.
+
 Diagnostics
 ###########
 
