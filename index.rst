@@ -69,6 +69,7 @@ topics.
 .. toctree::
    :caption: Reference Architectures
 
+   ref_arch/multi_tenant.rst
    ref_arch/real_time_dashboards.rst
 
 .. toctree::
