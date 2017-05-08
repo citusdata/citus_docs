@@ -5,7 +5,7 @@ Multi-tenant Applications
 
 Many companies with web applications cater not to end users, but to other businesses with customers of their own. When many clients with similar needs are expected, it makes sense to run a single instance of the application to handle all the clients.
 
-A software-as-a-service (SaaS) provider, for example, can run one instance of its application on one instance of a database and provide web access to multiple customers. In such a scenario, each tenant's data is isolated and remains invisible to other tenants. It's efficient in two ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently.
+A software-as-a-service (SaaS) provider, for example, can run one instance of its application on one instance of a database and provide web access to multiple customers. In such a scenario, each tenant's data is isolated and remains invisible to other tenants. This is efficient in two ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently.
 
 Using Citus, multi-tenant applications can be written as if they are connecting to a single PostgreSQL database, when in fact the database is a horizontally scalable cluster of machines. Client code requires minimal modifications and can continue to use full SQL capabilities.
 
@@ -66,3 +66,67 @@ Here is the initial schema for our application. Feel free to run this code in yo
     updated_at timestamp without time zone NOT NULL
   );
 
+  CREATE TABLE clicks (
+    id bigserial PRIMARY KEY,
+    ad_id bigint REFERENCES ads (id),
+    clicked_at timestamp without time zone NOT NULL,
+    site_url text NOT NULL,
+    cost_per_click_usd numeric(20,10),
+    user_ip inet NOT NULL,
+    user_data jsonb NOT NULL
+  );
+
+  CREATE TABLE impressions (
+    id bigserial PRIMARY KEY,
+    ad_id bigint REFERENCES ads (id),
+    seen_at timestamp without time zone NOT NULL,
+    site_url text NOT NULL,
+    cost_per_impression_usd numeric(20,10),
+    user_ip inet NOT NULL,
+    user_data jsonb NOT NULL
+  );
+
+  CREATE TABLE geo_ips (
+    ip inet NOT NULL PRIMARY KEY,
+    latlon point NOT NULL
+      CHECK (-90  <= latlon[0] AND latlon[0] <= 90 AND
+             -180 <= latlon[1] AND latlon[1] <= 180)
+  );
+
+This schema supports querying the performance of ads and campaigns. It is designed for a single-machine database, and will require adjustment in a distributed environment. To see why, we must become familar with how Citus distributes data and executes queries.
+
+Applications connect to a certain PostgreSQL server in the Citus cluster called the *coordinator node.* The connection is established using an ordinary PostgreSQL `connection URI <https://www.postgresql.org/docs/current/static/libpq-connect.html#AEN45527>`_. However the actual data and processing is stored on and will happen in other machines called *worker nodes.*
+
+The coordinator examines each client query and determines what data the query needs, and which worker nodes have the data. The coordinator then splits the query into simplified *query fragments*, and sends them to worker nodes for processing. When the workers' results are ready, the coordinator puts them together into a final result and forwards it to the application.
+
+TODO: diagram of query execution
+
+Using Citus effectively requires choosing the right pattern for distributing data and doing processing across workers. Citus runs fastest when the data distribution maximizes worker parallelism and minimizes network overhead for the application's most common queries. To minimize network overhead, related data items should be stored together on the same worker node. In multi-tenant applications this means that all data for a given tenant should be stored on the same worker. (Multiple tenants can be stored on the same worker for better hardware utilization, but no single tenant's data should span multiple workers.)
+
+Citus stores rows in groups called *shards*, where each shard is placed on a worker node. The bundling of rows into shards is determined by the value of a special column in the table called the *distribution column*. This column is chosen by the database administrator for each table. When reading or writing a row in a distributed table, Citus hashes the value in the the row's distribution column and compares it against the range of hashed values accepted by each shard. The shard hash ranges are disjoint and span the hash space. In short, Citus accesses a row by hashing its distribution column, finding the shard whose range includes the hashed value, and deferring to the worker node where the shard is placed.
+
+TODO: image of shards and their ranges
+
+Returning to the ad analytics application, let's consider the options for choosing distribution columns for the tables and the consequences of our choice. The performance of Citus must be evaluated in terms of specific queries. Consider a simple query to find the top campaigns with highest budget for a given company.
+
+::
+
+  -- Top ten campaigns with highest budget for a company
+
+  SELECT name, cost_model, state, monthly_budget
+    FROM campaigns
+   WHERE company_id = 5
+  ORDER BY monthly_budget DESC
+  LIMIT 10;
+
+This is a typical query for a multi-tenant application because it restricts the results to data from a single company. Generally each tenant will be accessing only their own data, and the tenants for this application will be advertising companies.
+
+Any column of the :code:`campaigns` table could be its distribution column, but let's compare how this query performs for either of two options: :code:`id` and :code:`company_id`.
+
+TODO: show id hashing pulling from all workers, and company_id routed to one
+
+.. * A few lines around how Citus does sharding across Postgres servers, what shard means, how it makes query fragments, and routes requests to the right shard etc.
+.. * Use a diagram to show how hash partitioning works
+.. * Using a join query from our repertoire, show the effects of choosing various distribution column combinations. Use diagrams to illustrate the join methods.
+.. * Mention that in the cases where the join was efficient, that choice of distribution makes the tables colocated
+..   * a diagram of a few worker nodes, and rows living inside each. Then show lines pulling rows from multiple worker nodes, entailing all that network overhead. A representation of a repartition join. Then contrast it with our colocation diagram.
