@@ -25,7 +25,12 @@ When processing an INSERT, Citus first finds the right shard placements based on
     INSERT INTO counters VALUES ('num_purchases', '2016-03-04', 12); -- Time: 10.314 ms
     INSERT INTO counters VALUES ('num_purchases', '2016-03-05', 5); -- Time: 3.132 ms
 
-To reach high throughput rates, applications should send INSERTs over a many separate connections and keep connections open to avoid the initial overhead of connection set-up.
+To reach high throughput rates, remember these techniques:
+
+* Increase CPU cores and memory on the coordinator node. Inserted data must pass through the coordinator, so check whether node resources are maxing out and upgrade the hardware if necessary.
+* Ingest with more threads on the client. If you have determined that the coordinator has enough resources, then throughput may be bottlenecked on the client. Try sending using more threads and PostgreSQL connections.
+* Avoid closing connections between INSERT statements. This avoids the overhead of connection setup.
+* Remember that column size will affect insert speed. Rows with big JSON blobs will take longer than those with small columns like integers.
 
 Real-time Updates (0-50k/s)
 ---------------------------
