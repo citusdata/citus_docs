@@ -132,6 +132,10 @@ If we distribute by the campaign id, then campaign shards will be spread across 
 
 The order/limit query slightly favors distribution by :code:`company_id`. However JOIN queries differ more dramatically.
 
+.. note::
+
+  In our normalized schema above, the ads table does not have a company_id column because it can retrieve that information through the campaigns table. If we want to distribute the ads table by company id however, we would need to denormalize the schema slightly and add that column. The query below assumes we have done this, and we'll talk more about this technique later.
+
 ::
 
   -- running campaigns which receive the most clicks and impressions
@@ -141,13 +145,14 @@ The order/limit query slightly favors distribution by :code:`company_id`. Howeve
          sum(impressions_count) as total_impressions,
          sum(clicks_count) as total_clicks
   FROM ads, campaigns
-  WHERE campaigns.company_id = 5
+  WHERE ads.company_id = campaigns.company_id
+  AND campaigns.company_id = 5
   AND campaigns.state = 'running'
   GROUP BY campaigns.id, campaigns.name, campaigns.monthly_budget
   ORDER BY total_impressions, total_clicks;
 
 DIAGRAM: show id repartitioning, and company_id routing
 
-For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.* Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`.  (Actually the query above requires a slight adjustment for router execution but that's inessential for our current discussion.) The placement of related information together on a worker is called *colocation.*
+For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.* Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`. The placement of related information together on a worker is called *co-location.*
 
-These queries indicate a general design pattern: distributing shards by tenant id (often company id) allows Citus to route queries to individual workers for efficient processing. This fits multi-tenant applications which often join structured information together per-tenant.
+These queries indicate a general design pattern: distributing shards by tenant id (such as the company id) allows Citus to route queries to individual workers for efficient processing. This fits multi-tenant applications which join structured information together per-tenant.
