@@ -99,15 +99,18 @@ Applications connect to a certain PostgreSQL server in the Citus cluster called 
 
 The coordinator examines each client query and determines what data the query needs, and which worker nodes have the data. The coordinator then splits the query into simplified *query fragments*, and sends them to worker nodes for processing. When the workers' results are ready, the coordinator puts them together into a final result and forwards it to the application.
 
-TODO: diagram of query execution
+DIAGRAM: diagram of query execution
+
+Distributing Data
+-----------------
 
 Using Citus effectively requires choosing the right pattern for distributing data and doing processing across workers. Citus runs fastest when the data distribution maximizes worker parallelism and minimizes network overhead for the application's most common queries. To minimize network overhead, related data items should be stored together on the same worker node. In multi-tenant applications this means that all data for a given tenant should be stored on the same worker. (Multiple tenants can be stored on the same worker for better hardware utilization, but no single tenant's data should span multiple workers.)
 
-Citus stores rows in groups called *shards*, where each shard is placed on a worker node. The bundling of rows into shards is determined by the value of a special column in the table called the *distribution column*. This column is chosen by the database administrator for each table. When reading or writing a row in a distributed table, Citus hashes the value in the the row's distribution column and compares it against the range of hashed values accepted by each shard. The shard hash ranges are disjoint and span the hash space. In short, Citus accesses a row by hashing its distribution column, finding the shard whose range includes the hashed value, and deferring to the worker node where the shard is placed.
+Citus stores rows in groups called *shards*, where each shard is placed on a worker node. The bundling of rows into shards is determined by the value of a special column in each table called the *distribution column*. (This column is chosen by the database administrator for each table.) When reading or writing a row in a distributed table, Citus hashes the value in the the row's distribution column and compares it against the range of hashed values accepted by each shard. The shard hash ranges are disjoint and span the hash space. In short, Citus accesses a row by hashing its distribution column, finding the shard whose range includes the hashed value, and deferring to the worker node where the shard is placed.
 
-TODO: image of shards and their ranges
+DIAGRAM: image of shards and their ranges
 
-Returning to the ad analytics application, let's consider the options for choosing distribution columns for the tables and the consequences of our choice. The performance of Citus must be evaluated in terms of specific queries. Consider a simple query to find the top campaigns with highest budget for a given company.
+Returning to the ad analytics application, let's consider the options for choosing distribution columns for the tables, and the consequences of our choice. The performance of Citus must be evaluated in terms of specific queries. Consider a simple query to find the top campaigns with highest budget for a given company.
 
 ::
 
@@ -119,14 +122,32 @@ Returning to the ad analytics application, let's consider the options for choosi
   ORDER BY monthly_budget DESC
   LIMIT 10;
 
-This is a typical query for a multi-tenant application because it restricts the results to data from a single company. Generally each tenant will be accessing only their own data, and the tenants for this application will be advertising companies.
+This is a typical query for a multi-tenant application because it restricts the results to data from a single company. Each tenant, in this case an advertising company, will be accessing only their own data.
 
 Any column of the :code:`campaigns` table could be its distribution column, but let's compare how this query performs for either of two options: :code:`id` and :code:`company_id`.
 
-TODO: show id hashing pulling from all workers, and company_id routed to one
+DIAGRAM: show id pulling from all workers, and company_id routed to one
 
-.. * A few lines around how Citus does sharding across Postgres servers, what shard means, how it makes query fragments, and routes requests to the right shard etc.
-.. * Use a diagram to show how hash partitioning works
-.. * Using a join query from our repertoire, show the effects of choosing various distribution column combinations. Use diagrams to illustrate the join methods.
-.. * Mention that in the cases where the join was efficient, that choice of distribution makes the tables colocated
-..   * a diagram of a few worker nodes, and rows living inside each. Then show lines pulling rows from multiple worker nodes, entailing all that network overhead. A representation of a repartition join. Then contrast it with our colocation diagram.
+If we distribute by the campaign id, then campaign shards will be spread across multiple workers irrespective of company. Finding the top ten monthly campaign budgets for a company requires asking all workers for their local top ten and doing a final sort and filter on the coordinator. If we distribute by :code:`company_id`, on the other hand, then Citus can detect by the presence of :code:`WHERE company_id = 5` that all relevant information will be on a single worker. Citus can route the entire query to that worker for execution and pass the results through verbatim.
+
+The order/limit query slightly favors distribution by :code:`company_id`. However JOIN queries differ more dramatically.
+
+::
+
+  -- running campaigns which receive the most clicks and impressions
+  -- for a single tenant
+
+  SELECT campaigns.id, campaigns.name, campaigns.monthly_budget,
+         sum(impressions_count) as total_impressions,
+         sum(clicks_count) as total_clicks
+  FROM ads, campaigns
+  WHERE campaigns.company_id = 5
+  AND campaigns.state = 'running'
+  GROUP BY campaigns.id, campaigns.name, campaigns.monthly_budget
+  ORDER BY total_impressions, total_clicks;
+
+DIAGRAM: show id repartitioning, and company_id routing
+
+For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.* Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`.  (Actually the query above requires a slight adjustment for router execution but that's inessential for our current discussion.) The placement of related information together on a worker is called *colocation.*
+
+These queries indicate a general design pattern: distributing shards by tenant id (often company id) allows Citus to route queries to individual workers for efficient processing. This fits multi-tenant applications which often join structured information together per-tenant.
