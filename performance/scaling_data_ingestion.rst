@@ -8,9 +8,9 @@ Citus lets you scale out data ingestion to very high rates, but there are severa
 Real-time Inserts (0-50k/s)
 ---------------------------
 
-On the Citus master, you can perform INSERT commands directly on hash distributed tables. The advantage of using INSERT is that the new data is immediately visible to SELECT queries, and durably stored on multiple replicas.
+On the Citus coordinator, you can perform INSERT commands directly on hash distributed tables. The advantage of using INSERT is that the new data is immediately visible to SELECT queries, and durably stored on multiple replicas.
 
-When processing an INSERT, Citus first finds the right shard placements based on the value in the distribution column, then it connects to the workers storing the shard placements, and finally performs an INSERT on each of them. From the perspective of the user, the INSERT takes several milliseconds to process because of the round-trips to the workers, but the master can process other INSERTs in other sessions while waiting for a response. The master also keeps connections to the workers open within the same session, which means subsequent queries will see lower response times.
+When processing an INSERT, Citus first finds the right shard placements based on the value in the distribution column, then it connects to the workers storing the shard placements, and finally performs an INSERT on each of them. From the perspective of the user, the INSERT takes several milliseconds to process because of the round-trips to the workers, but the coordinator can process other INSERTs in other sessions while waiting for a response. The coordinator also keeps connections to the workers open within the same session, which means subsequent queries will see lower response times.
 
 ::
 
@@ -35,7 +35,7 @@ To reach high throughput rates, remember these techniques:
 Real-time Updates (0-50k/s)
 ---------------------------
 
-On the Citus master, you can also perform UPDATE, DELETE, and INSERT ... ON CONFLICT (UPSERT) commands on distributed tables. By default, these queries take an exclusive lock on the shard, which prevents concurrent modifications to guarantee that the commands are applied in the same order on all shard placements.
+On the Citus coordinator, you can also perform UPDATE, DELETE, and INSERT ... ON CONFLICT (UPSERT) commands on distributed tables. By default, these queries take an exclusive lock on the shard, which prevents concurrent modifications to guarantee that the commands are applied in the same order on all shard placements.
 
 Given that every command requires several round-trips to the workers, and no two commands can run on the same shard at the same time, update throughput is very low by default. However, if you know that the order of the queries doesn't matter (they are commutative), then you can turn on citus.all_modifications_commutative, in which case multiple commands can update the same shard concurrently.
 
@@ -56,7 +56,7 @@ When the replication factor is 1, it is always safe to enable citus.all_modifica
 Bulk Copy (100-200k/s)
 ----------------------
 
-Hash distributed tables support `COPY <http://www.postgresql.org/docs/current/static/sql-copy.html>`_ from the Citus master for bulk ingestion, which can achieve much higher ingestion rates than regular INSERT statements.
+Hash distributed tables support `COPY <http://www.postgresql.org/docs/current/static/sql-copy.html>`_ from the Citus coordinator for bulk ingestion, which can achieve much higher ingestion rates than regular INSERT statements.
 
 COPY can be used to load data directly from an application using COPY .. FROM STDIN, or from a file on the server or program executed on the server.
 
