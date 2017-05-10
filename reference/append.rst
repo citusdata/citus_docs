@@ -150,7 +150,7 @@ You can use \\copy both on the coordinator and from any of the workers. When usi
 ::
 
     SET citus.shard_max_size TO '64MB';
-    \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV, master_host 'master-host-101')
+    \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV, master_host 'coordinator-host')
 
 Citus assigns a unique shard id to each new shard and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. One can connect to the worker postgres instances to view or run commands on individual shards.
 
@@ -230,7 +230,7 @@ COPY creates new shards every time it is used, which allows many files to be ing
     \COPY stage_1 FROM 'path-to-csv-file WITH CSV
 
     -- In a separate transaction, append the staging table
-    SELECT master_append_table_to_shard(select_events_shard(), 'stage_1', 'master-node', 5432);
+    SELECT master_append_table_to_shard(select_events_shard(), 'stage_1', 'coordinator-host', 5432);
 
 An example of a shard selection function is given below. It appends to a shard until its size is greater than 1GB and then creates a new one, which has the drawback of only allowing one append at a time, but the advantage of bounding shard sizes.
 
@@ -274,18 +274,18 @@ Append distributed tables support COPY via the worker, by specifying the address
 
 ::
 
-    psql -h worker-node-1 -c "\COPY events FROM 'data.csv' WITH (FORMAT CSV, MASTER_HOST 'master-node')"
+    psql -h worker-host-n -c "\COPY events FROM 'data.csv' WITH (FORMAT CSV, MASTER_HOST 'coordinator-host')"
 
 
 An alternative to using COPY is to create a staging table and use standard SQL clients to append it to the distributed table, which is similar to staging data via the coordinator. An example of staging a file via a worker using psql is as follows:
 
 ::
 
-    stage_table=$(psql -tA -h worker-node-1 -c "SELECT 'stage_'||nextval('stage_id_sequence')")
-    psql -h worker-node-1 -c "CREATE TABLE $stage_table (time timestamp, data jsonb)"
-    psql -h worker-node-1 -c "\COPY $stage_table FROM 'data.csv' WITH CSV"
-    psql -h master-node -c "SELECT master_append_table_to_shard(choose_underutilized_shard(), '$stage_table', 'worker-node-1', 5432)"
-    psql -h worker-node-1 -c "DROP TABLE $stage_table"
+    stage_table=$(psql -tA -h worker-host-n -c "SELECT 'stage_'||nextval('stage_id_sequence')")
+    psql -h worker-host-n -c "CREATE TABLE $stage_table (time timestamp, data jsonb)"
+    psql -h worker-host-n -c "\COPY $stage_table FROM 'data.csv' WITH CSV"
+    psql -h coordinator-host -c "SELECT master_append_table_to_shard(choose_underutilized_shard(), '$stage_table', 'worker-host-n', 5432)"
+    psql -h worker-host-n -c "DROP TABLE $stage_table"
 
 The example above uses a choose_underutilized_shard function to select the shard to which to append. To ensure parallel data ingestion, this function should balance across many different shards.
 
