@@ -27,7 +27,7 @@ The above version of Docker Compose is sufficient for running Citus, or you can 
 
 **2. Start the Citus Cluster**
 
-Citus uses Docker Compose to run and connect containers holding the database master node, workers, and a persistent data volume. To create a local cluster download our Docker Compose configuration file and run it
+Citus uses Docker Compose to run and connect containers holding the database coordinator node, workers, and a persistent data volume. To create a local cluster download our Docker Compose configuration file and run it
 
 .. code-block:: bash
 
@@ -45,7 +45,7 @@ The first time you start the cluster it builds its containers. Subsequent startu
     Error starting userland proxy:
     Bind for 0.0.0.0:5432: unexpected error address already in use
 
-  This is because the "master" service attempts to bind to the standard PostgreSQL port 5432. Simply adjust :code:`docker-compose.yml`. Under the :code:`master` section change the host port from 5432 to 5433 or another non-conflicting number.
+  This is because the "master" (coordinator) service attempts to bind to the standard PostgreSQL port 5432. Simply adjust :code:`docker-compose.yml`. Under the :code:`master` section change the host port from 5432 to 5433 or another non-conflicting number.
 
   .. code-block:: diff
 
@@ -54,7 +54,7 @@ The first time you start the cluster it builds its containers. Subsequent startu
 
 **3. Verify that installation has succeeded**
 
-To verify that the installation has succeeded we check that the master node has picked up the desired worker configuration. First start the psql shell on the master node:
+To verify that the installation has succeeded we check that the coordinator node has picked up the desired worker configuration. First start the psql shell on the coordinator (master) node:
 
 .. code-block:: bash
 

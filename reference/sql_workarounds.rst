@@ -127,7 +127,7 @@ Attempting to execute a JOIN between a local and a distributed table causes an e
 
   ERROR: cannot plan queries that include both regular and partitioned relations
 
-There is a workaround: you can replicate the local table to a single shard on every worker and push the join query down to the workers. We do this by defining the table as a 'reference' table using a different table creation API. Suppose we want to join tables *here* and *there*, where *there* is already distributed but *here* is on the master database.
+There is a workaround: you can replicate the local table to a single shard on every worker and push the join query down to the workers. We do this by defining the table as a 'reference' table using a different table creation API. Suppose we want to join tables *here* and *there*, where *there* is already distributed but *here* is on the coordinator database.
 
 
 .. code-block:: sql
@@ -142,7 +142,7 @@ replicate that shard to every node in the cluster. Now Citus will accept a join 
 Data Warehousing Queries
 ------------------------
 
-When queries have restrictive filters (i.e. when very few results need to be transferred to the master) there is a general technique to run unsupported queries in two steps. First store the results of the inner queries in regular PostgreSQL tables on the master. Then the next step can be executed on the master like a regular PostgreSQL query.
+When queries have restrictive filters (i.e. when very few results need to be transferred to the coordinator) there is a general technique to run unsupported queries in two steps. First store the results of the inner queries in regular PostgreSQL tables on the coordinator. Then the next step can be executed on the coordinator like a regular PostgreSQL query.
 
 For example, currently Citus does not have out of the box support for window functions on queries involving distributed tables. Suppose you have a query with a window function on a table of github_events function like the following:
 

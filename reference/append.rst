@@ -145,12 +145,12 @@ command is used to copy data from a file to a distributed table while handling
 replication and failures automatically. You can also use the server side `COPY command <http://www.postgresql.org/docs/current/static/sql-copy.html>`_. 
 In the examples, we use the \\copy command from psql, which sends a COPY .. FROM STDIN to the server and reads files on the client side, whereas COPY from a file would read the file on the server.
 
-You can use \\copy both on the master and from any of the workers. When using it from the worker, you need to add the master_host option. Behind the scenes, \\copy first opens a connection to the master using the provided master_host option and uses master_create_empty_shard to create a new shard. Then, the command connects to the workers and copies data into the replicas until the size reaches shard_max_size, at which point another new shard is created. Finally, the command fetches statistics for the shards and updates the metadata.
+You can use \\copy both on the coordinator and from any of the workers. When using it from the worker, you need to add the master_host option. Behind the scenes, \\copy first opens a connection to the coordinator using the provided master_host option and uses master_create_empty_shard to create a new shard. Then, the command connects to the workers and copies data into the replicas until the size reaches shard_max_size, at which point another new shard is created. Finally, the command fetches statistics for the shards and updates the metadata.
 
 ::
 
     SET citus.shard_max_size TO '64MB';
-    \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV, master_host 'master-host-101')
+    \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV, master_host 'coordinator-host')
 
 Citus assigns a unique shard id to each new shard and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. One can connect to the worker postgres instances to view or run commands on individual shards.
 
@@ -160,7 +160,7 @@ By default, the \\copy command depends on two configuration parameters for its b
 (2) **citus.shard_replication_factor :-** This parameter determines the number of nodes each shard gets replicated to, and defaults to one. Set it to two if you want Citus to replicate data automatically and provide fault tolerance. You may want to increase the factor even higher if you run large clusters and observe node failures on a more frequent basis.
 
 .. note::
-    The configuration setting citus.shard_replication_factor can only be set on the master node.
+    The configuration setting citus.shard_replication_factor can only be set on the coordinator node.
 
 Please note that you can load several files in parallel through separate database connections or from different nodes. It is also worth noting that \\copy always creates at least one shard and does not append to existing shards. You can use the method described below to append to previously created shards.
 
@@ -207,8 +207,8 @@ Scaling Data Ingestion
 
 If your use-case does not require real-time ingests, then using append distributed tables will give you the highest ingest rates. This approach is more suitable for use-cases which use time-series data and where the database can be a few minutes or more behind.
 
-Master Node Bulk Ingestion (100k/s-200k/s)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+Coordinator Node Bulk Ingestion (100k/s-200k/s)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 To ingest data into an append distributed table, you can use the `COPY <http://www.postgresql.org/docs/current/static/sql-copy.html>`_ command, which will create a new shard out of the data you ingest. COPY can break up files larger than the configured citus.shard_max_size into multiple shards. COPY for append distributed tables only opens connections for the new shards, which means it behaves a bit differently than COPY for hash distributed tables, which may open connections for all shards. A COPY for append distributed tables command does not ingest rows in parallel over many connections, but it is safe to run many commands in parallel.
 
@@ -230,7 +230,7 @@ COPY creates new shards every time it is used, which allows many files to be ing
     \COPY stage_1 FROM 'path-to-csv-file WITH CSV
 
     -- In a separate transaction, append the staging table
-    SELECT master_append_table_to_shard(select_events_shard(), 'stage_1', 'master-node', 5432);
+    SELECT master_append_table_to_shard(select_events_shard(), 'stage_1', 'coordinator-host', 5432);
 
 An example of a shard selection function is given below. It appends to a shard until its size is greater than 1GB and then creates a new one, which has the drawback of only allowing one append at a time, but the advantage of bounding shard sizes.
 
@@ -270,22 +270,22 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 For very high data ingestion rates, data can be staged via the workers. This method scales out horizontally and provides the highest ingestion rates, but can be more complex to use. Hence, we recommend trying this method only if your data ingestion rates cannot be addressed by the previously described methods.
 
-Append distributed tables support COPY via the worker, by specifying the address of the master in a master_host option, and optionally a master_port option (defaults to 5432). COPY via the workers has the same general properties as COPY via the master, except the initial parsing is not bottlenecked on the master.
+Append distributed tables support COPY via the worker, by specifying the address of the coordinator in a master_host option, and optionally a master_port option (defaults to 5432). COPY via the workers has the same general properties as COPY via the coordinator, except the initial parsing is not bottlenecked on the coordinator.
 
 ::
 
-    psql -h worker-node-1 -c "\COPY events FROM 'data.csv' WITH (FORMAT CSV, MASTER_HOST 'master-node')"
+    psql -h worker-host-n -c "\COPY events FROM 'data.csv' WITH (FORMAT CSV, MASTER_HOST 'coordinator-host')"
 
 
-An alternative to using COPY is to create a staging table and use standard SQL clients to append it to the distributed table, which is similar to staging data via the master. An example of staging a file via a worker using psql is as follows:
+An alternative to using COPY is to create a staging table and use standard SQL clients to append it to the distributed table, which is similar to staging data via the coordinator. An example of staging a file via a worker using psql is as follows:
 
 ::
 
-    stage_table=$(psql -tA -h worker-node-1 -c "SELECT 'stage_'||nextval('stage_id_sequence')")
-    psql -h worker-node-1 -c "CREATE TABLE $stage_table (time timestamp, data jsonb)"
-    psql -h worker-node-1 -c "\COPY $stage_table FROM 'data.csv' WITH CSV"
-    psql -h master-node -c "SELECT master_append_table_to_shard(choose_underutilized_shard(), '$stage_table', 'worker-node-1', 5432)"
-    psql -h worker-node-1 -c "DROP TABLE $stage_table"
+    stage_table=$(psql -tA -h worker-host-n -c "SELECT 'stage_'||nextval('stage_id_sequence')")
+    psql -h worker-host-n -c "CREATE TABLE $stage_table (time timestamp, data jsonb)"
+    psql -h worker-host-n -c "\COPY $stage_table FROM 'data.csv' WITH CSV"
+    psql -h coordinator-host -c "SELECT master_append_table_to_shard(choose_underutilized_shard(), '$stage_table', 'worker-host-n', 5432)"
+    psql -h worker-host-n -c "DROP TABLE $stage_table"
 
 The example above uses a choose_underutilized_shard function to select the shard to which to append. To ensure parallel data ingestion, this function should balance across many different shards.
 

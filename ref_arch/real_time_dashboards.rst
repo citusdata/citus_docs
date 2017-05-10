@@ -42,7 +42,7 @@ to demonstrate the overall architecture; a real system might use additional colu
 
 .. code-block:: sql
 
-  -- this is run on the master
+  -- this is run on the coordinator
 
   CREATE TABLE http_request (
     site_id INT,
@@ -70,7 +70,7 @@ CPU cores in your cluster. Using this many shards lets you rebalance
 data across your cluster after adding new worker nodes.
 
 Using a replication factor of 2 means every shard is held on multiple workers. When a
-worker fails the master will prevent downtime by serving queries for that worker's shards
+worker fails the coordinator will prevent downtime by serving queries for that worker's shards
 using the other replicas.
 
 .. NOTE::
@@ -193,12 +193,12 @@ the name of the shards to read and write from. It also takes out an advisory loc
 ensure there aren't any concurrency bugs where the same rows are written multiple times.
 
 The machinery above which accepts the names of the shards to read and write is necessary
-because only the master has the metadata required to know what the shard pairs are. It has
+because only the coordinator has the metadata required to know what the shard pairs are. It has
 its own function to figure that out:
 
 .. code-block:: plpgsql
 
-    -- this function is created on the master
+    -- this function is created on the coordinator
     CREATE FUNCTION colocated_shard_placements(left_table REGCLASS, right_table REGCLASS)
     RETURNS TABLE (left_shard TEXT, right_shard TEXT, nodename TEXT, nodeport BIGINT) AS $$
       SELECT
@@ -233,7 +233,7 @@ each pair of shards:
 
   There are many ways to make sure the function is called periodically and no answer that
   works well for every system. If you're able to run cron on the same machine as the
-  master, and assuming you named the above script ``run_rollups.sh``, you can do something
+  coordinator, and assuming you named the above script ``run_rollups.sh``, you can do something
   as simple as this:
 
   .. code-block:: bash
@@ -259,7 +259,7 @@ keep raw data for one day and 1-minute aggregations for one month.
 
 .. code-block:: plpgsql
 
-  -- another function for the master
+  -- another function for the coordinator
   CREATE OR REPLACE FUNCTION expire_old_request_data() RETURNS void
   AS $$
   BEGIN
@@ -274,7 +274,7 @@ keep raw data for one day and 1-minute aggregations for one month.
 .. NOTE::
 
   The above function should be called every minute. You could do this by adding a crontab
-  entry on the master node:
+  entry on the coordinator node:
 
   .. code-block:: bash
   
@@ -301,7 +301,7 @@ tens of billions of unique visitors with at most 2.2% error.
 
 An equivalent problem appears if you want to run a global query, such as the number of
 unique ip addresses which visited any of your client's sites over the last month. Without
-HLLs this query involves shipping lists of ip addresses from the workers to the master for
+HLLs this query involves shipping lists of ip addresses from the workers to the coordinator for
 it to deduplicate. That's both a lot of network traffic and a lot of computation. By using
 HLLs you can greatly improve query speed.
 
@@ -314,7 +314,7 @@ to enable it:
   -- this part must be run on all nodes
   CREATE EXTENSION hll;
 
-  -- this part runs on the master
+  -- this part runs on the coordinator
   ALTER TABLE http_request_1min ADD COLUMN distinct_ip_addresses hll;
 
 When doing our rollups, we can now aggregate sessions into an hll column with queries
@@ -350,7 +350,7 @@ aggregate function and its semantics. You do this by running the following:
 
 .. code-block:: sql
 
-  -- this should be run on the workers and master
+  -- this should be run on the workers and coordinator
   CREATE AGGREGATE sum (hll)
   (
     sfunc = hll_union_trans,

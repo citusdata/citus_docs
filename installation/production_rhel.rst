@@ -78,18 +78,18 @@ You must add the Citus extension to **every database** you would like to use in 
 
   sudo -i -u postgres psql -c "CREATE EXTENSION citus;"
 
-.. _production_rhel_master_node:
+.. _production_rhel_coordinator_node:
 
-Steps to be executed on the master node
----------------------------------------
+Steps to be executed on the coordinator node
+--------------------------------------------
 
-The steps listed below must be executed **only** on the master node after the previously mentioned steps have been executed.
+The steps listed below must be executed **only** on the coordinator node after the previously mentioned steps have been executed.
 
 **1. Add worker node information**
 
-We need to inform the master about its workers. To add this information,
+We need to inform the coordinator about its workers. To add this information,
 we call a UDF which adds the node information to the pg_dist_node
-catalog table, which the master uses to get the list of worker
+catalog table, which the coordinator uses to get the list of worker
 nodes. For our example, we assume that there are two workers (named
 worker-101, worker-102). Add the workers' DNS names (or IP addresses)
 and server ports to the table.
@@ -101,7 +101,7 @@ and server ports to the table.
 
 **2. Verify that installation has succeeded**
 
-To verify that the installation has succeeded, we check that the master node has
+To verify that the installation has succeeded, we check that the coordinator node has
 picked up the desired worker configuration. This command when run in the psql
 shell should output the worker nodes we added to the pg_dist_node table above.
 

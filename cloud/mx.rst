@@ -42,7 +42,7 @@ To create a distributed events table with a JSONB column and a BRIN index, we ca
 
 .. code::
 
-  $ psql postgres://citus:pw@coordinator-node:5432/citus?sslmode=require
+  $ psql postgres://citus:pw@coordinator-host:5432/citus?sslmode=require
 
 .. code:: sql
 

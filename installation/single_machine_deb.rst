@@ -20,7 +20,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
 
 **2. Initialize the Cluster**
 
-Citus has two kinds of components, the master and the workers. The master coordinates queries and maintains metadata on where in the cluster each row of data is. The workers hold your data and respond to queries.
+Citus has two kinds of components, the coordinator and the workers. The coordinator coordinates queries and maintains metadata on where in the cluster each row of data is. The workers hold your data and respond to queries.
 
 Let's create directories for those nodes to store their data. For convenience in using PostgreSQL Unix domain socket connections we'll use the postgres user.
 
@@ -33,10 +33,10 @@ Let's create directories for those nodes to store their data. For convenience in
   export PATH=$PATH:/usr/lib/postgresql/9.6/bin
 
   cd ~
-  mkdir -p citus/master citus/worker1 citus/worker2
+  mkdir -p citus/coordinator citus/worker1 citus/worker2
 
   # create three normal postgres instances
-  initdb -D citus/master
+  initdb -D citus/coordinator
   initdb -D citus/worker1
   initdb -D citus/worker2
 
@@ -44,17 +44,17 @@ Citus is a Postgres extension, to tell Postgres to use this extension you'll nee
 
 ::
 
-  echo "shared_preload_libraries = 'citus'" >> citus/master/postgresql.conf
+  echo "shared_preload_libraries = 'citus'" >> citus/coordinator/postgresql.conf
   echo "shared_preload_libraries = 'citus'" >> citus/worker1/postgresql.conf
   echo "shared_preload_libraries = 'citus'" >> citus/worker2/postgresql.conf
 
-**3. Start the master and workers**
+**3. Start the coordinator and workers**
 
-We will start the PostgreSQL instances on ports 9700 (for the master) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
+We will start the PostgreSQL instances on ports 9700 (for the coordinator) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
 
 Let's start the databases::
 
-  pg_ctl -D citus/master -o "-p 9700" -l master_logfile start
+  pg_ctl -D citus/coordinator -o "-p 9700" -l coordinator_logfile start
   pg_ctl -D citus/worker1 -o "-p 9701" -l worker1_logfile start
   pg_ctl -D citus/worker2 -o "-p 9702" -l worker2_logfile start
 
@@ -67,7 +67,7 @@ Above you added Citus to ``shared_preload_libraries``. That lets it hook into so
   psql -p 9701 -c "CREATE EXTENSION citus;"
   psql -p 9702 -c "CREATE EXTENSION citus;"
 
-Finally, the master needs to know where it can find the workers. To tell it you can run:
+Finally, the coordinator needs to know where it can find the workers. To tell it you can run:
 
 ::
 
@@ -76,7 +76,7 @@ Finally, the master needs to know where it can find the workers. To tell it you 
 
 **4. Verify that installation has succeeded**
 
-To verify that the installation has succeeded we check that the master node has picked up the desired worker configuration. First start the psql shell on the master node:
+To verify that the installation has succeeded we check that the coordinator node has picked up the desired worker configuration. First start the psql shell on the coordinator node:
 
 ::
 
