@@ -72,14 +72,14 @@ In the form, pick a unique name for your stack. You can customize your cluster s
 
 The next screen displays Tags and a few advanced options. For simplicity, we use the default options and click Next.
 
-Finally, you need to acknowledge IAM capabilities, which give the master node limited access to the EC2 APIs to obtain the list of worker IPs. Your AWS account needs to have IAM access to perform this step. After ticking the checkbox, you can click on Create.
+Finally, you need to acknowledge IAM capabilities, which give the coordinator node limited access to the EC2 APIs to obtain the list of worker IPs. Your AWS account needs to have IAM access to perform this step. After ticking the checkbox, you can click on Create.
 
 .. image:: ../images/aws_iam.png
 
 
 **5. Cluster launching**
 
-After the above steps, you will be redirected to the CloudFormation console. You can click the refresh button on the top-right to view your stack. In about 10 minutes, stack creation will complete and the hostname of the master node will appear in the Outputs tab. 
+After the above steps, you will be redirected to the CloudFormation console. You can click the refresh button on the top-right to view your stack. In about 10 minutes, stack creation will complete and the hostname of the coordinator node will appear in the Outputs tab. 
 
 .. image:: ../images/aws_cluster_launch.png
 
@@ -97,7 +97,7 @@ If something goes wrong during set-up, the stack will be rolled back but not del
 
 **6. Login to the cluster**
 
-Once the cluster creation completes, you can immediately connect to the master node using SSH with username ec2-user and the keypair you filled in. For example:
+Once the cluster creation completes, you can immediately connect to the coordinator node using SSH with username ec2-user and the keypair you filled in. For example:
 
 ::
 
@@ -106,7 +106,7 @@ Once the cluster creation completes, you can immediately connect to the master n
 
 **7. Ready to use the cluster**
 
-At this step, you have completed the installation process and are ready to use the Citus cluster. You can now login to the master node and start executing commands. The command below, when run in the psql shell, should output the worker nodes mentioned in the pg_dist_node.
+At this step, you have completed the installation process and are ready to use the Citus cluster. You can now login to the coordinator node and start executing commands. The command below, when run in the psql shell, should output the worker nodes mentioned in the pg_dist_node.
 
 ::
 

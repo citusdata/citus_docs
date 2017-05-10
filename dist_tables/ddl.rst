@@ -47,8 +47,8 @@ This example would create a total of citus.shard_count number of shards where ea
 shard owns a portion of a hash token space and gets replicated based on the
 default citus.shard_replication_factor configuration value. The shard replicas
 created on the worker have the same table schema, index, and constraint
-definitions as the table on the master. Once the replicas are created, this
-function saves all distributed metadata on the master.
+definitions as the table on the coordinator. Once the replicas are created, this
+function saves all distributed metadata on the coordinator.
 
 Each created shard is assigned a unique shard id and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. You can connect to the worker postgres instances to view or run commands on individual shards.
 
