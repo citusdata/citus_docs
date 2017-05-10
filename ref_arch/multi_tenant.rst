@@ -198,7 +198,7 @@ Similarly the primary key, since it implies uniqueness, must also be composite:
   primary key (company_id, id)
 
 
-Putting it all together, we need to run the following commands to denormalize the schema and prepare the tables for distribution by company_id.
+Putting it all together, we need to run the following commands to denormalize the schema and prepare the tables for distribution by company_id. These commands add company_id to tables that lack it, and makes sure keys include the column.
 
 ::
 
@@ -215,3 +215,52 @@ Putting it all together, we need to run the following commands to denormalize th
   ALTER TABLE ads ADD CONSTRAINT ads_campaign_fk
     FOREIGN KEY (company_id, campaign_id)
     REFERENCES campaigns (company_id, id);
+
+Distributing Tables, Ingesting Data
+-----------------------------------
+
+Once the schema is ready, we can tell Citus to create shards on the workers. From the coordinator node, run:
+
+::
+
+  SELECT create_distributed_table('companies',   'id');
+  SELECT create_distributed_table('campaigns',   'company_id');
+  SELECT create_distributed_table('ads',         'company_id');
+  SELECT create_distributed_table('clicks',      'company_id');
+  SELECT create_distributed_table('impressions', 'company_id');
+
+This activates these tables for distributed storage and query execution. The next step is loading sample data into the cluster.
+
+.. code-block:: bash
+
+  curl https://examples.citusdata.com/tutorial/companies.csv > companies.csv
+  curl https://examples.citusdata.com/tutorial/campaigns.csv > campaigns.csv
+  curl https://examples.citusdata.com/tutorial/ads.csv > ads.csv
+  curl https://examples.citusdata.com/tutorial/clicks.csv > clicks.csv
+  curl https://examples.citusdata.com/tutorial/impressions.csv > impressions.csv
+
+.. note::
+
+  **If you are using Docker,** you should use the :code:`docker cp` command to copy the files into the Docker container.
+
+  .. code-block:: bash
+
+    docker cp companies.csv citus_master:.
+    docker cp campaigns.csv citus_master:.
+    docker cp ads.csv citus_master:.
+
+Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location.
+
+::
+
+  \copy companies
+    from 'companies.csv' with csv;
+  \copy campaigns
+    from 'campaigns.csv' with csv;
+  \copy ads (id, company_id, campaign_id, name, image_url, target_url,
+             impressions_count, clicks_count, created_at, updated_at)
+    from 'ads.csv' with csv;
+  \copy clicks
+    from 'clicks.csv' with csv;
+  \copy impressions
+    from 'impressions.csv' with csv;
