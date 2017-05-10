@@ -15,8 +15,8 @@ Using Citus, multi-tenant applications can be written as if they are connecting 
 
 This guide takes an example multi-tenant database schema and adjusts it for use in Citus. Along the way we examine typical challenges for multi-tenant applications like per-tenant customization, isolating tenants from noisy neighbors, and scaling hardware to accomodate more data. PostgreSQL and Citus provide the tools to handle these challenges, so let's get building.
 
-Let's Make an App: Ad Analytics
--------------------------------
+Let's Make an App – Ad Analytics
+--------------------------------
 
 We'll build the backend for an application that tracks online advertising performance and provides an analytics dashboard on top. It's a natural fit for a multi-tenant SaaS application because each company running ad campaigns is concerned with the performance of only its own ads. The queries' requests for data are partitioned per company.
 
@@ -105,8 +105,8 @@ The coordinator examines each client query and determines what data the query ne
 
 DIAGRAM: diagram of query execution
 
-Distributing Data
------------------
+Distributed Data in Citus
+-------------------------
 
 Using Citus effectively requires choosing the right pattern for distributing data and doing processing across workers. Citus runs fastest when the data distribution maximizes worker parallelism and minimizes network overhead for the application's most common queries. To minimize network overhead, related data items should be stored together on the same worker node. In multi-tenant applications this means that all data for a given tenant should be stored on the same worker. (Multiple tenants can be stored on the same worker for better hardware utilization, but no single tenant's data should span multiple workers.)
 
@@ -160,3 +160,58 @@ DIAGRAM: show id repartitioning, and company_id routing
 For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.* Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`. The placement of related information together on a worker is called *co-location.*
 
 These queries indicate a general design pattern: distributing shards by tenant id (such as the company id) allows Citus to route queries to individual workers for efficient processing. This fits multi-tenant applications which join structured information together per-tenant.
+
+Preparing Tables for Distribution
+---------------------------------
+
+In the previous section we identified the correct distribution column for multi-tenant applications: the tenant id. We also saw that some tables designed for a single machine PostgreSQL instance may need to be denormalized by the addition of this column.
+
+We will need to modify our schema, but there is one other caveat to note about distributed systems. Enforcing uniqueness or foreign key constraints in Citus requires that they include the distribution column. Our tables don't currently do that, for instance in the ads table we specify
+
+::
+
+  -- not efficiently enforceable
+
+  campaign_id bigint REFERENCES campaigns (id)
+
+This constraint includes only the campaign id, not the company (tenant) id. In order to verify the constraint Citus might have to consult multiple workers because it's not guaranteed in all situations that the ad in question is co-located with its campaign.
+
+To guarantee that they are co-located, ad and campaign must both be distributed by company_id, and this column must appear in the foreign key.
+
+::
+
+  -- corrected
+
+  FOREIGN KEY (company_id, campaign_id) REFERENCES
+    campaigns (company_id, id)
+
+Similarly the primary key, since it implies uniqueness, must also be composite:
+
+::
+
+  -- before
+  id bigserial PRIMARY KEY
+
+  -- after
+  id bigserial,
+  company_id bigint,
+  primary key (company_id, id)
+
+
+Putting it all together, we need to run the following commands to denormalize the schema and prepare the tables for distribution by company_id.
+
+::
+
+  -- update the schema
+
+  ALTER TABLE ads DROP CONSTRAINT ads_pkey;
+  ALTER TABLE ads DROP CONSTRAINT ads_campaign_id_fkey;
+
+  ALTER TABLE campaigns DROP CONSTRAINT campaigns_pkey;
+  ALTER TABLE campaigns ADD PRIMARY KEY (id, company_id);
+
+  ALTER TABLE ads ADD COLUMN company_id bigint NOT NULL;
+  ALTER TABLE ads ADD PRIMARY KEY (id, company_id);
+  ALTER TABLE ads ADD CONSTRAINT ads_campaign_fk
+    FOREIGN KEY (company_id, campaign_id)
+    REFERENCES campaigns (company_id, id);
