@@ -81,13 +81,6 @@ Here is the initial schema for our application. We'll be updating it slightly la
     user_data jsonb NOT NULL
   );
 
-  CREATE TABLE geo_ips (
-    ip inet NOT NULL PRIMARY KEY,
-    latlon point NOT NULL
-      CHECK (-90  <= latlon[0] AND latlon[0] <= 90 AND
-             -180 <= latlon[1] AND latlon[1] <= 180)
-  );
-
 This schema supports querying the performance of ads and campaigns. It is designed for a single-machine database, and will require adjustment in a distributed environment. To see why, we must become familar with how Citus distributes data and executes queries.
 
 Applications connect to a certain PostgreSQL server in the Citus cluster called the *coordinator node.* The connection is established using an ordinary PostgreSQL `connection URI <https://www.postgresql.org/docs/current/static/libpq-connect.html#AEN45527>`_. However the actual data and processing is stored on and will happen in other machines called *worker nodes.*
@@ -250,13 +243,6 @@ Putting it all together, here are all the changes needed in the schema to prepar
   +    REFERENCES ads (company_id, id)
    );
 
-   CREATE TABLE geo_ips (
-     ip inet NOT NULL PRIMARY KEY,
-     latlon point NOT NULL
-       CHECK (-90  <= latlon[0] AND latlon[0] <= 90 AND
-              -180 <= latlon[1] AND latlon[1] <= 180)
-   );
-
 The final schema is available for `download <https://examples.citusdata.com/tutorial/schema.sql>`_.
 
 Distributing Tables, Ingesting Data
@@ -274,6 +260,8 @@ Distributing Tables, Ingesting Data
   * **Docker**: :code:`docker exec -it citus_master psql -U postgres`
   * **Cloud**: :code:`psql "connection-string"` where the connection string for your formation is available in the Cloud Console.
 
+  In either case psql will be connected to the coordinator node for the cluster.
+
 At this point feel free to follow along in your own Citus cluster by downloading and executing the SQL to create the schema. Once the schema is ready, we can tell Citus to create shards on the workers. From the coordinator node, run:
 
 ::
@@ -288,11 +276,9 @@ This activates these tables for distributed storage and query execution. The nex
 
 .. code-block:: bash
 
-  curl https://examples.citusdata.com/tutorial/companies.csv > companies.csv
-  curl https://examples.citusdata.com/tutorial/campaigns.csv > campaigns.csv
-  curl https://examples.citusdata.com/tutorial/ads.csv > ads.csv
-  curl https://examples.citusdata.com/tutorial/clicks.csv > clicks.csv
-  curl https://examples.citusdata.com/tutorial/impressions.csv > impressions.csv
+  for dataset in companies campaigns ads clicks impressions; do
+    curl -O https://examples.citusdata.com/tutorial/${dataset}.csv
+  done
 
 .. note::
 
@@ -319,3 +305,89 @@ Being an extension of PostgreSQL, Citus supports bulk loading with the COPY comm
     from 'clicks.csv' with csv;
   \copy impressions
     from 'impressions.csv' with csv;
+
+Querying the Cluster
+--------------------
+
+Tenant applications in Citus can make ordinary queries, as long as the queries include the tenant id as a filter condition. For instance, suppose we are company id 5, how do we determine our total campaign budget?
+
+::
+
+  SELECT sum(monthly_budget)
+    FROM campaigns
+   WHERE company_id = 5;
+
+Which campaigns in particular have the biggest budget? Ordering and limiting work as usual:
+
+::
+
+  -- Campaigns with biggest budgets
+
+  SELECT name, cost_model, state, monthly_budget
+  FROM campaigns
+  WHERE company_id = 5
+  ORDER BY monthly_budget DESC
+  LIMIT 10;
+
+Updates work too. Let's double the budget for all campaigns!
+
+::
+
+  UPDATE campaigns
+  SET monthly_budget = monthly_budget*2
+  WHERE company_id = 5;
+
+In all these queries, the filter routes SQL execution directly inside a worker. Full SQL support is available once queries are "pushed down" to a worker like this. For example, how about transactions in our distributed database? No problem:
+
+::
+
+  -- transactionally remove campaign 46 and all its ads
+
+  BEGIN;
+  DELETE from campaigns where id = 46 AND company_id = 5;
+  DELETE from ads where campaign_id = 46 AND company_id = 5;
+  COMMIT;
+
+When people scale applications with NoSQL databases they often miss the lack of transactions and joins. We already saw a join query when discussing distribution columns, but here's another to combine information from campaigns and ads.
+
+::
+
+  -- Total campaign budget vs expense this month
+
+  SELECT camp.monthly_budget,
+         CASE cost_model
+         WHEN 'cost_per_click' THEN
+           clicks_count
+         ELSE
+           impressions_count
+         END AS billable_events
+  FROM campaigns camp
+  JOIN ads a ON (
+        a.campaign_id = camp.id
+    AND a.company_id = camp.company_id)
+  WHERE camp.company_id = 5;
+
+Up until now all tables have been distributed by company_id, but sometimes there is data that can be shared by all tenants, and doesn't "belong" to any tenant in particular. For instance all companies using this example ad platform might want to get geographical information for their audience based on IP addresses. In a single machine database this could be accomplished by a lookup table for geo-ip, like the following. (A real table would probably use PostGIS but bear with the simplified example.)
+
+::
+
+  CREATE TABLE geo_ips (
+    addrs cidr NOT NULL PRIMARY KEY,
+    latlon point NOT NULL
+      CHECK (-90  <= latlon[0] AND latlon[0] <= 90 AND
+             -180 <= latlon[1] AND latlon[1] <= 180)
+  );
+  CREATE INDEX ON geo_ips USING gist (addrs inet_ops);
+
+Joining clicks with this table can produce, for example, the locations of everyone who clicked on ad 456.
+
+::
+
+  SELECT latlon
+    FROM geo_ips, clicks c
+   WHERE addrs >> c.user_ip
+     AND c.clicked_at > current_date - INTERVAL '1 day'
+     AND c.company_id = 5
+     AND c.ad_id = 456;
+
+In Citus we need to find a way to co-locate the geo_ips table with clicks for every company.
