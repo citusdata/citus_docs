@@ -22,21 +22,12 @@ We'll build the backend for an application that tracks online advertising perfor
 
 Before jumping ahead to all that, let's consider a simplified schema for this application, designed for use on a single-machine PostgreSQL database. The application must keep track of multiple companies, each of which runs advertising campaigns. Campaigns have many ads, and each ad has associated records of its clicks and impressions.
 
-.. note::
-
-  This guide is designed so you can follow along in your own Citus database. Use one of these alternatives to spin up a database:
-
-  * Run Citus locally using :ref:`single_machine_docker`, or
-  * Provision a cluster using `Citus Cloud <https://console.citusdata.com/users/sign_up>`_
-
-  You'll run the SQL commands using psql:
-
-  * **Docker**: :code:`docker exec -it citus_master psql -U postgres`
-  * **Cloud**: :code:`psql "connection-string"` where the connection string for your formation is available in the Cloud Console.
-
-Here is the initial schema for our application. Feel free to run this code in your own Citus database.
+Here is the initial schema for our application. We'll be updating it slightly later in this guide, so don't run it quite yet.
 
 ::
+
+  -- Don't try executing this schema as-is, we need to make
+  -- a few changes later on to prepare it for Citus
 
   CREATE TABLE companies (
     id bigserial PRIMARY KEY,
@@ -266,10 +257,24 @@ Putting it all together, here are all the changes needed in the schema to prepar
               -180 <= latlon[1] AND latlon[1] <= 180)
    );
 
+The final schema is available for `download <https://examples.citusdata.com/tutorial/schema.sql>`_.
+
 Distributing Tables, Ingesting Data
 -----------------------------------
 
-Once the schema is ready, we can tell Citus to create shards on the workers. From the coordinator node, run:
+.. note::
+
+  This guide is designed so you can follow along in your own Citus database. Use one of these alternatives to spin up a database:
+
+  * Run Citus locally using :ref:`single_machine_docker`, or
+  * Provision a cluster using `Citus Cloud <https://console.citusdata.com/users/sign_up>`_
+
+  You'll run the SQL commands using psql:
+
+  * **Docker**: :code:`docker exec -it citus_master psql -U postgres`
+  * **Cloud**: :code:`psql "connection-string"` where the connection string for your formation is available in the Cloud Console.
+
+At this point feel free to follow along in your own Citus cluster by downloading and executing the SQL to create the schema. Once the schema is ready, we can tell Citus to create shards on the workers. From the coordinator node, run:
 
 ::
 
