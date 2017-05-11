@@ -176,60 +176,95 @@ We will need to modify our schema, but there is one other caveat to note about d
 
 This constraint includes only the campaign id, not the company (tenant) id. In order to verify the constraint Citus might have to consult multiple workers because it's not guaranteed in all situations that the ad in question is co-located with its campaign.
 
-To guarantee that they are co-located, ad and campaign must both be distributed by company_id, and this column must appear in the foreign key.
+To guarantee that they are co-located, ad and campaign must both be distributed by company_id, and this column must appear in the foreign key. Similarly the primary key, implying uniqueness as it does, must be composite and include company_id.
 
-::
+Putting it all together, here are all the changes needed in the schema to prepare the tables for distribution by company_id.
 
-  -- corrected
+.. code-block:: diff
 
-  FOREIGN KEY (company_id, campaign_id) REFERENCES
-    campaigns (company_id, id)
+  @@ -1,58 +1,71 @@
+   CREATE TABLE companies (
+     id bigserial PRIMARY KEY,
+     name text NOT NULL,
+     image_url text,
+     created_at timestamp without time zone NOT NULL,
+     updated_at timestamp without time zone NOT NULL
+   );
 
-Similarly the primary key, since it implies uniqueness, must also be composite:
+   CREATE TABLE campaigns (
+  -  id bigserial PRIMARY KEY,
+  +  id bigserial,
+     company_id bigint REFERENCES companies (id),
+     name text NOT NULL,
+     cost_model text NOT NULL,
+     state text NOT NULL,
+     monthly_budget bigint,
+     blacklisted_site_urls text[],
+     created_at timestamp without time zone NOT NULL,
+  -  updated_at timestamp without time zone NOT NULL
+  +  updated_at timestamp without time zone NOT NULL,
+  +  PRIMARY KEY (company_id, id)
+   );
 
-::
+   CREATE TABLE ads (
+  -  id bigserial PRIMARY KEY,
+  -  campaign_id bigint REFERENCES campaigns (id),
+  +  id bigserial,
+  +  company_id bigint,
+  +  campaign_id bigint,
+     name text NOT NULL,
+     image_url text,
+     target_url text,
+     impressions_count bigint DEFAULT 0,
+     clicks_count bigint DEFAULT 0,
+     created_at timestamp without time zone NOT NULL,
+  -  updated_at timestamp without time zone NOT NULL
+  +  updated_at timestamp without time zone NOT NULL,
+  +  PRIMARY KEY (company_id, id),
+  +  FOREIGN KEY (company_id, campaign_id)
+  +    REFERENCES ads (company_id, id)
+   );
 
-  -- before
-  id bigserial PRIMARY KEY
+   CREATE TABLE clicks (
+  -  id bigserial PRIMARY KEY,
+  -  ad_id bigint REFERENCES ads (id),
+  +  id bigserial,
+  +  company_id bigint,
+  +  ad_id bigint,
+     clicked_at timestamp without time zone NOT NULL,
+     site_url text NOT NULL,
+     cost_per_click_usd numeric(20,10),
+     user_ip inet NOT NULL,
+  -  user_data jsonb NOT NULL
+  +  user_data jsonb NOT NULL,
+  +  PRIMARY KEY (company_id, id),
+  +  FOREIGN KEY (company_id, ad_id)
+  +    REFERENCES ads (company_id, id)
+   );
 
-  -- after
-  id bigserial,
-  company_id bigint,
-  primary key (company_id, id)
+   CREATE TABLE impressions (
+  -  id bigserial PRIMARY KEY,
+  -  ad_id bigint REFERENCES ads (id),
+  +  id bigserial,
+  +  company_id bigint,
+  +  ad_id bigint,
+     seen_at timestamp without time zone NOT NULL,
+     site_url text NOT NULL,
+     cost_per_impression_usd numeric(20,10),
+     user_ip inet NOT NULL,
+  -  user_data jsonb NOT NULL
+  +  user_data jsonb NOT NULL,
+  +  PRIMARY KEY (company_id, id),
+  +  FOREIGN KEY (company_id, ad_id)
+  +    REFERENCES ads (company_id, id)
+   );
 
-
-Putting it all together, we need to run the following commands to denormalize the schema and prepare the tables for distribution by company_id. These commands add company_id to tables that lack it, and makes sure keys include the column.
-
-::
-
-  -- update the schema
-
-  ALTER TABLE clicks
-    ADD COLUMN company_id bigint NOT NULL,
-    DROP CONSTRAINT clicks_pkey,
-    ADD PRIMARY KEY (id, company_id),
-    DROP CONSTRAINT clicks_ad_id_fkey,
-    ADD CONSTRAINT clicks_ad_fk
-      FOREIGN KEY (ad_id, company_id)
-      REFERENCES ads (id, company_id);
-
-  ALTER TABLE ads
-    DROP CONSTRAINT ads_pkey,
-    DROP CONSTRAINT ads_campaign_id_fkey,
-    ADD COLUMN company_id bigint NOT NULL,
-    ADD PRIMARY KEY (id, company_id),
-    ADD CONSTRAINT ads_campaign_fk
-      FOREIGN KEY (company_id, campaign_id)
-      REFERENCES campaigns (company_id, id);
-
-  ALTER TABLE campaigns
-    DROP CONSTRAINT campaigns_pkey,
-    ADD PRIMARY KEY (id, company_id);
-
-
-  ALTER TABLE impressions DROP CONSTRAINT impressions_pkey
-    ADD PRIMARY KEY (id, ad_id);
-
+   CREATE TABLE geo_ips (
+     ip inet NOT NULL PRIMARY KEY,
+     latlon point NOT NULL
+       CHECK (-90  <= latlon[0] AND latlon[0] <= 90 AND
+              -180 <= latlon[1] AND latlon[1] <= 180)
+   );
 
 Distributing Tables, Ingesting Data
 -----------------------------------
