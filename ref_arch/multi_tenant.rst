@@ -204,17 +204,32 @@ Putting it all together, we need to run the following commands to denormalize th
 
   -- update the schema
 
-  ALTER TABLE ads DROP CONSTRAINT ads_pkey;
-  ALTER TABLE ads DROP CONSTRAINT ads_campaign_id_fkey;
+  ALTER TABLE clicks
+    ADD COLUMN company_id bigint NOT NULL,
+    DROP CONSTRAINT clicks_pkey,
+    ADD PRIMARY KEY (id, company_id),
+    DROP CONSTRAINT clicks_ad_id_fkey,
+    ADD CONSTRAINT clicks_ad_fk
+      FOREIGN KEY (ad_id, company_id)
+      REFERENCES ads (id, company_id);
 
-  ALTER TABLE campaigns DROP CONSTRAINT campaigns_pkey;
-  ALTER TABLE campaigns ADD PRIMARY KEY (id, company_id);
+  ALTER TABLE ads
+    DROP CONSTRAINT ads_pkey,
+    DROP CONSTRAINT ads_campaign_id_fkey,
+    ADD COLUMN company_id bigint NOT NULL,
+    ADD PRIMARY KEY (id, company_id),
+    ADD CONSTRAINT ads_campaign_fk
+      FOREIGN KEY (company_id, campaign_id)
+      REFERENCES campaigns (company_id, id);
 
-  ALTER TABLE ads ADD COLUMN company_id bigint NOT NULL;
-  ALTER TABLE ads ADD PRIMARY KEY (id, company_id);
-  ALTER TABLE ads ADD CONSTRAINT ads_campaign_fk
-    FOREIGN KEY (company_id, campaign_id)
-    REFERENCES campaigns (company_id, id);
+  ALTER TABLE campaigns
+    DROP CONSTRAINT campaigns_pkey,
+    ADD PRIMARY KEY (id, company_id);
+
+
+  ALTER TABLE impressions DROP CONSTRAINT impressions_pkey
+    ADD PRIMARY KEY (id, ad_id);
+
 
 Distributing Tables, Ingesting Data
 -----------------------------------
