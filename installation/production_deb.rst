@@ -19,6 +19,8 @@ Steps to be executed on all nodes
   # Add Citus repository for package manager
   curl https://install.citusdata.com/community/deb.sh | sudo bash
 
+.. _post_install:
+
 **2. Install PostgreSQL + Citus and initialize a database**
 
 ::

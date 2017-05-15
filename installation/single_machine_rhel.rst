@@ -17,6 +17,8 @@ This section describes the steps needed to set up a single-node Citus cluster on
   # install Citus extension
   sudo yum install -y citus61_96
 
+.. _post_install:
+
 **2. Initialize the Cluster**
 
 Citus has two kinds of components, the coordinator and the workers. The coordinator coordinates queries and maintains metadata on where in the cluster each row of data is. The workers hold your data and respond to queries.
