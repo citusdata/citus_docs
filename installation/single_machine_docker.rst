@@ -25,6 +25,8 @@ This section describes setting up a Citus cluster on a single machine using dock
 
 The above version of Docker Compose is sufficient for running Citus, or you can install the `latest version <https://github.com/docker/compose/releases/latest>`_.
 
+.. _post_install:
+
 **2. Start the Citus Cluster**
 
 Citus uses Docker Compose to run and connect containers holding the database coordinator node, workers, and a persistent data volume. To create a local cluster download our Docker Compose configuration file and run it

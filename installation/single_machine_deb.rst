@@ -18,6 +18,8 @@ This section describes the steps needed to set up a single-node Citus cluster on
   sudo apt-get -y install postgresql-9.6-citus-6.1
 
 
+.. _post_install:
+
 **2. Initialize the Cluster**
 
 Citus has two kinds of components, the coordinator and the workers. The coordinator coordinates queries and maintains metadata on where in the cluster each row of data is. The workers hold your data and respond to queries.
