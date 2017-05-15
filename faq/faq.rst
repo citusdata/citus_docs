@@ -110,4 +110,6 @@ Citus treats cstore_fdw tables just like regular PostgreSQL tables. When cstore_
 What happened to pg_shard?
 --------------------------
 
+The pg_shard extension is deprecated and no longer supported.
+
 Starting with the open-source release of Citus v5.x, pg_shard's codebase has been merged into Citus to offer you a unified solution which provides the advanced distributed query planning previously only enjoyed by CitusDB customers while preserving the simple and transparent sharding and real-time writes and reads pg_shard brought to the PostgreSQL ecosystem. Our flagship product, Citus, provides a superset of the functionality of pg_shard and we have migration steps to help existing users to perform a drop-in replacement. Please `contact us <https://www.citusdata.com/about/contact_us>`_ for more information.
