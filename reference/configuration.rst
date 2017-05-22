@@ -15,7 +15,6 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Citus tracks worker nodes' locations and their membership in a shared hash table on the coordinator node. This configuration value limits the size of the hash table, and consequently the number of worker nodes that can be tracked. The default for this setting is 2048. This parameter can only be set at server start and is effective on the coordinator node.
 
-
 Data Loading
 ---------------------------
 
@@ -152,7 +151,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 Sets a log-level for any queries which generates more than one task (i.e. which
 hits more than one shard). This is useful during a multi-tenant application
 migration, as one can choose to error or warn for such queries, to find them and
-add a tenant_id filter to them.
+add a tenant_id filter to them. This parameter can be set at runtime and is
+effective on the coordinator. The default value for this parameter is 'off'.
 
 The supported values for this enum are:
 
