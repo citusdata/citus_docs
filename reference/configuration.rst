@@ -144,6 +144,34 @@ Citus has two executor types for running distributed SELECT queries. The desired
 
 This parameter can be set at run-time and is effective on the coordinator. For more details about the executors, you can visit the :ref:`distributed_query_executor` section of our documentation.
 
+.. _multi_task_logging:
+
+citus.multi_task_query_log_level (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Sets a log-level for any queries which generates more than one task (i.e. which
+hits more than one shard). This is useful during a multi-tenant application
+migration, as one can choose to error or warn for such queries, to find them and
+add a tenant_id filter to them.
+
+The supported values for this enum are:
+
+* **off:** Turn off logging any queries which generate multiple tasks (i.e. span multiple shards)
+
+* **debug:** Logs statement at DEBUG severity level.
+
+* **log:** Logs statement at LOG severity level.
+
+* **notice:** Logs statement at NOTICE severity level.
+
+* **warning:** Logs statement at WARNING severity level.
+
+* **error:** Logs statement at ERROR severity level.
+
+Note that it may be useful to use 'error' or 'warning' during testing, and a
+lower log-level like 'notice' or 'log' during actual production deployment.
+
+
 Real-time executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
