@@ -76,12 +76,6 @@ serve queries to your cluster. For details on setting this up, please refer to t
 backup tools <http://www.postgresql.org/docs/9.6/static/backup.html>`_ to backup the metadata. Then, they can easily
 copy over that metadata to new nodes to resume operation.
 
-3. Citus's metadata tables are simple and mostly contain text columns which
-are easy to understand. So, in case there is no failure handling mechanism in
-place for the coordinator node, users can dynamically reconstruct this metadata from
-shard information available on the worker nodes. To learn more about the metadata
-tables and their schema, you can visit the :ref:`metadata_tables` section of our documentation.
-
 Tenant Isolation
 ################
 
