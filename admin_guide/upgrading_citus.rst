@@ -122,10 +122,12 @@ On the Coordinator Node
     CREATE TABLE public.pg_dist_colocation AS SELECT * FROM pg_catalog.pg_dist_colocation;
 
 3. Configure the new database instance to use Citus.
-  * Include Citus as a shared preload library in postgresql.conf:
-  .. code-block:: ini
 
-    shared_preload_libraries = 'citus'
+  * Include Citus as a shared preload library in postgresql.conf:
+
+    .. code-block:: ini
+
+      shared_preload_libraries = 'citus'
 
   * **DO NOT CREATE** Citus extension yet
 
@@ -133,12 +135,12 @@ On the Coordinator Node
 
 5. Check upgrade compatibility.
 
-  .. code-block:: bash
+   .. code-block:: bash
 
-    $NEW_PG_PATH/bin/pg_upgrade -b $OLD_PG_PATH/bin/ -B $NEW_PG_PATH/bin/ \
-                                -d $OLD_PG_DATA -D $NEW_PG_DATA --check
+     $NEW_PG_PATH/bin/pg_upgrade -b $OLD_PG_PATH/bin/ -B $NEW_PG_PATH/bin/ \
+                                 -d $OLD_PG_DATA -D $NEW_PG_DATA --check
 
-  You should see a "Clusters are compatible" message. If you do not, fix any errors before proceeding. Please ensure that
+   You should see a "Clusters are compatible" message. If you do not, fix any errors before proceeding. Please ensure that
 
   * :code:`NEW_PG_DATA` contains an empty database initialized by new PostgreSQL version
   * The Citus extension **IS NOT** created

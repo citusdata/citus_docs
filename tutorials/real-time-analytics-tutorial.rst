@@ -106,10 +106,10 @@ and allows for efficient joins and distributed roll-ups. You can learn more abou
 Then, you can go ahead and load the data we downloaded into the tables using the standard PostgreSQL :code:`\COPY` command.
 Please make sure that you specify the correct file path if you downloaded the file to a different location.
 
-::
-                                                                                          
-    \copy github_users from 'users.csv' with csv;                                                     
-    \copy github_events from 'events.csv' with csv;                                                     
+.. code-block:: psql
+
+    \copy github_users from 'users.csv' with csv;
+    \copy github_events from 'events.csv' with csv;
 
 
 Running queries

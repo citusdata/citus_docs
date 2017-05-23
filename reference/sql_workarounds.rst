@@ -53,7 +53,7 @@ Workaround 1. Generate explicit WHERE-IN expression
 
 In this technique we use PL/pgSQL to construct and execute one statement based on the results of another.
 
-.. code-block:: sql
+.. code-block:: postgresql
 
   -- create temporary table with results
   do language plpgsql $$
