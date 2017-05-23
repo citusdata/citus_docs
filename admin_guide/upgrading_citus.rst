@@ -77,7 +77,7 @@ After installing the new package and restarting the database, run the extension 
 .. note::
 
   During a major version upgrade, from the moment of yum installing a new
-  version, Citus will refuse to run distributed queries until is restarted and
+  version, Citus will refuse to run distributed queries until the server is restarted and
   ALTER EXTENSION is executed. This is to protect your data, as Citus object and
   function definitions are specific to a version. After a yum install you
   should (a) restart and (b) run alter extension. In rare cases if you

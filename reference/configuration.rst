@@ -25,11 +25,11 @@ Upgrading Citus version requires a server restart (to pick up the new
 shared-library), as well as running an ALTER EXTENSION UPDATE command. The
 failure to execute both steps could potentially cause errors or crashes. Citus
 thus validates the version of the code and that of the extension match, and
-error's out if they don't.
+errors out if they don't.
 
-This value defaults to true, and is effective on the coordinator. In rare cases
-this parameter may set to false, thus disabling the check, and might be suitable
-for more complex upgrade processes.
+This value defaults to true, and is effective on the coordinator. In rare cases,
+complex upgrade processes may require setting this parameter to false, thus
+disabling the check.
 
 Data Loading
 ---------------------------
