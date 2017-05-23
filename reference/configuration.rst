@@ -148,9 +148,9 @@ This parameter can be set at run-time and is effective on the coordinator. For m
 citus.multi_task_query_log_level (enum)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Sets a log-level for any queries which generates more than one task (i.e. which
+Sets a log-level for any query which generates more than one task (i.e. which
 hits more than one shard). This is useful during a multi-tenant application
-migration, as one can choose to error or warn for such queries, to find them and
+migration, as you can choose to error or warn for such queries, to find them and
 add a tenant_id filter to them. This parameter can be set at runtime and is
 effective on the coordinator. The default value for this parameter is 'off'.
 
@@ -168,8 +168,8 @@ The supported values for this enum are:
 
 * **error:** Logs statement at ERROR severity level.
 
-Note that it may be useful to use 'error' or 'warning' during testing, and a
-lower log-level like 'notice' or 'log' during actual production deployment.
+Note that it may be useful to use :code:`error` or :code:`warning` during testing, and a
+lower log-level like :code:`notice` or :code:`log` during actual production deployment.
 
 
 Real-time executor configuration
