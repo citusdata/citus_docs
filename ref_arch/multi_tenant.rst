@@ -22,7 +22,7 @@ We'll build the backend for an application that tracks online advertising perfor
 
 Before jumping ahead to all that, let's consider a simplified schema for this application, designed for use on a single-machine PostgreSQL database. The application must keep track of multiple companies, each of which runs advertising campaigns. Campaigns have many ads, and each ad has associated records of its clicks and impressions.
 
-Here is the initial schema for our application. We'll be updating it slightly later in this guide, so don't run it quite yet.
+Here is a schema designed for single-node PostgreSQL. We'll make some minor changes later, which allow us to effectively partition and isolate the data in a distributed environment.
 
 ::
 
@@ -85,12 +85,12 @@ This schema supports querying the performance of ads and campaigns. It is design
 
 Applications connect to a certain PostgreSQL server in the Citus cluster called the *coordinator node.* The connection is established using an ordinary PostgreSQL `connection URI <https://www.postgresql.org/docs/current/static/libpq-connect.html#AEN45527>`_. However the actual data and processing is stored on and will happen in other machines called *worker nodes.*
 
-The coordinator examines each client query and determines what data the query needs, and which worker nodes have the data. The coordinator then splits the query into simplified *query fragments*, and sends them to worker nodes for processing. When the workers' results are ready, the coordinator puts them together into a final result and forwards it to the application.
+The coordinator examines each client query and determines what data the query needs, and which worker nodes have the data. The coordinator then splits the query into *query fragments*, and sends them to worker nodes for processing. When the workers' results are ready, the coordinator puts them together into a final result and forwards it to the application.
 
 DIAGRAM: diagram of query execution
 
-Distributed Data in Citus
--------------------------
+Distributing Data in the Cluster
+--------------------------------
 
 Using Citus effectively requires choosing the right pattern for distributing data and doing processing across workers. Citus runs fastest when the data distribution maximizes worker parallelism and minimizes network overhead for the application's most common queries. To minimize network overhead, related data items should be stored together on the same worker node. In multi-tenant applications this means that all data for a given tenant should be stored on the same worker. (Multiple tenants can be stored on the same worker for better hardware utilization, but no single tenant's data should span multiple workers.)
 
@@ -110,7 +110,7 @@ Returning to the ad analytics application, let's consider the options for choosi
   ORDER BY monthly_budget DESC
   LIMIT 10;
 
-This is a typical query for a multi-tenant application because it restricts the results to data from a single company. Each tenant, in this case an advertising company, will be accessing only their own data.
+This is a typical query for a multi-tenant application because it restricts the results to data from a single company, by the presence of the where-clause filter `where company_id = 5`. Each tenant, in this case an advertising company, will be accessing only their own data.
 
 Any column of the :code:`campaigns` table could be its distribution column, but let's compare how this query performs for either of two options: :code:`id` and :code:`company_id`.
 
@@ -141,7 +141,7 @@ The order/limit query slightly favors distribution by :code:`company_id`. Howeve
 
 DIAGRAM: show id repartitioning, and company_id routing
 
-For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.* Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`. The placement of related information together on a worker is called *co-location.*
+For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.* Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`. The placement of related information together on a worker is called :ref:`co-location <colocation>`.
 
 These queries indicate a general design pattern: distributing shards by tenant id (such as the company id) allows Citus to route queries to individual workers for efficient processing. This fits multi-tenant applications which join structured information together per-tenant.
 
