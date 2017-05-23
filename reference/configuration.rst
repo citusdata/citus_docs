@@ -15,7 +15,6 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Citus tracks worker nodes' locations and their membership in a shared hash table on the coordinator node. This configuration value limits the size of the hash table, and consequently the number of worker nodes that can be tracked. The default for this setting is 2048. This parameter can only be set at server start and is effective on the coordinator node.
 
-
 Data Loading
 ---------------------------
 
@@ -143,6 +142,35 @@ Citus has two executor types for running distributed SELECT queries. The desired
 * **task-tracker:** The task-tracker executor is well suited for long running, complex queries which require shuffling of data across worker nodes and efficient resource management.
 
 This parameter can be set at run-time and is effective on the coordinator. For more details about the executors, you can visit the :ref:`distributed_query_executor` section of our documentation.
+
+.. _multi_task_logging:
+
+citus.multi_task_query_log_level (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Sets a log-level for any query which generates more than one task (i.e. which
+hits more than one shard). This is useful during a multi-tenant application
+migration, as you can choose to error or warn for such queries, to find them and
+add a tenant_id filter to them. This parameter can be set at runtime and is
+effective on the coordinator. The default value for this parameter is 'off'.
+
+The supported values for this enum are:
+
+* **off:** Turn off logging any queries which generate multiple tasks (i.e. span multiple shards)
+
+* **debug:** Logs statement at DEBUG severity level.
+
+* **log:** Logs statement at LOG severity level.
+
+* **notice:** Logs statement at NOTICE severity level.
+
+* **warning:** Logs statement at WARNING severity level.
+
+* **error:** Logs statement at ERROR severity level.
+
+Note that it may be useful to use :code:`error` or :code:`warning` during testing, and a
+lower log-level like :code:`notice` or :code:`log` during actual production deployment.
+
 
 Real-time executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
