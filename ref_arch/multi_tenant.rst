@@ -119,7 +119,7 @@ The order/limit query slightly favors distribution by :code:`company_id`. Howeve
 
 .. note::
 
-  In our normalized schema above, the ads table does not have a company_id column because it can retrieve that information through the campaigns table. To distribute the ads table by company id, we will need to add the company_id column to it. The query below assumes we have done this, and we'll talk more about this technique later.
+  In our normalized schema above, the :code:`ads` table does not have a :code:`company_id` column because it can retrieve that information through the :code:`campaigns` table. To distribute the :code:`ads` table by company id, we will need to add the :code:`company_id` column to it. The query below assumes we have done this, and we'll talk more about this technique later.
 
 ::
 
@@ -275,7 +275,7 @@ At this point feel free to follow along in your own Citus cluster by `downloadin
   SELECT create_distributed_table('clicks',      'company_id');
   SELECT create_distributed_table('impressions', 'company_id');
 
-The :code:`create_distributed_table` function informs Citus that a table should be distributed and future incoming queries to those tables should be planned for distributed execution. The function also creates shards for the table on worker nodes, allowing queries to be routed there.
+The :code:`create_distributed_table` function informs Citus that a table should be distributed and that future incoming queries to those tables should be planned for distributed execution. The function also creates shards for the table on worker nodes, allowing queries to be routed there.
 
 The next step is loading sample data into the cluster.
 
@@ -299,7 +299,7 @@ The next step is loading sample data into the cluster.
 
 Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location.
 
-::
+.. code-block:: psql
 
   \copy companies
     from 'companies.csv' with csv;
@@ -374,7 +374,7 @@ When people scale applications with NoSQL databases they often miss the lack of 
     AND a.company_id = camp.company_id)
   WHERE camp.company_id = 5;
 
-Up until now all tables have been distributed by company_id, but sometimes there is data that can be shared by all tenants, and doesn't "belong" to any tenant in particular. For instance all companies using this example ad platform might want to get geographical information for their audience based on IP addresses. In a single machine database this could be accomplished by a lookup table for geo-ip, like the following. (A real table would probably use PostGIS but bear with the simplified example.)
+Up until now all tables have been distributed by :code:`company_id`, but sometimes there is data that can be shared by all tenants, and doesn't "belong" to any tenant in particular. For instance all companies using this example ad platform might want to get geographical information for their audience based on IP addresses. In a single machine database this could be accomplished by a lookup table for geo-ip, like the following. (A real table would probably use PostGIS but bear with the simplified example.)
 
 ::
 
