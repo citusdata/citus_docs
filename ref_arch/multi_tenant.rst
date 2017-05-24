@@ -374,6 +374,9 @@ When people scale applications with NoSQL databases they often miss the lack of 
     AND a.company_id = camp.company_id)
   WHERE camp.company_id = 5;
 
+Sharing Data Between Tenants
+----------------------------
+
 Up until now all tables have been distributed by :code:`company_id`, but sometimes there is data that can be shared by all tenants, and doesn't "belong" to any tenant in particular. For instance all companies using this example ad platform might want to get geographical information for their audience based on IP addresses. In a single machine database this could be accomplished by a lookup table for geo-ip, like the following. (A real table would probably use PostGIS but bear with the simplified example.)
 
 ::
@@ -397,4 +400,14 @@ Joining clicks with this table can produce, for example, the locations of everyo
      AND c.company_id = 5
      AND c.ad_id = 456;
 
-In Citus we need to find a way to co-locate the geo_ips table with clicks for every company.
+In Citus we need to find a way to co-locate the :code:`geo_ips` table with clicks for every company. One way would be to add a :code:`company_id` column to :code:`geo_ips` and duplicate the data in the table for every company. This approach is not optimal because it introduces the burden of keeping the data synchronized between the companies if and when it changes. A more convenient way is by designating :code:`geo_ips` as a *reference table.*
+
+Reference tables in Citus have exactly one shard, and it is replicated across all worker nodes. This co-locates the information for all tenants' queries. It does require reserving space for a copy of the data on all nodes, but automatically stays in sync during reference table updates. To make a reference table, call :code:`create_reference_table` for a table on the coordinator node:
+
+::
+
+  -- Make synchronized copies of geo_ips on all workers
+
+  SELECT create_reference_table('geo_ips');
+
+After doing this, the join query (presented earlier) on :code:`geo_ips` and :code:`clicks` will perform efficiently.
