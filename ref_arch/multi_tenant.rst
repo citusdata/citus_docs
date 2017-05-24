@@ -9,11 +9,11 @@ Multi-tenant Applications
 
 Many companies with web applications cater not to end users, but to other businesses with customers of their own. When many clients with similar needs are expected, it makes sense to run a single instance of the application to handle all the clients.
 
-A software-as-a-service (SaaS) provider, for example, can run one instance of its application on one instance of a database and provide web access to multiple customers. In such a scenario, each tenant's data is isolated and remains invisible to other tenants. This is efficient in two ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently.
+A software-as-a-service (SaaS) provider, for example, can run one instance of its application on one instance of a database and provide web access to multiple customers. In such a scenario, each tenant's data can be isolated and kept invisible to other tenants. This is efficient in two ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently.
 
 Using Citus, multi-tenant applications can be written as if they are connecting to a single PostgreSQL database, when in fact the database is a horizontally scalable cluster of machines. Client code requires minimal modifications and can continue to use full SQL capabilities.
 
-This guide takes an example multi-tenant database schema and adjusts it for use in Citus. Along the way we examine typical challenges for multi-tenant applications like per-tenant customization, isolating tenants from noisy neighbors, and scaling hardware to accomodate more data. PostgreSQL and Citus provide the tools to handle these challenges, so let's get building.
+This guide takes a sample multi-tenant application and describes how to model it for scalability with Citus. Along the way we examine typical challenges for multi-tenant applications like per-tenant customization, isolating tenants from noisy neighbors, and scaling hardware to accomodate more data. PostgreSQL and Citus provide the tools to handle these challenges, so let's get building.
 
 Let's Make an App – Ad Analytics
 --------------------------------
@@ -25,9 +25,6 @@ Before jumping ahead to all that, let's consider a simplified schema for this ap
 Here is a schema designed for single-node PostgreSQL. We'll make some minor changes later, which allow us to effectively partition and isolate the data in a distributed environment.
 
 ::
-
-  -- Don't try executing this schema as-is, we need to make
-  -- a few changes later on to prepare it for Citus
 
   CREATE TABLE companies (
     id bigserial PRIMARY KEY,
@@ -81,20 +78,20 @@ Here is a schema designed for single-node PostgreSQL. We'll make some minor chan
     user_data jsonb NOT NULL
   );
 
-This schema supports querying the performance of ads and campaigns. It is designed for a single-machine database, and will require adjustment in a distributed environment. To see why, we must become familar with how Citus distributes data and executes queries.
+This schema supports querying the performance of ads and campaigns. It is designed for a single-machine database, and will require modification in a distributed environment. To see why, we must become familiar with how Citus distributes data and executes queries.
 
 Applications connect to a certain PostgreSQL server in the Citus cluster called the *coordinator node.* The connection is established using an ordinary PostgreSQL `connection URI <https://www.postgresql.org/docs/current/static/libpq-connect.html#AEN45527>`_. However the actual data and processing is stored on and will happen in other machines called *worker nodes.*
 
-The coordinator examines each client query and determines what data the query needs, and which worker nodes have the data. The coordinator then splits the query into *query fragments*, and sends them to worker nodes for processing. When the workers' results are ready, the coordinator puts them together into a final result and forwards it to the application.
+The coordinator examines each client query and determines to which tenant it pertains. The coordinator then routes the query for processing to the worker node which holds that tenant. When the worker's results are ready, the coordinator forwards it to the application.
 
 DIAGRAM: diagram of query execution
 
 Distributing Data in the Cluster
 --------------------------------
 
-Using Citus effectively requires choosing the right pattern for distributing data and doing processing across workers. Citus runs fastest when the data distribution maximizes worker parallelism and minimizes network overhead for the application's most common queries. To minimize network overhead, related data items should be stored together on the same worker node. In multi-tenant applications this means that all data for a given tenant should be stored on the same worker. (Multiple tenants can be stored on the same worker for better hardware utilization, but no single tenant's data should span multiple workers.)
+Using Citus effectively requires choosing the right pattern for distributing data and doing processing across workers. Citus runs fastest when the data distribution minimizes network overhead for the application's most common queries. This happens when related data items are stored together on the same worker node. In multi-tenant applications all data for a given tenant should be stored on the same worker. (Multiple tenants can be stored on the same worker for better hardware utilization, but no single tenant's data should span multiple workers.)
 
-Citus stores rows in groups called *shards*, where each shard is placed on a worker node. The bundling of rows into shards is determined by the value of a special column in each table called the *distribution column*. (This column is chosen by the database administrator for each table.) When reading or writing a row in a distributed table, Citus hashes the value in the the row's distribution column and compares it against the range of hashed values accepted by each shard. The shard hash ranges are disjoint and span the hash space. In short, Citus accesses a row by hashing its distribution column, finding the shard whose range includes the hashed value, and deferring to the worker node where the shard is placed.
+Citus stores rows in groups called *shards*, where each shard is placed on a worker node. The bundling of rows into shards is determined by the value of a special column in each table called the *distribution column*. (This column is chosen by the database administrator for each table.) When reading or writing a row in a distributed table, Citus hashes the value in the row's distribution column and compares it against the range of hashed values accepted by each shard. The shard hash ranges are disjoint and span the hash space. In short, Citus accesses a row by hashing its distribution column, finding the shard whose range includes the hashed value, and deferring to the worker node where the shard is placed.
 
 DIAGRAM: image of shards and their ranges
 
@@ -122,7 +119,7 @@ The order/limit query slightly favors distribution by :code:`company_id`. Howeve
 
 .. note::
 
-  In our normalized schema above, the ads table does not have a company_id column because it can retrieve that information through the campaigns table. If we want to distribute the ads table by company id however, we would need to denormalize the schema slightly and add that column. The query below assumes we have done this, and we'll talk more about this technique later.
+  In our normalized schema above, the ads table does not have a company_id column because it can retrieve that information through the campaigns table. To distribute the ads table by company id, we will need to add the company_id column to it. The query below assumes we have done this, and we'll talk more about this technique later.
 
 ::
 
@@ -143,7 +140,15 @@ DIAGRAM: show id repartitioning, and company_id routing
 
 For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.* Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`. The placement of related information together on a worker is called :ref:`co-location <colocation>`.
 
-These queries indicate a general design pattern: distributing shards by tenant id (such as the company id) allows Citus to route queries to individual workers for efficient processing. This fits multi-tenant applications which join structured information together per-tenant.
+The key idea is to think of your schema hierarchically -- e.g. impressions are for ads, ads are in campaigns, campaigns belong to companies -- and pick the item at the top of the hierarchy as the sharding key. In B2B scenarios, this would typically be your customer or business. This provides two benefits:
+
+* All tables will be related to the concept of tenant.  This ensures all tables are co-located.
+* Since the application is multi-tenant, all queries will be scoped to a tenant. This means they will be routed to a single node, as data for a tenant will be on a single node.
+
+These properties dramatically reduce the cost associated
+with distributed transactions, joins, and foreign key constraints.  It also allows PostgreSQL to optimize a single-tenant query as it sees appropriate.
+
+Routing queries to a worker node allows full support for PostgreSQL transactions and enforcement of foreign keys. These are features typically lacking in NoSQL distributed databases.
 
 Preparing Tables for Distribution
 ---------------------------------
@@ -158,11 +163,9 @@ We will need to modify our schema, but there is one other caveat to note about d
 
   campaign_id bigint REFERENCES campaigns (id)
 
-This constraint includes only the campaign id, not the company (tenant) id. In order to verify the constraint Citus might have to consult multiple workers because it's not guaranteed in all situations that the ad in question is co-located with its campaign.
+This constraint includes only the campaign id, not the company (tenant) id. If we don't include the tenant id in the primary or foreign keys, Citus will need to check all worker nodes to enforce uniqueness on each index, which does not scale well. Adding tenant id to your keys allows Citus to perform the check at a shard level which can be completely enforced on the worker nodes.
 
-To guarantee that they are co-located, ad and campaign must both be distributed by company_id, and this column must appear in the foreign key. Similarly the primary key, implying uniqueness as it does, must be composite and include company_id.
-
-Putting it all together, here are all the changes needed in the schema to prepare the tables for distribution by company_id.
+Putting it all together, here are all the changes needed in the schema to prepare the tables for distribution by :code:`company_id`. Notice how all primary/foreign keys include the distribution column.
 
 .. code-block:: diff
 
@@ -262,7 +265,7 @@ Distributing Tables, Ingesting Data
 
   In either case psql will be connected to the coordinator node for the cluster.
 
-At this point feel free to follow along in your own Citus cluster by downloading and executing the SQL to create the schema. Once the schema is ready, we can tell Citus to create shards on the workers. From the coordinator node, run:
+At this point feel free to follow along in your own Citus cluster by `downloading <https://examples.citusdata.com/tutorial/schema.sql>`_ and executing the SQL to create the schema. Once the schema is ready, we can tell Citus to create shards on the workers. From the coordinator node, run:
 
 ::
 
@@ -272,9 +275,13 @@ At this point feel free to follow along in your own Citus cluster by downloading
   SELECT create_distributed_table('clicks',      'company_id');
   SELECT create_distributed_table('impressions', 'company_id');
 
-This activates these tables for distributed storage and query execution. The next step is loading sample data into the cluster.
+The :code:`create_distributed_table` function informs Citus that a table should be distributed and future incoming queries to those tables should be planned for distributed execution. The function also creates shards for the table on worker nodes, allowing queries to be routed there.
+
+The next step is loading sample data into the cluster.
 
 .. code-block:: bash
+
+  # download and ingest datasets from the shell
 
   for dataset in companies campaigns ads clicks impressions; do
     curl -O https://examples.citusdata.com/tutorial/${dataset}.csv
@@ -309,7 +316,7 @@ Being an extension of PostgreSQL, Citus supports bulk loading with the COPY comm
 Querying the Cluster
 --------------------
 
-Tenant applications in Citus can make ordinary queries, as long as the queries include the tenant id as a filter condition. For instance, suppose we are company id 5, how do we determine our total campaign budget?
+Multi-tenant applications in Citus can run any SQL queries, as long as the queries include the tenant id as a filter condition. For instance, suppose we are company id 5, how do we determine our total campaign budget?
 
 ::
 
