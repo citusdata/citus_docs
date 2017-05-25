@@ -84,6 +84,32 @@ reference table
 
 	SELECT create_reference_table('nation');
 
+upgrade_to_reference_table
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+.. _upgrade_to_reference_table:
+
+The upgrade_to_reference_table() function takes an existing distributed table which has a shard count of one, and upgrades it to be a recognized reference table. After calling this function, the table will be as if it had been created with :ref:`create_reference_table <create_reference_table>`.
+
+Arguments
+************************
+
+**table_name:** Name of the distributed table (having shard count = 1) which will be distributed as a reference table.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+
+This example informs the database that the nation table should be defined as a
+reference table
+
+::
+
+	SELECT upgrade_to_reference_table('nation');
+
 master_create_distributed_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. _master_create_distributed_table:
@@ -389,6 +415,35 @@ Example
           7 |       7 | new-node |    12345 | default  | f           | t
     (1 row)
 
+master_disable_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The :code:`master_disable_node` function is the opposite of
+:code:`master_activate_node`. It marks a node as inactive in
+the Citus metadata table :code:`pg_dist_node`, removing it from
+the cluster temporarily. The function also deletes all reference table
+placements from the disabled node. To reactivate the node, just run
+:code:`master_activate_node` again.
+
+Arguments
+************************
+
+**node_name:** DNS name or IP address of the node to be disabled.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+N/A
+
+Example
+***********************
+
+::
+
+    select * from master_disable_node('new-node', 12345);
+
 master_remove_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -527,6 +582,46 @@ Example
   --------------------------------------
                                  540007
   (1 row)
+
+column_to_column_name
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Translates the :code:`partkey` column of :code:`pg_dist_partition` into a textual column name. This is useful to determine the distribution column of a distributed table.
+
+For a more detailed discussion, see :ref:`finding_dist_col`.
+
+Arguments
+************************
+
+**table_name:** The distributed table.
+
+**column_var_text:** The value of :code:`partkey` in the :code:`pg_dist_partition` table.
+
+Return Value
+******************************
+
+The name of :code:`table_name`'s distribution column.
+
+Example
+***********************
+
+.. code-block:: postgresql
+
+  -- get distribution column name for products table
+
+  SELECT column_to_column_name(logicalrelid, partkey) AS dist_col_name
+    FROM pg_dist_partition
+   WHERE logicalrelid='products'::regclass;
+
+Output:
+
+::
+
+  ┌───────────────┐
+  │ dist_col_name │
+  ├───────────────┤
+  │ company_id    │
+  └───────────────┘
 
 citus_relation_size
 $$$$$$$$$$$$$$$$$$$
@@ -730,3 +825,44 @@ This example will attempt to bring the shards of the github_events table to the 
 ::
 
 	SELECT replicate_table_shards('github_events', max_shard_copies:=10);
+
+isolate_tenant_to_new_shard
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+  The isolate_tenant_to_new_shard function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+This function creates a new shard to hold rows with a specific single value in the distribution column. It is especially handy for the multi-tenant Citus use case, where a large tenant can be placed alone on its own shard and ultimately its own physical node.
+
+For a more in-depth discussion, see :ref:`tenant_isolation`.
+
+Arguments
+*************************
+
+**table_name:** The name of the table to get a new shard.
+
+**tenant_id:** The value of the distribution column which will be assigned to the new shard.
+
+**cascade_option:** (Optional) When set to "CASCADE," also isolates a shard from all tables in the current table's :ref:`colocation_groups`.
+
+Return Value
+***************************
+
+**shard_id:** The function returns the unique id assigned to the newly created shard.
+
+Examples
+**************************
+
+Create a new shard to hold the lineitems for tenant 135:
+
+.. code-block:: postgresql
+
+  SELECT isolate_tenant_to_new_shard('lineitem', 135);
+
+::
+
+  ┌─────────────────────────────┐
+  │ isolate_tenant_to_new_shard │
+  ├─────────────────────────────┤
+  │                      102240 │
+  └─────────────────────────────┘
