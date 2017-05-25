@@ -843,7 +843,7 @@ Arguments
 
 **tenant_id:** The value of the distribution column which will be assigned to the new shard.
 
-**cascade_option:** (Optional) When set to "CASCADE," also isolates a shard from all tables in the current table's :ref:`colocation_group`.
+**cascade_option:** (Optional) When set to "CASCADE," also isolates a shard from all tables in the current table's :ref:`colocation_groups`.
 
 Return Value
 ***************************
