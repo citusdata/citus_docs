@@ -76,6 +76,8 @@ serve queries to your cluster. For details on setting this up, please refer to t
 backup tools <http://www.postgresql.org/docs/9.6/static/backup.html>`_ to backup the metadata. Then, they can easily
 copy over that metadata to new nodes to resume operation.
 
+.. _tenant_isolation:
+
 Tenant Isolation
 ################
 
