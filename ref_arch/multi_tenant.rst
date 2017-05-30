@@ -411,3 +411,32 @@ Reference tables in Citus have exactly one shard, and it is replicated across al
   SELECT create_reference_table('geo_ips');
 
 After doing this, the join query (presented earlier) on :code:`geo_ips` and :code:`clicks` will perform efficiently.
+
+Dealing with Big Tenants
+------------------------
+
+As the number of tenants increases, the the size of tenant data typically tends to follow a Zipfian distribution. This means there are a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them. To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.
+
+Citus Enterprise Edition and Citus Cloud provide the tools to isolate a tenant on a specific node. This happens in two phases: 1) isolating the tenant’s data to a new dedicated shard, then 2) moving the shard to the desired node.
+
+In our case, let's imagine that good old company id=5 is very large. The first step in isolating it from other tenants is to make a new shard dedicated entirely to that company.
+
+::
+
+  SELECT isolate_tenant_to_new_shard('companies', 5, 'CASCADE');
+
+The output is the shard id dedicated to :code:`company_id=5`:
+
+::
+
+  ┌─────────────────────────────┐
+  │ isolate_tenant_to_new_shard │
+  ├─────────────────────────────┤
+  │                      102240 │
+  └─────────────────────────────┘
+
+The optional :code:`'CASCADE'` parameter makes a dedicated shard not only for the :code:`companies` table but for any other tables which are co-located with it. In our case that would be all the other tables except the reference table. If you recall, these tables are distributed by :code:`company_id` and are thus in the same co-location group. (Note that the shards created for the other tables each have their own shard id, they do not share id 102240.)
+
+Creating shards is only half the battle. The new shards -- one per table -- live on the worker nodes from which their data originated. For true hardware isolation we can move them to a separate node in the Citus cluster.
+
+TODO: show how to physically move tenant shards to freshly added worker. Make this section part of — or after — the hardware scaling section.
