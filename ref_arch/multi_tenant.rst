@@ -412,6 +412,55 @@ Reference tables in Citus have exactly one shard, and it is replicated across al
 
 After doing this, the join query (presented earlier) on :code:`geo_ips` and :code:`clicks` will perform efficiently.
 
+Online Changes to the Schema
+----------------------------
+
+Citus propagates most DDL statements fron the coordinator node to the workers. This allows the database administrator to alter the database even during use and after tables are distributed in the cluster. Citus uses a two-phase commit protocol to make sure updates happen consistently.
+
+For example, the advertisements in this application could use a text caption. We can add a column to the table by issuing the standard SQL on the coordinator:
+
+::
+
+  ALTER TABLE ads
+    ADD COLUMN caption text;
+
+This updates all the shards as well. Once this command finishes, the Citus cluster will accept queries that read or write data in the new :code:`caption` column.
+
+For a fuller explanation of which DDL commands propagate through the cluster, see :ref:`ddl_prop_support`.
+
+Per-Tenant Customization
+========================
+
+Given that all tenants share a common schema and a hardware infrastructure, how can we accommodate those which want to store information not needed by others? For example, one of the tenant applications using our advertising database may want to associate tracking cookie information with clicks, whereas another tenant may care about browser agents. Traditionally databases using a shared schema approach for multi-tenancy have resorted to creating a fixed number of pre-allocated "custom" columns, or having external "extension tables." However PostgreSQL provides a much easier way with its unstructured column types, notably `JSONB <https://www.postgresql.org/docs/current/static/datatype-json.html>`_.
+
+We can add a JSONB field to :code:`clicks` called :code:`extra` which each tenant can use for open-ended storage:
+
+.. code-block:: postgresql
+
+  ALTER TABLE clicks
+    ADD COLUMN extra jsonb;
+
+Supposing company 5 uses the field to track the user agent ad clicks, they can later query to find which browsers click most often:
+
+.. code-block:: postgresql
+
+  SELECT
+    extra->>'browser' AS browser,
+    count(*) AS count
+  FROM clicks
+  WHERE company_id = 5
+  GROUP BY extra->>'browser'
+  ORDER BY count DESC
+  LIMIT 10;
+
+The database administrator can even create a `partial index <https://www.postgresql.org/docs/current/static/indexes-partial.html>`_ to improve speed for an individual tenant's query patterns. Here is one to improve company 5's filters for browser information:
+
+.. code-block:: postgresql
+
+  CREATE INDEX click_extra_browser
+  ON clicks ((extra->>'browser'))
+  WHERE company_id = 5;
+
 Dealing with Big Tenants
 ------------------------
 
