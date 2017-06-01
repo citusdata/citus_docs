@@ -415,25 +415,20 @@ For a fuller explanation of which DDL commands propagate through the cluster, se
 Per-Tenant Customization
 ========================
 
-Given that all tenants share a common schema and a hardware infrastructure, how can we accommodate those which want to store information not needed by others? For example, one of the tenant applications using our advertising database may want to associate tracking cookie information with clicks, whereas another tenant may care about browser agents. Traditionally databases using a shared schema approach for multi-tenancy have resorted to creating a fixed number of pre-allocated "custom" columns, or having external "extension tables." However PostgreSQL provides a much easier way with its unstructured column types, notably `JSONB <https://www.postgresql.org/docs/current/static/datatype-json.html>`_.
+Given that all tenants share a common schema and hardware infrastructure, how can we accommodate tenants which want to store information not needed by others? For example, one of the tenant applications using our advertising database may want to store tracking cookie information with clicks, whereas another tenant may care about browser agents. Traditionally databases using a shared schema approach for multi-tenancy have resorted to creating a fixed number of pre-allocated "custom" columns, or having external "extension tables." However PostgreSQL provides a much easier way with its unstructured column types, notably `JSONB <https://www.postgresql.org/docs/current/static/datatype-json.html>`_.
 
-We can add a JSONB field to :code:`clicks` called :code:`extra` which each tenant can use for open-ended storage:
-
-.. code-block:: postgresql
-
-  ALTER TABLE clicks
-    ADD COLUMN extra jsonb;
+Notice that our schema already has a JSONB field in :code:`clicks` called :code:`user_data`. Each tenant can use it for flexible storage.
 
 Supposing company 5 uses the field to track the user agent ad clicks, they can later query to find which browsers click most often:
 
 .. code-block:: postgresql
 
   SELECT
-    extra->>'browser' AS browser,
+    user_data->>'browser' AS browser,
     count(*) AS count
   FROM clicks
   WHERE company_id = 5
-  GROUP BY extra->>'browser'
+  GROUP BY user_data->>'browser'
   ORDER BY count DESC
   LIMIT 10;
 
@@ -441,8 +436,8 @@ The database administrator can even create a `partial index <https://www.postgre
 
 .. code-block:: postgresql
 
-  CREATE INDEX click_extra_browser
-  ON clicks ((extra->>'browser'))
+  CREATE INDEX click_user_data_browser
+  ON clicks ((user_data->>'browser'))
   WHERE company_id = 5;
 
 Scaling Hardware Resources
