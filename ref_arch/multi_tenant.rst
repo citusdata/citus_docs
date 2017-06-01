@@ -461,6 +461,42 @@ The database administrator can even create a `partial index <https://www.postgre
   ON clicks ((extra->>'browser'))
   WHERE company_id = 5;
 
+Scaling Hardware Resources
+--------------------------
+
+Multi-tenant databases should be designed for future scale as business grows or tenants want to store more data. Citus can scale out easily by adding new machines without having to make any changes or take application downtime.
+
+Being able to rebalance data in the Citus cluster allows you to grow your data size or number of customers and improve performance on demand. Adding new machines allows you to keep data in memory even when it is much larger than what a single machine can store.
+
+Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance.
+
+.. note::
+
+  This section assumes you are using Citus Cloud and have created the schema and loaded data as described earlier. Additionally the Citus Cloud "Dev Plan" will not work because it does not allow scaling nodes; you must use a "Customized Plan."
+
+We're going to learn to add a new worker node to the Citus cluster and redistribute some of the data onto it for increased processing power.
+
+First log in to the `Citus Console <https://console.citusdata.com/>`_ and open the "Settings" tab. If you are using a "Customized Plan" on Cloud, you will see the current number of worker nodes and their RAM capacity:
+
+.. image:: ../images/cloud-formation-configuration.png
+
+To add nodes, click "Change node count and size." A slider will appear for both the count and size. In this section we'll be changing only the count. You can learn more about other options in the [Cloud Scaling] section.
+
+.. image:: ../images/cloud-nodes-slider.png
+
+Drag the slider to increase node count by one, and click "Resize Formation." While the node is added the Cloud Console will display a message at the top of the screen:
+
+.. image:: ../images/cloud-change-progress.png
+
+.. note::
+
+  Don't forget that even when this process finishes there is more to do! The new node will be available in the system, but at this point no tenants are stored on it so **Citus will not yet run any queries there**.
+
+.. Adding nodes on Cloud
+.. Show how to look at the distribution of data across nodes
+.. The new nodes are there, but they’re empty!
+.. Rebalancing the shards
+
 Dealing with Big Tenants
 ------------------------
 
