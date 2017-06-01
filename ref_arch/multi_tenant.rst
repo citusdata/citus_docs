@@ -539,3 +539,8 @@ Create a new node as described in the previous section. Take note of its hostnam
     'dest_host', dest_port);
 
 You can confirm the shard movement by querying :ref:`pg_dist_shard_placement <placements>` again.
+
+Where to Go From Here
+---------------------
+
+Foo, that's where!
