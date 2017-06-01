@@ -201,7 +201,7 @@ Putting it all together, here are all the changes needed in the schema to prepar
     updated_at timestamp without time zone NOT NULL,
     PRIMARY KEY (company_id, id),         -- added
     FOREIGN KEY (company_id, campaign_id) -- added
-      REFERENCES ads (company_id, id)
+      REFERENCES campaigns (company_id, id)
   );
 
   CREATE TABLE clicks (
