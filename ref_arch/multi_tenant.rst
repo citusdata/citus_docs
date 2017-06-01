@@ -476,10 +476,25 @@ Drag the slider to increase node count by one, and click "Resize Formation." Whi
 
   Don't forget that even when this process finishes there is more to do! The new node will be available in the system, but at this point no tenants are stored on it so **Citus will not yet run any queries there**.
 
-.. Adding nodes on Cloud
-.. Show how to look at the distribution of data across nodes
-.. The new nodes are there, but they’re empty!
-.. Rebalancing the shards
+Node addition takes around five minutes. Refresh the browser until the the change-in-progress message disappears. Next selec thte "Nodes" tab in the Cloud Console. You should see three nodes listed. Notice how the new node has no data on it (data size = 0 bytes):
+
+.. image:: ../images/cloud-node-stats.png
+
+To bring the node into play we can ask Citus to rebalance the shards. This operation moves shards between the currently active nodes to attempt to equalize the amount of data on each. Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the :code:`companies` table and it will take the hint and rebalance the other tables which are distributed by :code:`company_id`.
+
+::
+
+  -- Spread data evenly between the nodes
+
+  SELECT rebalance_table_shards('companies');
+
+As it executes, the command outputs notices of each shard it moves:
+
+.. code-block:: text
+
+  NOTICE:  00000: Moving shard [id] from [host:port] to [host:port] ...
+
+Refreshing the Nodes tab in the Cloud Console shows that the new node now contains data! It can now help processing requests for some of the tenants.
 
 Dealing with Big Tenants
 ------------------------
