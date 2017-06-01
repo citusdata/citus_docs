@@ -259,7 +259,7 @@ At this point feel free to follow along in your own Citus cluster by `downloadin
   SELECT create_distributed_table('clicks',      'company_id');
   SELECT create_distributed_table('impressions', 'company_id');
 
-The :code:`create_distributed_table` function informs Citus that a table should be distributed and that future incoming queries to those tables should be planned for distributed execution. The function also creates shards for the table on worker nodes, allowing queries to be routed there.
+The :ref:`create_distributed_table` function informs Citus that a table should be distributed and that future incoming queries to those tables should be planned for distributed execution. The function also creates shards for the table on worker nodes, allowing queries to be routed there.
 
 The next step is loading sample data into the cluster.
 
@@ -386,7 +386,7 @@ Joining clicks with this table can produce, for example, the locations of everyo
 
 In Citus we need to find a way to co-locate the :code:`geo_ips` table with clicks for every company. One way would be to add a :code:`company_id` column to :code:`geo_ips` and duplicate the data in the table for every company. This approach is not optimal because it introduces the burden of keeping the data synchronized between the companies if and when it changes. A more convenient way is by designating :code:`geo_ips` as a *reference table.*
 
-Reference tables in Citus have exactly one shard, and it is replicated across all worker nodes. This co-locates the information for all tenants' queries. It does require reserving space for a copy of the data on all nodes, but automatically stays in sync during reference table updates. To make a reference table, call :code:`create_reference_table` for a table on the coordinator node:
+Reference tables in Citus have exactly one shard, and it is replicated across all worker nodes. This co-locates the information for all tenants' queries. It does require reserving space for a copy of the data on all nodes, but automatically stays in sync during reference table updates. To make a reference table, call :ref:`create_reference_table <create_reference_table>` for a table on the coordinator node:
 
 ::
 
@@ -504,7 +504,7 @@ The output is the shard id dedicated to :code:`company_id=5`:
   │                      102240 │
   └─────────────────────────────┘
 
-The optional :code:`'CASCADE'` parameter makes a dedicated shard not only for the :code:`companies` table but for any other tables which are co-located with it. In our case that would be all the other tables except the reference table. If you recall, these tables are distributed by :code:`company_id` and are thus in the same co-location group. (Note that the shards created for the other tables each have their own shard id, they do not share id 102240.)
+The optional :code:`CASCADE` parameter to :ref:`isolate_tenant_to_new_shard` makes a dedicated shard not only for the :code:`companies` table but for any other tables which are co-located with it. In our case that would be all the other tables except the reference table. If you recall, these tables are distributed by :code:`company_id` and are thus in the same co-location group. (Note that the shards created for the other tables each have their own shard id, they do not share id 102240.)
 
 Creating shards is only half the battle. The new shards -- one per table -- live on the worker nodes from which their data originated. For true hardware isolation we can move them to a separate node in the Citus cluster.
 
