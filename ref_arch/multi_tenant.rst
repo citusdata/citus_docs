@@ -499,17 +499,19 @@ Refreshing the Nodes tab in the Cloud Console shows that the new node now contai
 Dealing with Big Tenants
 ------------------------
 
-As the number of tenants increases, the the size of tenant data typically tends to follow a Zipfian distribution. This means there are a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them. To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.
+The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However there's another technique that becomes important when individual tenants get especially large compared to the others.
 
-Citus Enterprise Edition and Citus Cloud provide the tools to isolate a tenant on a specific node. This happens in two phases: 1) isolating the tenant’s data to a new dedicated shard, then 2) moving the shard to the desired node.
+As the number of tenants increases, the the size of tenant data typically tends to follow a Zipfian distribution. This means there are a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them. Standard shard rebalancing won't prevent this mixing of tenants.
 
-In our case, let's imagine that good old company id=5 is very large. The first step in isolating it from other tenants is to make a new shard dedicated entirely to that company.
+To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.  Citus Enterprise Edition and Citus Cloud provide the tools to do this. The process happens in two phases: 1) isolating the tenant’s data to a new dedicated shard, then 2) moving the shard to the desired node.
+
+In our case, let's imagine that our old friend company id=5 is very large. The first step in isolating it from other tenants is to make a new shard dedicated entirely to that company.
 
 ::
 
   SELECT isolate_tenant_to_new_shard('companies', 5, 'CASCADE');
 
-The output is the shard id dedicated to :code:`company_id=5`:
+The output is the shard id dedicated to hold :code:`company_id=5`:
 
 ::
 
@@ -523,4 +525,22 @@ The optional :code:`CASCADE` parameter to :ref:`isolate_tenant_to_new_shard` mak
 
 Creating shards is only half the battle. The new shards -- one per table -- live on the worker nodes from which their data originated. For true hardware isolation we can move them to a separate node in the Citus cluster.
 
-TODO: show how to physically move tenant shards to freshly added worker. Make this section part of — or after — the hardware scaling section.
+Create a new node as described in the previous section. Take note of its hostname as shown in the Nodes tab of the Cloud Console. We'll move the newly created shards to the new node.
+
+::
+
+  -- find the node currently holding the new shard
+
+  SELECT nodename, nodeport
+    FROM pg_dist_shard_placement
+   WHERE shardid = 102240;
+
+  -- move the shard to your choice of worker
+  -- (it will also move any shards created with the CASCADE option)
+
+  SELECT master_move_shard_placement(
+    102240,
+    'source_host', source_port,
+    'dest_host', dest_port);
+
+You can confirm the shard movement by querying :ref:`pg_dist_shard_placement <placements>` again.
