@@ -13,12 +13,12 @@ A software-as-a-service (SaaS) provider, for example, can run one instance of it
 
 Using Citus, multi-tenant applications can be written as if they are connecting to a single PostgreSQL database, when in fact the database is a horizontally scalable cluster of machines. Client code requires minimal modifications and can continue to use full SQL capabilities.
 
-This guide takes a sample multi-tenant application and describes how to model it for scalability with Citus. Along the way we examine typical challenges for multi-tenant applications like per-tenant customization, isolating tenants from noisy neighbors, and scaling hardware to accomodate more data. PostgreSQL and Citus provide the tools to handle these challenges, so let's get building.
+This guide takes a sample multi-tenant application and describes how to model it for scalability with Citus. Along the way we examine typical challenges for multi-tenant applications like per-tenant customization, isolating tenants from noisy neighbors, and scaling hardware to accommodate more data. PostgreSQL and Citus provide the tools to handle these challenges, so let's get building.
 
 Let's Make an App – Ad Analytics
 --------------------------------
 
-We'll build the backend for an application that tracks online advertising performance and provides an analytics dashboard on top. It's a natural fit for a multi-tenant SaaS application because each company running ad campaigns is concerned with the performance of only its own ads. The queries' requests for data are partitioned per company.
+We'll build the back-end for an application that tracks online advertising performance and provides an analytics dashboard on top. It's a natural fit for a multi-tenant SaaS application because each company running ad campaigns is concerned with the performance of only its own ads. The queries' requests for data are partitioned per company.
 
 Before jumping ahead to all that, let's consider a simplified schema for this application, designed for use on a single-machine PostgreSQL database. The application must keep track of multiple companies, each of which runs advertising campaigns. Campaigns have many ads, and each ad has associated records of its clicks and impressions.
 
@@ -84,8 +84,6 @@ Applications connect to a certain PostgreSQL server in the Citus cluster called 
 
 The coordinator examines each client query and determines to which tenant it pertains. The coordinator then routes the query for processing to the worker node which holds that tenant. When the worker's results are ready, the coordinator forwards it to the application.
 
-DIAGRAM: diagram of query execution
-
 Distributing Data in the Cluster
 --------------------------------
 
@@ -93,27 +91,27 @@ Using Citus effectively requires choosing the right pattern for distributing dat
 
 Citus stores rows in groups called *shards*, where each shard is placed on a worker node. The bundling of rows into shards is determined by the value of a special column in each table called the *distribution column*. (This column is chosen by the database administrator for each table.) When reading or writing a row in a distributed table, Citus uses the value in the distribution column to determine which shard -- and hence worker node -- holds the row. For a more technical description of this process, see :ref:`hash_space`.
 
-Returning to the ad analytics application, let's consider the options for choosing distribution columns for the tables, and the consequences of our choice. The performance of Citus must be evaluated in terms of specific queries. Consider a simple query to find the top campaigns with highest budget for a given company.
+Returning to the ad analytics application, let's consider the options for choosing table distribution columns, and the consequences of our choice. The performance of Citus must be evaluated in terms of specific queries.  Consider a simple query to determine the total campaign budget for company five.
 
 ::
 
-  -- Top ten campaigns with highest budget for a company
-
-  SELECT name, cost_model, state, monthly_budget
+  SELECT sum(monthly_budget)
     FROM campaigns
-   WHERE company_id = 5
-  ORDER BY monthly_budget DESC
-  LIMIT 10;
+   WHERE company_id = 5;
 
 This is a typical query for a multi-tenant application because it restricts the results to data from a single company, by the presence of the where-clause filter `where company_id = 5`. Each tenant, in this case an advertising company, will be accessing only their own data.
 
 Any column of the :code:`campaigns` table could be its distribution column, but let's compare how this query performs for either of two options: :code:`id` and :code:`company_id`.
 
-DIAGRAM: show id pulling from all workers, and company_id routed to one
+If we distribute by the campaign id, then campaign shards will be spread across multiple workers irrespective of company. Finding the total budget for a company requires asking all workers for their local total and calculating a final sum the coordinator.
 
-If we distribute by the campaign id, then campaign shards will be spread across multiple workers irrespective of company. Finding the top ten monthly campaign budgets for a company requires asking all workers for their local top ten and doing a final sort and filter on the coordinator. If we distribute by :code:`company_id`, on the other hand, then Citus can detect by the presence of :code:`WHERE company_id = 5` that all relevant information will be on a single worker. Citus can route the entire query to that worker for execution and pass the results through verbatim.
+.. image:: ../images/diagram-filter-non-tenant.png
 
-The order/limit query slightly favors distribution by :code:`company_id`. However JOIN queries differ more dramatically.
+If we distribute by :code:`company_id`, on the other hand, then Citus can detect by the presence of :code:`WHERE company_id = 5` that all relevant information will be on a single worker. Citus can route the entire query to that worker for execution and pass the results through verbatim.
+
+.. image:: ../images/diagram-filter-tenant.png
+
+This aggregate query favors distribution by :code:`company_id`. JOIN queries differ even more dramatically.
 
 .. note::
 
@@ -134,9 +132,13 @@ The order/limit query slightly favors distribution by :code:`company_id`. Howeve
   GROUP BY campaigns.id, campaigns.name, campaigns.monthly_budget
   ORDER BY total_impressions, total_clicks;
 
-DIAGRAM: show id repartitioning, and company_id routing
+For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.*
 
-For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.* Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`. The placement of related information together on a worker is called :ref:`co-location <colocation>`.
+.. image:: ../images/diagram-repartition-join.png
+
+Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`. The placement of related information together on a worker is called :ref:`co-location <colocation>`.
+
+.. image:: ../images/diagram-pushdown-join.png
 
 The key idea is to think of your schema hierarchically -- e.g. impressions are for ads, ads are in campaigns, campaigns belong to companies -- and pick the item at the top of the hierarchy as the sharding key. In B2B scenarios, this would typically be your customer or business. This provides two benefits:
 
@@ -300,23 +302,15 @@ Being an extension of PostgreSQL, Citus supports bulk loading with the COPY comm
 Querying the Cluster
 --------------------
 
-Multi-tenant applications in Citus can run any SQL queries, as long as the queries include the tenant id as a filter condition. For instance, suppose we are company id 5, how do we determine our total campaign budget?
+Multi-tenant applications in Citus can run any SQL queries, as long as the queries include the tenant id as a filter condition. For instance, consider a simple query to find the top campaigns with highest budget for company five.
 
 ::
 
-  SELECT sum(monthly_budget)
-    FROM campaigns
-   WHERE company_id = 5;
-
-Which campaigns in particular have the biggest budget? Ordering and limiting work as usual:
-
-::
-
-  -- Campaigns with biggest budgets
+  -- Top ten campaigns with highest budget for a company
 
   SELECT name, cost_model, state, monthly_budget
-  FROM campaigns
-  WHERE company_id = 5
+    FROM campaigns
+   WHERE company_id = 5
   ORDER BY monthly_budget DESC
   LIMIT 10;
 
@@ -471,7 +465,7 @@ Drag the slider to increase node count by one, and click "Resize Formation." Whi
 
   Don't forget that even when this process finishes there is more to do! The new node will be available in the system, but at this point no tenants are stored on it so **Citus will not yet run any queries there**.
 
-Node addition takes around five minutes. Refresh the browser until the the change-in-progress message disappears. Next selec thte "Nodes" tab in the Cloud Console. You should see three nodes listed. Notice how the new node has no data on it (data size = 0 bytes):
+Node addition takes around five minutes. Refresh the browser until the change-in-progress message disappears. Next select the "Nodes" tab in the Cloud Console. You should see three nodes listed. Notice how the new node has no data on it (data size = 0 bytes):
 
 .. image:: ../images/cloud-node-stats.png
 
@@ -496,7 +490,7 @@ Dealing with Big Tenants
 
 The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However there's another technique that becomes important when individual tenants get especially large compared to the others.
 
-As the number of tenants increases, the the size of tenant data typically tends to follow a Zipfian distribution. This means there are a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them. Standard shard rebalancing won't prevent this mixing of tenants.
+As the number of tenants increases, the size of tenant data typically tends to follow a Zipfian distribution. This means there are a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them. Standard shard rebalancing won't prevent this mixing of tenants.
 
 To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.  Citus Enterprise Edition and Citus Cloud provide the tools to do this. The process happens in two phases: 1) isolating the tenant’s data to a new dedicated shard, then 2) moving the shard to the desired node.
 
