@@ -47,7 +47,6 @@ topics.
    :caption: Transitioning to Citus
 
    migration/transitioning.rst
-   migration/rails.rst
 
 .. toctree::
    :caption: Performance
