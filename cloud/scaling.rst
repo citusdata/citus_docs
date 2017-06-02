@@ -15,9 +15,23 @@ Clicking the node change link provides two sliders:
 
 The first slider, **count**, scales out the cluster by adding new nodes. The second, **RAM**, scales it up by changing the amount of RAM on existing nodes.
 
-After you adjust the sliders and accept the changes, Citus Cloud begins applying the changes. Increasing the number of nodes will begin immediately, whereas increasing node RAM size will wait for a time in the user-specified maintenance window:
+For example, just drag the slider for node count:
+
+.. image:: ../images/cloud-nodes-slider-2.png
+
+After you adjust the sliders and accept the changes, Citus Cloud begins applying the changes. Increasing the number of nodes will begin immediately, whereas increasing node RAM size will wait for a time in the user-specified maintenance window.
 
 .. image:: ../images/cloud-maintenance-window.png
+
+Citus Cloud will display a popup message in the console while scaling actions have begun or are scheduled. The message will disappear when the action completes.
+
+For instance, when adding nodes:
+
+.. image:: ../images/cloud-scaling-out.png
+
+Or when waiting for node resize to begin in the maintenance window:
+
+.. image:: ../images/cloud-scaling-up.png
 
 Scaling Up (increasing node size)
 ---------------------------------
@@ -27,7 +41,9 @@ Resizing node RAM works by creating a PostgreSQL follower for each node, where t
 Scaling Out (adding new nodes)
 ------------------------------
 
-Node addition completes in five to ten minutes, which is faster than node resizing because the new nodes are created without data. To take advantage of the new nodes you still must adjust manually rebalance the shards, meaning move some shards from existing nodes to the new ones. Citus does not automatically do this on node creation because shard rebalancing takes locks that prevent inserts. The choice of when to run the shard rebalancer is left to the database administrator.
+Node addition completes in five to ten minutes, which is faster than node resizing because the new nodes are created without data. To take advantage of the new nodes you still must adjust manually rebalance the shards, meaning move some shards from existing nodes to the new ones.
+
+Citus does not automatically rebalance on node creation because shard rebalancing takes locks on rows whose shards are being moved, degrading write performance for other database clients. The slowdown isn't terribly severe because Citus moves data a shard (or a group of colocated shards) at a time while inserts to other shards can continue normally. However, for maximum control, the choice of when to run the shard rebalancer is left to the database administrator.
 
 To start the shard rebalance, connect to the cluster coordinator node with psql and run:
 
