@@ -22,7 +22,7 @@ After you adjust the sliders and accept the changes, Citus Cloud begins applying
 Scaling Up (increasing node size)
 ---------------------------------
 
-Resizing node RAM works by creating a PostgreSQL follower for each node, where the followers are provisioned with the desired amount of RAM. It takes an average of forty minutes per hundred gigabytes of data for the primary nodes' data to be fully synchronized on the followers. After the synchronization is complete, Citus Cloud does a quick failover from the existing primary nodes to their followers which takes about one minute. The creation and switchover process uses the same well-tested replication mechanism that powers Cloud's high-availability feature.
+Resizing node RAM works by creating a PostgreSQL follower for each node, where the followers are provisioned with the desired amount of RAM. It takes an average of forty minutes per hundred gigabytes of data for the primary nodes' data to be fully synchronized on the followers. After the synchronization is complete, Citus Cloud does a quick failover from the existing primary nodes to their followers which takes about one minute. The creation and switchover process uses the same well-tested replication mechanism that powers Cloud's :ref:`ha` feature.
 
 Scaling Out (adding new nodes)
 ------------------------------
