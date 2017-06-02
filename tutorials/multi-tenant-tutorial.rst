@@ -125,10 +125,10 @@ You can learn more about the benefits of this approach `here <https://www.citusd
 Then, you can go ahead and load the data we downloaded into the tables using the standard PostgreSQL :code:`\COPY` command.
 Please make sure that you specify the correct file path if you downloaded the file to some other location.
 
-::
-                                                                                          
-    \copy companies from 'companies.csv' with csv;                                                     
-    \copy campaigns from 'campaigns.csv' with csv;                                                     
+.. code-block:: psql
+
+    \copy companies from 'companies.csv' with csv;
+    \copy campaigns from 'campaigns.csv' with csv;
     \copy ads from 'ads.csv' with csv;
 
 

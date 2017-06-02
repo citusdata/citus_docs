@@ -36,7 +36,7 @@ First download our example github_events dataset by running:
 
 Then, you can copy the data using psql:
 
-.. code-block:: postgresql
+.. code-block:: psql
 
     \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
 

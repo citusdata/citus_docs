@@ -1,3 +1,5 @@
+:orphan:
+
 Controlling Query Propagation
 #############################
 
