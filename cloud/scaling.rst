@@ -15,7 +15,7 @@ Clicking the node change link provides two sliders:
 
 The first slider, **count**, scales out the cluster by adding new nodes. The second, **RAM**, scales it up by changing the amount of RAM on existing nodes.
 
-After you adjust the sliders and accept the changes, Citus Cloud begins applying the changes subject to the user-specified maintenance window:
+After you adjust the sliders and accept the changes, Citus Cloud begins applying the changes. Increasing the number of nodes will begin immediately, whereas increasing node RAM size will wait for a time in the user-specified maintenance window:
 
 .. image:: ../images/cloud-maintenance-window.png
 
