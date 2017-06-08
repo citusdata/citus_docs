@@ -93,11 +93,11 @@ Using Citus effectively requires choosing the right pattern for distributing dat
 
 The way to choose how to distribute a table's data to node(s) in Citus is by designating one of the columns a *distribution column.* When reading or writing a row in a distributed table, Citus uses the value in the distribution column to determine which worker hode holds, or will hold, the row. For a more technical description of this process, see :ref:`hash_space`.
 
-Returning to the ad analytics application, let's consider the options for choosing table distribution columns, and the consequences of our choice. The performance of Citus must be evaluated in terms of specific queries.  Consider a simple query to determine the total campaign budget for company five.
+Returning to the ad analytics application, let's consider the options for choosing table distribution columns, and the consequences of our choice. The performance of Citus must be evaluated in terms of specific queries.  Consider a simple query to list the campaigns for company five.
 
 ::
 
-  SELECT sum(monthly_budget)
+  SELECT *
     FROM campaigns
    WHERE company_id = 5;
 
@@ -105,15 +105,15 @@ This is a typical query for a multi-tenant application because it restricts the 
 
 Any column of the :code:`campaigns` table could be its distribution column, but let's compare how this query performs for either of two options: :code:`id` and :code:`company_id`.
 
-If we distribute by the campaign id, then campaign data will be spread across multiple workers irrespective of company. Finding the total budget for a company requires asking all workers for their local total and calculating a final sum the coordinator.
+If we distribute by the campaign id, then campaign data will be spread across multiple workers irrespective of company. There is extra overhead to ask all nodes for their information about company five when some of them won't even have any. The coordinator has to wait for all nodes to respond, and combine the results.
 
-.. image:: ../images/diagram-filter-non-tenant.png
+TODO: diagram showing an inefficient query to all nodes
 
 If we distribute by :code:`company_id`, on the other hand, then Citus can detect by the presence of :code:`WHERE company_id = 5` that all relevant information will be on a single worker. Citus can route the entire query to that worker for execution and pass the results through verbatim.
 
 .. image:: ../images/diagram-filter-tenant.png
 
-This aggregate query favors distribution by :code:`company_id`. JOIN queries differ even more dramatically.
+This query favors distribution by :code:`company_id`. JOIN queries differ even more dramatically.
 
 .. note::
 
