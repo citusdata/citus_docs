@@ -333,7 +333,7 @@ In all these queries, the filter routes SQL execution directly inside a worker. 
   DELETE from ads where campaign_id = 46 AND company_id = 5;
   COMMIT;
 
-When people scale applications with NoSQL databases they often miss the lack of transactions and joins. We already saw a join query when discussing distribution columns, but here's another to combine information from campaigns and ads.
+When people scale applications with NoSQL databases they suffer the lack of transactions and joins. We already saw a join query when discussing distribution columns, but here's another to combine information from campaigns and ads.
 
 ::
 
@@ -378,9 +378,9 @@ Joining clicks with this table can produce, for example, the locations of everyo
      AND c.company_id = 5
      AND c.ad_id = 456;
 
-In Citus we need to find a way to co-locate the :code:`geo_ips` table with clicks for every company. One way would be to add a :code:`company_id` column to :code:`geo_ips` and duplicate the data in the table for every company. This approach is not optimal because it introduces the burden of keeping the data synchronized between the companies if and when it changes. A more convenient way is by designating :code:`geo_ips` as a *reference table.*
+To run this query efficiently in a distributed setup, we need to find a way to co-locate the :code:`geo_ips` table with clicks for every company. That way, no network traffic need be incurred at query time. One way would be to add a :code:`company_id` column to :code:`geo_ips` and duplicate the data in the table for every company. This approach is not optimal because it introduces the burden of keeping the data synchronized between the companies if and when it changes. A more convenient way is by designating :code:`geo_ips` as a *reference table.*
 
-Reference tables in Citus have exactly one shard, and it is replicated across all worker nodes. This co-locates the information for all tenants' queries. It does require reserving space for a copy of the data on all nodes, but automatically stays in sync during reference table updates. To make a reference table, call :ref:`create_reference_table <create_reference_table>` for a table on the coordinator node:
+Reference tables are replicated across all worker nodes, and Citus automatically keeps them in sync during modifications. This co-locates the information for all tenants' queries. To make a reference table, call :ref:`create_reference_table <create_reference_table>` for a table on the coordinator node:
 
 ::
 
@@ -393,7 +393,7 @@ After doing this, the join query (presented earlier) on :code:`geo_ips` and :cod
 Online Changes to the Schema
 ----------------------------
 
-Citus propagates most DDL statements fron the coordinator node to the workers. This allows the database administrator to alter the database even during use and after tables are distributed in the cluster. Citus uses a two-phase commit protocol to make sure updates happen consistently.
+Another challenge with multi-tenant systems is keeping the schemas for all the tenants in sync. Any schema change needs to be consistently reflected across all the tenants. In Citus, you can use standard postgres DDL commands to change the schema of your tables, and Citus will propagate them from the coordinator node to the workers using a two-phase commit protocol.
 
 For example, the advertisements in this application could use a text caption. We can add a column to the table by issuing the standard SQL on the coordinator:
 
@@ -402,7 +402,7 @@ For example, the advertisements in this application could use a text caption. We
   ALTER TABLE ads
     ADD COLUMN caption text;
 
-This updates all the shards as well. Once this command finishes, the Citus cluster will accept queries that read or write data in the new :code:`caption` column.
+This updates all the workers as well. Once this command finishes, the Citus cluster will accept queries that read or write data in the new :code:`caption` column.
 
 For a fuller explanation of which DDL commands propagate through the cluster, see :ref:`ddl_prop_support`.
 
@@ -431,8 +431,23 @@ The database administrator can even create a `partial index <https://www.postgre
 .. code-block:: postgresql
 
   CREATE INDEX click_user_data_browser
-  ON clicks ((user_data->>'browser'))
+  ON clicks (user_data->>'browser')
   WHERE company_id = 5;
+
+Additionally, PostgreSQL supports GIN indices on JSONB. Creating a GIN index on a JSONB column will create an index on every key and value within that JSON document. This speeds up a number of `JSONB operators <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_ such as :code:`?`, :code:`?|`, and :code:`?&`.
+
+.. code-block:: postgresql
+
+  CREATE INDEX click_user_data
+  ON clicks GIN (user_data);
+
+  -- this allows queries like, "which clicks have
+  -- the browser key present in user_data?"
+
+  SELECT id
+    FROM clicks
+   WHERE user_data ? 'browser'
+     AND company_id = 5;
 
 Scaling Hardware Resources
 --------------------------
@@ -469,7 +484,9 @@ Node addition takes around five minutes. Refresh the browser until the change-in
 
 .. image:: ../images/cloud-node-stats.png
 
-To bring the node into play we can ask Citus to rebalance the shards. This operation moves shards between the currently active nodes to attempt to equalize the amount of data on each. Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the :code:`companies` table and it will take the hint and rebalance the other tables which are distributed by :code:`company_id`.
+To bring the node into play we can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node. Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the :code:`companies` table and it will take the hint and rebalance the other tables which are distributed by :code:`company_id`.
+
+Applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight.
 
 ::
 
@@ -490,7 +507,9 @@ Dealing with Big Tenants
 
 The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However there's another technique that becomes important when individual tenants get especially large compared to the others.
 
-As the number of tenants increases, the size of tenant data typically tends to follow a Zipfian distribution. This means there are a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them. Standard shard rebalancing won't prevent this mixing of tenants.
+As the number of tenants increases, the size of tenant data typically tends to follow a Zipfian distribution. This means there are a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them.
+
+Performing standard Citus shard rebalancing may improve the mixing of large and small tenants, but this would be accidental because it is not designed to do so. The rebalancer simply distributes shards to equalize storage usage on nodes, without examining the ratio of shards allocated to one tenant vs another within any given node.
 
 To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.  Citus Enterprise Edition and Citus Cloud provide the tools to do this. The process happens in two phases: 1) isolating the tenant’s data to a new dedicated shard, then 2) moving the shard to the desired node.
 
