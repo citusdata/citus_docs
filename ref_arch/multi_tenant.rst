@@ -107,7 +107,7 @@ Any column of the :code:`campaigns` table could be its distribution column, but 
 
 If we distribute by the campaign id, then campaign data will be spread across multiple workers irrespective of company. There is extra overhead to ask all nodes for their information about company five when some of them won't even have any. The coordinator has to wait for all nodes to respond, and combine the results.
 
-TODO: diagram showing an inefficient query to all nodes
+.. image:: ../images/diagram-filter-non-tenant.png
 
 If we distribute by :code:`company_id`, on the other hand, then Citus can detect by the presence of :code:`WHERE company_id = 5` that all relevant information will be on a single worker. Citus can route the entire query to that worker for execution and pass the results through verbatim.
 
