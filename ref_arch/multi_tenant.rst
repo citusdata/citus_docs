@@ -136,7 +136,7 @@ This query favors distribution by :code:`company_id`. JOIN queries differ even m
 
 For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.*
 
-TODO: Better diagram of repartitioning aka shuffle
+.. image:: ../images/diagram-repartition-join.png
 
 Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`. The placement of related information together on a worker is called :ref:`co-location <colocation>`.
 
