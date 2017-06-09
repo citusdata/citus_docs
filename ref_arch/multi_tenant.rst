@@ -144,20 +144,18 @@ Routing the query for execution in a single worker avoids the overhead, and is p
 
 The key idea is to think of your schema hierarchically -- e.g. impressions are for ads, ads are in campaigns, campaigns belong to companies -- and pick the item at the top of the hierarchy as the distribution key. In B2B scenarios, this would typically be your customer or business. This provides two benefits:
 
-* All tables will be related to the concept of tenant.  This ensures all tables are co-located.
-* Since the application is multi-tenant, all queries will be scoped to a tenant. This means they will be routed to a single node, as data for a tenant will be on a single node.
+* All tables will be related to the concept of company.  This ensures all tables are co-located.
+* Since the application is multi-tenant, all queries will be scoped to a tenant company. This means they will be routed to a single node, as data for a company will be on a single node.
 
 These properties dramatically reduce the cost associated
-with distributed transactions, joins, and foreign key constraints.  It also allows PostgreSQL to optimize a single-tenant query as it sees appropriate.
-
-Routing queries to a worker node allows full support for PostgreSQL transactions and enforcement of foreign keys. These are features typically lacking in NoSQL distributed databases.
+with distributed transactions, joins, and foreign key constraints, making them feasible in Citus. These are features typically lacking in NoSQL distributed databases. Additionally, executing single-company queries inside a single worker node allows the PostgreSQL planner therein greater freedom to optimize query execution.
 
 Preparing Tables for Distribution
 ---------------------------------
 
-In the previous section we identified the correct distribution column for multi-tenant applications: the tenant id. We also saw that some tables designed for a single machine PostgreSQL instance may need to be denormalized by the addition of this column.
+In the previous section we identified the correct distribution column for multi-tenant applications: the tenant (often company) id. Even in a single-machine database it can be useful to denormalize tables with the addition of company id, whether it be for row-level security or for additional indexing. The extra benefit, as we saw, is that including the extra column helps for multi-machine scaling as well.
 
-We will need to modify our schema, but there is one other caveat to note about distributed systems. Enforcing uniqueness or foreign key constraints in Citus requires that they include the distribution column. Our tables don't currently do that, for instance in the ads table we specify
+The schema we have created so far uses a separate :code:`id` column as primary key for each table. Given that the distribution column is :code:`company_id`, enforcing the primary key constraint requires Citus to check all nodes for each insert statement. This doesn't scale well. The same also holds for foreign keys.
 
 ::
 
@@ -165,9 +163,9 @@ We will need to modify our schema, but there is one other caveat to note about d
 
   campaign_id bigint REFERENCES campaigns (id)
 
-This constraint includes only the campaign id, not the company (tenant) id. If we don't include the tenant id in the primary or foreign keys, Citus will need to check all worker nodes to enforce uniqueness on each index, which does not scale well. Adding tenant id to your keys allows Citus to perform the check within a worker nodes.
+In the mult-tenant case what we really need is to ensure uniqueness on a per-tenant basis, since different tenant's data never interact with each other. In SQL this translates to making primary and foreign keys compound by including :code:`company_id`.
 
-Putting it all together, here are all the changes needed in the schema to prepare the tables for distribution by :code:`company_id`. Notice how all primary/foreign keys include the distribution column.
+Putting it all together, here are all the changes needed in the schema to prepare the tables for distribution by :code:`company_id`.
 
 ::
 
