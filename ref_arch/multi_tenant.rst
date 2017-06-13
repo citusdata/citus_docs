@@ -270,7 +270,7 @@ The next step is loading sample data into the cluster.
   # download and ingest datasets from the shell
 
   for dataset in companies campaigns ads clicks impressions; do
-    curl -O https://examples.citusdata.com/tutorial/${dataset}.csv
+    curl -O https://examples.citusdata.com/mt_ref_arch/${dataset}.csv
   done
 
 .. note::
@@ -287,17 +287,11 @@ Being an extension of PostgreSQL, Citus supports bulk loading with the COPY comm
 
 .. code-block:: psql
 
-  \copy companies
-    from 'companies.csv' with csv;
-  \copy campaigns
-    from 'campaigns.csv' with csv;
-  \copy ads (id, company_id, campaign_id, name, image_url, target_url,
-             impressions_count, clicks_count, created_at, updated_at)
-    from 'ads.csv' with csv;
-  \copy clicks
-    from 'clicks.csv' with csv;
-  \copy impressions
-    from 'impressions.csv' with csv;
+  \copy companies from 'companies.csv' with csv;
+  \copy campaigns from 'campaigns.csv' with csv;
+  \copy ads from 'ads.csv' with csv;
+  \copy clicks from 'clicks.csv' with csv;
+  \copy impressions from 'impressions.csv' with csv;
 
 Querying the Cluster
 --------------------
