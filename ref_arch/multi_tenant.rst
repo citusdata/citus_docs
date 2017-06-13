@@ -562,4 +562,4 @@ You can confirm the shard movement by querying :ref:`pg_dist_shard_placement <pl
 Where to Go From Here
 ---------------------
 
-Foo, that's where!
+Now that you know the basics of designing a schema for scalability in a multi-tenant application, you can continue further in our docs to put this knowledge to use. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`. To adjust a front-end application, specifically Ruby on Rails, read :ref:`rails_migration`. Finally, try :ref:`Citus Cloud <cloud_overview>`, the easiest way to manage a Citus cluster, available with discounted developer plan pricing.
