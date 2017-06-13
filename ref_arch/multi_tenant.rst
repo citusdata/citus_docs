@@ -350,11 +350,22 @@ In all these queries, the filter routes SQL execution directly inside a worker. 
   DELETE from ads where campaign_id = 46 AND company_id = 5;
   COMMIT;
 
-As a final demonstration of SQL support, this query includes joins, distinctness, window functions and where-clause subqueries, and it executes fine.
+As a final demonstration of SQL support, this query includes a joins, grouping, aggregation and a window function, and it executes fine. The query ranks the ads in each campaign by the count of their impressions.
 
 ::
 
-  -- TODO: Mega Query
+  SELECT a.campaign_id,
+         RANK() OVER (
+           PARTITION BY a.campaign_id
+           ORDER BY a.campaign_id, count(*) desc
+         ), count(*) as n_impressions, a.id
+    FROM ads as a,
+         impressions as i
+   WHERE a.company_id = 5
+     AND i.company_id = a.company_id
+     AND i.ad_id      = a.id
+  GROUP BY a.campaign_id, a.id
+  ORDER BY a.campaign_id, n_impressions desc;
 
 In short when queries are scoped to a tenant then inserts, updates, deletes, complex SQL, and transactions all work as expected.
 
