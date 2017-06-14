@@ -312,7 +312,7 @@ For instance, consider a simple query to find the top campaigns with highest bud
 
 The EXPLAIN output shows that Citus routes this to a single worker node, inside which PostgreSQL uses its usual tactics.
 
-::
+.. code-block::
 
   ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
   │                                                 QUERY PLAN                                                 │
@@ -538,7 +538,7 @@ In our case, let's imagine that our old friend company id=5 is very large. The f
 
 The output is the shard id dedicated to hold :code:`company_id=5`:
 
-::
+.. code-block::
 
   ┌─────────────────────────────┐
   │ isolate_tenant_to_new_shard │

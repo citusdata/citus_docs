@@ -826,6 +826,8 @@ This example will attempt to bring the shards of the github_events table to the 
 
 	SELECT replicate_table_shards('github_events', max_shard_copies:=10);
 
+.. _isolate_tenant_to_new_shard:
+
 isolate_tenant_to_new_shard
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

@@ -78,8 +78,6 @@ copy over that metadata to new nodes to resume operation.
 
 .. _tenant_isolation:
 
-.. _tenant_isolation:
-
 Tenant Isolation
 ################
 
