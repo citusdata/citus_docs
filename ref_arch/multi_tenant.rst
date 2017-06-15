@@ -475,6 +475,10 @@ Additionally, PostgreSQL supports GIN indices on JSONB. Creating a GIN index on 
 Scaling Hardware Resources
 --------------------------
 
+.. note::
+
+  This section uses features available in Citus Cloud and Citus Enterprise, and will not work in the community edition.
+
 Multi-tenant databases should be designed for future scale as business grows or tenants want to store more data. Citus can scale out easily by adding new machines without having to make any changes or take application downtime.
 
 Being able to rebalance data in the Citus cluster allows you to grow your data size or number of customers and improve performance on demand. Adding new machines allows you to keep data in memory even when it is much larger than what a single machine can store.
@@ -483,7 +487,7 @@ Also, if data increases for only a few large tenants, then you can isolate those
 
 .. note::
 
-  This section assumes you are using Citus Cloud and have created the schema and loaded data as described earlier. Additionally the Citus Cloud "Dev Plan" will not work because it does not allow scaling nodes; you must use a "Customized Plan."
+  The Citus Cloud "Dev Plan" will not work because it does not allow scaling nodes; you must use a "Customized Plan."
 
 We're going to learn to add a new worker node to the Citus cluster and redistribute some of the data onto it for increased processing power.
 
@@ -527,6 +531,10 @@ Refreshing the Nodes tab in the Cloud Console shows that the new node now contai
 
 Dealing with Big Tenants
 ------------------------
+
+.. note::
+
+  This section uses features available in Citus Cloud and Citus Enterprise, and will not work in the community edition.
 
 The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However there's another technique that becomes important when individual tenants get especially large compared to the others.
 
