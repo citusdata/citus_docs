@@ -322,24 +322,24 @@ For instance, consider a simple query to find the top campaigns with highest bud
 
 The EXPLAIN output shows that Citus routes this to a single worker node (node: ec2-34-224-105-231.compute-1.amazonaws.com) which contains :code:`company_id` = 5. PostgreSQL uses its usual execution tactics within the node.
 
-.. code-block::
+.. code-block:: text
 
-  ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │                                                 QUERY PLAN                                                 │
-  ├────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ Custom Scan (Citus Router)  (cost=0.00..0.00 rows=0 width=0)                                               │
-  │   Task Count: 1                                                                                            │
-  │   Tasks Shown: All                                                                                         │
-  │   ->  Task                                                                                                 │
-  │         Node: host=ec2-34-224-105-231.compute-1.amazonaws.com port=5432 dbname=citus                       │
-  │         ->  Limit  (cost=9.51..9.52 rows=2 width=104)                                                      │
-  │               ->  Sort  (cost=9.51..9.52 rows=2 width=104)                                                 │
-  │                     Sort Key: monthly_budget DESC                                                          │
-  │                     ->  Bitmap Heap Scan on campaigns_102046 campaigns  (cost=4.16..9.50 rows=2 width=104) │
-  │                           Recheck Cond: (company_id = 5)                                                   │
-  │                           ->  Bitmap Index Scan on campaigns_pkey_102046  (cost=0.00..4.16 rows=2 width=0) │
-  │                                 Index Cond: (company_id = 5)                                               │
-  └────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  ┌───────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │                                             QUERY PLAN                                            │
+  ├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Custom Scan (Citus Router)  (cost=0.00..0.00 rows=0 width=0)                                      │
+  │   Task Count: 1                                                                                   │
+  │   Tasks Shown: All                                                                                │
+  │   -> Task                                                                                         |
+  │      Node: host=ec2-34-224-105-231.compute-1.amazonaws.com port=5432 dbname=citus                 |
+  │      -> Limit  (cost=9.51..9.52 rows=2 width=104)                                                 |
+  │         -> Sort  (cost=9.51..9.52 rows=2 width=104)                                               |
+  │            Sort Key: monthly_budget DESC                                                          |
+  │            -> Bitmap Heap Scan on campaigns_102046 campaigns  (cost=4.16..9.50 rows=2 width=104)  |
+  │               Recheck Cond: (company_id = 5)                                                      │
+  │               -> Bitmap Index Scan on campaigns_pkey_102046  (cost=0.00..4.16 rows=2 width=0)     │
+  │                  Index Cond: (company_id = 5)                                                     │
+  └───────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 Updates work too. Let's double the budget for all campaigns.
 
@@ -542,11 +542,19 @@ The previous section describes a general-purpose way to scale a cluster as the n
 
 As the number of tenants increases, the size of tenant data typically tends to follow a Zipfian distribution. This means there are a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them.
 
+.. Your application typically would have a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them. Also, users at times have concerns about their largest tenant not being able to fit on a single node with the other tenants.
+
+.. Data typically follows a Zipfs distribution. This means x percent of data is in y percent of tenants. Taking an example of a database with 1000 tenants and 1TB data, this means your largest tenant will be roughly X% of data i.e. Y GB. This can easily fit on a single node and also allow you to scale to .... nodes.
+
+.. Then, we can talk about the second aspect which is better resource allocation and QoS guarantees. Could you take a stab at changing this section reflect the above and answer both questions.
+
 Performing standard Citus shard rebalancing will improve overall performance but it may or may not improve the mixing of large and small tenants. The rebalancer simply distributes shards to equalize storage usage on nodes, without examining which tenants are allocated on each shard.
 
 To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.  Citus Enterprise Edition and Citus Cloud provide the tools to do this. The process happens in two phases: 1) isolating the tenant’s data to a new dedicated shard, then 2) moving the shard to the desired node.
 
 In our case, let's imagine that our old friend company id=5 is very large. The first step in isolating it from other tenants is to make a new shard dedicated entirely to that company.
+
+.. Can we also make this section small on this is how you can isolate a tenant and specify the 2 commands. Users who want to understand this in greater detail (about shard id, splitting into different shards etc.) can look at the tenant isolation section in our docs. Could we also link to that here?
 
 ::
 
@@ -554,7 +562,7 @@ In our case, let's imagine that our old friend company id=5 is very large. The f
 
 The output is the shard id dedicated to hold :code:`company_id=5`:
 
-.. code-block::
+.. code-block:: text
 
   ┌─────────────────────────────┐
   │ isolate_tenant_to_new_shard │
