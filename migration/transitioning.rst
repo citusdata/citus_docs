@@ -11,6 +11,8 @@ Citus is well suited to hosting B2B multi-tenant application data. In this model
 
 This section will explore how to model for the multi-tenant scenario, including necessary adjustments to the schema and queries.
 
+.. _mt_schema_migration:
+
 Schema Migration
 ----------------
 
