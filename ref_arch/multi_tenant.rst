@@ -289,9 +289,9 @@ The next step is loading sample data into the cluster.
 
   .. code-block:: bash
 
-    docker cp companies.csv citus_master:.
-    docker cp campaigns.csv citus_master:.
-    docker cp ads.csv citus_master:.
+    for dataset in companies campaigns ads clicks impressions; do
+      docker cp ${dataset}.csv citus_master:.
+    done
 
 Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location.
 
@@ -456,7 +456,7 @@ The database administrator can even create a `partial index <https://www.postgre
 .. code-block:: postgresql
 
   CREATE INDEX click_user_data_browser
-  ON clicks (user_data->>'browser')
+  ON clicks ((user_data->>'browser'))
   WHERE company_id = 5;
 
 Additionally, PostgreSQL supports GIN indices on JSONB. Creating a GIN index on a JSONB column will create an index on every key and value within that JSON document. This speeds up a number of `JSONB operators <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_ such as :code:`?`, :code:`?|`, and :code:`?&`.
@@ -464,7 +464,7 @@ Additionally, PostgreSQL supports GIN indices on JSONB. Creating a GIN index on 
 .. code-block:: postgresql
 
   CREATE INDEX click_user_data
-  ON clicks GIN (user_data);
+  ON clicks USING gin (user_data);
 
   -- this speeds up queries like, "which clicks have
   -- the browser key present in user_data?"
