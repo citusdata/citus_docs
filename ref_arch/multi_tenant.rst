@@ -82,86 +82,25 @@ Here is the example schema. We'll make some minor changes later, which allow us 
 
 There are modifications we can make to the schema which will give it a performance boost in a distributed environment like Citus. To see how, we must become familiar with how Citus distributes data and executes queries.
 
-Applications connect to a certain PostgreSQL server in the Citus cluster called the *coordinator node.* The connection is established using an ordinary PostgreSQL `connection URI <https://www.postgresql.org/docs/current/static/libpq-connect.html#AEN45527>`_. However the actual data and processing is stored on and will happen in other machines called *worker nodes.*
-
-As explained in more detail in :ref:`Citus Architecture <introduction_to_citus>`, the coordinator examines each client query and determines to which tenant it pertains. It consults metadata tables to locate the tenant on a worker node, and routes the query for processing on that node. When the worker's results are ready, the coordinator forwards it to the application.
-
-Distributing Data in the Cluster
---------------------------------
-
-Using Citus effectively requires choosing the right pattern for distributing data and doing processing across workers. Citus runs fastest when the data distribution minimizes network overhead for the application's most common queries. This happens when related data items are stored together on the same worker node. Hence one approach for making multi-tenant application queries fast is to store *all* data for a given tenant on the same worker. (Multiple tenants can be stored on the same worker for better hardware utilization, but in this approach no single tenant's data spans multiple workers.)
-
-The way to choose how to distribute a table's data to node(s) in Citus is by designating one of the columns a *distribution column.* When reading or writing a row in a distributed table, Citus uses the value in the distribution column to determine which worker node holds, or will hold, the row. For a more technical description of this process, see :ref:`hash_space`.
-
-For a more general look at choosing the distribution column, see the section :ref:`Distributed Data Modeling <distributed_data_modeling>`.
-
-Comparing Choices of Distribution Column
-========================================
-
-Returning to the ad analytics application, let's consider the options for choosing table distribution columns, and the consequences of our choice. The performance of Citus must be evaluated in terms of specific queries.  Consider a simple query to list the campaigns for company five.
-
-::
-
-  SELECT *
-    FROM campaigns
-   WHERE company_id = 5;
-
-This is a typical query for a multi-tenant application because it restricts the results to data from a single company, by the presence of the where-clause filter `where company_id = 5`. Each tenant, in this case an advertising company, will be accessing only their own data.
-
-Any column of the :code:`campaigns` table could be its distribution column, but let's compare how this query performs for either of two options: :code:`id` and :code:`company_id`.
-
-If we distribute by the campaign id, then campaign data will be spread across multiple workers irrespective of company. There is extra overhead to ask all nodes for their information about company five when some of them won't even have any. The coordinator has to wait for all nodes to respond, and combine the results.
-
-.. image:: ../images/diagram-filter-non-tenant.png
-
-If we distribute by :code:`company_id`, on the other hand, then Citus can detect by the presence of :code:`WHERE company_id = 5` that all relevant information will be on a single worker. Citus can route the entire query to that worker for execution and pass the results through verbatim.
-
-.. image:: ../images/diagram-filter-tenant.png
-
-This query favors distribution by :code:`company_id`. JOIN queries differ even more dramatically.
-
-.. note::
-
-  In our normalized schema above, the :code:`ads` table does not have a :code:`company_id` column because it can retrieve that information through the :code:`campaigns` table. To distribute the :code:`ads` table by company id, we will need to add the :code:`company_id` column to it. The query below assumes we have done this, and we'll talk more about this technique later.
-
-::
-
-  -- running campaigns which receive the most clicks and impressions
-  -- for a single tenant
-
-  SELECT campaigns.id, campaigns.name, campaigns.monthly_budget,
-         sum(impressions_count) as total_impressions,
-         sum(clicks_count) as total_clicks
-  FROM ads, campaigns
-  WHERE ads.company_id = campaigns.company_id
-  AND campaigns.company_id = 5
-  AND campaigns.state = 'running'
-  GROUP BY campaigns.id, campaigns.name, campaigns.monthly_budget
-  ORDER BY total_impressions, total_clicks;
-
-For this query, distributing by campaign id is quite bad. Workers must use a lot of network traffic to pull related information together for the join, in a process called *repartitioning.*
-
-.. image:: ../images/diagram-repartition-join.png
-
-Routing the query for execution in a single worker avoids the overhead, and is possible when distributing by :code:`company_id`. The placement of related information together on a worker is called :ref:`co-location <colocation>`.
-
-.. image:: ../images/diagram-pushdown-join.png
-
-Recommended Choice
-==================
-
-The key idea is to think of your schema hierarchically -- e.g. impressions are for ads, ads are in campaigns, campaigns belong to companies -- and pick the item at the top of the hierarchy as the distribution key, in our case companies. This provides two benefits:
-
-* All tables will be related to the concept of company.  This ensures all tables are co-located.
-* Since the application is multi-tenant, all queries will be scoped to a tenant company. This means they will be routed to a single node, as data for a company will be on a single node.
-
-These properties dramatically reduce the cost associated
-with distributed transactions, joins, and foreign key constraints, making them feasible in Citus. These are features typically lacking in NoSQL distributed databases. Additionally, executing single-company queries inside a single worker node allows the PostgreSQL planner therein greater freedom to optimize query execution.
-
-Preparing Tables for Distribution
+Scaling the Relational Data Model
 ---------------------------------
 
-In the previous section we identified the correct distribution column for multi-tenant applications: the tenant (often company) id. Even in a single-machine database it can be useful to denormalize tables with the addition of company id, whether it be for row-level security or for additional indexing. The extra benefit, as we saw, is that including the extra column helps for multi-machine scaling as well.
+The relational data model is great for applications. It protects data integrity, allows flexible queries, and accommodates changing data. Traditionally the only problem was that relational databases weren't considered capable of scaling to the workloads needed for big SaaS applications. Developers had to put up with awkward NoSQL databases -- or a collection of backend services -- to reach that size. With Citus you can keep your data model *and* make it scale.
+
+Citus appears to applications as a single PostgreSQL database, but it internally routes queries to an adjustible number of physical servers (nodes) which can process requests in parallel. When configuring Citus, the database administrator specifies how the routing will happen.
+
+Multi-tenant applications have a nice property that we can take advantage of: queries usually always request information for one tenant at a time, not a mix of tenants. For instance, when a visitor is shopping at an online store runing on an ecommerce platform, the search results are just for that store; competitors' products are not mixed in.
+
+Because application queries are restricted to a single tenant, such as a store or company, one approach for making multi-tenant application queries fast is to store *all* data for a given tenant on the same node. This minimizes network overhead between the nodes. The joins, key constraints, and transactions can happen entirely within a node and do not require information from other nodes.
+
+We do this in Citus by making sure every table in our schema has a column to clearly mark which tenant owns which rows. In the ad analytics application the tenants are companies, so we must ensure all tables have a :code:`company_id` column.
+
+We can tell Citus to use this column to read and write rows to the same node when the rows are marked for the same company. In Citus' terminology :code:`company_id` will be the *distribution column*, which you can learn more about in :ref:`Distributed Data Modeling <distributed_data_modeling>`.
+
+Preparing Tables and Ingesting Data
+-----------------------------------
+
+In the previous section we identified the correct distribution column for our multi-tenant application: the company id. Even in a single-machine database it can be useful to denormalize tables with the addition of company id, whether it be for row-level security or for additional indexing. The extra benefit, as we saw, is that including the extra column helps for multi-machine scaling as well.
 
 The schema we have created so far uses a separate :code:`id` column as primary key for each table. Given that the distribution column is :code:`company_id`, enforcing the primary key constraint would require Citus to check all nodes for each insert statement. That would become prohibitively expensive for high write throughput, especially when there are many nodes.
 
@@ -244,8 +183,8 @@ Putting it all together, here are all the changes needed in the schema to prepar
 
 The change above is typical for a :ref:`multi-tenant schema migration <mt_schema_migration>`. The linked section goes into greater detail.
 
-Distributing Tables, Ingesting Data
------------------------------------
+Try it Yourself
+~~~~~~~~~~~~~~~
 
 .. note::
 
@@ -271,7 +210,7 @@ At this point feel free to follow along in your own Citus cluster by `downloadin
   SELECT create_distributed_table('clicks',      'company_id');
   SELECT create_distributed_table('impressions', 'company_id');
 
-The :ref:`create_distributed_table` function informs Citus that a table should be distributed and that future incoming queries to those tables should be planned for distributed execution. The function also creates shards for the table on worker nodes, allowing incoming data and queries to be routed there.
+The :ref:`create_distributed_table` function informs Citus that a table should be distributed among nodes and that future incoming queries to those tables should be planned for distributed execution. The function also creates shards for the table on worker nodes, which are low-level units of data storage Citus uses to assign data to nodes.
 
 The next step is loading sample data into the cluster.
 
@@ -303,64 +242,43 @@ Being an extension of PostgreSQL, Citus supports bulk loading with the COPY comm
   \copy clicks from 'clicks.csv' with csv;
   \copy impressions from 'impressions.csv' with csv;
 
-Querying the Cluster
---------------------
+Integrating Applications
+------------------------
 
-Distributing data by tenant id as discussed earlier allows applications to scale with minimal modifications. Citus supports all SQL constructs for queries which include tenant id as a filter condition, including queries generated by Object-Relational Mappers (ORMs). This guide is framework-agnostic and deals with plain SQL, but you can learn more about :ref:`rails_migration`. Be aware we are developing a similar library for Django.
+Here's the good news: once you have made the slight schema modification outlined earlier, your application can scale with very little work. You'll just connect the app to Citus and let the database take care of keeping the queries fast and the data safe.
 
-For instance, consider a simple query to find the top campaigns with highest budget for company five.
+Any application queries or update statements which include a filter on :code:`company_id` will continue to work exactly as they are. As mentioned earlier, this kind of filter is common in multi-tenant apps. When using an Object-Relational Mapper (ORM) you can recognize these queries by methods such as :code:`where` or :code:`filter`.
 
-::
+ActiveRecord:
 
-  -- Top ten campaigns with highest budget for a company
+.. code-block:: ruby
 
-  EXPLAIN SELECT name, cost_model, state, monthly_budget
-   FROM campaigns
-  WHERE company_id = 5
-  ORDER BY monthly_budget DESC
-  LIMIT 10;
+  Impression.where(company_id: 5).count
 
-The EXPLAIN output shows that Citus routes this to a single worker node (node: ec2-34-224-105-231.compute-1.amazonaws.com) which contains :code:`company_id` = 5. PostgreSQL uses its usual execution tactics within the node.
+Django:
 
-.. code-block:: text
+.. code-block:: py
 
-  ┌───────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │                                             QUERY PLAN                                            │
-  ├───────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ Custom Scan (Citus Router)  (cost=0.00..0.00 rows=0 width=0)                                      │
-  │   Task Count: 1                                                                                   │
-  │   Tasks Shown: All                                                                                │
-  │   -> Task                                                                                         |
-  │      Node: host=ec2-34-224-105-231.compute-1.amazonaws.com port=5432 dbname=citus                 |
-  │      -> Limit  (cost=9.51..9.52 rows=2 width=104)                                                 |
-  │         -> Sort  (cost=9.51..9.52 rows=2 width=104)                                               |
-  │            Sort Key: monthly_budget DESC                                                          |
-  │            -> Bitmap Heap Scan on campaigns_102046 campaigns  (cost=4.16..9.50 rows=2 width=104)  |
-  │               Recheck Cond: (company_id = 5)                                                      │
-  │               -> Bitmap Index Scan on campaigns_pkey_102046  (cost=0.00..4.16 rows=2 width=0)     │
-  │                  Index Cond: (company_id = 5)                                                     │
-  └───────────────────────────────────────────────────────────────────────────────────────────────────┘
+  Impression.objects.filter(company_id=5).count()
 
-Updates work too. Let's double the budget for all campaigns.
+Basically when the resulting SQL executed in the database contains a :code:`WHERE company_id = :value` clause on every table (including tables in JOIN queries), then the query will be routed to a single node and will work fine.
+
+Rather than track down each query in your application to make sure it filters properly, you can use our library for Rails (one for Django is in progress as well). It allows you to surround queries in a tenant scope which automatically filters them, even complicated ones. Check out our :ref:`rails_migration` section for details.
+
+This guide is framework-agnostic, so we'll point out some Citus features using SQL. Use your imagination for how these statements would be expressed in your language of choice.
+
+When a Citus sends a query to a single node for execution (called "pushing down" the query), then all SQL functionality is available. The node is an ordinary PostgreSQL server after all. When people scale applications with NoSQL databases they suffer the lack of transactions and joins. However per-tenant transactions work fine in Citus:
 
 ::
 
-  UPDATE campaigns
-  SET monthly_budget = monthly_budget*2
-  WHERE company_id = 5;
-
-In all these queries, the filter routes SQL execution directly inside a worker. Full SQL support is available once queries are "pushed down" to a worker like this. When people scale applications with NoSQL databases they suffer the lack of transactions and joins. However per-tenant transactions work fine in Citus:
-
-::
-
-  -- transactionally remove campaign 46 and all its ads
+  -- transactionally remove campaign 46 and all its ads etc
 
   BEGIN;
   DELETE from campaigns where id = 46 AND company_id = 5;
   DELETE from ads where campaign_id = 46 AND company_id = 5;
   COMMIT;
 
-As a final demo of SQL support, we have a query which includes aggregates and window functions and it works the same as it does in PostgreSQL. The query ranks the ads in each campaign by the count of their impressions.
+As a final demo of SQL support, we have a query which includes aggregates and window functions and it works the same in Citus as it does in PostgreSQL. The query ranks the ads in each campaign by the count of their impressions.
 
 ::
 
@@ -432,7 +350,7 @@ This updates all the workers as well. Once this command finishes, the Citus clus
 For a fuller explanation of how DDL commands propagate through the cluster, see :ref:`ddl_prop_support`.
 
 When Data Differs Across Tenants
-================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Given that all tenants share a common schema and hardware infrastructure, how can we accommodate tenants which want to store information not needed by others? For example, one of the tenant applications using our advertising database may want to store tracking cookie information with clicks, whereas another tenant may care about browser agents. Traditionally databases using a shared schema approach for multi-tenancy have resorted to creating a fixed number of pre-allocated "custom" columns, or having external "extension tables." However PostgreSQL provides a much easier way with its unstructured column types, notably `JSONB <https://www.postgresql.org/docs/current/static/datatype-json.html>`_.
 
@@ -538,27 +456,24 @@ Dealing with Big Tenants
 
   This section uses features available in Citus Cloud and Citus Enterprise, and will not work in the community edition.
 
-The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However there's another technique that becomes important when individual tenants get especially large compared to the others.
+The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However, users often have two concerns. The first is that their largest tenant won't be able to fit on a single node. The second is that hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them.
 
-As the number of tenants increases, the size of tenant data typically tends to follow a Zipfian distribution. This means there are a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them.
+The first concern tends to be unwarranted. Investigating data from large SaaS sites reveals that as the number of tenants increases, the size of tenant data typically tends to follow a `Zipfian distribution <https://en.wikipedia.org/wiki/Zipf%27s_law>`_. For instance in a database of 10 tenants, the largest is predicted to account for 60% of the data. When there are 10k tenants, the largest will account for 2% of all data. Even at 10TB for 10k tenants, the largest tenant will require 200GB, which can still fit on a single node.
 
-.. Your application typically would have a few very large tenants, and many smaller ones. Hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them. Also, users at times have concerns about their largest tenant not being able to fit on a single node with the other tenants.
+There's truth to the second concern, but there's a solution as well. The true part is that standard Citus shard rebalancing will improve overall performance but it may or may not improve the mixing of large and small tenants. The rebalancer simply distributes shards to equalize storage usage on nodes, without examining which tenants are allocated on each shard.
 
-.. Data typically follows a Zipfs distribution. This means x percent of data is in y percent of tenants. Taking an example of a database with 1000 tenants and 1TB data, this means your largest tenant will be roughly X% of data i.e. Y GB. This can easily fit on a single node and also allow you to scale to .... nodes.
+To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.  Citus Enterprise Edition and Citus Cloud provide the tools to do this.
 
-.. Then, we can talk about the second aspect which is better resource allocation and QoS guarantees. Could you take a stab at changing this section reflect the above and answer both questions.
+In our case, let's imagine that our old friend company id=5 is very large. We can isolating the data for this tenant happens in two somewhat low-level steps. We'll present the commands here, and you can consult :ref:`tenant_isolation` for the theory behind them.
 
-Performing standard Citus shard rebalancing will improve overall performance but it may or may not improve the mixing of large and small tenants. The rebalancer simply distributes shards to equalize storage usage on nodes, without examining which tenants are allocated on each shard.
-
-To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.  Citus Enterprise Edition and Citus Cloud provide the tools to do this. The process happens in two phases: 1) isolating the tenant’s data to a new dedicated shard, then 2) moving the shard to the desired node.
-
-In our case, let's imagine that our old friend company id=5 is very large. The first step in isolating it from other tenants is to make a new shard dedicated entirely to that company.
-
-.. Can we also make this section small on this is how you can isolate a tenant and specify the 2 commands. Users who want to understand this in greater detail (about shard id, splitting into different shards etc.) can look at the tenant isolation section in our docs. Could we also link to that here?
+First consolidate the tenant's data into a bundle (called a shard) suitable to move. The CASCADE option also applies this change to the rest of our tables distributed by :code:`company_id`.
 
 ::
 
-  SELECT isolate_tenant_to_new_shard('companies', 5, 'CASCADE');
+
+  SELECT isolate_tenant_to_new_shard(
+    'companies', 5, 'CASCADE'
+  );
 
 The output is the shard id dedicated to hold :code:`company_id=5`:
 
@@ -570,11 +485,7 @@ The output is the shard id dedicated to hold :code:`company_id=5`:
   │                      102240 │
   └─────────────────────────────┘
 
-The optional :code:`CASCADE` parameter to :ref:`isolate_tenant_to_new_shard` makes a dedicated shard not only for the :code:`companies` table but for any other tables which are co-located with it. In our case that would be all the other tables except the reference table. If you recall, these tables are distributed by :code:`company_id` and are thus in the same co-location group. (Note that the shards created for the other tables each have their own shard id, they do not share id 102240.)
-
-Creating shards is only the first step. The new shards -- one per table -- live on the worker nodes from which their data originated. For true hardware isolation we can move them to a separate node in the Citus cluster.
-
-Create a new node as described in the previous section. Take note of its hostname as shown in the Nodes tab of the Cloud Console. We'll move the newly created shards to the new node.
+Next we move the data across the network to a new dedicated node. Create a new node as described in the previous section. Take note of its hostname as shown in the Nodes tab of the Cloud Console.
 
 ::
 
@@ -584,8 +495,8 @@ Create a new node as described in the previous section. Take note of its hostnam
     FROM pg_dist_shard_placement
    WHERE shardid = 102240;
 
-  -- move the shard to your choice of worker
-  -- (it will also move any shards created with the CASCADE option)
+  -- move the shard to your choice of worker (it will also move the
+  -- other shards created with the CASCADE option)
 
   SELECT master_move_shard_placement(
     102240,
