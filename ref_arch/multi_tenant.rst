@@ -9,7 +9,7 @@ Multi-tenant Applications
 
 Many companies with web applications cater not to end users, but to other businesses with customers of their own. When many clients with similar needs are expected, it makes sense to run a single instance of the application to handle all the clients.
 
-A software-as-a-service (SaaS) provider, for example, might desire to run one instance of its application on one instance of a database and provide web access to multiple customers. In such a scenario, each tenant's data can be isolated and kept invisible to other tenants. This is efficient in three ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently. Last, it is simpler to manage a single database for all tenants than a different database server for each tenant.
+A software-as-a-service (SaaS) provider, for example, might desire to run one instance of its application on one instance of a database and provide web access to multiple customers. In such a scenario, each tenant's data can be isolated and kept invisible to other tenants. This is efficient in three ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently. Last, it is much simpler to manage a single database for all tenants than a different database server for each tenant.
 
 However, a single relational database instance has traditionally had trouble scaling to the volume of data needed for a large multi-tenant application. Developers were forced to relinquish the benefits of the relational model when data exceeded the capacity of a single database node.
 
@@ -87,11 +87,11 @@ Scaling the Relational Data Model
 
 The relational data model is great for applications. It protects data integrity, allows flexible queries, and accommodates changing data. Traditionally the only problem was that relational databases weren't considered capable of scaling to the workloads needed for big SaaS applications. Developers had to put up with awkward NoSQL databases -- or a collection of backend services -- to reach that size. With Citus you can keep your data model *and* make it scale.
 
-Citus appears to applications as a single PostgreSQL database, but it internally routes queries to an adjustible number of physical servers (nodes) which can process requests in parallel. When configuring Citus, the database administrator specifies how the routing will happen.
+Citus appears to applications as a single PostgreSQL database, but it internally routes queries to an adjustable number of physical servers (nodes) which can process requests in parallel. When configuring Citus, the database administrator specifies how the routing will happen.
 
-Multi-tenant applications have a nice property that we can take advantage of: queries usually always request information for one tenant at a time, not a mix of tenants. For instance, when a visitor is shopping at an online store runing on an ecommerce platform, the search results are just for that store; competitors' products are not mixed in.
+Multi-tenant applications have a nice property that we can take advantage of: queries usually always request information for one tenant at a time, not a mix of tenants. For instance, when a salesperson is searching prospect information in a CRM, the search results are specific to his employer; other businesses' leads and notes are not included.
 
-Because application queries are restricted to a single tenant, such as a store or company, one approach for making multi-tenant application queries fast is to store *all* data for a given tenant on the same node. This minimizes network overhead between the nodes. The joins, key constraints, and transactions can happen entirely within a node and do not require information from other nodes.
+Because application queries are restricted to a single tenant, such as a store or company, one approach for making multi-tenant application queries fast is to store *all* data for a given tenant on the same node. This minimizes network overhead between the nodes and allows Citus to support all your application's joins, key constraints and transactions efficiently. They can happen entirely within a node and do not require information from other nodes. With this, you can scale across multiple nodes without having to totally re-write or re-architect your application.
 
 We do this in Citus by making sure every table in our schema has a column to clearly mark which tenant owns which rows. In the ad analytics application the tenants are companies, so we must ensure all tables have a :code:`company_id` column.
 
@@ -112,7 +112,7 @@ The schema we have created so far uses a separate :code:`id` column as primary k
 
 Thus Citus requires that primary and foreign key constraints include the distribution column. In SQL this translates to making primary and foreign keys composite by including :code:`company_id`. This is compatible with the multi-tenant case because what we really need there is to ensure uniqueness on a per-tenant basis.
 
-Putting it all together, here are all the changes needed in the schema to prepare the tables for distribution by :code:`company_id`.
+Putting it all together, here are the changes which prepare the tables for distribution by :code:`company_id`.
 
 ::
 
@@ -181,7 +181,7 @@ Putting it all together, here are all the changes needed in the schema to prepar
       REFERENCES ads (company_id, id)
   );
 
-The change above is typical for a :ref:`multi-tenant schema migration <mt_schema_migration>`. The linked section goes into greater detail.
+You can learn more about migrating your own data model in :ref:`multi-tenant schema migration <mt_schema_migration>`.
 
 Try it Yourself
 ~~~~~~~~~~~~~~~
@@ -261,13 +261,15 @@ Django:
 
   Impression.objects.filter(company_id=5).count()
 
-Basically when the resulting SQL executed in the database contains a :code:`WHERE company_id = :value` clause on every table (including tables in JOIN queries), then the query will be routed to a single node and will work fine.
+Basically when the resulting SQL executed in the database contains a :code:`WHERE company_id = :value` clause on every table (including tables in JOIN queries), then Citus will recognize that the query should be routed to a single node and execute it there as it is. This makes sure that all SQL functionality is available. The node is an ordinary PostgreSQL server after all.
 
-Rather than track down each query in your application to make sure it filters properly, you can use our library for Rails (one for Django is in progress as well). It allows you to surround queries in a tenant scope which automatically filters them, even complicated ones. Check out our :ref:`rails_migration` section for details.
+Also, to make it even simpler, you can use our `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ library for Rails (one for Django is in progress as well) which will automatically add these filters to all your queries, even the complicated ones. Check out our :ref:`rails_migration` section for details.
 
 This guide is framework-agnostic, so we'll point out some Citus features using SQL. Use your imagination for how these statements would be expressed in your language of choice.
 
-When a Citus sends a query to a single node for execution (called "pushing down" the query), then all SQL functionality is available. The node is an ordinary PostgreSQL server after all. When people scale applications with NoSQL databases they suffer the lack of transactions and joins. However per-tenant transactions work fine in Citus:
+.. I would include a simple update statement or select statement to tee up the NoSQL point.
+
+A common pain point for users scaling applications with NoSQL databases is the lack of transactions and joins. However, transactions work as you'd expect them to in Citus:
 
 ::
 
@@ -336,7 +338,7 @@ Now joining clicks with this table can execute efficiently. We can ask, for exam
 Online Changes to the Schema
 ----------------------------
 
-Another challenge with multi-tenant systems is keeping the schemas for all the tenants in sync. Any schema change needs to be consistently reflected across all the tenants. In Citus, you can use standard PostgreSQL DDL commands to change the schema of your tables, and Citus will propagate them from the coordinator node to the workers using a two-phase commit protocol.
+Another challenge with multi-tenant systems is keeping the schemas for all the tenants in sync. Any schema change needs to be consistently reflected across all the tenants. In Citus, you can simply use standard PostgreSQL DDL commands to change the schema of your tables, and Citus will propagate them from the coordinator node to the workers using a two-phase commit protocol.
 
 For example, the advertisements in this application could use a text caption. We can add a column to the table by issuing the standard SQL on the coordinator:
 
@@ -350,7 +352,7 @@ This updates all the workers as well. Once this command finishes, the Citus clus
 For a fuller explanation of how DDL commands propagate through the cluster, see :ref:`ddl_prop_support`.
 
 When Data Differs Across Tenants
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
 Given that all tenants share a common schema and hardware infrastructure, how can we accommodate tenants which want to store information not needed by others? For example, one of the tenant applications using our advertising database may want to store tracking cookie information with clicks, whereas another tenant may care about browser agents. Traditionally databases using a shared schema approach for multi-tenancy have resorted to creating a fixed number of pre-allocated "custom" columns, or having external "extension tables." However PostgreSQL provides a much easier way with its unstructured column types, notably `JSONB <https://www.postgresql.org/docs/current/static/datatype-json.html>`_.
 
@@ -377,7 +379,7 @@ The database administrator can even create a `partial index <https://www.postgre
   ON clicks ((user_data->>'browser'))
   WHERE company_id = 5;
 
-Additionally, PostgreSQL supports GIN indices on JSONB. Creating a GIN index on a JSONB column will create an index on every key and value within that JSON document. This speeds up a number of `JSONB operators <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_ such as :code:`?`, :code:`?|`, and :code:`?&`.
+Additionally, PostgreSQL supports `GIN indices <https://www.postgresql.org/docs/current/static/gin-intro.html>`_ on JSONB. Creating a GIN index on a JSONB column will create an index on every key and value within that JSON document. This speeds up a number of `JSONB operators <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_ such as :code:`?`, :code:`?|`, and :code:`?&`.
 
 .. code-block:: postgresql
 
@@ -397,7 +399,7 @@ Scaling Hardware Resources
 
 .. note::
 
-  This section uses features available in Citus Cloud and Citus Enterprise, and will not work in the community edition.
+  This section uses features available in `Citus Cloud <https://www.citusdata.com/product/cloud>`_ and `Citus Enterprise <https://www.citusdata.com/product/enterprise>`_, and will not work in the community edition.
 
 Multi-tenant databases should be designed for future scale as business grows or tenants want to store more data. Citus can scale out easily by adding new machines without having to make any changes or take application downtime.
 
@@ -456,13 +458,17 @@ Dealing with Big Tenants
 
   This section uses features available in Citus Cloud and Citus Enterprise, and will not work in the community edition.
 
-The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However, users often have two concerns. The first is that their largest tenant won't be able to fit on a single node. The second is that hosting a large tenant together with small ones on a single worker node can degrade the performance for all of them.
+The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However, users often have two questions. The first is what will happen to their largest tenant if it grows too big. The second is what are the performance implications of hosting a large tenant together with small ones on a single worker node, and what can be done about it.
 
-The first concern tends to be unwarranted. Investigating data from large SaaS sites reveals that as the number of tenants increases, the size of tenant data typically tends to follow a `Zipfian distribution <https://en.wikipedia.org/wiki/Zipf%27s_law>`_. For instance in a database of 10 tenants, the largest is predicted to account for 60% of the data. When there are 10k tenants, the largest will account for 2% of all data. Even at 10TB for 10k tenants, the largest tenant will require 200GB, which can still fit on a single node.
+Regarding the first question, investigating data from large SaaS sites reveals that as the number of tenants increases, the size of tenant data typically tends to follow a `Zipfian distribution <https://en.wikipedia.org/wiki/Zipf%27s_law>`_.
 
-There's truth to the second concern, but there's a solution as well. The true part is that standard Citus shard rebalancing will improve overall performance but it may or may not improve the mixing of large and small tenants. The rebalancer simply distributes shards to equalize storage usage on nodes, without examining which tenants are allocated on each shard.
+.. image:: ../images/zipf.png
 
-To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.  Citus Enterprise Edition and Citus Cloud provide the tools to do this.
+For instance, in a database of 100 tenants, the largest is predicted to account for 23% of the data. In a more realistic example for a large SaaS company, if there are 10k tenants, the largest will account for ~2% of the data. Even at 10TB of data, the largest tenant will require 200GB, which can pretty easily fit on a single node.
+
+Another question is regarding performance when large and small tenants are on the same node. Standard shard rebalancing will improve overall performance but it may or may not improve the mixing of large and small tenants. The rebalancer simply distributes shards to equalize storage usage on nodes, without examining which tenants are allocated on each shard.
+
+To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes. Citus provides the tools to do this.
 
 In our case, let's imagine that our old friend company id=5 is very large. We can isolating the data for this tenant happens in two somewhat low-level steps. We'll present the commands here, and you can consult :ref:`tenant_isolation` for the theory behind them.
 
