@@ -64,6 +64,87 @@ To measure the number of active connections at a given time, run:
 
 .. raw:: html
 
+Users and Permissions
+#####################
+
+As we saw above, every new Citus Cloud formation includes a user account called :code:`citus`. This account is great for creating tables and other DDL, but it has too much power for certain applications.
+
+We'll want to create new roles for specialized purposes. For instance, a user with read-only access is perfect for a web/reporting tool. The Cloud console allows us to create a new user, and will set up a new password automatically. Go to the "Roles" tab and click "Create New Role."
+
+.. image:: ../images/cloud-roles-tab.png
+
+It pops up a dialog where we will fill in the role name, which we can call :code:`reports`.
+
+.. image:: ../images/cloud-role-dialog.png
+
+After creating the role on a fresh formation, there will be three roles:
+
+.. code-block:: text
+
+  ┌─[ RECORD 1 ]────────────────────────────────────────────────────────────┐
+  │ Role name  │ citus                                                      │
+  │ Attributes │                                                            │
+  │ Member of  │ {reports}                                                  │
+  ├─[ RECORD 2 ]────────────────────────────────────────────────────────────┤
+  │ Role name  │ postgres                                                   │
+  │ Attributes │ Superuser, Create role, Create DB, Replication, Bypass RLS │
+  │ Member of  │ {}                                                         │
+  ├─[ RECORD 3 ]────────────────────────────────────────────────────────────┤
+  │ Role name  │ reports                                                    │
+  │ Attributes │                                                            │
+  │ Member of  │ {}                                                         │
+  └────────────┴────────────────────────────────────────────────────────────┘
+
+The new :code:`reports` role starts with no privileges, except "usage" on the public schema, meaning the ability to get a list of the tables etc inside. We have to specifically grant the role extra permissions to database objects. For instance, to allow read-only access to :code:`mytable`, connect to Citus as the :code:`citus` user with the connection string provided in the Cloud console and issue this command:
+
+.. code-block:: postgresql
+
+  -- run as the citus user
+
+  GRANT SELECT ON mytable TO reports;
+
+You can confirm the privileges by consulting the information schema:
+
+.. code-block:: postgresql
+
+  SELECT grantee, privilege_type
+    FROM information_schema.role_table_grants
+   WHERE table_name='mytable';
+
+::
+
+  ┌─────────┬────────────────┐
+  │ grantee │ privilege_type │
+  ├─────────┼────────────────┤
+  │ citus   │ INSERT         │
+  │ citus   │ SELECT         │
+  │ citus   │ UPDATE         │
+  │ citus   │ DELETE         │
+  │ citus   │ TRUNCATE       │
+  │ citus   │ REFERENCES     │
+  │ citus   │ TRIGGER        │
+  │ reports │ SELECT         │
+  └─────────┴────────────────┘
+
+The PostgreSQL documentation has more detailed information about types of privileges you can `GRANT on database objects <https://www.postgresql.org/docs/current/static/sql-grant.html#SQL-GRANT-DESCRIPTION-OBJECTS>`_.
+
+Granting Privileges in Bulk
+---------------------------
+
+Citus propagates single-table GRANT statements through the entire cluster, making them apply on all worker nodes. However GRANTs that are system-wide (e.g. for all tables in a schema) need to be applied individually to every data node using a Citus helper function.
+
+.. code-block:: postgresql
+
+  -- applies to the coordinator node
+  GRANT SELECT ON ALL TABLES IN SCHEMA public TO reports;
+
+  -- make it apply to workers as well
+  SELECT run_command_on_workers(
+    'GRANT SELECT ON ALL TABLES IN SCHEMA public TO reports;'
+  );
+
+.. raw:: html
+
   <script type="text/javascript">
   analytics.track('Doc', {page: 'overview', section: 'cloud'});
   </script>
