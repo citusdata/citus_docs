@@ -1,3 +1,5 @@
+.. _ha:
+
 High-Availability
 #################
 

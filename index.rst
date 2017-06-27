@@ -63,6 +63,7 @@ topics.
    cloud/index.rst
    cloud/availability.rst
    cloud/security.rst
+   cloud/scaling.rst
    cloud/logging.rst
    cloud/mx.rst
    cloud/support.rst
