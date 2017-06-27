@@ -93,6 +93,8 @@ Multi-tenant applications have a nice property that we can take advantage of: qu
 
 Because application queries are restricted to a single tenant, such as a store or company, one approach for making multi-tenant application queries fast is to store *all* data for a given tenant on the same node. This minimizes network overhead between the nodes and allows Citus to support all your application's joins, key constraints and transactions efficiently. They can happen entirely within a node and do not require information from other nodes. With this, you can scale across multiple nodes without having to totally re-write or re-architect your application.
 
+.. image:: ../images/mt-ad-routing-diagram.png
+
 We do this in Citus by making sure every table in our schema has a column to clearly mark which tenant owns which rows. In the ad analytics application the tenants are companies, so we must ensure all tables have a :code:`company_id` column.
 
 We can tell Citus to use this column to read and write rows to the same node when the rows are marked for the same company. In Citus' terminology :code:`company_id` will be the *distribution column*, which you can learn more about in :ref:`Distributed Data Modeling <distributed_data_modeling>`.
