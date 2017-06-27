@@ -1,9 +1,9 @@
 Scaling
 #######
 
-Citus Cloud provides self-service scaling to deal with increased load. The web interface makes it easy to either add new worker nodes or increase existing nodes' memory capacity.
+Citus Cloud provides self-service scaling to deal with increased load. The web interface makes it easy to either add new worker nodes or increase existing nodes' memory and CPU capacity.
 
-For most cases either approach to scaling is fine and will improve performance. However there are times you may want to choose one over the other. If the cluster is reaching its disk limit then adding more nodes is the best choice. Alternately, if there is still a lot of headroom on disk but performance is suffering, then scaling node RAM is the way to go.
+For most cases either approach to scaling is fine and will improve performance. However there are times you may want to choose one over the other. If the cluster is reaching its disk limit then adding more nodes is the best choice. Alternately, if there is still a lot of headroom on disk but performance is suffering, then scaling node RAM and processing power is the way to go.
 
 Both adjustments are available in the formation configuration panel of the settings tab:
 
@@ -13,13 +13,13 @@ Clicking the node change link provides two sliders:
 
 .. image:: ../images/cloud-nodes-slider.png
 
-The first slider, **count**, scales out the cluster by adding new nodes. The second, **RAM**, scales it up by changing the amount of RAM on existing nodes.
+The first slider, **count**, scales out the cluster by adding new nodes. The second, **RAM**, scales it up by changing the instance size (RAM and CPU cores) of existing nodes.
 
 For example, just drag the slider for node count:
 
 .. image:: ../images/cloud-nodes-slider-2.png
 
-After you adjust the sliders and accept the changes, Citus Cloud begins applying the changes. Increasing the number of nodes will begin immediately, whereas increasing node RAM size will wait for a time in the user-specified maintenance window.
+After you adjust the sliders and accept the changes, Citus Cloud begins applying the changes. Increasing the number of nodes will begin immediately, whereas increasing node instance size will wait for a time in the user-specified maintenance window.
 
 .. image:: ../images/cloud-maintenance-window.png
 
@@ -36,7 +36,7 @@ Or when waiting for node resize to begin in the maintenance window:
 Scaling Up (increasing node size)
 ---------------------------------
 
-Resizing node RAM works by creating a PostgreSQL follower for each node, where the followers are provisioned with the desired amount of RAM. It takes an average of forty minutes per hundred gigabytes of data for the primary nodes' data to be fully synchronized on the followers. After the synchronization is complete, Citus Cloud does a quick switchover from the existing primary nodes to their followers which takes about two minutes. The creation and switchover process uses the same well-tested replication mechanism that powers Cloud's :ref:`ha` feature. During the switchover period clients may experience errors and have to retry queries, especially cross-tenant queries hitting multiple nodes.
+Resizing node size works by creating a PostgreSQL follower for each node, where the followers are provisioned with the desired amount of RAM and CPU cores. It takes an average of forty minutes per hundred gigabytes of data for the primary nodes' data to be fully synchronized on the followers. After the synchronization is complete, Citus Cloud does a quick switchover from the existing primary nodes to their followers which takes about two minutes. The creation and switchover process uses the same well-tested replication mechanism that powers Cloud's :ref:`ha` feature. During the switchover period clients may experience errors and have to retry queries, especially cross-tenant queries hitting multiple nodes.
 
 Scaling Out (adding new nodes)
 ------------------------------
