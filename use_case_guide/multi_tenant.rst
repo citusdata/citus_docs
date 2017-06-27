@@ -15,7 +15,7 @@ However, a single relational database instance has traditionally had trouble sca
 
 Citus allows users to write multi-tenant applications as if they are connecting to a single PostgreSQL database, when in fact the database is a horizontally scalable cluster of machines. Client code requires minimal modifications and can continue to use full SQL capabilities.
 
-This guide takes a sample multi-tenant application and describes how to model it for scalability with Citus. Along the way we examine typical challenges for multi-tenant applications like per-tenant customization, isolating tenants from noisy neighbors, and scaling hardware to accommodate more data. PostgreSQL and Citus provide all the tools needed to handle these challenges, so let's get building.
+This guide takes a sample multi-tenant application and describes how to model it for scalability with Citus. Along the way we examine typical challenges for multi-tenant applications like isolating tenants from noisy neighbors, scaling hardware to accommodate more data, and storing data that differs across tenants. PostgreSQL and Citus provide all the tools needed to handle these challenges, so let's get building.
 
 Let's Make an App – Ad Analytics
 --------------------------------
@@ -91,7 +91,7 @@ Citus appears to applications as a single PostgreSQL database, but it internally
 
 Multi-tenant applications have a nice property that we can take advantage of: queries usually always request information for one tenant at a time, not a mix of tenants. For instance, when a salesperson is searching prospect information in a CRM, the search results are specific to his employer; other businesses' leads and notes are not included.
 
-Because application queries are restricted to a single tenant, such as a store or company, one approach for making multi-tenant application queries fast is to store *all* data for a given tenant on the same node. This minimizes network overhead between the nodes and allows Citus to support all your application's joins, key constraints and transactions efficiently. They can happen entirely within a node and do not require information from other nodes. With this, you can scale across multiple nodes without having to totally re-write or re-architect your application.
+Because application queries are restricted to a single tenant, such as a store or company, one approach for making multi-tenant application queries fast is to store *all* data for a given tenant on the same node. This minimizes network overhead between the nodes and allows Citus to support all your application's joins, key constraints and transactions efficiently. With this, you can scale across multiple nodes without having to totally re-write or re-architect your application.
 
 .. image:: ../images/mt-ad-routing-diagram.png
 
@@ -488,9 +488,9 @@ Another question is regarding performance when large and small tenants are on th
 
 To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes. Citus provides the tools to do this.
 
-In our case, let's imagine that our old friend company id=5 is very large. We can isolating the data for this tenant happens in two somewhat low-level steps. We'll present the commands here, and you can consult :ref:`tenant_isolation` for the theory behind them.
+In our case, let's imagine that our old friend company id=5 is very large. We can isolate the data for this tenant in two steps. We'll present the commands here, and you can consult :ref:`tenant_isolation` to learn more about them.
 
-First consolidate the tenant's data into a bundle (called a shard) suitable to move. The CASCADE option also applies this change to the rest of our tables distributed by :code:`company_id`.
+First sequester the tenant's data into a bundle (called a shard) suitable to move. The CASCADE option also applies this change to the rest of our tables distributed by :code:`company_id`.
 
 ::
 
@@ -532,4 +532,4 @@ You can confirm the shard movement by querying :ref:`pg_dist_shard_placement <pl
 Where to Go From Here
 ---------------------
 
-Now that you know the basics of designing a schema for scalability in a multi-tenant application, you can continue further in our docs to put this knowledge to use. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`. To adjust a front-end application, specifically Ruby on Rails, read :ref:`rails_migration`. Finally, try :ref:`Citus Cloud <cloud_overview>`, the easiest way to manage a Citus cluster, available with discounted developer plan pricing.
+With this, you now know how to use Citus to power your multi-tenant application for scalability. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`. To adjust a front-end application, specifically Ruby on Rails, read :ref:`rails_migration`. Finally, try :ref:`Citus Cloud <cloud_overview>`, the easiest way to manage a Citus cluster, available with discounted developer plan pricing.
