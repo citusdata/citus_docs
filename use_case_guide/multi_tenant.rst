@@ -269,7 +269,23 @@ Also, to make it even simpler, you can use our `activerecord-multi-tenant <https
 
 This guide is framework-agnostic, so we'll point out some Citus features using SQL. Use your imagination for how these statements would be expressed in your language of choice.
 
-.. I would include a simple update statement or select statement to tee up the NoSQL point.
+Here is a simple query and update operating on a single tenant.
+
+::
+
+  -- campaigns with highest budget
+
+  SELECT name, cost_model, state, monthly_budget
+    FROM campaigns
+   WHERE company_id = 5
+   ORDER BY monthly_budget DESC
+   LIMIT 10;
+
+  -- double the budgets!
+
+  UPDATE campaigns
+     SET monthly_budget = monthly_budget*2
+   WHERE company_id = 5;
 
 A common pain point for users scaling applications with NoSQL databases is the lack of transactions and joins. However, transactions work as you'd expect them to in Citus:
 
