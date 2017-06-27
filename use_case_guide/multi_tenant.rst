@@ -291,11 +291,20 @@ A common pain point for users scaling applications with NoSQL databases is the l
 
 ::
 
-  -- transactionally remove campaign 46 and all its ads etc
+  -- transactionally reallocate campaign budget money
 
   BEGIN;
-  DELETE from campaigns where id = 46 AND company_id = 5;
-  DELETE from ads where campaign_id = 46 AND company_id = 5;
+
+  UPDATE campaigns
+     SET monthly_budget = monthly_budget + 1000
+   WHERE company_id = 5
+     AND id = 40;
+
+  UPDATE campaigns
+     SET monthly_budget = monthly_budget - 1000
+   WHERE company_id = 5
+     AND id = 41;
+
   COMMIT;
 
 As a final demo of SQL support, we have a query which includes aggregates and window functions and it works the same in Citus as it does in PostgreSQL. The query ranks the ads in each campaign by the count of their impressions.
