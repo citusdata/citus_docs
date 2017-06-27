@@ -214,7 +214,7 @@ At this point feel free to follow along in your own Citus cluster by `downloadin
 
 The :ref:`create_distributed_table` function informs Citus that a table should be distributed among nodes and that future incoming queries to those tables should be planned for distributed execution. The function also creates shards for the table on worker nodes, which are low-level units of data storage Citus uses to assign data to nodes.
 
-The next step is loading sample data into the cluster.
+The next step is loading sample data into the cluster from the command line.
 
 .. code-block:: bash
 
@@ -234,15 +234,15 @@ The next step is loading sample data into the cluster.
       docker cp ${dataset}.csv citus_master:.
     done
 
-Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location.
+Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location. Back inside psql run this:
 
 .. code-block:: psql
 
-  \copy companies from 'companies.csv' with csv;
-  \copy campaigns from 'campaigns.csv' with csv;
-  \copy ads from 'ads.csv' with csv;
-  \copy clicks from 'clicks.csv' with csv;
-  \copy impressions from 'impressions.csv' with csv;
+  \copy companies from 'companies.csv' with csv
+  \copy campaigns from 'campaigns.csv' with csv
+  \copy ads from 'ads.csv' with csv
+  \copy clicks from 'clicks.csv' with csv
+  \copy impressions from 'impressions.csv' with csv
 
 Integrating Applications
 ------------------------
