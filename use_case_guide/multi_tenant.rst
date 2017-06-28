@@ -385,25 +385,24 @@ Given that all tenants share a common schema and hardware infrastructure, how ca
 
 Notice that our schema already has a JSONB field in :code:`clicks` called :code:`user_data`. Each tenant can use it for flexible storage.
 
-Supposing company 5 uses the field to track the user agent ad clicks, they can later query to find which browsers click most often:
+Suppose company five includes information in the field to track whether the user is on a mobile device. The company can query to find who clicks more, mobile or traditional visitors:
 
 .. code-block:: postgresql
 
   SELECT
-    user_data->>'browser' AS browser,
+    user_data->>'is_mobile' AS is_mobile,
     count(*) AS count
   FROM clicks
   WHERE company_id = 5
-  GROUP BY user_data->>'browser'
-  ORDER BY count DESC
-  LIMIT 10;
+  GROUP BY user_data->>'is_mobile'
+  ORDER BY count DESC;
 
 The database administrator can even create a `partial index <https://www.postgresql.org/docs/current/static/indexes-partial.html>`_ to improve speed for an individual tenant's query patterns. Here is one to improve company 5's filters for browser information:
 
 .. code-block:: postgresql
 
-  CREATE INDEX click_user_data_browser
-  ON clicks ((user_data->>'browser'))
+  CREATE INDEX click_user_data_is_mobile
+  ON clicks ((user_data->>'is_mobile'))
   WHERE company_id = 5;
 
 Additionally, PostgreSQL supports `GIN indices <https://www.postgresql.org/docs/current/static/gin-intro.html>`_ on JSONB. Creating a GIN index on a JSONB column will create an index on every key and value within that JSON document. This speeds up a number of `JSONB operators <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_ such as :code:`?`, :code:`?|`, and :code:`?&`.
@@ -414,11 +413,11 @@ Additionally, PostgreSQL supports `GIN indices <https://www.postgresql.org/docs/
   ON clicks USING gin (user_data);
 
   -- this speeds up queries like, "which clicks have
-  -- the browser key present in user_data?"
+  -- the is_mobile key present in user_data?"
 
   SELECT id
     FROM clicks
-   WHERE user_data ? 'browser'
+   WHERE user_data ? 'is_mobile'
      AND company_id = 5;
 
 Scaling Hardware Resources
