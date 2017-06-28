@@ -47,6 +47,11 @@ For Papertrail leave Message Template empty. Other providers might require a tok
 Supported External Providers
 ----------------------------
 
+Papertrail
+~~~~~~~~~~
+
+
+
 We're currently testing with these providers:
 
 * Papertrail
