@@ -220,7 +220,7 @@ The next step is loading sample data into the cluster from the command line.
 
   # download and ingest datasets from the shell
 
-  for dataset in companies campaigns ads clicks impressions; do
+  for dataset in companies campaigns ads clicks impressions geo_ips; do
     curl -O https://examples.citusdata.com/mt_ref_arch/${dataset}.csv
   done
 
@@ -230,7 +230,7 @@ The next step is loading sample data into the cluster from the command line.
 
   .. code-block:: bash
 
-    for dataset in companies campaigns ads clicks impressions; do
+    for dataset in companies campaigns ads clicks impressions geo_ips; do
       docker cp ${dataset}.csv citus_master:.
     done
 
@@ -351,16 +351,21 @@ To use this table efficiently in a distributed setup, we need to find a way to c
 
 Reference tables are replicated across all worker nodes, and Citus automatically keeps them in sync during modifications. Notice that we call :ref:`create_reference_table <create_reference_table>` rather than :code:`create_distributed_table`.
 
-Now joining clicks with this table can execute efficiently. We can ask, for example, the locations of everyone who clicked on ad 456.
+Now that :code:`geo_ips` is established as a reference table, load it with example data:
+
+.. code-block:: psql
+
+  \copy geo_ips from 'geo_ips.csv' with csv
+
+Now joining clicks with this table can execute efficiently. We can ask, for example, the locations of everyone who clicked on ad 290.
 
 ::
 
-  SELECT latlon
+  SELECT c.id, clicked_at, latlon
     FROM geo_ips, clicks c
    WHERE addrs >> c.user_ip
-     AND c.clicked_at > current_date - INTERVAL '1 day'
      AND c.company_id = 5
-     AND c.ad_id = 456;
+     AND c.ad_id = 290;
 
 Online Changes to the Schema
 ----------------------------
