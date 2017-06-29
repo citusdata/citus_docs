@@ -7,9 +7,9 @@ Multi-tenant Applications
 
 *Estimated read time: 30 minutes*
 
-Many companies with web applications cater not to end users, but to other businesses with customers of their own. When many clients with similar needs are expected, it makes sense to run a single instance of the application to handle all the clients.
+If you're building a Software-as-a-service (SaaS) application, you probably already have the notion of tenancy built into your data model. Typically, most information relates to tenants / customers / accounts and the database tables capture this natural relation.
 
-A software-as-a-service (SaaS) provider, for example, might desire to run one instance of its application on one instance of a database and provide web access to multiple customers. In such a scenario, each tenant's data can be isolated and kept invisible to other tenants. This is efficient in three ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently. Last, it is much simpler to manage a single database for all tenants than a different database server for each tenant.
+For SaaS applications, each tenant's data can be isolated and kept invisible from other tenants. This is efficient in three ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently. Last, it is much simpler to manage a single database for all tenants than a different database server for each tenant.
 
 However, a single relational database instance has traditionally had trouble scaling to the volume of data needed for a large multi-tenant application. Developers were forced to relinquish the benefits of the relational model when data exceeded the capacity of a single database node.
 
@@ -24,7 +24,7 @@ We'll build the back-end for an application that tracks online advertising perfo
 
 Let's start by considering a simplified schema for this application. The application must keep track of multiple companies, each of which runs advertising campaigns. Campaigns have many ads, and each ad has associated records of its clicks and impressions.
 
-Here is the example schema. We'll make some minor changes later, which allow us to effectively partition and isolate the data in a distributed environment.
+Here is the example schema. We'll make some minor changes later, which allow us to effectively distribute and isolate the data in a distributed environment.
 
 ::
 
@@ -85,9 +85,9 @@ There are modifications we can make to the schema which will give it a performan
 Scaling the Relational Data Model
 ---------------------------------
 
-The relational data model is great for applications. It protects data integrity, allows flexible queries, and accommodates changing data. Traditionally the only problem was that relational databases weren't considered capable of scaling to the workloads needed for big SaaS applications. Developers had to put up with awkward NoSQL databases -- or a collection of backend services -- to reach that size. With Citus you can keep your data model *and* make it scale.
+The relational data model is great for applications. It protects data integrity, allows flexible queries, and accommodates changing data. Traditionally the only problem was that relational databases weren't considered capable of scaling to the workloads needed for big SaaS applications. Developers had to put up with NoSQL databases -- or a collection of backend services -- to reach that size.
 
-Citus appears to applications as a single PostgreSQL database, but it internally routes queries to an adjustable number of physical servers (nodes) which can process requests in parallel. When configuring Citus, the database administrator specifies how the routing will happen.
+With Citus you can keep your data model *and* make it scale. Citus appears to applications as a single PostgreSQL database, but it internally routes queries to an adjustable number of physical servers (nodes) which can process requests in parallel.
 
 Multi-tenant applications have a nice property that we can take advantage of: queries usually always request information for one tenant at a time, not a mix of tenants. For instance, when a salesperson is searching prospect information in a CRM, the search results are specific to his employer; other businesses' leads and notes are not included.
 
@@ -104,15 +104,9 @@ Preparing Tables and Ingesting Data
 
 In the previous section we identified the correct distribution column for our multi-tenant application: the company id. Even in a single-machine database it can be useful to denormalize tables with the addition of company id, whether it be for row-level security or for additional indexing. The extra benefit, as we saw, is that including the extra column helps for multi-machine scaling as well.
 
-The schema we have created so far uses a separate :code:`id` column as primary key for each table. Given that the distribution column is :code:`company_id`, enforcing the primary key constraint would require Citus to check all nodes for each insert statement. That would become prohibitively expensive for high write throughput, especially when there are many nodes.
+The schema we have created so far uses a separate :code:`id` column as primary key for each table. Citus requires that primary and foreign key constraints include the distribution column. This requirement makes enforcing these constraints much more efficient in a distributed environment.
 
-::
-
-  -- not efficiently enforceable
-
-  campaign_id bigint REFERENCES campaigns (id)
-
-Thus Citus requires that primary and foreign key constraints include the distribution column. In SQL this translates to making primary and foreign keys composite by including :code:`company_id`. This is compatible with the multi-tenant case because what we really need there is to ensure uniqueness on a per-tenant basis.
+In SQL, this requirement translates to making primary and foreign keys composite by including :code:`company_id`. This is compatible with the multi-tenant case because what we really need there is to ensure uniqueness on a per-tenant basis.
 
 Putting it all together, here are the changes which prepare the tables for distribution by :code:`company_id`.
 
@@ -430,17 +424,13 @@ Scaling Hardware Resources
 
 .. note::
 
-  This section uses features available in `Citus Cloud <https://www.citusdata.com/product/cloud>`_ and `Citus Enterprise <https://www.citusdata.com/product/enterprise>`_, and will not work in the community edition.
+  This section uses features available only in `Citus Cloud <https://www.citusdata.com/product/cloud>`_ and `Citus Enterprise <https://www.citusdata.com/product/enterprise>`_. Also, please note that these features are available in Citus Cloud across all plans except for the "Dev Plan".
 
 Multi-tenant databases should be designed for future scale as business grows or tenants want to store more data. Citus can scale out easily by adding new machines without having to make any changes or take application downtime.
 
 Being able to rebalance data in the Citus cluster allows you to grow your data size or number of customers and improve performance on demand. Adding new machines allows you to keep data in memory even when it is much larger than what a single machine can store.
 
 Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance.
-
-.. note::
-
-  The Citus Cloud "Dev Plan" will not work because it does not allow scaling nodes; you must use a "Customized Plan."
 
 We're going to learn to add a new worker node to the Citus cluster and redistribute some of the data onto it for increased processing power.
 
@@ -460,9 +450,7 @@ Drag the slider to increase node count by one, and click "Resize Formation." Whi
 
   Don't forget that even when this process finishes there is more to do! The new node will be available in the system, but at this point no tenants are stored on it so **Citus will not yet run any queries there**. Below we'll explore how to move existing data to the new nodes.
 
-Node addition takes around five minutes. Refresh the browser until the change-in-progress message disappears. Next select the "Nodes" tab in the Cloud Console. You should see three nodes listed. Notice how the new node has no data on it (data size = 0 bytes):
-
-.. image:: ../images/cloud-node-stats.png
+Node addition takes around five minutes. Refresh the browser until the change-in-progress message disappears. Next select the "Nodes" tab in the Cloud Console. You should see three nodes listed. Notice how the new node has no data on it (data size = 0 bytes).
 
 To bring the node into play we can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node. Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the :code:`companies` table and it will take the hint and rebalance the other tables which are distributed by :code:`company_id`.
 
@@ -487,7 +475,7 @@ Dealing with Big Tenants
 
 .. note::
 
-  This section uses features available in Citus Cloud and Citus Enterprise, and will not work in the community edition.
+  This section uses features available only in Citus Cloud and Citus Enterprise.
 
 The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However, users often have two questions. The first is what will happen to their largest tenant if it grows too big. The second is what are the performance implications of hosting a large tenant together with small ones on a single worker node, and what can be done about it.
 
@@ -495,7 +483,7 @@ Regarding the first question, investigating data from large SaaS sites reveals t
 
 .. image:: ../images/zipf.png
 
-For instance, in a database of 100 tenants, the largest is predicted to account for 23% of the data. In a more realistic example for a large SaaS company, if there are 10k tenants, the largest will account for ~2% of the data. Even at 10TB of data, the largest tenant will require 200GB, which can pretty easily fit on a single node.
+For instance, in a database of 100 tenants, the largest is predicted to account for about 20% of the data. In a more realistic example for a large SaaS company, if there are 10k tenants, the largest will account for around 2% of the data. Even at 10TB of data, the largest tenant will require 200GB, which can pretty easily fit on a single node.
 
 Another question is regarding performance when large and small tenants are on the same node. Standard shard rebalancing will improve overall performance but it may or may not improve the mixing of large and small tenants. The rebalancer simply distributes shards to equalize storage usage on nodes, without examining which tenants are allocated on each shard.
 
@@ -545,4 +533,6 @@ You can confirm the shard movement by querying :ref:`pg_dist_shard_placement <pl
 Where to Go From Here
 ---------------------
 
-With this, you now know how to use Citus to power your multi-tenant application for scalability. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`. To adjust a front-end application, specifically Ruby on Rails, read :ref:`rails_migration`. Finally, try :ref:`Citus Cloud <cloud_overview>`, the easiest way to manage a Citus cluster, available with discounted developer plan pricing.
+With this, you now know how to use Citus to power your multi-tenant application for scalability. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`.
+
+To adjust a front-end application, specifically Ruby on Rails, read :ref:`rails_migration`. Finally, try :ref:`Citus Cloud <cloud_overview>`, the easiest way to manage a Citus cluster, available with discounted developer plan pricing.
