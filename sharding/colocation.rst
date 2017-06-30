@@ -7,6 +7,8 @@ Relational databases are the first choice of data store for many applications du
 
 The principle of data co-location is that all tables in the database have a common distribution column and are sharded across machines in the same way, such that rows with the same distribution column value are always on the same machine, even across different tables. As long as the distribution column provides a meaningful grouping of data, relational operations can be performed within the groups.
 
+.. _hash_space:
+
 Data co-location in Citus for hash-distributed tables
 -----------------------------------------------------
 
