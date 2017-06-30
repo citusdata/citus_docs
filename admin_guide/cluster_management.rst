@@ -146,6 +146,8 @@ The new shard(s) are created on the same node as the shard(s) from which the ten
     'source_host', source_port,
     'dest_host', dest_port);
 
+Note that :code:`master_move_shard_placement` will also move any shards which are co-located with the specified one, to preserve their co-location.
+
 Running a Query on All Workers
 ##############################
 

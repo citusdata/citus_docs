@@ -68,9 +68,10 @@ topics.
    cloud/support.rst
 
 .. toctree::
-   :caption: Reference Architectures
+   :caption: Use-Case Guides
 
-   ref_arch/real_time_dashboards.rst
+   use_case_guide/multi_tenant.rst
+   use_case_guide/real_time_dashboards.rst
 
 .. toctree::
    :maxdepth: 1
