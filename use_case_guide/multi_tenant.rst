@@ -438,19 +438,11 @@ First log in to the `Citus Console <https://console.citusdata.com/>`_ and open t
 
 .. image:: ../images/cloud-formation-configuration.png
 
-To add nodes, click "Change node count and size." A slider will appear for both the count and size. In this section we'll be changing only the count. You can learn more about other options in the [Cloud Scaling] section.
+To add nodes, click "Change node count and size." A slider will appear for both the count and size. For this section we'll be changing only the count.
 
-.. image:: ../images/cloud-nodes-slider.png
+Follow the instructions in :ref:`Cloud Scaling <cloud_scaling>` to add one more node to your cluster.
 
-Drag the slider to increase node count by one, and click "Resize Formation." While the node is added the Cloud Console will display a message at the top of the screen:
-
-.. image:: ../images/cloud-change-progress.png
-
-.. note::
-
-  Don't forget that even when this process finishes there is more to do! The new node will be available in the system, but at this point no tenants are stored on it so **Citus will not yet run any queries there**. Below we'll explore how to move existing data to the new nodes.
-
-Node addition takes around five minutes. Refresh the browser until the change-in-progress message disappears. Next select the "Nodes" tab in the Cloud Console. You should see three nodes listed. Notice how the new node has no data on it (data size = 0 bytes).
+As the section about Cloud Scaling mentions, after the node is added there is more to do. The new node will be available in the system, but at this point no tenants are stored on it so **Citus will not yet run any queries there**. Below we'll explore how to move existing data to the new nodes.
 
 To bring the node into play we can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node. Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the :code:`companies` table and it will take the hint and rebalance the other tables which are distributed by :code:`company_id`.
 
