@@ -230,7 +230,7 @@ The next step is loading sample data into the cluster from the command line.
 
 Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location. Back inside psql run this:
 
-.. code-block:: postgres
+.. code-block:: text
 
   \copy companies from 'companies.csv' with csv
   \copy campaigns from 'campaigns.csv' with csv
