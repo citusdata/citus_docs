@@ -69,11 +69,7 @@ data across your cluster after adding new worker nodes.
 
 .. NOTE::
 
-  Citus Cloud uses `streaming replication
-  <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high
-  availability and thus maintaining shard replicas would be redundant. In a
-  production environment, you should set ``citus.shard_replication_factor`` to 2
-  or higher for fault tolerance.
+  Citus Cloud uses `streaming replication <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high availability and thus maintaining shard replicas would be redundant. In any production environment where streaming replication is unavailable, you should set ``citus.shard_replication_factor`` to 2 or higher for fault tolerance.
 
 With this, the system is ready to accept data and serve queries! We've provided `a data
 ingest script
