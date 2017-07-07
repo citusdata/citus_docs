@@ -432,35 +432,20 @@ Being able to rebalance data in the Citus cluster allows you to grow your data s
 
 Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance.
 
-We're going to learn to add a new worker node to the Citus cluster and redistribute some of the data onto it for increased processing power.
+To scale out your Citus cluster, first add a new worker node to it. On Citus Cloud, you can use the slider present in the "Settings" tab, sliding it to add the required number of nodes. Alternately, if you run your own Citus installation, you can add nodes manually with the :ref:`master_add_node` UDF.
 
-First log in to the `Citus Console <https://console.citusdata.com/>`_ and open the "Settings" tab. If you are using a "Customized Plan" on Cloud, you will see the current number of worker nodes and their RAM capacity:
+.. image:: ../images/cloud-nodes-slider.png
 
-.. image:: ../images/cloud-formation-configuration.png
+Once you add the node it will be available in the system. However at this point no tenants are stored on it and Citus will not yet run any queries there. To move your existing data, you can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node.
 
-To add nodes, click "Change node count and size." A slider will appear for both the count and size. For this section we'll be changing only the count.
-
-Follow the instructions in :ref:`Cloud Scaling <cloud_scaling>` to add one more node to your cluster.
-
-As the section about Cloud Scaling mentions, after the node is added there is more to do. The new node will be available in the system, but at this point no tenants are stored on it so **Citus will not yet run any queries there**. Below we'll explore how to move existing data to the new nodes.
-
-To bring the node into play we can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node. Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the :code:`companies` table and it will take the hint and rebalance the other tables which are distributed by :code:`company_id`.
-
-Applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight.
-
-::
-
-  -- Spread data evenly between the nodes
+.. code-block:: postgres
 
   SELECT rebalance_table_shards('companies');
 
-As it executes, the command outputs notices of each shard it moves:
+Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the companies table and it will take the hint and rebalance the other tables which are distributed by company_id. Also, applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight.
 
-.. code-block:: text
+You can learn more about how shard rebalancing works here: :ref:`scaling_out`.
 
-  NOTICE:  00000: Moving shard [id] from [host:port] to [host:port] ...
-
-Refreshing the Nodes tab in the Cloud Console shows that the new node now contains data! It can now help processing requests for some of the tenants.
 
 Dealing with Big Tenants
 ------------------------
