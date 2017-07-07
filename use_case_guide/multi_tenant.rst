@@ -9,7 +9,7 @@ Multi-tenant Applications
 
 If you're building a Software-as-a-service (SaaS) application, you probably already have the notion of tenancy built into your data model. Typically, most information relates to tenants / customers / accounts and the database tables capture this natural relation.
 
-For SaaS applications, each tenant's data can be isolated and kept invisible from other tenants. This is efficient in three ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently. Last, it is much simpler to manage a single database for all tenants than a different database server for each tenant.
+For SaaS applications, each tenant's data can be stored together in a single database instance and kept isolated and invisible from other tenants. This is efficient in three ways. First application improvements apply to all clients. Second, sharing a database between tenants uses hardware efficiently. Last, it is much simpler to manage a single database for all tenants than a different database server for each tenant.
 
 However, a single relational database instance has traditionally had trouble scaling to the volume of data needed for a large multi-tenant application. Developers were forced to relinquish the benefits of the relational model when data exceeded the capacity of a single database node.
 
@@ -104,7 +104,7 @@ Preparing Tables and Ingesting Data
 
 In the previous section we identified the correct distribution column for our multi-tenant application: the company id. Even in a single-machine database it can be useful to denormalize tables with the addition of company id, whether it be for row-level security or for additional indexing. The extra benefit, as we saw, is that including the extra column helps for multi-machine scaling as well.
 
-The schema we have created so far uses a separate :code:`id` column as primary key for each table. Citus requires that primary and foreign key constraints include the distribution column. This requirement makes enforcing these constraints much more efficient in a distributed environment.
+The schema we have created so far uses a separate :code:`id` column as primary key for each table. Citus requires that primary and foreign key constraints include the distribution column. This requirement makes enforcing these constraints much more efficient in a distributed environment as only a single node has to be checked to guarantee them.
 
 In SQL, this requirement translates to making primary and foreign keys composite by including :code:`company_id`. This is compatible with the multi-tenant case because what we really need there is to ensure uniqueness on a per-tenant basis.
 
@@ -230,7 +230,7 @@ The next step is loading sample data into the cluster from the command line.
 
 Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location. Back inside psql run this:
 
-.. code-block:: psql
+.. code-block:: text
 
   \copy companies from 'companies.csv' with csv
   \copy campaigns from 'campaigns.csv' with csv
@@ -396,7 +396,7 @@ Suppose company five includes information in the field to track whether the user
   GROUP BY user_data->>'is_mobile'
   ORDER BY count DESC;
 
-The database administrator can even create a `partial index <https://www.postgresql.org/docs/current/static/indexes-partial.html>`_ to improve speed for an individual tenant's query patterns. Here is one to improve company 5's filters for browser information:
+The database administrator can even create a `partial index <https://www.postgresql.org/docs/current/static/indexes-partial.html>`_ to improve speed for an individual tenant's query patterns. Here is one to improve company 5's filters for clicks from users on mobile devices:
 
 .. code-block:: postgresql
 
@@ -432,43 +432,20 @@ Being able to rebalance data in the Citus cluster allows you to grow your data s
 
 Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance.
 
-We're going to learn to add a new worker node to the Citus cluster and redistribute some of the data onto it for increased processing power.
-
-First log in to the `Citus Console <https://console.citusdata.com/>`_ and open the "Settings" tab. If you are using a "Customized Plan" on Cloud, you will see the current number of worker nodes and their RAM capacity:
-
-.. image:: ../images/cloud-formation-configuration.png
-
-To add nodes, click "Change node count and size." A slider will appear for both the count and size. In this section we'll be changing only the count. You can learn more about other options in the [Cloud Scaling] section.
+To scale out your Citus cluster, first add a new worker node to it. On Citus Cloud, you can use the slider present in the "Settings" tab, sliding it to add the required number of nodes. Alternately, if you run your own Citus installation, you can add nodes manually with the :ref:`master_add_node` UDF.
 
 .. image:: ../images/cloud-nodes-slider.png
 
-Drag the slider to increase node count by one, and click "Resize Formation." While the node is added the Cloud Console will display a message at the top of the screen:
+Once you add the node it will be available in the system. However at this point no tenants are stored on it and Citus will not yet run any queries there. To move your existing data, you can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node.
 
-.. image:: ../images/cloud-change-progress.png
-
-.. note::
-
-  Don't forget that even when this process finishes there is more to do! The new node will be available in the system, but at this point no tenants are stored on it so **Citus will not yet run any queries there**. Below we'll explore how to move existing data to the new nodes.
-
-Node addition takes around five minutes. Refresh the browser until the change-in-progress message disappears. Next select the "Nodes" tab in the Cloud Console. You should see three nodes listed. Notice how the new node has no data on it (data size = 0 bytes).
-
-To bring the node into play we can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node. Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the :code:`companies` table and it will take the hint and rebalance the other tables which are distributed by :code:`company_id`.
-
-Applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight.
-
-::
-
-  -- Spread data evenly between the nodes
+.. code-block:: postgres
 
   SELECT rebalance_table_shards('companies');
 
-As it executes, the command outputs notices of each shard it moves:
+Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the companies table and it will take the hint and rebalance the other tables which are distributed by company_id. Also, applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight.
 
-.. code-block:: text
+You can learn more about how shard rebalancing works here: :ref:`scaling_out`.
 
-  NOTICE:  00000: Moving shard [id] from [host:port] to [host:port] ...
-
-Refreshing the Nodes tab in the Cloud Console shows that the new node now contains data! It can now help processing requests for some of the tenants.
 
 Dealing with Big Tenants
 ------------------------

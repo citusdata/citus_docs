@@ -1,3 +1,5 @@
+.. _cloud_scaling:
+
 Scaling
 #######
 
@@ -37,6 +39,8 @@ Scaling Up (increasing node size)
 ---------------------------------
 
 Resizing node size works by creating a PostgreSQL follower for each node, where the followers are provisioned with the desired amount of RAM and CPU cores. It takes an average of forty minutes per hundred gigabytes of data for the primary nodes' data to be fully synchronized on the followers. After the synchronization is complete, Citus Cloud does a quick switchover from the existing primary nodes to their followers which takes about two minutes. The creation and switchover process uses the same well-tested replication mechanism that powers Cloud's :ref:`ha` feature. During the switchover period clients may experience errors and have to retry queries, especially cross-tenant queries hitting multiple nodes.
+
+.. _scaling_out:
 
 Scaling Out (adding new nodes)
 ------------------------------
