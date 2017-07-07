@@ -163,8 +163,11 @@ The :ref:`configuration parameter section <multi_task_logging>` has more info on
 
 .. _rails_migration:
 
-App Migration (Ruby on Rails)
------------------------------
+App Migration
+-------------
+
+Ruby on Rails
+~~~~~~~~~~~~~
 
 Above, we discussed the framework-agnostic database changes required
 for using Citus in the multi-tenant use case. This section investigates
@@ -182,7 +185,7 @@ for the particular use-case of a distributed multi-tenant database like
 Citus.
 
 Preparing to scale-out a multi-tenant application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*************************************************
 
 Initially you’ll often start out with all tenants placed on a single
 database node, and using a framework like Ruby on Rails and ActiveRecord
@@ -279,7 +282,7 @@ the system individually and asking the shard whether it knows the given
 object\_id.
 
 Updating the Rails Application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+******************************
 
 You can get started by including ``gem 'activerecord-multi-tenant'``
 into your Gemfile, running ``bundle install``, and then annotating your
@@ -370,7 +373,7 @@ that the primary key includes the tenant\_id column, as well as
 to multiple nodes.
 
 Example Application
-~~~~~~~~~~~~~~~~~~~
+*******************
 
 If you are interested in a more complete
 example, check out our `reference app
@@ -383,6 +386,11 @@ As you can see in the screenshot, most data is associated to the
 currently logged in customer - even though this is complex analytical
 data, all data is accessed in the context of a single customer or
 tenant.
+
+Django
+~~~~~~
+
+Foo
 
 Real-Time Analytics Data Model
 ==============================
