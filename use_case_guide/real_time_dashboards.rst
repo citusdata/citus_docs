@@ -56,8 +56,6 @@ to demonstrate the overall architecture; a real system might use additional colu
     response_time_msec INT
   );
 
-  SET citus.shard_replication_factor = 2;
-
   SELECT create_distributed_table('http_request', 'site_id');
 
 When we call :ref:`create_distributed_table <create_distributed_table>`
@@ -69,16 +67,9 @@ recommend :ref:`using 2-4x as many shards <faq_choose_shard_count>` as
 CPU cores in your cluster. Using this many shards lets you rebalance
 data across your cluster after adding new worker nodes.
 
-Using a replication factor of 2 means every shard is held on multiple workers. When a
-worker fails the coordinator will prevent downtime by serving queries for that worker's shards
-using the other replicas.
-
 .. NOTE::
 
-  In Citus Cloud you must use a replication factor of 1 (instead of the 2 used here). As
-  Citus Cloud uses `streaming replication
-  <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high
-  availability maintaining shard replicas would be redundant.
+  Citus Cloud uses `streaming replication <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high availability and thus maintaining shard replicas would be redundant. In any production environment where streaming replication is unavailable, you should set ``citus.shard_replication_factor`` to 2 or higher for fault tolerance.
 
 With this, the system is ready to accept data and serve queries! We've provided `a data
 ingest script
