@@ -29,7 +29,10 @@ External Log Destinations
 For anything more than a quick look at your logs, we recommend setting up an external provider as a log destination. Through this method you'll receive
 all logs using the Syslog protocol, and can analyze and retain them according to your own preferences.
 
-As an example, the process for setting up Papertrail, a common log provider, goes like this:
+Papertrail
+~~~~~~~~~~
+
+The process for setting up Papertrail, a common log provider, goes like this:
 
 1. Determine Syslog host and port number (note that Citus only supports providers that can accept incoming Syslog data)
 
@@ -43,20 +46,18 @@ For Papertrail leave Message Template empty. Other providers might require a tok
 
 3. After creation, it might take up to 5 minutes for logging to be configured. You'll then see it show up in your favorite provider's dashboard.
 
+Loggly
+~~~~~~
 
-Supported External Providers
-----------------------------
+Sumologic
+~~~~~~~~~
 
-Papertrail
+Logentries
 ~~~~~~~~~~
 
 
-
-We're currently testing with these providers:
-
-* Papertrail
-* Splunk Enterprise
-* Loggly
+Other
+~~~~~
 
 We likely also support other providers that can receive syslog. Please reach out if you encounter any issues.
 
