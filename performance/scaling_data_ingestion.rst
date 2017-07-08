@@ -17,13 +17,28 @@ Insert Throughput
 
 To measure data ingest rates with Citus, we use a standard tool called pgbench and provide repeatable benchmarking steps.
 
-We also used these steps to run pgbench across different Citus Cloud formations on AWS and observed the following ingest rates for transactional INSERT statements. It's worth noting that we didn't apply any particular optimizations when running these benchmarks; and you can get higher ingest ratios by tuning your database setup.
+We also used these steps to run pgbench across different Citus Cloud formations on AWS and observed the following ingest rates for transactional INSERT statements. For these benchmark results, we used Citus Cloud formations' default configuration, and set pgbench's concurrent thread count to 64 and client count to 256. We didn't apply any optimizations to improve performance numbers; and you can get higher ingest ratios by tuning your database setup.
 
-
+<table>
+<thead>
+  <tr>Coordinator Node</tr>
+  <tr>Worker Nodes</tr>
+  <tr>Latency (ms)</tr>
+  <tr>Transactions per second</tr>
+</thead>
+<tbody>
+<tr><td>2 cores - 7.5GB RAM</td><td>2 * (1 core - 15GB RAM)</td><td>28.5</td><td>9,000</td></tr>
+<tr><td>4 cores - 15GB RAM</td><td>2 * (1 core - 15GB RAM)</td><td>15.3</td><td>16,600</td></tr>
+<tr><td>8 cores - 30GB RAM</td><td>2 * (1 core - 15GB RAM)</td><td>15.2</td><td>16,700</td></tr>
+<tr><td>8 cores - 30GB RAM</td><td>4 * (1 core - 15GB RAM)</td><td>8.6</td><td>29,600</td></tr>
+</tbody>
+</table>
 
 We have three observations following from these benchmark numbers. First, the top row shows performance numbers for an entry level Citus cluster with one c4.xlarge (two cpu cores) as the coordinator and two r4.large (one cpu core each) as worker nodes. This basic cluster can deliver 9,000 INSERTs per second, or 775 million transactional INSERT statements per day.
 
-Second, a more powerful Citus cluster that has about four times the CPU capacity can deliver 32K INSERTs per second, or 2.75 billion INSERT statements per day. Third, across all data ingest benchmarks, the network latency becomes the primary performance bottleneck. In a production environment with hundreds of tables and indexes, this bottleneck will likely shift to a different resource.
+Second, a more powerful Citus cluster that has about four times the CPU capacity can deliver 30K INSERTs per second, or 2.75 billion INSERT statements per day.
+
+Third, across all data ingest benchmarks, the network latency combined with the number of concurrent connections PostgreSQL can efficiently handle, becomes the  performance bottleneck. In a production environment with hundreds of tables and indexes, this bottleneck will likely shift to a different resource.
 
 Update Througput
 ~~~~~~~~~~~~~~~~
