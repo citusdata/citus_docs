@@ -10,7 +10,6 @@ To create a distributed table, you need to first define the table schema. To do 
 
 ::
 
-    psql -h localhost -d postgres
     CREATE TABLE github_events
     (
     	event_id bigint,
