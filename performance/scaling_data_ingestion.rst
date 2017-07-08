@@ -98,7 +98,7 @@ In psql, the \\COPY command can be used to load data from the local machine. The
 
 A powerful feature of COPY for distributed tables is that it asynchronously copies data to the workers over many parallel connections, one for each shard placement. This means that data can be ingested using multiple workers and multiple cores in parallel. Especially when there are expensive indexes such as a GIN, this can lead to major performance boosts over ingesting into a regular PostgreSQL table.
 
-From a throughput standpoint, you can expect data ingest ratios of 250K - 2M rows per second when using COPY. To learn more about COPY performance across different scenarios, please refer to the [following blog post](https://www.citusdata.com/blog/2016/06/15/copy-postgresql-distributed-tables).
+From a throughput standpoint, you can expect data ingest ratios of 250K - 2M rows per second when using COPY. To learn more about COPY performance across different scenarios, please refer to the `following blog post <https://www.citusdata.com/blog/2016/06/15/copy-postgresql-distributed-tables>`_.
 
 .. note::
 
