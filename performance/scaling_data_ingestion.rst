@@ -45,13 +45,13 @@ To measure UPDATE throughputs with Citus, we used the same benchmarking steps fr
 +---------------------+-------------------------+---------------+----------------------+
 | Coordinator Node    | Worker Nodes            | Latency (ms)  | Transactions per sec |
 +=====================+=========================+===============+======================+
-| 2 cores - 7.5GB RAM | 2 * (1 core - 15GB RAM) |          14.2 |                9,000 |
+| 2 cores - 7.5GB RAM | 2 * (1 core - 15GB RAM) |          25.0 |               10,200 |
 +---------------------+-------------------------+---------------+----------------------+
-| 4 cores -  15GB RAM | 2 * (1 core - 15GB RAM) |          10.0 |               12,800 |
+| 4 cores -  15GB RAM | 2 * (1 core - 15GB RAM) |          19.6 |               13,000 |
 +---------------------+-------------------------+---------------+----------------------+
-| 8 cores -  30GB RAM | 2 * (1 core - 15GB RAM) |          10.0 |               13,000 |
+| 8 cores -  30GB RAM | 2 * (1 core - 15GB RAM) |          20.3 |               12,600 |
 +---------------------+-------------------------+---------------+----------------------+
-| 8 cores -  30GB RAM | 4 * (1 core - 15GB RAM) |           8.6 |               23,800 |
+| 8 cores -  30GB RAM | 4 * (1 core - 15GB RAM) |          10.7 |               23,900 |
 +---------------------+-------------------------+---------------+----------------------+
 
 These benchmark numbers show that Citus's UPDATE throughput is slightly lower than those of INSERTs. This is because pgbench creates a primary key index for UPDATE statements and an UPDATE incurs more work on the worker nodes. It's also worth noting two additional differences between INSERT and UPDATEs.
