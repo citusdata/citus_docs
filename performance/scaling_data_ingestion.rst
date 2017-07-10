@@ -3,14 +3,14 @@
 Scaling Out Data Ingestion
 ##########################
 
-Citus lets you scale out data ingestion to very high rates, but there are several trade-offs to consider in terms of application integration, throughput, and latency. In this section, we discuss different approaches to data ingestion and provide guidelines for expected throughput and latency numbers.
+Citus lets you scale out data ingestion to very high rates, but there are several trade-offs to consider in terms of application integration, throughput, and latency. In this section, we discuss different approaches to data ingestion, and provide guidelines for expected throughput and latency numbers.
 
 Real-time Insert and Updates
 ----------------------------
 
-On the Citus coordinator, you can perform INSERT, INSERT .. ON CONFLICT, UPDATE, and DELETE commands directly on distributed tables. When you issue these standalone commands, the changes are immediately visible to the user.
+On the Citus coordinator, you can perform INSERT, INSERT .. ON CONFLICT, UPDATE, and DELETE commands directly on distributed tables. When you issue one of these commands, the changes are immediately visible to the user.
 
-When you run an INSERT (or another standalone command), Citus first finds the right shard placements based on the value in the distribution column. Citus then connects to the worker nodes storing the shard placements, and finally performs an INSERT on each of them. From the perspective of the user, the INSERT takes several milliseconds to process because of the network latency to worker nodes. The Citus coordinator node however can process concurrent INSERTs to reach high throughputs.
+When you run an INSERT (or another ingest command), Citus first finds the right shard placements based on the value in the distribution column. Citus then connects to the worker nodes storing the shard placements, and performs an INSERT on each of them. From the perspective of the user, the INSERT takes several milliseconds to process because of the network latency to worker nodes. The Citus coordinator node however can process concurrent INSERTs to reach high throughputs.
 
 Insert Throughput
 ~~~~~~~~~~~~~~~~~
@@ -31,7 +31,7 @@ We also used these steps to run pgbench across different Citus Cloud formations 
 | 8 cores -  30GB RAM | 4 * (1 core - 15GB RAM) |           8.6 |               29,600 |
 +---------------------+-------------------------+---------------+----------------------+
 
-We have three observations following from these benchmark numbers. First, the top row shows performance numbers for an entry level Citus cluster with one c4.xlarge (two cpu cores) as the coordinator and two r4.large (one cpu core each) as worker nodes. This basic cluster can deliver 9,000 INSERTs per second, or 775 million transactional INSERT statements per day.
+We have three observations that follow from these benchmark numbers. First, the top row shows performance numbers for an entry level Citus cluster with one c4.xlarge (two physical cpu cores) as the coordinator and two r4.large (one physical cpu core each) as worker nodes. This basic cluster can deliver 9,000 INSERTs per second, or 775 million transactional INSERT statements per day.
 
 Second, a more powerful Citus cluster that has about four times the CPU capacity can deliver 30K INSERTs per second, or 2.75 billion INSERT statements per day.
 
@@ -42,8 +42,21 @@ Update Througput
 
 To measure UPDATE throughputs with Citus, we used the same benchmarking steps from above and ran pgbench across different Citus Cloud formations on AWS.
 
++---------------------+-------------------------+---------------+----------------------+
+| Coordinator Node    | Worker Nodes            | Latency (ms)  | Transactions per sec |
++=====================+=========================+===============+======================+
+| 2 cores - 7.5GB RAM | 2 * (1 core - 15GB RAM) |          14.2 |                9,000 |
++---------------------+-------------------------+---------------+----------------------+
+| 4 cores -  15GB RAM | 2 * (1 core - 15GB RAM) |          10.0 |               12,800 |
++---------------------+-------------------------+---------------+----------------------+
+| 8 cores -  30GB RAM | 2 * (1 core - 15GB RAM) |          10.0 |               13,000 |
++---------------------+-------------------------+---------------+----------------------+
+| 8 cores -  30GB RAM | 4 * (1 core - 15GB RAM) |           8.6 |               23,800 |
++---------------------+-------------------------+---------------+----------------------+
 
-These benchmark numbers show that Citus' transactional throughput is similar across INSERT and UPDATE statements. However, it's worth noting two differences between INSERT and UPDATEs. First, UPDATE statements cause bloat in the database and VACUUM needs to run regularly to clean up this bloat. In Citus, since VACUUM runs in parallel across worker nodes, your production workloads are less likely to be impacted by VACUUM.
+These benchmark numbers show that Citus's UPDATE throughput is slightly lower than those of INSERTs. This is because pgbench creates a primary key index for UPDATE statements and an UPDATE incurs more work on the worker nodes. It's also worth noting two additional differences between INSERT and UPDATEs.
+
+First, UPDATE statements cause bloat in the database and VACUUM needs to run regularly to clean up this bloat. In Citus, since VACUUM runs in parallel across worker nodes, your workloads are less likely to be impacted by VACUUM.
 
 Second, these benchmark numbers show UPDATE throughput for standard Citus deployments. If you're on the Citus community edition, using statement-based replication, and you increased the default replication factor to 2, you're going to observe lower UPDATE throughputs. For this particular setting, Citus comes with additional configuration (citus.all_modifications_commutative) that may increase UPDATE ratios.
 
@@ -54,14 +67,14 @@ When you're running transactional write benchmarks on a moderately sized Citus c
 
 * Check the network latency between your application and your database. High latencies will impact your write throughput.
 * Ingest data using concurrent threads. If the roundtrip latency during an INSERT is 4ms, you can process 250 INSERTs/second over one thread. If you run 100 concurrent threads, you will see your write throughput increase with the number of threads.
-* Check whether the nodes in your cluster have CPU or disk bottlenecks. Inserted data passes through the coordinator node, so check whether your coordinator is bottlenecked on CPU.
+* Check whether the nodes in your cluster have CPU or disk bottlenecks. Ingested data passes through the coordinator node, so check whether your coordinator is bottlenecked on CPU.
 * Avoid closing connections between INSERT statements. This avoids the overhead of connection setup.
 * Remember that column size will affect insert speed. Rows with big JSON blobs will take longer than those with small columns like integers.
 
 Insert and Update: Latency
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The benefit of running INSERT, INSERT .. ON CONFLICT, UPDATE, or DELETE commands is that changes are immediately visible to other queries. For example, when you issue an INSERT, the Citus coordinator node routes the INSERT to related worker node(s). The coordinator node also keeps connections to the workers open within the same session, which means subsequent commands will see lower response times.
+The benefit of running INSERT, INSERT .. ON CONFLICT, UPDATE, or DELETE commands is that changes are immediately visible to other queries. When you issue an INSERT or UPDATE command, the Citus coordinator node routes this command to related worker node(s). The coordinator node also keeps connections to the workers open within the same session, which means subsequent commands will see lower response times.
 
 ::
 
