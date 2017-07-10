@@ -3,13 +3,6 @@
 Creating and Modifying Distributed Tables (DDL)
 ###############################################
 
-.. note::
-    The instructions below assume that the PostgreSQL installation is in your path. If not, you will need to add it to your PATH environment variable. For example:
-
-    ::
-
-        export PATH=/usr/lib/postgresql/9.6/:$PATH
-
 Creating And Distributing Tables
 --------------------------------
 
@@ -17,7 +10,6 @@ To create a distributed table, you need to first define the table schema. To do 
 
 ::
 
-    psql -h localhost -d postgres
     CREATE TABLE github_events
     (
     	event_id bigint,
