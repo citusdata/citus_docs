@@ -394,6 +394,9 @@ Before:
 
 .. code-block:: python
 
+  from django.utils import timezone
+  from django.db import models
+
   class Store(models.Model):
       name = models.CharField(max_length=255)
       url = models.URLField()
@@ -403,63 +406,113 @@ Before:
       description = models.TextField()
       price = models.DecimalField(max_digits=6, decimal_places=2),
       quantity = models.IntegerField()
-      store = models.ForeignKey(
-          Store,
-          on_delete=models.PROTECT
-      )
+      store = models.ForeignKey(Store)
 
   class Purchase(models.Model):
       ordered_at = models.DateTimeField(default=timezone.now)
       billing_address = models.TextField()
       shipping_address = models.TextField()
 
-      product = models.ForeignKey(
-          Product,
-          on_delete=models.PROTECT
-      )
+      product = models.ForeignKey(Product)
 
 After:
 
 .. code-block:: python
+
+  from django.utils import timezone
+  from django.db import models
 
   class Store(models.Model):
     name = models.CharField(max_length=255)
     url = models.URLField()
 
   class Product(models.Model):
-    id = models.AutoField(primary_key=False)
-
     name = models.CharField(max_length=255)
     description = models.TextField()
-    price = MoneyField(
-      decimal_places=2,
-      default_currency='USD',
-      max_digits=11,
-    )
+    price = models.DecimalField(max_digits=6, decimal_places=2),
     quantity = models.IntegerField()
-    store = models.ForeignKey(
-      Store,
-      on_delete=models.PROTECT
-    )
+    store = models.ForeignKey(Store)
 
-    class Meta(object):
-      unique_together = ["id", "store"]
+    class Meta(object):                  # added
+      unique_together = ["id", "store"]  #
 
   class Purchase(models.Model):
-    id = models.AutoField(primary_key=False)
-
     ordered_at = models.DateTimeField(default=timezone.now)
     billing_address = models.TextField()
     shipping_address = models.TextField()
 
     product = models.ForeignKey(
       Product,
-      on_delete=models.PROTECT,
-      db_constraint=False
+      db_constraint=False,               # added
+      db_index=False                     #
+    )
+    store = models.ForeignKey(           # added
+      Store,                             #
+      db_constraint=False,               #
+      db_index=False,                    #
+      default=None                       #
     )
 
-    class Meta(object):
-      unique_together = ["id", "store"]
+    class Meta(object):                  # added
+      unique_together = ["id", "store"]  #
+
+Create a migration to reflect the change: :code:`./manage.py makemigrations`.
+
+Now make a custom migration for us to use to do low-level sql: :code:`./manage.py makemigrations --empty`. Edit the result to look like this:
+
+.. code-block:: python
+
+  from __future__ import unicode_literals
+  from django.db import migrations
+
+  class Migration(migrations.Migration):
+    dependencies = [
+      # Leave this as is.
+      # Should be all the migrations thus far ...
+    ]
+
+    operations = [
+      # Django considers "id" the primary key of these tables, but
+      # the database mustn't, because the primary key will be composite
+      migrations.RunSQL(
+        "ALTER TABLE appname_product DROP CONSTRAINT appname_product_pkey;",
+        "ALTER TABLE appname_product ADD CONSTRAINT PRIMARY KEY (id)",
+      ),
+      migrations.RunSQL(
+        "ALTER TABLE appname_purchase DROP CONSTRAINT appname_purchase_pkey;",
+        "ALTER TABLE appname_purchase ADD CONSTRAINT PRIMARY KEY (id)",
+      ),
+
+      # We have added store_id to purchases but the field is currently
+      # NULL. We need to "backfill" real values in it.
+      migrations.RunSQL(
+        """
+          UPDATE appname_purchase as pur
+          SET store_id = (
+            SELECT id
+            FROM appname_product
+            WHERE pur.product_id = id
+            LIMIT 1
+          )
+        """,
+        migrations.RunSQL.noop
+      ),
+
+      # Include store_id in composite foreign key between purchases and products
+      migrations.RunSQL(
+        """
+          ALTER TABLE appname_purchase
+          ADD CONSTRAINT appname_purchase_product_fk
+          FOREIGN KEY (store_id, product_id)
+          REFERENCES appname_product (store_id, id)
+          ON DELETE CASCADE;
+        """,
+        "ALTER TABLE appname_purchase DROP CONSTRAINT appname_purchase_product_fk"
+      ),
+    ]
+
+Make another custom migration to distribute the tables in Citus. This will not be undoable.
+
 
 Real-Time Analytics Data Model
 ==============================
