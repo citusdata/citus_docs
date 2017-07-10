@@ -390,7 +390,76 @@ tenant.
 Django
 ~~~~~~
 
-Foo
+Before:
+
+.. code-block:: python
+
+  class Store(models.Model):
+      name = models.CharField(max_length=255)
+      url = models.URLField()
+
+  class Product(models.Model):
+      name = models.CharField(max_length=255)
+      description = models.TextField()
+      price = models.DecimalField(max_digits=6, decimal_places=2),
+      quantity = models.IntegerField()
+      store = models.ForeignKey(
+          Store,
+          on_delete=models.PROTECT
+      )
+
+  class Purchase(models.Model):
+      ordered_at = models.DateTimeField(default=timezone.now)
+      billing_address = models.TextField()
+      shipping_address = models.TextField()
+
+      product = models.ForeignKey(
+          Product,
+          on_delete=models.PROTECT
+      )
+
+After:
+
+.. code-block:: python
+
+  class Store(models.Model):
+    name = models.CharField(max_length=255)
+    url = models.URLField()
+
+  class Product(models.Model):
+    id = models.AutoField(primary_key=False)
+
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    price = MoneyField(
+      decimal_places=2,
+      default_currency='USD',
+      max_digits=11,
+    )
+    quantity = models.IntegerField()
+    store = models.ForeignKey(
+      Store,
+      on_delete=models.PROTECT
+    )
+
+    class Meta(object):
+      unique_together = ["id", "store"]
+
+  class Purchase(models.Model):
+    id = models.AutoField(primary_key=False)
+
+    ordered_at = models.DateTimeField(default=timezone.now)
+    billing_address = models.TextField()
+    shipping_address = models.TextField()
+
+    product = models.ForeignKey(
+      Product,
+      on_delete=models.PROTECT,
+      db_constraint=False
+    )
+
+    class Meta(object):
+      unique_together = ["id", "store"]
 
 Real-Time Analytics Data Model
 ==============================
