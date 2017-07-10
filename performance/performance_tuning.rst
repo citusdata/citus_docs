@@ -103,7 +103,7 @@ Once you have tuned a worker to your satisfaction you will have to manually appl
 
   SET citus.explain_all_tasks = 1;
 
-This will cause EXPLAIN to show the the query plan for all tasks, not just one.
+This will cause EXPLAIN to show the query plan for all tasks, not just one.
 
 .. code-block:: postgresql
 
