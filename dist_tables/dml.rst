@@ -33,12 +33,24 @@ First download our example github_events dataset by running:
     wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
     gzip -d github_events-2015-01-01-*.gz
 
-
 Then, you can copy the data using psql:
 
 .. code-block:: psql
 
     \COPY github_events FROM 'github_events-2015-01-01-0.csv' WITH (format CSV)
+
+.. note::
+
+  Inserting multiple rows directly from literal SQL values is not yet supported. Statements such as the following will not work.
+
+  .. code-block:: postgresql
+
+    -- Not supported in the current Citus version
+
+    INSERT INTO table_name (col_a, col_b)
+      VALUES (a, b), (x, y), (u, v);
+
+  Use the :code:`\COPY` discussed earlier as a workaround.
 
 .. note::
 
