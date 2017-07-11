@@ -15,7 +15,7 @@ When you run an INSERT (or another ingest command), Citus first finds the right 
 Insert Throughput
 ~~~~~~~~~~~~~~~~~
 
-To measure data ingest rates with Citus, we use a standard tool called pgbench and provide repeatable benchmarking steps.
+To measure data ingest rates with Citus, we use a standard tool called pgbench and provide `repeatable benchmarking steps <_citus_write_throughput_benchmark>`.
 
 We also used these steps to run pgbench across different Citus Cloud formations on AWS and observed the following ingest rates for transactional INSERT statements. For these benchmark results, we used Citus Cloud formations' default configuration, and set pgbench's concurrent thread count to 64 and client count to 256. We didn't apply any optimizations to improve performance numbers; and you can get higher ingest ratios by tuning your database setup.
 
@@ -40,7 +40,7 @@ Third, across all data ingest benchmarks, the network latency combined with the 
 Update Througput
 ~~~~~~~~~~~~~~~~
 
-To measure UPDATE throughputs with Citus, we used the same benchmarking steps from above and ran pgbench across different Citus Cloud formations on AWS.
+To measure UPDATE throughputs with Citus, we used the :ref:`same benchmarking steps <_citus_update_throughput_benchmark>` and ran pgbench across different Citus Cloud formations on AWS.
 
 +---------------------+-------------------------+---------------+----------------------+
 | Coordinator Node    | Worker Nodes            | Latency (ms)  | Transactions per sec |
