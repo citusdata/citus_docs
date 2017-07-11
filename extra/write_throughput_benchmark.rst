@@ -1,5 +1,7 @@
 :orphan:
 
+.. _citus_write_throughput_benchmark:
+
 Benchmark Setup with Citus and pgbench
 --------------------------------------
 
@@ -31,15 +33,15 @@ Install pgbench
 
 Once we create a new EC2 instance, we need to install pgbench on this instance.
 
-If you are running a Debian based system, please type:
+If you are running a **Debian** based system, please type::
 
-sudo apt-get update
-sudo apt-get install postgresql-contrib-9.5
+  sudo apt-get update
+  sudo apt-get install postgresql-contrib-9.5
 
-If you are running a RedHat based system, please type:
+If you are running a **RedHat** based system, please type::
 
-sudo yum update
-sudo yum install postgresql95-contrib
+  sudo yum update
+  sudo yum install postgresql95-contrib
 
 
 Benchmark INSERT Throughput
@@ -50,12 +52,12 @@ Initialize and Distribute Tables
 
 Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run INSERT tests on.
 
-To initialize the test environment and distribute the related table, we need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands:
+To initialize the test environment and distribute the related table, we need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands::
 
-pgbench -i connection_string_to_coordinator
-psql connection_string_to_coordinator
-
-psql=> SELECT create_distributed_table('pgbench_history', 'aid');
+  pgbench -i connection_string_to_coordinator
+  psql connection_string_to_coordinator
+  
+  psql=> SELECT create_distributed_table('pgbench_history', 'aid');
 
 
 Prepare SQL File to Run with pgbench
@@ -63,28 +65,30 @@ Prepare SQL File to Run with pgbench
 
 pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use the INSERT command that comes with the pgbench benchmark.
 
-To create the related SQL commands, create a file named insert.sql and pase the following lines into it:
+To create the related SQL commands, create a file named insert.sql and pase the following lines into it::
 
-\set nbranches :scale
-\set ntellers 10 * :scale
-\set naccounts 100000 * :scale
-\setrandom aid 1 :naccounts
-\setrandom bid 1 :nbranches
-\setrandom tid 1 :ntellers
-\setrandom delta -5000 5000
-INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);
+  \set nbranches :scale
+  \set ntellers 10 * :scale
+  \set naccounts 100000 * :scale
+  \setrandom aid 1 :naccounts
+  \setrandom bid 1 :nbranches
+  \setrandom tid 1 :ntellers
+  \setrandom delta -5000 5000
+  INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);
+
 
 Benchmark INSERT commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, pgbench opens a single connection to the database and sends INSERT commands through this connection. To benchmark write throughput, we're going to open parallel connections to the database and issue concurrent commands. In particular, we're going to use pgbench's -j parameter to specify the number of concurrent threads and -c parameter to specify the number of concurrent connections. We will also set the duration for our tests to 30 seconds using the -T parameter.
 
-To run pgbench with these parameters, simply type:
+To run pgbench with these parameters, simply type::
 
-pgbench connection_string_to_coordinator -j 64 -c 256 -f insert.sql -T 30
+  pgbench connection_string_to_coordinator -j 64 -c 256 -f insert.sql -T 30
 
 Please note that these parameters open 256 concurrent connections to Citus. If you're running Citus on your own instances, you will need to increase the default max_connections setting.
 
+.. _citus_update_throughput_benchmark:
 
 Benchmark UPDATE Throughput
 ---------------------------
@@ -94,13 +98,13 @@ Initialize and Distribute Tables
 
 Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run UPDATE tests on.
 
-To initialize the test environment and distribute the related table, we need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands:
+To initialize the test environment and distribute the related table, we need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands::
 
-pgbench -i connection_string_to_coordinator
-psql connection_string_to_coordinator
-
-psql=> /* INSERT and UPDATE tests run on different distributed tables */
-psql=> SELECT create_distributed_table('pgbench_accounts', 'aid');
+  pgbench -i connection_string_to_coordinator
+  psql connection_string_to_coordinator
+  
+  psql=> /* INSERT and UPDATE tests run on different distributed tables */
+  psql=> SELECT create_distributed_table('pgbench_accounts', 'aid');
 
 
 Prepare SQL File to Run with pgbench
@@ -108,12 +112,12 @@ Prepare SQL File to Run with pgbench
 
 pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use the INSERT command that comes with the pgbench benchmark.
 
-To create the related SQL commands, create a file named update.sql and pase the following lines into it:
+To create the related SQL commands, create a file named update.sql and pase the following lines into it::
 
-\set naccounts 100000 * :scale
-\setrandom aid 1 :naccounts
-\setrandom delta -5000 5000
-UPDATE pgbench_accounts SET abalance = abalance + :delta WHERE aid = :aid;
+  \set naccounts 100000 * :scale
+  \setrandom aid 1 :naccounts
+  \setrandom delta -5000 5000
+  UPDATE pgbench_accounts SET abalance = abalance + :delta WHERE aid = :aid;
 
 
 Benchmark UPDATE commands
@@ -121,8 +125,8 @@ Benchmark UPDATE commands
 
 By default, pgbench opens a single connection to the database and sends INSERT commands through this connection. To benchmark write throughput, we're going to open parallel connections to the database and issue concurrent commands. In particular, we're going to use pgbench's -j parameter to specify the number of concurrent threads and -c parameter to specify the number of concurrent connections. We will also set the duration for our tests to 30 seconds using the -T parameter.
 
-To run pgbench with these parameters, simply type:
+To run pgbench with these parameters, simply type::
 
-pgbench connection_string_to_coordinator -j 64 -c 256 -f update.sql -T 30
+  pgbench connection_string_to_coordinator -j 64 -c 256 -f update.sql -T 30
 
 Please note that these parameters open 256 concurrent connections to Citus. If you're running Citus on your own instances, you will need to increase the default max_connections setting.
