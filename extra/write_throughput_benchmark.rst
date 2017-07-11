@@ -5,43 +5,43 @@
 Benchmark Setup with Citus and pgbench
 --------------------------------------
 
-In this section, we provide step by step instructions to benchmark Citus' write throughput. For these benchmark steps, we use `Citus Cloud <https://console.citusdata.com/users/sign_up>`_ to create test clusters, and a standard benchmarking tool called `pgbench  <https://www.postgresql.org/docs/current/static/pgbench.html>`_ to run write throughput tests.
+In this section, we provide step by step instructions to benchmark Citus' write throughput. For these benchmark steps, we use `Citus Cloud <https://console.citusdata.com/users/sign_up>`_ to create test clusters, and a standard benchmarking tool called `pgbench  <https://www.postgresql.org/docs/current/static/pgbench.html>`_.
 
 If you're interested in general throughput numbers based on these tests, you can also find them in :ref:`scaling_data_ingestion`.
 
 Create Citus Cluster
 ~~~~~~~~~~~~~~~~~~~~
 
-The easiest way to start a Citus Cluster is by vising the Citus Cloud dashboard. This dashboard allows you to choose different coordinator and worker node configurations and bills you by the hour. Once you picked your desired cluster setup, click on the "Create New Formation" button.
+The easiest way to start a Citus Cluster is by vising the Citus Cloud dashboard. This dashboard allows you to choose different coordinator and worker node configurations and charges you by the hour. Once you picked your desired cluster setup, click on the "Create New Formation" button.
 
 .. image:: ../images/cloud-coordinator-worker-slider.png
-  :scale: 60 %
+  :scale: 50 %
   :align: center
 
 A pop-up will ask you the AWS region (US East, US West) where your formation will be created. Please remember the region where you created your Citus Cloud formation. We will use it in the next step.
 
-If you're planning to run the following steps on your own cluster, please note that Citus Cloud automatically tunes your cluster based on the hardware configuration. For this benchmark, you will need to manully increase `max_connections = 303` across the coordinator and worker nodes.
+Please note that Citus Cloud automatically tunes your cluster based on your hardware configuration. If you're planning to run the following steps on your own cluster, you will need to manully increase :code:`max_connections = 303` on the coordinator and worker nodes.
 
 Create an Instance to Run pgbench
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-pgbench is standard utility provided by PostgreSQL to perform benchmarks. pgbench runs given SQL commands repeatedly and measures number of completed transactions per second.
+pgbench is standard benchmarking tool provided by PostgreSQL. pgbench runs given SQL commands repeatedly and measures number of completed transactions per second.
 
-Since pgbench itself uses some CPU power to execute SQL commands repeatedly, we recommend that you run pgbench on a separate machine than the one where the Citus cluster runs. This recommendation also follows pgbench's own documentation.
+Since pgbench itself uses some CPU power to execute SQL commands, we recommend that you run pgbench on a separate machine than the one where your Citus cluster runs. This recommendation also follows pgbench's documentation.
 
-Therefore, we're going to create a separate EC2 instance to run pgbench, and place the instance in the same EC2 region as our Citus cluster. We will also use a large EC2 (m4.16xlarge) instance to ensure pgbench itself doesn't become the bottleneck.
+In these tests, we're going to create a separate EC2 instance to run pgbench, and place the instance in the same AWS region as our Citus cluster. We will also use a large EC2 (m4.16xlarge) instance to ensure pgbench itself doesn't become the performance bottleneck.
 
 Install pgbench
 ~~~~~~~~~~~~~~~
 
 Once we create a new EC2 instance, we need to install pgbench on this instance.
 
-If you are running a **Debian** based system, please type::
+If you are running a **Debian** based system, simply type::
 
   sudo apt-get update
   sudo apt-get install postgresql-contrib-9.5
 
-If you are running a **RedHat** based system, please type::
+If you are running a **RedHat** based system, simply type::
 
   sudo yum update
   sudo yum install postgresql95-contrib
@@ -53,9 +53,9 @@ Benchmark INSERT Throughput
 Initialize and Distribute Tables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run INSERT tests on.
+Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run INSERT benchmarks on.
 
-To initialize the test environment and distribute the related table, we need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands::
+To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands::
 
   pgbench -i connection_string_to_coordinator
   psql connection_string_to_coordinator
@@ -63,12 +63,12 @@ To initialize the test environment and distribute the related table, we need to 
   psql=> SELECT create_distributed_table('pgbench_history', 'aid');
 
 
-Prepare SQL File to Run with pgbench
+Create SQL File for pgbench
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use the INSERT command that comes with the pgbench benchmark.
+pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use the INSERT command that comes with pgbench.
 
-To create the related SQL commands, create a file named insert.sql and pase the following lines into it::
+To create the related SQL commands, create a file named insert.sql and paste the following lines into it::
 
   \set nbranches :scale
   \set ntellers 10 * :scale
@@ -99,9 +99,9 @@ Benchmark UPDATE Throughput
 Initialize and Distribute Tables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run UPDATE tests on.
+Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run UPDATE benchmarks on.
 
-To initialize the test environment and distribute the related table, we need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands::
+To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands::
 
   pgbench -i connection_string_to_coordinator
   psql connection_string_to_coordinator
@@ -110,12 +110,12 @@ To initialize the test environment and distribute the related table, we need to 
   psql=> SELECT create_distributed_table('pgbench_accounts', 'aid');
 
 
-Prepare SQL File to Run with pgbench
+Create SQL File for pgbench
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use the INSERT command that comes with the pgbench benchmark.
+pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use one of the UPDATE commands that comes with pgbench.
 
-To create the related SQL commands, create a file named update.sql and pase the following lines into it::
+To create the related SQL commands, create a file named update.sql and paste the following lines into it::
 
   \set naccounts 100000 * :scale
   \setrandom aid 1 :naccounts
