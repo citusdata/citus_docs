@@ -513,6 +513,22 @@ Now make a custom migration for us to use to do low-level sql: :code:`./manage.p
 
 Make another custom migration to distribute the tables in Citus. This will not be undoable.
 
+.. code-block:: python
+
+  # as before, keep the structure of the migration the same, but use
+  # these operations
+  operations = [
+      migrations.RunSQL(
+        "SELECT create_distributed_table('appname_store','id')"
+      ),
+      migrations.RunSQL(
+        "SELECT create_distributed_table('appname_product','store_id')"
+      ),
+      migrations.RunSQL(
+        "SELECT create_distributed_table('appname_purchase','store_id')"
+      )
+  ]
+
 
 Real-Time Analytics Data Model
 ==============================
