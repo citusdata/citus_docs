@@ -15,7 +15,7 @@ When you run an INSERT (or another ingest command), Citus first finds the right 
 Insert Throughput
 ~~~~~~~~~~~~~~~~~
 
-To measure data ingest rates with Citus, we use a standard tool called pgbench and provide `repeatable benchmarking steps <_citus_write_throughput_benchmark>`.
+To measure data ingest rates with Citus, we use a standard tool called pgbench and provide :ref:`repeatable benchmarking steps <citus_write_throughput_benchmark>`.
 
 We also used these steps to run pgbench across different Citus Cloud formations on AWS and observed the following ingest rates for transactional INSERT statements. For these benchmark results, we used Citus Cloud formations' default configuration, and set pgbench's concurrent thread count to 64 and client count to 256. We didn't apply any optimizations to improve performance numbers; and you can get higher ingest ratios by tuning your database setup.
 
@@ -31,7 +31,7 @@ We also used these steps to run pgbench across different Citus Cloud formations 
 | 8 cores -  30GB RAM | 4 * (1 core - 15GB RAM) |           8.6 |               29,600 |
 +---------------------+-------------------------+---------------+----------------------+
 
-We have three observations that follow from these benchmark numbers. First, the top row shows performance numbers for an entry level Citus cluster with one c4.xlarge (two physical cpu cores) as the coordinator and two r4.large (one physical cpu core each) as worker nodes. This basic cluster can deliver 9,000 INSERTs per second, or 775 million transactional INSERT statements per day.
+We have three observations that follow from these benchmark numbers. First, the top row shows performance numbers for an entry level Citus cluster with one c4.xlarge (two physical cores) as the coordinator and two r4.large (one physical core each) as worker nodes. This basic cluster can deliver 9K INSERTs per second, or 775 million transactional INSERT statements per day.
 
 Second, a more powerful Citus cluster that has about four times the CPU capacity can deliver 30K INSERTs per second, or 2.75 billion INSERT statements per day.
 
@@ -40,7 +40,7 @@ Third, across all data ingest benchmarks, the network latency combined with the 
 Update Througput
 ~~~~~~~~~~~~~~~~
 
-To measure UPDATE throughputs with Citus, we used the :ref:`same benchmarking steps <_citus_update_throughput_benchmark>` and ran pgbench across different Citus Cloud formations on AWS.
+To measure UPDATE throughputs with Citus, we used the :ref:`same benchmarking steps <citus_update_throughput_benchmark>` and ran pgbench across different Citus Cloud formations on AWS.
 
 +---------------------+-------------------------+---------------+----------------------+
 | Coordinator Node    | Worker Nodes            | Latency (ms)  | Transactions per sec |
