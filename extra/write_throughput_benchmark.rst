@@ -20,16 +20,16 @@ The easiest way to start a Citus Cluster is by vising the Citus Cloud dashboard.
 
 A pop-up will ask you the AWS region (US East, US West) where your formation will be created. Please remember the region where you created your Citus Cloud formation. We will use it in the next step.
 
-Please note that Citus Cloud automatically tunes your cluster based on your hardware configuration. If you're planning to run the following steps on your own cluster, you will need to manully increase :code:`max_connections = 303` on the coordinator and worker nodes.
+Please note that Citus Cloud automatically tunes your cluster based on your hardware configuration. If you're planning to run the following steps on your own cluster, you will need to manully increase :code:`max_connections = 300` on the coordinator and worker nodes.
 
 Create an Instance to Run pgbench
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-pgbench is standard benchmarking tool provided by PostgreSQL. pgbench runs given SQL commands repeatedly and measures number of completed transactions per second.
+pgbench is a standard benchmarking tool provided by PostgreSQL. pgbench repeatedly runs given SQL commands and measures the number of completed transactions per second.
 
-Since pgbench itself uses some CPU power to execute SQL commands, we recommend that you run pgbench on a separate machine than the one where your Citus cluster runs. This recommendation also follows pgbench's documentation.
+Since pgbench itself consumes CPU power, we recommend running it on a separate machine than those running your Citus cluster. pgbench's own documentation also points out that putting it on the same machine as the tested database can skew test results.
 
-In these tests, we're going to create a separate EC2 instance to run pgbench, and place the instance in the same AWS region as our Citus cluster. We will also use a large EC2 (m4.16xlarge) instance to ensure pgbench itself doesn't become the performance bottleneck.
+In these tests, we're therefore going to create a separate EC2 instance to run pgbench, and place the instance in the same AWS region as our Citus cluster. We will also use a large EC2 (m4.16xlarge) instance to ensure pgbench itself doesn't become the performance bottleneck.
 
 Install pgbench
 ~~~~~~~~~~~~~~~
@@ -126,7 +126,7 @@ To create the related SQL commands, create a file named update.sql and paste the
 Benchmark UPDATE commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, pgbench opens a single connection to the database and sends INSERT commands through this connection. To benchmark write throughput, we're going to open parallel connections to the database and issue concurrent commands. In particular, we're going to use pgbench's -j parameter to specify the number of concurrent threads and -c parameter to specify the number of concurrent connections. We will also set the duration for our tests to 30 seconds using the -T parameter.
+By default, pgbench opens a single connection to the database and sends UPDATE commands through this connection. To benchmark write throughput, we're going to open parallel connections to the database and issue concurrent commands. In particular, we're going to use pgbench's -j parameter to specify the number of concurrent threads and -c parameter to specify the number of concurrent connections. We will also set the duration for our tests to 30 seconds using the -T parameter.
 
 To run pgbench with these parameters, simply type::
 
