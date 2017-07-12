@@ -17,7 +17,7 @@ Insert Throughput
 
 To measure data ingest rates with Citus, we use a standard tool called pgbench and provide :ref:`repeatable benchmarking steps <citus_write_throughput_benchmark>`.
 
-We also used these steps to run pgbench across different Citus Cloud formations on AWS and observed the following ingest rates for transactional INSERT statements. For these benchmark results, we used Citus Cloud formations' default configuration, and set pgbench's concurrent thread count to 64 and client count to 256. We didn't apply any optimizations to improve performance numbers; and you can get higher ingest ratios by tuning your database setup.
+We also used these steps to run pgbench across different Citus Cloud formations on AWS and observed the following ingest rates for transactional INSERT statements. For these benchmark results, we used the default configuration for Citus Cloud formations, and set pgbench's concurrent thread count to 64 and client count to 256. We didn't apply any optimizations to improve performance numbers; and you can get higher ingest ratios by tuning your database setup.
 
 +---------------------+-------------------------+---------------+----------------------+
 | Coordinator Node    | Worker Nodes            | Latency (ms)  | Transactions per sec |
@@ -79,7 +79,7 @@ The benefit of running INSERT, INSERT .. ON CONFLICT, UPDATE, or DELETE commands
 ::
 
     -- Set up a distributed table that keeps account history information
-    CREATE TABLE pgbench_history (tid int, bid int, aid int, delta int, mtime timestamp, filler char(22));
+    CREATE TABLE pgbench_history (tid int, bid int, aid int, delta int, mtime timestamp);
     SELECT create_distributed_table('pgbench_history', 'aid');
 
     -- Enable timing to see reponse times
