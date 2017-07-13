@@ -74,7 +74,7 @@ When you're running the above pgbench benchmarks on a moderately sized Citus clu
 Insert and Update: Latency
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The benefit of running INSERT, INSERT .. ON CONFLICT, UPDATE, or DELETE commands is that changes are immediately visible to other queries. When you issue an INSERT or UPDATE command, the Citus coordinator node routes this command to related worker node(s). The coordinator node also keeps connections to the workers open within the same session, which means subsequent commands will see lower response times.
+The benefit of running INSERT or UPDATE commands, compared to issuing bulk COPY commands, is that changes are immediately visible to other queries. When you issue an INSERT or UPDATE command, the Citus coordinator node directly routes this command to related worker node(s). The coordinator node also keeps connections to the workers open within the same session, which means subsequent commands will see lower response times.
 
 ::
 
