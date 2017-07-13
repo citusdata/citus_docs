@@ -55,12 +55,11 @@ Initialize and Distribute Tables
 
 Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run INSERT benchmarks on.
 
-To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands::
+To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following two commands::
 
   pgbench -i connection_string_to_coordinator
-  psql connection_string_to_coordinator
   
-  psql=> SELECT create_distributed_table('pgbench_history', 'aid');
+  psql connection_string_to_coordinator -c "SELECT create_distributed_table('pgbench_history', 'aid');"
 
 
 Create SQL File for pgbench
@@ -103,13 +102,12 @@ Initialize and Distribute Tables
 
 Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run UPDATE benchmarks on.
 
-To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following commands::
+To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following two commands::
 
   pgbench -i connection_string_to_coordinator
-  psql connection_string_to_coordinator
   
-  psql=> /* INSERT and UPDATE tests run on different distributed tables */
-  psql=> SELECT create_distributed_table('pgbench_accounts', 'aid');
+  # INSERT and UPDATE tests run on different distributed tables
+  psql connection_string_to_coordinator -c "SELECT create_distributed_table('pgbench_accounts', 'aid');"
 
 
 Create SQL File for pgbench
