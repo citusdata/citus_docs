@@ -67,10 +67,8 @@ Create SQL File for pgbench
 
 pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use the INSERT command that comes with pgbench.
 
-To create the related SQL commands, create a file named insert.sql and paste the following lines into it:
+To create the related SQL commands, create a file named insert.sql and paste the following lines into it::
 
-.. code-block:: postgresql
-  
   \set nbranches :scale
   \set ntellers 10 * :scale
   \set naccounts 100000 * :scale
@@ -115,9 +113,7 @@ Create SQL File for pgbench
 
 pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use one of the UPDATE commands that comes with pgbench.
 
-To create the related SQL commands, create a file named update.sql and paste the following lines into it:
-
-.. code-block:: postgresql
+To create the related SQL commands, create a file named update.sql and paste the following lines into it::
 
   \set naccounts 100000 * :scale
   \setrandom aid 1 :naccounts
