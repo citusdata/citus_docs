@@ -69,7 +69,7 @@ pgbench runs the given SQL commands repeatedly and reports results. For this ben
 
 To create the related SQL commands, create a file named insert.sql and paste the following lines into it:
 
-.. code-block:: psql
+.. code-block:: postgresql
   
   \set nbranches :scale
   \set ntellers 10 * :scale
@@ -117,7 +117,7 @@ pgbench runs the given SQL commands repeatedly and reports results. For this ben
 
 To create the related SQL commands, create a file named update.sql and paste the following lines into it:
 
-.. code-block:: psql
+.. code-block:: postgresql
 
   \set naccounts 100000 * :scale
   \setrandom aid 1 :naccounts
