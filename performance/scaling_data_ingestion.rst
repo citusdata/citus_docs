@@ -3,79 +3,119 @@
 Scaling Out Data Ingestion
 ##########################
 
-Citus lets you scale out data ingestion to very high rates, but there are several trade-offs to consider in terms of the throughput, durability, consistency and latency. In this section, we discuss several approaches to data ingestion and give examples of how to use them.
+Citus lets you scale out data ingestion to very high rates, but there are several trade-offs to consider in terms of application integration, throughput, and latency. In this section, we discuss different approaches to data ingestion, and provide guidelines for expected throughput and latency numbers.
 
-Real-time Inserts (0-50k/s)
----------------------------
+Real-time Insert and Updates
+----------------------------
 
-On the Citus coordinator, you can perform INSERT commands directly on hash distributed tables. The advantage of using INSERT is that the new data is immediately visible to SELECT queries, and durably stored on multiple replicas.
+On the Citus coordinator, you can perform INSERT, INSERT .. ON CONFLICT, UPDATE, and DELETE commands directly on distributed tables. When you issue one of these commands, the changes are immediately visible to the user.
 
-When processing an INSERT, Citus first finds the right shard placements based on the value in the distribution column, then it connects to the workers storing the shard placements, and finally performs an INSERT on each of them. From the perspective of the user, the INSERT takes several milliseconds to process because of the round-trips to the workers, but the coordinator can process other INSERTs in other sessions while waiting for a response. The coordinator also keeps connections to the workers open within the same session, which means subsequent queries will see lower response times.
+When you run an INSERT (or another ingest command), Citus first finds the right shard placements based on the value in the distribution column. Citus then connects to the worker nodes storing the shard placements, and performs an INSERT on each of them. From the perspective of the user, the INSERT takes several milliseconds to process because of the network latency to worker nodes. The Citus coordinator node however can process concurrent INSERTs to reach high throughputs.
+
+Insert Throughput
+~~~~~~~~~~~~~~~~~
+
+To measure data ingest rates with Citus, we use a standard tool called pgbench and provide :ref:`repeatable benchmarking steps <citus_write_throughput_benchmark>`.
+
+We also used these steps to run pgbench across different Citus Cloud formations on AWS and observed the following ingest rates for transactional INSERT statements. For these benchmark results, we used the default configuration for Citus Cloud formations, and set pgbench's concurrent thread count to 64 and client count to 256. We didn't apply any optimizations to improve performance numbers; and you can get higher ingest ratios by tuning your database setup.
+
++---------------------+-------------------------+---------------+----------------------+
+| Coordinator Node    | Worker Nodes            | Latency (ms)  | Transactions per sec |
++=====================+=========================+===============+======================+
+| 2 cores - 7.5GB RAM | 2 * (1 core - 15GB RAM) |          28.5 |                9,000 |
++---------------------+-------------------------+---------------+----------------------+
+| 4 cores -  15GB RAM | 2 * (1 core - 15GB RAM) |          15.3 |               16,600 |
++---------------------+-------------------------+---------------+----------------------+
+| 8 cores -  30GB RAM | 2 * (1 core - 15GB RAM) |          15.2 |               16,700 |
++---------------------+-------------------------+---------------+----------------------+
+| 8 cores -  30GB RAM | 4 * (1 core - 15GB RAM) |           8.6 |               29,600 |
++---------------------+-------------------------+---------------+----------------------+
+
+We have three observations that follow from these benchmark numbers. First, the top row shows performance numbers for an entry level Citus cluster with one c4.xlarge (two physical cores) as the coordinator and two r4.large (one physical core each) as worker nodes. This basic cluster can deliver 9K INSERTs per second, or 775 million transactional INSERT statements per day.
+
+Second, a more powerful Citus cluster that has about four times the CPU capacity can deliver 30K INSERTs per second, or 2.75 billion INSERT statements per day.
+
+Third, across all data ingest benchmarks, the network latency combined with the number of concurrent connections PostgreSQL can efficiently handle, becomes the  performance bottleneck. In a production environment with hundreds of tables and indexes, this bottleneck will likely shift to a different resource.
+
+Update Througput
+~~~~~~~~~~~~~~~~
+
+To measure UPDATE throughputs with Citus, we used the :ref:`same benchmarking steps <citus_update_throughput_benchmark>` and ran pgbench across different Citus Cloud formations on AWS.
+
++---------------------+-------------------------+---------------+----------------------+
+| Coordinator Node    | Worker Nodes            | Latency (ms)  | Transactions per sec |
++=====================+=========================+===============+======================+
+| 2 cores - 7.5GB RAM | 2 * (1 core - 15GB RAM) |          25.0 |               10,200 |
++---------------------+-------------------------+---------------+----------------------+
+| 4 cores -  15GB RAM | 2 * (1 core - 15GB RAM) |          19.6 |               13,000 |
++---------------------+-------------------------+---------------+----------------------+
+| 8 cores -  30GB RAM | 2 * (1 core - 15GB RAM) |          20.3 |               12,600 |
++---------------------+-------------------------+---------------+----------------------+
+| 8 cores -  30GB RAM | 4 * (1 core - 15GB RAM) |          10.7 |               23,900 |
++---------------------+-------------------------+---------------+----------------------+
+
+These benchmark numbers show that Citus's UPDATE throughput is slightly lower than those of INSERTs. This is because pgbench creates a primary key index for UPDATE statements and an UPDATE incurs more work on the worker nodes. It's also worth noting two additional differences between INSERT and UPDATEs.
+
+First, UPDATE statements cause bloat in the database and VACUUM needs to run regularly to clean up this bloat. In Citus, since VACUUM runs in parallel across worker nodes, your workloads are less likely to be impacted by VACUUM.
+
+Second, these benchmark numbers show UPDATE throughput for standard Citus deployments. If you're on the Citus community edition, using statement-based replication, and you increased the default replication factor to 2, you're going to observe notably lower UPDATE throughputs. For this particular setting, Citus comes with additional configuration (citus.all_modifications_commutative) that may increase UPDATE ratios.
+
+Insert and Update: Throughput Checklist
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you're running the above pgbench benchmarks on a moderately sized Citus cluster, you can generally expect 10K-50K INSERTs per second. This translates to approximately 1 to 4 billion INSERTs per day. If you aren't observing these throughputs numbers, remember the following checklist:
+
+* Check the network latency between your application and your database. High latencies will impact your write throughput.
+* Ingest data using concurrent threads. If the roundtrip latency during an INSERT is 4ms, you can process 250 INSERTs/second over one thread. If you run 100 concurrent threads, you will see your write throughput increase with the number of threads.
+* Check whether the nodes in your cluster have CPU or disk bottlenecks. Ingested data passes through the coordinator node, so check whether your coordinator is bottlenecked on CPU.
+* Avoid closing connections between INSERT statements. This avoids the overhead of connection setup.
+* Remember that column size will affect insert speed. Rows with big JSON blobs will take longer than those with small columns like integers.
+
+Insert and Update: Latency
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The benefit of running INSERT or UPDATE commands, compared to issuing bulk COPY commands, is that changes are immediately visible to other queries. When you issue an INSERT or UPDATE command, the Citus coordinator node directly routes this command to related worker node(s). The coordinator node also keeps connections to the workers open within the same session, which means subsequent commands will see lower response times.
 
 ::
 
-    -- Set up a distributed table containing counters
-    CREATE TABLE counters (c_key text, c_date date, c_value int, primary key (c_key, c_date));
-    SELECT create_distributed_table('counters', 'c_key');
+    -- Set up a distributed table that keeps account history information
+    CREATE TABLE pgbench_history (tid int, bid int, aid int, delta int, mtime timestamp);
+    SELECT create_distributed_table('pgbench_history', 'aid');
 
     -- Enable timing to see reponse times
     \timing on
 
     -- First INSERT requires connection set-up, second will be faster
-    INSERT INTO counters VALUES ('num_purchases', '2016-03-04', 12); -- Time: 10.314 ms
-    INSERT INTO counters VALUES ('num_purchases', '2016-03-05', 5); -- Time: 3.132 ms
-
-To reach high throughput rates, remember these techniques:
-
-* Increase CPU cores and memory on the coordinator node. Inserted data must pass through the coordinator, so check whether node resources are maxing out and upgrade the hardware if necessary.
-* Ingest with more threads on the client. If you have determined that the coordinator has enough resources, then throughput may be bottlenecked on the client. Try sending using more threads and PostgreSQL connections.
-* Avoid closing connections between INSERT statements. This avoids the overhead of connection setup.
-* Remember that column size will affect insert speed. Rows with big JSON blobs will take longer than those with small columns like integers.
-
-Real-time Updates (0-50k/s)
----------------------------
-
-On the Citus coordinator, you can also perform UPDATE, DELETE, and INSERT ... ON CONFLICT (UPSERT) commands on distributed tables. By default, these queries take an exclusive lock on the shard, which prevents concurrent modifications to guarantee that the commands are applied in the same order on all shard placements.
-
-Given that every command requires several round-trips to the workers, and no two commands can run on the same shard at the same time, update throughput is very low by default. However, if you know that the order of the queries doesn't matter (they are commutative), then you can turn on citus.all_modifications_commutative, in which case multiple commands can update the same shard concurrently.
-
-For example, if your distributed table contains counters and all your DML queries are UPSERTs that add to the counters, then you can safely turn on citus.all_modifications_commutative since addition is commutative:
-
-::
-
-    SET citus.all_modifications_commutative TO on;
-    INSERT INTO counters VALUES ('num_purchases', '2016-03-04', 1)
-    ON CONFLICT (c_key, c_date) DO UPDATE SET c_value = counters.c_value + 1;
-
-Note that this query also takes an exclusive lock on the row in PostgreSQL, which may also limit the throughput. When storing counters, consider that using INSERT and summing values in a SELECT does not require exclusive locks.
-
-When the replication factor is 1, it is always safe to enable citus.all_modifications_commutative. Citus does not do this automatically yet.
+    INSERT INTO pgbench_history VALUES (10, 1, 10000, -5000, CURRENT_TIMESTAMP); -- Time: 10.314 ms
+    INSERT INTO pgbench_history VALUES (10, 1, 22000, 5000, CURRENT_TIMESTAP); -- Time: 3.132 ms
 
 .. _bulk_copy:
 
-Bulk Copy (100-200k/s)
+Bulk Copy (250K - 2M/s)
 ----------------------
 
-Hash distributed tables support `COPY <http://www.postgresql.org/docs/current/static/sql-copy.html>`_ from the Citus coordinator for bulk ingestion, which can achieve much higher ingestion rates than regular INSERT statements.
+Distributed tables support `COPY <http://www.postgresql.org/docs/current/static/sql-copy.html>`_ from the Citus coordinator for bulk ingestion, which can achieve much higher ingestion rates than INSERT statements.
 
-COPY can be used to load data directly from an application using COPY .. FROM STDIN, or from a file on the server or program executed on the server.
+COPY can be used to load data directly from an application using COPY .. FROM STDIN, from a file on the server, or program executed on the server.
 
 ::
 
-    COPY counters FROM STDIN WITH (FORMAT CSV);
+    COPY pgbench_history FROM STDIN WITH (FORMAT CSV);
 
 In psql, the \\COPY command can be used to load data from the local machine. The \\COPY command actually sends a COPY .. FROM STDIN command to the server before sending the local data, as would an application that loads data directly.
 
 ::
 
-    psql -c "\COPY counters FROM 'counters-20160304.csv' (FORMAT CSV)"
+    psql -c "\COPY pgbench_history FROM 'pgbench_history-2016-03-04.csv' (FORMAT CSV)"
 
 
-A very powerful feature of COPY for hash distributed tables is that it asynchronously copies data to the workers over many parallel connections, one for each shard placement. This means that data can be ingested using multiple workers and multiple cores in parallel. Especially when there are expensive indexes such as a GIN, this can lead to major performance boosts over ingesting into a regular PostgreSQL table.
+A powerful feature of COPY for distributed tables is that it asynchronously copies data to the workers over many parallel connections, one for each shard placement. This means that data can be ingested using multiple workers and multiple cores in parallel. Especially when there are expensive indexes such as a GIN, this can lead to major performance boosts over ingesting into a regular PostgreSQL table.
+
+From a throughput standpoint, you can expect data ingest ratios of 250K - 2M rows per second when using COPY. To learn more about COPY performance across different scenarios, please refer to the `following blog post <https://www.citusdata.com/blog/2016/06/15/copy-postgresql-distributed-tables>`_.
 
 .. note::
 
-    To avoid opening too many connections to the workers. We recommend only running only one COPY command on a hash distributed table at a time. In practice, running more than two at a time rarely results in performance benefits. An exception is when all the data in the ingested file has a specific partition key value, which goes into a single shard. COPY will only open connections to shards when necessary.
+    To avoid opening too many connections to worker nodes, we recommend running only two COPY commands on a distributed table at a time. In practice, running more than four at a time rarely results in performance benefits. An exception is when all the data in the ingested file has a specific partition key value, which goes into a single shard. COPY will only open connections to shards when necessary.
 
 Masterless Citus (50k/s-500k/s)
 -------------------------------
