@@ -34,7 +34,7 @@ In these tests, we're therefore going to create a separate EC2 instance to run p
 Install pgbench
 ~~~~~~~~~~~~~~~
 
-Once we create a new EC2 instance, we need to install pgbench on this instance. Please note that pgbench 9.5 will run across all Citus versions and that the instructions below assume that you have pgbench 9.5 installed.
+Once we create a new EC2 instance, we need to install pgbench on this instance. Please note that pgbench 9.5 will run across all Citus versions and that the instructions below assume that you're using pgbench 9.5.
 
 If you are running a **Debian** based system, simply type::
 
