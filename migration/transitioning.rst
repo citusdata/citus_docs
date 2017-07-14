@@ -390,6 +390,8 @@ tenant.
 Django
 ~~~~~~
 
+Assuming an existing schema on the coordinator node, but no data loaded in it.
+
 Before:
 
 .. code-block:: python
@@ -443,22 +445,27 @@ After:
 
     product = models.ForeignKey(
       Product,
-      db_constraint=False,               # added
-      db_index=False                     #
+      db_constraint=False                # added
     )
-    store = models.ForeignKey(           # added
-      Store,                             #
-      db_constraint=False,               #
-      db_index=False,                    #
-      default=None                       #
-    )
+    store = models.ForeignKey(Store)     # added
 
     class Meta(object):                  # added
       unique_together = ["id", "store"]  #
 
 Create a migration to reflect the change: :code:`./manage.py makemigrations`.
 
-Now make a custom migration for us to use to do low-level sql: :code:`./manage.py makemigrations --empty`. Edit the result to look like this:
+Next we need some custom migrations to adapt the key structure in the database to be compatible with Citus. To keep these migrations distinct from the ones for the ordinary application, we'll make a new "citus" application in the same Django project.
+
+.. code-block:: bash
+
+  # Make a new application in the project
+  django-admin startapp citus
+
+Edit :code:`appname/settings.py` and add :code:`'citus'` to the array :code:`INSTALLED_APPS`.
+
+We'll now make a series custom migration to do low-level sql.
+
+The first removes simple primary keys which will be become composite: :code:`./manage.py makemigrations citus --empty --name remove_simple_pk`. Edit the result to look like this:
 
 .. code-block:: python
 
@@ -467,68 +474,70 @@ Now make a custom migration for us to use to do low-level sql: :code:`./manage.p
 
   class Migration(migrations.Migration):
     dependencies = [
-      # Leave this as is.
-      # Should be all the migrations thus far ...
+      ('appname', '<name of latest migration>')
     ]
 
     operations = [
       # Django considers "id" the primary key of these tables, but
       # the database mustn't, because the primary key will be composite
       migrations.RunSQL(
-        "ALTER TABLE appname_product DROP CONSTRAINT appname_product_pkey;",
-        "ALTER TABLE appname_product ADD CONSTRAINT PRIMARY KEY (id)",
+        "ALTER TABLE mtdjango_product DROP CONSTRAINT mtdjango_product_pkey;",
+        "ALTER TABLE mtdjango_product ADD CONSTRAINT PRIMARY KEY (id)",
       ),
       migrations.RunSQL(
-        "ALTER TABLE appname_purchase DROP CONSTRAINT appname_purchase_pkey;",
-        "ALTER TABLE appname_purchase ADD CONSTRAINT PRIMARY KEY (id)",
-      ),
-
-      # We have added store_id to purchases but the field is currently
-      # NULL. We need to "backfill" real values in it.
-      migrations.RunSQL(
-        """
-          UPDATE appname_purchase as pur
-          SET store_id = (
-            SELECT id
-            FROM appname_product
-            WHERE pur.product_id = id
-            LIMIT 1
-          )
-        """,
-        migrations.RunSQL.noop
-      ),
-
-      # Include store_id in composite foreign key between purchases and products
-      migrations.RunSQL(
-        """
-          ALTER TABLE appname_purchase
-          ADD CONSTRAINT appname_purchase_product_fk
-          FOREIGN KEY (store_id, product_id)
-          REFERENCES appname_product (store_id, id)
-          ON DELETE CASCADE;
-        """,
-        "ALTER TABLE appname_purchase DROP CONSTRAINT appname_purchase_product_fk"
+        "ALTER TABLE mtdjango_purchase DROP CONSTRAINT mtdjango_purchase_pkey;",
+        "ALTER TABLE mtdjango_purchase ADD CONSTRAINT PRIMARY KEY (id)",
       ),
     ]
 
-Make another custom migration to distribute the tables in Citus. This will not be undoable.
+Next, make one to tell Citus to mark tables for distribution. :code:`./manage.py makemigrations citus --empty --name distribute_tables`. Edit the result to look like this:
 
 .. code-block:: python
 
-  # as before, keep the structure of the migration the same, but use
-  # these operations
-  operations = [
-      migrations.RunSQL(
-        "SELECT create_distributed_table('appname_store','id')"
-      ),
-      migrations.RunSQL(
-        "SELECT create_distributed_table('appname_product','store_id')"
-      ),
-      migrations.RunSQL(
-        "SELECT create_distributed_table('appname_purchase','store_id')"
-      )
-  ]
+  from __future__ import unicode_literals
+  from django.db import migrations
 
+  class Migration(migrations.Migration):
+    dependencies = [
+      # leave this as it was generated
+    ]
+
+    operations = [
+      migrations.RunSQL(
+        "SELECT create_distributed_table('mtdjango_store','id')"
+      ),
+      migrations.RunSQL(
+        "SELECT create_distributed_table('mtdjango_product','store_id')"
+      ),
+      migrations.RunSQL(
+        "SELECT create_distributed_table('mtdjango_purchase','store_id')"
+      ),
+    ]
+
+Finally, we'll establish a composite foreign key. :code:`./manage.py makemigrations citus --empty --name composite_fk`.
+
+.. code-block:: python
+
+  from __future__ import unicode_literals
+  from django.db import migrations
+
+  class Migration(migrations.Migration):
+    dependencies = [
+      # leave this as it was generated
+    ]
+
+    operations = [
+      migrations.RunSQL(
+        """
+            ALTER TABLE mtdjango_purchase
+            ADD CONSTRAINT mtdjango_purchase_product_fk
+            FOREIGN KEY (store_id, product_id)
+            REFERENCES mtdjango_product (store_id, id)
+            ON DELETE CASCADE;
+        """,
+        "ALTER TABLE mtdjango_purchase DROP CONSTRAINT mtdjango_purchase_product_fk"
+      ),
+    ]
 
 Real-Time Analytics Data Model
 ==============================
