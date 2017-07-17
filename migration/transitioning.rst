@@ -554,7 +554,7 @@ Finally, we'll establish a composite foreign key. :code:`./manage.py makemigrati
       ),
     ]
 
-Apply the migrations by running :code:`./`manage.py migrate`.
+Apply the migrations by running :code:`./manage.py migrate`.
 
 At this point the Django application models are ready to work with a Citus backend. You can continue by importing data to the new system and modifying controllers as necessary to deal with the model changes.
 
