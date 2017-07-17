@@ -225,7 +225,7 @@ the future:
 **1. Introduce a column for the tenant\_id on every record that belongs
 to a tenant**
 
-In order to scale out a multi-tenant model, its essential you can locate
+In order to scale out a multi-tenant model, it's essential you can locate
 all records that belong to a tenant quickly. The easiest way to achieve
 this is to simply add a ``tenant_id`` column (or “customer\_id” column,
 etc) on every object that belongs to a tenant, and backfilling your
@@ -390,9 +390,14 @@ tenant.
 Django
 ~~~~~~
 
-Assuming an existing schema on the coordinator node, but no data loaded in it.
+At the start of this section we discussed the framework-agnostic database changes required for using Citus in the multi-tenant use case. This section investigates specifically how to migrate multi-tenant Django applications to a Citus storage backend.
 
-Before:
+Preparing to scale-out a multi-tenant application
+*************************************************
+
+Initially you’ll often start with all tenants placed on a single database node, and using a framework like Django to load the data for a given tenant when you serve a web request that returns the tenant’s data.
+
+Django's typical conventions make a few assumptions about the data storage that limit scale-out options. In particular, the ORM introduces a pattern where you normalize data and split it into many distinct models each identified by a single ``id`` column (usually added implicitly by the ORM). For instance, consider this simplified model:
 
 .. code-block:: python
 
@@ -417,7 +422,19 @@ Before:
 
       product = models.ForeignKey(Product)
 
-After:
+The tricky thing with this pattern is that in order to find all purchases for a store, you'll have to query for all of a store's products first. This becomes a problem once you start sharding data, and in particular when you run UPDATE or DELETE queries on nested models like purchases in this example.
+
+**1. Introduce a column for the store\_id on every record that belongs to a store**
+
+In order to scale out a multi-tenant model, it's essential that you can locate all records that belong to a store quickly. The easiest way to achieve this is to simply add a :code:`store_id` column on every object that belongs to a store, and backfill your existing data to have this column set correctly.
+
+**2. Use UNIQUE constraints which include the store\_id**
+
+Unique constraints on values will present a problem in any distributed system, since it’s difficult to make sure that no two nodes accept the same unique value.
+
+In many cases, you can work around this problem by adding the store\_id to the constraint, effectively making objects unique inside a given store, but not guaranteeing this beyond that store.
+
+Let's begin by adjusting our model definitions and have Django generate a new migration for the two changes discussed.
 
 .. code-block:: python
 
@@ -454,18 +471,16 @@ After:
 
 Create a migration to reflect the change: :code:`./manage.py makemigrations`.
 
-Next we need some custom migrations to adapt the key structure in the database to be compatible with Citus. To keep these migrations distinct from the ones for the ordinary application, we'll make a new "citus" application in the same Django project.
+Next we need some custom migrations to adapt the existing key structure in the database for compatibility with Citus. To keep these migrations separate from the ones for the ordinary application, we'll make a new citus application in the same Django project.
 
 .. code-block:: bash
 
-  # Make a new application in the project
+  # Make a new sub-application in the project
   django-admin startapp citus
 
 Edit :code:`appname/settings.py` and add :code:`'citus'` to the array :code:`INSTALLED_APPS`.
 
-We'll now make a series custom migration to do low-level sql.
-
-The first removes simple primary keys which will be become composite: :code:`./manage.py makemigrations citus --empty --name remove_simple_pk`. Edit the result to look like this:
+Next we'll add a custom migration to remove simple primary keys which will become composite: :code:`./manage.py makemigrations citus --empty --name remove_simple_pk`. Edit the result to look like this:
 
 .. code-block:: python
 
@@ -490,7 +505,7 @@ The first removes simple primary keys which will be become composite: :code:`./m
       ),
     ]
 
-Next, make one to tell Citus to mark tables for distribution. :code:`./manage.py makemigrations citus --empty --name distribute_tables`. Edit the result to look like this:
+Next, we'll make one to tell Citus to mark tables for distribution. :code:`./manage.py makemigrations citus --empty --name distribute_tables`. Edit the result to look like this:
 
 .. code-block:: python
 
@@ -538,6 +553,10 @@ Finally, we'll establish a composite foreign key. :code:`./manage.py makemigrati
         "ALTER TABLE mtdjango_purchase DROP CONSTRAINT mtdjango_purchase_product_fk"
       ),
     ]
+
+Apply the migrations by running :code:`./`manage.py migrate`.
+
+At this point the Django application models are ready to work with a Citus backend. You can continue by importing data to the new system and modifying controllers as necessary to deal with the model changes.
 
 Real-Time Analytics Data Model
 ==============================
