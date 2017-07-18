@@ -558,6 +558,51 @@ Apply the migrations by running :code:`./manage.py migrate`.
 
 At this point the Django application models are ready to work with a Citus backend. You can continue by importing data to the new system and modifying controllers as necessary to deal with the model changes.
 
+Updating the Django Application
+*******************************
+
+To simplify queries in the Django application, Citus has developed a Python library called `django-multitenant <https://github.com/citusdata/django-multitenant>`_. Include :code:`django-multitenant` in the :code:`requirements.txt` package file for your project, and then modify your models.
+
+First, include the library in models.py:
+
+.. code-block:: python
+
+  from django_multitenant import *
+
+Next, change the base class for each model from :code:`models.Model` to :code:`TenantModel`, and add a property specifying the name of the tenant id. For instance, to continue the earlier example:
+
+.. code-block:: python
+
+  class Store(TenantModel):
+    tenant_id = 'id'
+    # ...
+
+  class Product(TenantModel):
+    tenant_id = 'store_id'
+    # ...
+
+  class Purchase(TenantModel):
+    tenant_id = 'store_id'
+    # ...
+
+No extra database migration is necessary beyond the steps in the previous section. The library allows application code to easily scope queries to a single tenant. It automatically adds the correct SQL filters to all statements, including fetching objects through relations.
+
+For instance:
+
+.. code-block:: python
+
+  # set the current tenant to the first store
+  s = Store.objects.all()[0]
+  set_current_tenant(s)
+
+  # now this count query applies only to Products for that store
+  Product.objects.count()
+
+  # Find purchases for risky products in the current store
+  Purchase.objects.filter(product__description='Dangerous Toy')
+
+In the context of an application controller, the current tenant object can be stored as a SESSION variable when a user logs in, and controller actions can :code:`set_current_tenant` to this value.
+
 Real-Time Analytics Data Model
 ==============================
 
