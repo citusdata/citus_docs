@@ -497,11 +497,11 @@ Next we'll add a custom migration to remove simple primary keys which will becom
       # the database mustn't, because the primary key will be composite
       migrations.RunSQL(
         "ALTER TABLE mtdjango_product DROP CONSTRAINT mtdjango_product_pkey;",
-        "ALTER TABLE mtdjango_product ADD CONSTRAINT PRIMARY KEY (id)",
+        "ALTER TABLE mtdjango_product ADD CONSTRAINT mtdjango_product_pkey PRIMARY KEY (id)"
       ),
       migrations.RunSQL(
         "ALTER TABLE mtdjango_purchase DROP CONSTRAINT mtdjango_purchase_pkey;",
-        "ALTER TABLE mtdjango_purchase ADD CONSTRAINT PRIMARY KEY (id)",
+        "ALTER TABLE mtdjango_purchase ADD CONSTRAINT mtdjango_purchase_pkey PRIMARY KEY (id)"
       ),
     ]
 
