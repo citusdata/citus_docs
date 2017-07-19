@@ -165,12 +165,12 @@ Broadcasting a statement for execution on all workers is useful for viewing prop
 
 The :code:`run_command_on_workers` function can run only queries which return a single column and single row.
 
+.. _worker_security:
+
 Worker Security
 ###############
 
-For your convenience getting started, our multi-node installation instructions direct you to set up the :code:`pg_hba.conf` on the workers with its `authentication method <https://www.postgresql.org/docs/current/static/auth-methods.html>`_ set to "trust" for local network connections. This is also the default configuration on Citus Cloud. It offers reasonable security, but more may be desired.
-
-For instance, requiring roles and passwords for connection ensures that users must connect as only the roles permitted to them. This allows having users with read-only access, or hiding tables with sensitive information.
+For your convenience getting started, our multi-node installation instructions direct you to set up the :code:`pg_hba.conf` on the workers with its `authentication method <https://www.postgresql.org/docs/current/static/auth-methods.html>`_ set to "trust" for local network connections. However you might desire more security.
 
 To require that all connections supply a hashed password, update the PostgreSQL :code:`pg_hba.conf` on every worker node with something like this:
 
