@@ -101,6 +101,34 @@ We support other providers that can receive syslog via the BSD or IETF protocols
 
 Please reach out if you encounter any issues.
 
+External Notifications
+----------------------
+
+To monitor events in the life of a formation with outside tools via a standard format, we offer RSS feeds per organization. You can use a feed reader or RSS Slack integration (e.g. on an :code:`#ops` channel) to keep up to date.
+
+On the upper right of the "Formations" list in the Cloud console, follow the "Formation Events" link to the RSS feed. The feed includes entries for three types of events, each with the following details:
+
+**Failover Scheduled**
+
+*  Formation name
+*  Formation url
+*  Leader
+*  Failover at
+
+**Failover**
+
+*  Formation name
+*  Formation url
+*  Leader
+*  Situation
+*  Follower
+
+**Server Unavailable**
+
+*  Formation name
+*  Formation url
+*  Server
+
 .. raw:: html
 
   <script type="text/javascript">
