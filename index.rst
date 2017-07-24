@@ -64,6 +64,7 @@ topics.
    cloud/security.rst
    cloud/scaling.rst
    cloud/logging.rst
+   cloud/monitoring.rst
    cloud/mx.rst
    cloud/support.rst
 
