@@ -15,16 +15,18 @@ This is a notification of connectivity problems such as hardware failure.
 
 **Failover Scheduled**
 
-After a server is detected as unavailable Citus Cloud schedules a failover to a replacement.
+For planned upgrades, or when operating a formation without high availability that experiences a failure, this event will appear to indicate a future planned failover event.
 
 *  Formation name
 *  Formation url
 *  Leader
 *  Failover at
 
+For planned failovers, "failover at" will usually match your maintenance window. Note that the failover might happen at this point or shortly thereafter, once a follower is available and has caught up to the primary database.
+
 **Failover**
 
-Failovers happen to address hardware failure, as mentioned, and also for other reasons such as performing system software upgrades, or trasferring data to a server with better hardware.
+Failovers happen to address hardware failure, as mentioned, and also for other reasons such as performing system software upgrades, or transferring data to a server with better hardware.
 
 *  Formation name
 *  Formation url
