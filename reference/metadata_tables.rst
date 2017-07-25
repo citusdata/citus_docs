@@ -111,32 +111,45 @@ The shardstorage column in pg_dist_shard indicates the type of storage used for 
 Shard placement table
 ---------------------------------------
 
-The pg_dist_shard_placement table tracks the location of shard replicas on worker nodes. Each replica of a shard assigned to a specific node is called a shard placement. This table stores information about the health and location of each shard placement.
-
+The pg_dist_placement table tracks the location of shard replicas on worker nodes. Each replica of a shard assigned to a specific node is called a shard placement. This table stores information about the health and location of each shard placement.
 
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
 +================+======================+===========================================================================+
-| shardid   	 |      bigint          | | Shard identifier associated with this placement. This values references |
+| shardid        |       bigint         | | Shard identifier associated with this placement. This values references |
 |                |                      | | the shardid column in the pg_dist_shard catalog table.                  |
 +----------------+----------------------+---------------------------------------------------------------------------+ 
-| shardstate     |        int       	| | Describes the state of this placement. Different shard states are       |
+| shardstate     |         int          | | Describes the state of this placement. Different shard states are       |
 |                |                      | | discussed in the section below.                                         |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| shardlength    |          bigint      | | For append distributed tables, the size of the shard placement on the   |
+| shardlength    |       bigint         | | For append distributed tables, the size of the shard placement on the   |
 |                |                      | | worker node in bytes.                                                   |
 |                |                      | | For hash distributed tables, zero.                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
-|  nodename      |            text      | | Host name or IP address of the worker node PostgreSQL server hosting    |
-|                |                      | | this shard placement.                                                   |
+| placementid    |       bigint         | | Unique auto-generated identifier for each individual placement.         |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| nodeport       |            int       | | Port number on which the worker node PostgreSQL server hosting this     |
-|                |                      | | shard placement is listening.                                           |
-+----------------+----------------------+---------------------------------------------------------------------------+
-| placementid    |        bigint        | | Unique auto-generated identifier for each individual placement.         |
+| groupid        |         int          | | Identifier used to denote a group of one primary server and zero or more|
+|                |                      | | secondary servers, when the streaming replication model is used.        |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
+
+  SELECT * from pg_dist_placement;
+    shardid | shardstate | shardlength | placementid | groupid
+   ---------+------------+-------------+-------------+---------
+     102008 |          1 |           0 |           1 |       1
+     102008 |          1 |           0 |           2 |       2
+     102009 |          1 |           0 |           3 |       2
+     102009 |          1 |           0 |           4 |       3
+     102010 |          1 |           0 |           5 |       3
+     102010 |          1 |           0 |           6 |       4
+     102011 |          1 |           0 |           7 |       4
+
+.. note::
+
+  As of Citus 7.0 the analogous table :code:`pg_dist_shard_placement` has been deprecated. It included the node name and port for each placement:
+
+  ::
 
     SELECT * from pg_dist_shard_placement;
       shardid | shardstate | shardlength | nodename  | nodeport | placementid 
@@ -148,6 +161,8 @@ The pg_dist_shard_placement table tracks the location of shard replicas on worke
        102010 |          1 |           0 | localhost |    12347 |           5
        102010 |          1 |           0 | localhost |    12345 |           6
        102011 |          1 |           0 | localhost |    12345 |           7
+
+  That information is now available by joining pg_dist_placement with :ref:`pg_dist_node <pg_dist_node>` on the groupid. For compatibility Citus still provides pg_dist_shard_placement as a view. However we recommend using the new, more normalized, tables when possible.
 
 
 Shard Placement States
