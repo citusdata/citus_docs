@@ -63,7 +63,7 @@ We use the github events dataset to illustrate the commands below. You can downl
     wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
     gzip -d github_events-2015-01-01-*.gz
 
-To create an append distributed table, you need to first define the table schema. To do so, you can define a table using the `CREATE TABLE <http://www.postgresql.org/docs/9.6/static/sql-createtable.html>`_ statement in the same way as you would do with a regular PostgreSQL table.
+To create an append distributed table, you need to first define the table schema. To do so, you can define a table using the `CREATE TABLE <http://www.postgresql.org/docs/current/static/sql-createtable.html>`_ statement in the same way as you would do with a regular PostgreSQL table.
 
 ::
 
@@ -92,7 +92,7 @@ This function informs Citus that the github_events table should be distributed b
 Expiring Data
 ---------------
 
-In append distribution, users typically want to track data only for the last few months / years. In such cases, the shards that are no longer needed still occupy disk space. To address this, Citus provides a user defined function master_apply_delete_command() to delete old shards. The function takes a `DELETE <http://www.postgresql.org/docs/9.6/static/sql-delete.html>`_ command as input and deletes all the shards that match the delete criteria with their metadata.
+In append distribution, users typically want to track data only for the last few months / years. In such cases, the shards that are no longer needed still occupy disk space. To address this, Citus provides a user defined function master_apply_delete_command() to delete old shards. The function takes a `DELETE <http://www.postgresql.org/docs/current/static/sql-delete.html>`_ command as input and deletes all the shards that match the delete criteria with their metadata.
 
 The function uses shard metadata to decide whether or not a shard needs to be deleted, so it requires the WHERE clause in the DELETE statement to be on the distribution column. If no condition is specified, then all shards are selected for deletion. The UDF then connects to the worker nodes and issues DROP commands for all the shards which need to be deleted. If a drop query for a particular shard replica fails, then that replica is marked as TO DELETE. The shard replicas which are marked as TO DELETE are not considered for future queries and can be cleaned up later.
 
@@ -123,7 +123,7 @@ The function uses a configurable commit protocol to update or delete data safely
 Dropping Tables
 ---------------
 
-You can use the standard PostgreSQL `DROP TABLE <http://www.postgresql.org/docs/9.6/static/sql-droptable.html>`_
+You can use the standard PostgreSQL `DROP TABLE <http://www.postgresql.org/docs/current/static/sql-droptable.html>`_
 command to remove your append distributed tables. As with regular tables, DROP TABLE removes any
 indexes, rules, triggers, and constraints that exist for the target table. In addition, it also
 drops the shards on the worker nodes and cleans up their metadata.

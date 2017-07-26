@@ -10,9 +10,9 @@ The logs will contain the following messages:
 
 * Citus and PostgreSQL errors
 * Slow queries that take longer than 30 seconds
-* `Checkpoint <https://www.postgresql.org/docs/9.6/static/wal-configuration.html>`_ statistics
+* `Checkpoint <https://www.postgresql.org/docs/current/static/wal-configuration.html>`_ statistics
 * Temporary files that are written and bigger than 64 MB
-* `Autovacuum <https://www.postgresql.org/docs/9.6/static/routine-vacuuming.html#AUTOVACUUM>`_ that takes more than 30 seconds
+* `Autovacuum <https://www.postgresql.org/docs/current/static/routine-vacuuming.html#AUTOVACUUM>`_ that takes more than 30 seconds
 
 
 Recent Logs

@@ -11,7 +11,7 @@ Inserting Data
 Single row inserts
 $$$$$$$$$$$$$$$$$$
 
-To insert data into distributed tables, you can use the standard PostgreSQL `INSERT <http://www.postgresql.org/docs/9.6/static/sql-insert.html>`_ commands. As an example, we pick two rows randomly from the Github Archive dataset.
+To insert data into distributed tables, you can use the standard PostgreSQL `INSERT <http://www.postgresql.org/docs/current/static/sql-insert.html>`_ commands. As an example, we pick two rows randomly from the Github Archive dataset.
 
 ::
 
@@ -137,7 +137,7 @@ The situation changes when dealing with late arriving data, or running the rollu
 Single-Shard Updates and Deletion
 ---------------------------------
 
-You can update or delete rows from your tables, using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/9.6/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/9.6/static/sql-delete.html>`_ commands.
+You can update or delete rows from your tables, using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/current/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/current/static/sql-delete.html>`_ commands.
 
 ::
 

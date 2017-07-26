@@ -33,7 +33,7 @@ As the Citus coordinator node is similar to a standard PostgreSQL server, regula
 How do I ingest the results of a query into a distributed table?
 ----------------------------------------------------------------
 
-Citus supports the `INSERT / SELECT <https://www.postgresql.org/docs/9.6/static/sql-insert.html>`_ syntax for copying the results of a query on a distributed table into a distributed table, when the tables are :ref:`co-located <colocation>`.
+Citus supports the `INSERT / SELECT <https://www.postgresql.org/docs/current/static/sql-insert.html>`_ syntax for copying the results of a query on a distributed table into a distributed table, when the tables are :ref:`co-located <colocation>`.
 
 If your tables are not co-located, or you are using append distribution, there
 are workarounds you can use (for eg. using COPY to copy data out and then back
