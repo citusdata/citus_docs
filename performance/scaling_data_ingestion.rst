@@ -92,7 +92,7 @@ The benefit of running INSERT or UPDATE commands, compared to issuing bulk COPY 
 .. _bulk_copy:
 
 Bulk Copy (250K - 2M/s)
-----------------------
+-----------------------
 
 Distributed tables support `COPY <http://www.postgresql.org/docs/current/static/sql-copy.html>`_ from the Citus coordinator for bulk ingestion, which can achieve much higher ingestion rates than INSERT statements.
 
