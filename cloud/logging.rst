@@ -26,34 +26,80 @@ The Citus Cloud dashboard automatically shows you the most recent 100 log lines 
 External Log Destinations
 -------------------------
 
-For anything more than a quick look at your logs, we recommend setting up an external provider as a log destination. Through this method you'll receive
-all logs using the Syslog protocol, and can analyze and retain them according to your own preferences.
-
-As an example, the process for setting up Papertrail, a common log provider, goes like this:
-
-1. Determine Syslog host and port number (note that Citus only supports providers that can accept incoming Syslog data)
-
-.. image:: ../images/cloud_logs_papertrail.png
-
-2. Add a new log destination in your Citus Cloud dashboard in the "Logs" tab, like this:
+For anything more than a quick look at your logs, we recommend setting up an external provider. Through this method the logs will transmit to a dedicated logging service and you can analyze and retain them according to your own preferences. To use an external provider, create a new logging destination in the Citus Cloud console. For instance, here is the new destination dialog filled in with Papertrail settings:
 
 .. image:: ../images/citus_logs_add_log_form.png
 
-For Papertrail leave Message Template empty. Other providers might require a token to be set - follow the syslog-ng instructions for the provider, if they make them available.
+Note that after creation, it might take up to five minutes for logging preferences to be applied. You'll then see logs show up in your chosen provider's dashboard.
 
-3. After creation, it might take up to 5 minutes for logging to be configured. You'll then see it show up in your favorite provider's dashboard.
+The settings to use differ per provider. In the following tables we list settings verified to work for a number of popular providers.
 
+Verified Provider Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Supported External Providers
-----------------------------
+Replace :code:`<token>` with the custom token listed in the provider's web site. This token tells them the logs are yours.
 
-We're currently testing with these providers:
+**Papertrail**
 
-* Papertrail
-* Splunk Enterprise
-* Loggly
++------------------+-------------------------+
+| Hostname         | logs4.papertrailapp.com |
++------------------+-------------------------+
+| Port             | 19493                   |
++------------------+-------------------------+
+| TLS              | Yes                     |
++------------------+-------------------------+
+| Protocol         | IETF Syslog             |
++------------------+-------------------------+
+| Message Template |                         |
++------------------+-------------------------+
 
-We likely also support other providers that can receive syslog. Please reach out if you encounter any issues.
+**Loggly**
+
++------------------+--------------------------------------------------------------------------------------------------+
+| Hostname         | logs-01.loggly.com                                                                               |
++------------------+--------------------------------------------------------------------------------------------------+
+| Port             | 514                                                                                              |
++------------------+--------------------------------------------------------------------------------------------------+
+| TLS              | No                                                                                               |
++------------------+--------------------------------------------------------------------------------------------------+
+| Protocol         | BSD Syslog over TCP                                                                              |
++------------------+--------------------------------------------------------------------------------------------------+
+| Message Template | <${PRI}>1 ${ISODATE} ${HOST} ${PROGRAM} ${PID} ${MSGID} [<token>@41058 tag=\\"CITUS\\" ] $MSG\\n |
++------------------+--------------------------------------------------------------------------------------------------+
+
+**Sumologic**
+
++------------------+---------------------------------------------------------------------------------+
+| Hostname         | syslog.collection.us2.sumologic.com                                             |
++------------------+---------------------------------------------------------------------------------+
+| Port             | 6514                                                                            |
++------------------+---------------------------------------------------------------------------------+
+| TLS              | Yes                                                                             |
++------------------+---------------------------------------------------------------------------------+
+| Protocol         | IETF Syslog                                                                     |
++------------------+---------------------------------------------------------------------------------+
+| Message Template | <${PRI}>1 ${ISODATE} ${HOST} ${PROGRAM} ${PID} ${MSGID} [<token>@41123] $MSG\\n |
++------------------+---------------------------------------------------------------------------------+
+
+**Logentries**
+
++------------------+--------------------------------+
+| Hostname         | data.logentries.com            |
++------------------+--------------------------------+
+| Port             | 80                             |
++------------------+--------------------------------+
+| TLS              | No                             |
++------------------+--------------------------------+
+| Protocol         | IETF Syslog                    |
++------------------+--------------------------------+
+| Message Template | <token> $ISODATE $HOST $MSG\\n |
++------------------+--------------------------------+
+
+**Other**
+
+We support other providers that can receive syslog via the BSD or IETF protocols. Internally Citus Cloud uses syslog-ng, so check your providers configuration documentation for syslog-ng settings.
+
+Please reach out if you encounter any issues.
 
 .. raw:: html
 
