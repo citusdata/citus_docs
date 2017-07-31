@@ -37,8 +37,6 @@ To measure the number of active connections at a given time, run:
     FROM pg_stat_activity
    WHERE state <> 'idle';
 
-.. raw:: html
-
 Users and Permissions
 =====================
 
