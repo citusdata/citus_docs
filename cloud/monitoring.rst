@@ -3,7 +3,11 @@ Monitoring
 
 To monitor events in the life of a formation with outside tools via a standard format, we offer RSS feeds per organization. You can use a feed reader or RSS Slack integration (e.g. on an :code:`#ops` channel) to keep up to date.
 
-On the upper right of the "Formations" list in the Cloud console, follow the "Formation Events" link to the RSS feed. The feed includes entries for three types of events, each with the following details:
+On the upper right of the "Formations" list in the Cloud console, follow the "Formation Events" link to the RSS feed.
+
+.. image:: ../images/cloud-formation-events.png
+
+The feed includes entries for three types of events, each with the following details:
 
 **Server Unavailable**
 
