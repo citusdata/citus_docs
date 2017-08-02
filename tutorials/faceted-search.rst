@@ -28,7 +28,7 @@ cluster with full auto-failover. The main table in our `database schema
 <https://gist.github.com/marcocitus/fb49a20404f5fa8d4ff16c25ce04599c>`__
 is the "product" table, which contains the name and description
 of a product, its price, and attributes in `JSON format
-<http://www.postgresql.org/docs/9.5/static/datatype-json.html>`__ such
+<http://www.postgresql.org/docs/current/static/datatype-json.html>`__ such
 that different types of products can use different attributes:
 
 .. code:: sql
@@ -48,8 +48,7 @@ are distributed and replicated across the 4 workers.
 
 .. code:: sql
 
-    SELECT master_create_distributed_table('product', 'product_id', 'hash');
-    SELECT master_create_worker_shards('product', 16, 2);
+    SELECT create_distributed_table('product', 'product_id');
 
 We create a `GIN
 index <http://blog.2ndquadrant.com/jsonb-type-performance-postgresql-9-4/>`__
@@ -65,7 +64,7 @@ can use the GIN index.
 
 To filter products by their name and description, we use the `full text
 search
-functions <http://www.postgresql.org/docs/9.5/static/textsearch.html>`__
+functions <http://www.postgresql.org/docs/current/static/textsearch.html>`__
 in PostgreSQL to find a match with a user-specified query. A text search
 operation is performed on a text search vector (tsvector) using a text
 search query (tsquery). It can be useful to define an intermediate
@@ -83,14 +82,21 @@ higher when sorting by relevance.
              setweight(to_tsvector(description),'B');
     $function$;
 
-To use the product\_text\_search function in queries and indexes, it
-also needs to be created on the workers. An easy way to run a SQL file
-on every worker is to use xargs.
+To use the product\_text\_search function in queries and
+indexes, it also needs to be created on the workers. We'll use
+``run_command_on_workers`` to do this (see :ref:`worker_propagation` for
+more info).
 
 .. code:: sql
 
-    $ psql -c "SELECT * FROM master_get_active_worker_nodes()" -tA -F" " \
-     | xargs -n 2 sh -c "psql -h \$0 -p \$1 -f product_text_search.sql"
+    $ psql
+    SELECT run_command_on_workers($cmd$
+      CREATE FUNCTION product_text_search(name text, description text)
+      RETURNS tsvector LANGUAGE sql IMMUTABLE AS $function$
+        SELECT setweight(to_tsvector(name),'A') ||
+               setweight(to_tsvector(description),'B');
+      $function$;
+    $cmd$);
 
 After setting up the function, we define a GIN index on it, which speeds
 up text searches on the product table.
@@ -195,7 +201,7 @@ offers should also show up in searches if their price is under
 the maximum. A product can have many such offers. We create an
 additional distributed table, which we distribute by ``product_id``
 and assign the same number of shards, such that we can perform joins
-on the :ref:`co-located <colocation>` product and offer tables on
+on the :ref:`co-located <colocation>` product / offer tables on
 ``product_id``.
 
 .. code:: sql
@@ -208,8 +214,7 @@ on the :ref:`co-located <colocation>` product and offer tables on
       new bool,
       primary key(product_id, offer_id)
     );
-    SELECT master_create_distributed_table('offer', 'product_id','hash');
-    SELECT master_create_worker_shards('offer', 16, 2);
+    SELECT create_distributed_table('offer', 'product_id');
 
 We load 5 million random offers generated using the ``generate_offers``
 function and COPY. The following query searches for popcorn oven

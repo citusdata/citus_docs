@@ -9,6 +9,8 @@ However the way queries are partitioned into fragments (and which queries are pr
 
 Manual query propagation bypasses coordinator logic, locking, and any other consistency checks. These functions are available as a last resort to allow statements which Citus otherwise does not run natively. Use them carefully to avoid data inconsistency and deadlocks.
 
+.. _worker_propagation:
+
 Running on all Workers
 ----------------------
 
