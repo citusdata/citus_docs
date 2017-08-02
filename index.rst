@@ -80,6 +80,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
 
    tutorials/multi-tenant-tutorial.rst
    tutorials/real-time-analytics-tutorial.rst
+   tutorials/faceted-search.rst
 
 .. toctree::
    :caption: Distributed Data Modeling
