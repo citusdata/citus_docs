@@ -6,23 +6,18 @@ PostgreSQL. Its ability to transparently shard data and parallelise
 queries over many machines makes it possible to have real-time
 responsiveness even with terabytes of data. Users with very high data
 volumes often store pre-aggregated data to avoid the cost of processing
-raw data at run-time. With `Citus
-6.0 <https://www.citusdata.com/blog/2016/11/14/introducing-citus-6/>`__
-this type of workflow became even easier using a new feature that
-enables pre-aggregation inside the database in a massively parallel
-fashion using standard SQL. For large datasets, querying pre-computed
+raw data at run-time. For large datasets, querying pre-computed
 aggregation tables can be orders of magnitude faster than querying the
 facts table on demand.
 
 To create aggregations for distributed tables, the latest version of
 Citus supports the INSERT .. SELECT syntax for tables that use the same
-distribution column. Citus 6 automatically 'co-locates' the shards of
+distribution column. Citus automatically 'co-locates' the shards of
 distributed tables such that the same distribution column value is
 always placed on the same worker node, which allows us to transfer data
 between tables as long as the distribution column value is preserved. A
 common way of taking advantage of co-location is to follow the
-`multi-tenant data
-model <https://www.citusdata.com/blog/2016/10/03/designing-your-saas-database-for-high-scalability/>`__
+:ref:`multi-tenant data model <distributing_by_tenant_id>`
 and shard all tables by tenant\_id or customer\_id. Even without that
 model, as long as your tables share the same distribution column, you
 can leverage the INSERT .. SELECT syntax.
@@ -41,11 +36,10 @@ tables will usually look like:
     SELECT tenant_id, ... FROM facts_table ...
 
 Now let's walk through the steps of creating aggregations for a typical
-example of high-volume data: page views. We set up a Citus 6 on
-PostgreSQL 9.6 cluster using `Citus
-Cloud <https://console.citusdata.com/users/sign_up>`__ consisting of 4
-workers with 4 cores each, and create a distributed
-`facts <http://databases.about.com/od/datamining/a/Facts-Vs-Dimensions.htm>`__
+example of high-volume data: page views. We set up a `Citus Cloud
+<https://console.citusdata.com/users/sign_up>`__ formation consisting
+of 4 workers with 4 cores each, and create a distributed `facts
+<http://databases.about.com/od/datamining/a/Facts-Vs-Dimensions.htm>`__
 table with several indexes:
 
 .. code-block:: postgres
@@ -144,8 +138,8 @@ aggregation table in a fraction of the query time:
 We typically want to keep aggregations up-to-date, even as the current
 day progresses. We can achieve this by expanding our original command to
 only consider new rows and updating existing rows to consider the new
-data using ``ON CONFLICT``
-(“`upsert <http://www.craigkerstiens.com/2015/05/08/upsert-lands-in-postgres-9.5/>`__\ ”).
+data using
+`ON CONFLICT <https://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`__.
 If we insert data for a primary key (tenant\_id, day, page\_id) that
 already exists in the aggregation table, then the count will be added
 instead.
@@ -218,9 +212,6 @@ A few caveats to note:
    but it's generally better to distinguish between the time at which
    the event happened at the source and the database-generated ingestion
    time used to keep track of whether an event was already processed.
--  Due to a current limitation in the INSERT .. SELECT implementation,
-   we recommend using timestamp instead of timestamptz for the ingestion
-   time column.
 -  When running Citus on-premises with built-in replication, we
    recommend you set citus.all\_modifications\_commutative to on before
    any INSERT..SELECT command, since Citus otherwise locks the source
@@ -266,10 +257,9 @@ another table and perform a join:
 You can also perform joins in the INSERT..SELECT command, allowing you
 to create more detailed aggregations, e.g. by language.
 
-Distributed aggregation adds another tool to Citus' broad toolchest in
-dealing with big data problems. With parallel INSERT .. SELECT, parallel
-indexing, parallel querying, scaling write throughput through `Citus
-MX <https://www.citusdata.com/blog/2016/09/22/announcing-citus-mx/>`__,
-and many other features, Citus can not only horizontally scale your
-multi-tenant database, but can also unify many different parts of your
-data pipeline into one platform.
+Distributed aggregation adds another tool to Citus' broad toolchest
+in dealing with big data problems. With parallel INSERT .. SELECT,
+parallel indexing, parallel querying, scaling write throughput through
+:ref:`Citus MX <mx>`, and many other features, Citus can not only
+horizontally scale your multi-tenant database, but can also unify many
+different parts of your data pipeline into one platform.
