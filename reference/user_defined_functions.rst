@@ -460,9 +460,9 @@ master_remove_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The master_remove_node() function removes the specified node from the
-pg_dist_node metadata table. This function will error out if there are existing
-shard placements on this node in pg_dist_shard_placement. Thus, before using
-this function, the shards will need to be moved off that node.
+pg_dist_node metadata table. This function will error out if there
+are existing shard placements on this node. Thus, before using this
+function, the shards will need to be moved off that node.
 
 Arguments
 ************************

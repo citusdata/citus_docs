@@ -123,7 +123,7 @@ On the Coordinator Node
 
     CREATE TABLE public.pg_dist_partition AS SELECT * FROM pg_catalog.pg_dist_partition;
     CREATE TABLE public.pg_dist_shard AS SELECT * FROM pg_catalog.pg_dist_shard;
-    CREATE TABLE public.pg_dist_shard_placement AS SELECT * FROM pg_catalog.pg_dist_shard_placement;
+    CREATE TABLE public.pg_dist_placement AS SELECT * FROM pg_catalog.pg_dist_placement;
     CREATE TABLE public.pg_dist_node AS SELECT * FROM pg_catalog.pg_dist_node;
     CREATE TABLE public.pg_dist_local_group AS SELECT * FROM pg_catalog.pg_dist_local_group;
     CREATE TABLE public.pg_dist_transaction AS SELECT * FROM pg_catalog.pg_dist_transaction;
@@ -168,7 +168,7 @@ On the Coordinator Node
 
     INSERT INTO pg_catalog.pg_dist_partition SELECT * FROM public.pg_dist_partition;
     INSERT INTO pg_catalog.pg_dist_shard SELECT * FROM public.pg_dist_shard;
-    INSERT INTO pg_catalog.pg_dist_shard_placement SELECT * FROM public.pg_dist_shard_placement;
+    INSERT INTO pg_catalog.pg_dist_placement SELECT * FROM public.pg_dist_placement;
     INSERT INTO pg_catalog.pg_dist_node SELECT * FROM public.pg_dist_node;
     TRUNCATE TABLE pg_catalog.pg_dist_local_group;
     INSERT INTO pg_catalog.pg_dist_local_group SELECT * FROM public.pg_dist_local_group;
@@ -181,7 +181,7 @@ On the Coordinator Node
 
     DROP TABLE public.pg_dist_partition;
     DROP TABLE public.pg_dist_shard;
-    DROP TABLE public.pg_dist_shard_placement;
+    DROP TABLE public.pg_dist_placement;
     DROP TABLE public.pg_dist_node;
     DROP TABLE public.pg_dist_local_group;
     DROP TABLE public.pg_dist_transaction;
@@ -197,7 +197,7 @@ On the Coordinator Node
 
     SELECT setval('pg_catalog.pg_dist_node_nodeid_seq', (SELECT MAX(nodeid)+1 AS max_node_id FROM pg_dist_node), false);
 
-    SELECT setval('pg_catalog.pg_dist_shard_placement_placementid_seq', (SELECT MAX(placementid)+1 AS max_placement_id FROM pg_dist_shard_placement), false);
+    SELECT setval('pg_catalog.pg_dist_placement_placementid_seq', (SELECT MAX(placementid)+1 AS max_placement_id FROM pg_dist_placement), false);
 
     SELECT setval('pg_catalog.pg_dist_colocationid_seq', (SELECT MAX(colocationid)+1 AS max_colocation_id FROM pg_dist_colocation), false);
 
