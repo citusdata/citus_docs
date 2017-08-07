@@ -238,13 +238,17 @@ modification.
 
 **2. Use UNIQUE constraints which include the tenant\_id**
 
-Unique constraints on values will present a problem in any distributed
-system, since it’s difficult to make sure that no two nodes accept the
-same unique value.
+Unique and foreign-key constraints on values other than the tenant\_id
+will present a problem in any distributed system, since it’s difficult
+to make sure that no two nodes accept the same unique value. Enforcing
+the constraint would require expensive scans of the data across all
+nodes.
 
-In many cases, you can work around this problem by adding the tenant\_id
-to the constraint, effectively making objects unique inside a given
-tenant, but not guaranteeing this beyond that tenant.
+To solve this problem, for the models which are logically related
+to a store (the tenant for our app), you should add store\_id to
+the constraints, effectively scoping objects unique inside a given
+store. This helps add the concept of tenancy to your models, thereby
+making the multi-tenant system more robust.
 
 For example, Rails creates a primary key by default, that only includes
 the ``id`` of the record:
@@ -430,9 +434,17 @@ In order to scale out a multi-tenant model, it's essential that you can locate a
 
 **2. Use UNIQUE constraints which include the store\_id**
 
-Unique constraints on values will present a problem in any distributed system, since it’s difficult to make sure that no two nodes accept the same unique value.
+Unique and foreign-key constraints on values other than the tenant\_id
+will present a problem in any distributed system, since it’s difficult
+to make sure that no two nodes accept the same unique value. Enforcing
+the constraint would require expensive scans of the data across all
+nodes.
 
-In many cases, you can work around this problem by adding the store\_id to the constraint, effectively making objects unique inside a given store, but not guaranteeing this beyond that store.
+To solve this problem, for the models which are logically related
+to a store (the tenant for our app), you should add store\_id to
+the constraints, effectively scoping objects unique inside a given
+store. This helps add the concept of tenancy to your models, thereby
+making the multi-tenant system more robust.
 
 Let's begin by adjusting our model definitions and have Django generate a new migration for the two changes discussed.
 
