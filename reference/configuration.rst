@@ -186,6 +186,21 @@ The supported values for this enum are:
 Note that it may be useful to use :code:`error` or :code:`warning` during testing, and a
 lower log-level like :code:`notice` or :code:`log` during actual production deployment.
 
+citus.use_secondary_nodes (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Sets the policy to use when choosing nodes for SELECT queries.
+
+The supported values for this enum are:
+
+* **never:** (default) All reads happen on primary nodes.
+
+* **always:** Reads run against secondary nodes instead, and insert/update statements are disabled.
+
+citus.cluster_name (text, read-only)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The name of the cluster containing the node in which this GUC is evaluated. That is, different nodes will potentially provide different answers to this query: :code:`SHOW citus.cluster_name;`.
 
 Real-time executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
