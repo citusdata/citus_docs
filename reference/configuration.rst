@@ -15,6 +15,22 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Citus tracks worker nodes' locations and their membership in a shared hash table on the coordinator node. This configuration value limits the size of the hash table, and consequently the number of worker nodes that can be tracked. The default for this setting is 2048. This parameter can only be set at server start and is effective on the coordinator node.
 
+citus.use_secondary_nodes (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Sets the policy to use when choosing nodes for SELECT queries.
+
+The supported values for this enum are:
+
+* **never:** (default) All reads happen on primary nodes.
+
+* **always:** Reads run against secondary nodes instead, and insert/update statements are disabled.
+
+citus.cluster_name (text, read-only)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The name of the cluster containing the node in which this GUC is evaluated. That is, different nodes will potentially provide different answers to this query: :code:`SHOW citus.cluster_name;`.
+
 .. _enable_version_checks:
 
 citus.enable_version_checks (bool)
@@ -185,22 +201,6 @@ The supported values for this enum are:
 
 Note that it may be useful to use :code:`error` or :code:`warning` during testing, and a
 lower log-level like :code:`notice` or :code:`log` during actual production deployment.
-
-citus.use_secondary_nodes (enum)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-Sets the policy to use when choosing nodes for SELECT queries.
-
-The supported values for this enum are:
-
-* **never:** (default) All reads happen on primary nodes.
-
-* **always:** Reads run against secondary nodes instead, and insert/update statements are disabled.
-
-citus.cluster_name (text, read-only)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-The name of the cluster containing the node in which this GUC is evaluated. That is, different nodes will potentially provide different answers to this query: :code:`SHOW citus.cluster_name;`.
 
 Real-time executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
