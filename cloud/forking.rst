@@ -15,7 +15,7 @@ Shortly after you click "Fork Formation," the new formation will appear in the C
 How it Works Internally
 -----------------------
 
-Citus is an extension of PostgreSQL and can thus leverage all the features of the underlying database. Forking is actually just point-in-time recovery (PITR) into a new database where the recovery time is just the time the fork is initiated. The two features relevant for PITR are:
+Citus is an extension of PostgreSQL and can thus leverage all the features of the underlying database. Forking is actually point-in-time recovery (PITR) into a new database where the recovery time is the time the fork is initiated. The two features relevant for PITR are:
 
 * Base Backups
 * Write-Ahead Log (WAL) Shipping
