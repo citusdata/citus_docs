@@ -1,3 +1,5 @@
+.. _connection:
+
 Connection and Security
 #######################
 
