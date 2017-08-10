@@ -10,21 +10,21 @@ Welcome to the documentation for Citus 6.2! Citus horizontally scales PostgreSQL
       <div class="box">
         <h3>Overview</h3>
         <img src="_images/ico1.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.</p>
+        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/overview.html">Read More &gt;</a></p>
       </div>
     </div>
     <div class="col-xs-4">
       <div class="box">
         <h3>Getting Started</h3>
         <img src="_images/ico2.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.</p>
+        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/getting_started.html">Read More &gt;</a></p>
       </div>
     </div>
     <div class="col-xs-4">
       <div class="box">
         <h3>Awesome Stuff</h3>
         <img src="_images/ico3.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.</p>
+        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/awesome_stuff.html">Read More &gt;</a></p>
       </div>
     </div>
   </div>
@@ -33,21 +33,21 @@ Welcome to the documentation for Citus 6.2! Citus horizontally scales PostgreSQL
       <div class="box">
         <h3>Total Mastery</h3>
         <img src="_images/ico4.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.</p>
+        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/total_mastery.html">Read More &gt;</a></p>
       </div>
     </div>
     <div class="col-xs-4">
       <div class="box">
         <h3>Beyond Infinity</h3>
         <img src="_images/ico5.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.</p>
+        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/beyond_infinity.html">Read More &gt;</a></p>
       </div>
     </div>
     <div class="col-xs-4">
       <div class="box">
         <h3>Transcendence</h3>
         <img src="_images/ico6.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.</p>
+        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/transcendence.html">Read More &gt;</a></p>
       </div>
     </div>
   </div>
