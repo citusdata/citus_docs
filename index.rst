@@ -65,6 +65,7 @@ topics.
    cloud/scaling.rst
    cloud/logging.rst
    cloud/monitoring.rst
+   cloud/forking.rst
    cloud/mx.rst
    cloud/support.rst
 
