@@ -5,50 +5,50 @@ Welcome to the documentation for Citus 6.2! Citus horizontally scales PostgreSQL
 
 .. raw:: html
 
-  <div class="row">
+  <div class="front-menu row">
     <div class="col-xs-4">
-      <div class="box">
+      <a class="box" href="/portals/overview.html">
         <h3>Overview</h3>
         <img src="_images/ico1.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/overview.html">Read More &gt;</a></p>
-      </div>
+        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      </a>
     </div>
     <div class="col-xs-4">
-      <div class="box">
+      <a class="box" href="/portals/getting_started.html">
         <h3>Getting Started</h3>
         <img src="_images/ico2.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/getting_started.html">Read More &gt;</a></p>
-      </div>
+        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      </a>
     </div>
     <div class="col-xs-4">
-      <div class="box">
+      <a class="box" href="/portals/awesome_stuff.html">
         <h3>Awesome Stuff</h3>
         <img src="_images/ico3.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/awesome_stuff.html">Read More &gt;</a></p>
-      </div>
+        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      </a>
     </div>
   </div>
-  <div class="row">
+  <div class="front-menu row">
     <div class="col-xs-4">
-      <div class="box">
+      <a class="box" href="/portals/total_mastery.html">
         <h3>Total Mastery</h3>
         <img src="_images/ico4.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/total_mastery.html">Read More &gt;</a></p>
-      </div>
+        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      </a>
     </div>
     <div class="col-xs-4">
-      <div class="box">
+      <a class="box" href="/portals/beyond_infinity.html">
         <h3>Beyond Infinity</h3>
         <img src="_images/ico5.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/beyond_infinity.html">Read More &gt;</a></p>
-      </div>
+        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      </a>
     </div>
     <div class="col-xs-4">
-      <div class="box">
+      <a class="box" href="/portals/transcendence.html">
         <h3>Transcendence</h3>
         <img src="_images/ico6.png" />
-        <p>Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no. <a href="/portals/transcendence.html">Read More &gt;</a></p>
-      </div>
+        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      </a>
     </div>
   </div>
 

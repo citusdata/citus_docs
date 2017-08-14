@@ -4630,6 +4630,18 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
   clear: both;
 }
 
+.front-menu a.box {
+  color: #444;
+  padding: 1em;
+  margin: 1em 0.5em;
+  box-shadow: 2px 2px 4px 4px #CCC;
+  display: block;
+}
+.front-menu .box:hover {
+  box-shadow: 2px 2px 4px 4px #AAA;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
 div.wy-menu.rst-pro {
   display: none !important;
 }
