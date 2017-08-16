@@ -82,14 +82,17 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
   -- We want to synchronise them so that every time little_vals
   -- are created, big_vals appear with double the value
   --
-  -- First we make a trigger function for each placement
-  SELECT run_command_on_placements('big_vals', $cmd$
-    CREATE OR REPLACE FUNCTION embiggen_%1$I() RETURNS TRIGGER AS $$
+  -- First we make a trigger function on each worker, which will
+  -- take the destination table placement as an argument
+  SELECT run_command_on_workers($cmd$
+    CREATE OR REPLACE FUNCTION embiggen() RETURNS TRIGGER AS $$
       BEGIN
         IF (TG_OP = 'INSERT') THEN
-          INSERT INTO %1$I (key, val) VALUES (NEW.key, NEW.val*2);
+          EXECUTE format(
+            'INSERT INTO %s (key, val) SELECT ($1).key, ($1).val*2;',
+            TG_ARGV[0]
+          ) USING NEW;
         END IF;
-
         RETURN NULL;
       END;
     $$ LANGUAGE plpgsql;
@@ -101,8 +104,8 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
     'little_vals',
     'big_vals',
     $cmd$
-      CREATE TRIGGER after_insert AFTER INSERT ON %I
-        FOR EACH ROW EXECUTE PROCEDURE embiggen_%I()
+      CREATE TRIGGER after_insert AFTER INSERT ON %s
+        FOR EACH ROW EXECUTE PROCEDURE embiggen(%I)
     $cmd$
   );
 
