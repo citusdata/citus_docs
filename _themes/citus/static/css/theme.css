@@ -4639,7 +4639,6 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
 }
 .front-menu .box:hover {
   box-shadow: 2px 2px 4px 4px #AAA;
-  transition: box-shadow 0.2s ease-in-out;
 }
 
 div.wy-menu.rst-pro {
