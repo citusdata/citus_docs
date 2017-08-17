@@ -28,10 +28,11 @@ The supported values for this enum are:
 
 * **always:** Reads run against secondary nodes instead, and insert/update statements are disabled.
 
-citus.cluster_name (text, read-only)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+citus.cluster_name (text)
+$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The name of the cluster containing the node in which this GUC is evaluated. That is, different nodes will potentially provide different answers to this query: :code:`SHOW citus.cluster_name;`.
+Informs the coordinator node planner which cluster it coordinates. Once
+cluster_name is set, the planner will query worker nodes in that cluster alone.
 
 .. _enable_version_checks:
 
