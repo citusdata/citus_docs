@@ -58,7 +58,7 @@ In this technique we use PL/pgSQL to construct and execute one statement based o
   -- create temporary table with results
   do language plpgsql $$
     declare user_ids integer[];
-  begin 
+  begin
     execute
       'select user_id'
       '  from events'
@@ -68,7 +68,7 @@ In this technique we use PL/pgSQL to construct and execute one statement based o
       'create temp table results_temp as '
       'select user_id'
       '  from events'
-      ' where user_id = any(array[%s])'
+      ' where user_id = any(array[%s]::bigint[])'
       '   and event_type = ''A''',
       array_to_string(user_ids, ','));
   end;
