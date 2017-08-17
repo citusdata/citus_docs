@@ -87,7 +87,7 @@ The benefit of running INSERT or UPDATE commands, compared to issuing bulk COPY 
 
     -- First INSERT requires connection set-up, second will be faster
     INSERT INTO pgbench_history VALUES (10, 1, 10000, -5000, CURRENT_TIMESTAMP); -- Time: 10.314 ms
-    INSERT INTO pgbench_history VALUES (10, 1, 22000, 5000, CURRENT_TIMESTAP); -- Time: 3.132 ms
+    INSERT INTO pgbench_history VALUES (10, 1, 22000, 5000, CURRENT_TIMESTAMP); -- Time: 3.132 ms
 
 .. _bulk_copy:
 
