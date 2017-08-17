@@ -18,7 +18,9 @@ Citus tracks worker nodes' locations and their membership in a shared hash table
 citus.use_secondary_nodes (enum)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Sets the policy to use when choosing nodes for SELECT queries.
+Sets the policy to use when choosing nodes for SELECT queries. If this
+is set to 'always', then the planner will query only nodes which are
+marked as 'secondary' noderole in :ref:`pg_dist_node <pg_dist_node>`.
 
 The supported values for this enum are:
 
