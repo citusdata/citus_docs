@@ -88,7 +88,7 @@ queries such as:
   FROM http_request
   WHERE site_id = 1 AND date_trunc('minute', ingest_time) > now() - interval '5 minutes'
   GROUP BY minute;
- 
+
 The setup described above works, but has two drawbacks:
 
 * Your HTTP analytics dashboard must go over each row every time it needs to generate a
@@ -123,7 +123,7 @@ for each of the last 30 days.
   );
 
   SELECT create_distributed_table('http_request_1min', 'site_id');
-  
+
   -- indexes aren't automatically created by Citus
   -- this will create the index on all shards
   CREATE INDEX http_request_1min_idx ON http_request_1min (site_id, ingest_time);
@@ -155,7 +155,7 @@ on every matching pair of shards. This is possible because the tables are co-loc
         -- N.B. make sure the int constant (29999) you use here is unique within your system
         RETURN;
       END IF;
-    
+
       EXECUTE format($insert$
         INSERT INTO %2$I (
           site_id, ingest_time, request_count,
@@ -195,7 +195,7 @@ its own function to figure that out:
       SELECT
         a.logicalrelid::regclass||'_'||a.shardid,
         b.logicalrelid::regclass||'_'||b.shardid,
-        nodename, nodeport
+        nodename, nodeport::BIGINT
       FROM pg_dist_shard a
       JOIN pg_dist_shard b USING (shardminvalue)
       JOIN pg_dist_placement p ON (a.shardid = p.shardid)
@@ -209,16 +209,16 @@ each pair of shards:
 .. code-block:: bash
 
    #!/usr/bin/env bash
-   
+
    QUERY=$(cat <<END
      SELECT * FROM colocated_shard_placements(
        'http_request'::regclass, 'http_request_1min'::regclass
      );
    END
    )
-   
+
    COMMAND="psql -h \$2 -p \$3 -c \"SELECT rollup_1min('\$0', '\$1')\""
-   
+
    psql -tA -F" " -c "$QUERY" | xargs -P32 -n4 sh -c "$COMMAND"
 
 .. NOTE::
@@ -229,7 +229,7 @@ each pair of shards:
   as simple as this:
 
   .. code-block:: bash
-  
+
      * * * * * /some/path/run_rollups.sh
 
 The dashboard query from earlier is now a lot nicer:
@@ -269,7 +269,7 @@ keep raw data for one day and 1-minute aggregations for one month.
   entry on the coordinator node:
 
   .. code-block:: bash
-  
+
     * * * * * psql -c "SELECT expire_old_request_data();"
 
 That's the basic architecture! We provided an architecture that ingests HTTP events and
