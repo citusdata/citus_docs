@@ -191,7 +191,7 @@ its own function to figure that out:
 
     -- this function is created on the coordinator
     CREATE FUNCTION colocated_shard_placements(left_table REGCLASS, right_table REGCLASS)
-    RETURNS TABLE (left_shard TEXT, right_shard TEXT, nodename TEXT, nodeport BIGINT) AS $$
+    RETURNS TABLE (left_shard TEXT, right_shard TEXT, nodename TEXT, nodeport INT4) AS $$
       SELECT
         a.logicalrelid::regclass||'_'||a.shardid,
         b.logicalrelid::regclass||'_'||b.shardid,
