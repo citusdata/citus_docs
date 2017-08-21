@@ -241,7 +241,7 @@ An example of a shard selection function is given below. It appends to a shard u
       shard_id bigint;
     BEGIN
       SELECT shardid INTO shard_id
-      FROM pg_dist_shard JOIN pg_dist_shard_placement USING (shardid)
+      FROM pg_dist_shard JOIN pg_dist_placement USING (shardid)
       WHERE logicalrelid = 'events'::regclass AND shardlength < 1024*1024*1024;
 
       IF shard_id IS NULL THEN
@@ -302,7 +302,7 @@ An example choose_underutilized_shard function belows randomly picks one of the 
       num_small_shards int;
     BEGIN
       SELECT shardid, count(*) OVER () INTO shard_id, num_small_shards
-      FROM pg_dist_shard JOIN pg_dist_shard_placement USING (shardid)
+      FROM pg_dist_shard JOIN pg_dist_placement USING (shardid)
       WHERE logicalrelid = 'events'::regclass AND shardlength < 1024*1024*1024
       GROUP BY shardid ORDER BY RANDOM() ASC;
 
