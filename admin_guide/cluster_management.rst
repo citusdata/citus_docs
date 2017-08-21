@@ -136,6 +136,7 @@ The new shard(s) are created on the same node as the shard(s) from which the ten
     FROM pg_dist_placement AS placement,
          pg_dist_node AS node
    WHERE placement.groupid = node.groupid
+     AND node.noderole = 'primary'
      AND shardid = 102240;
 
   -- list the available worker nodes that could hold the shard
@@ -210,6 +211,7 @@ To find the worker node holding the data for store id=4, ask for the placement o
     FROM pg_dist_placement AS placement,
          pg_dist_node AS node
    WHERE placement.groupid = node.groupid
+     AND node.noderole = 'primary'
      AND shardid = (
        SELECT get_shard_id_for_distribution_column('stores', 4)
      );

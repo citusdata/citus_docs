@@ -497,6 +497,7 @@ Next we move the data across the network to a new dedicated node. Create a new n
     FROM pg_dist_placement AS placement,
          pg_dist_node AS node
    WHERE placement.groupid = node.groupid
+     AND node.noderole = 'primary'
      AND shardid = 102240;
 
   -- move the shard to your choice of worker (it will also move the
