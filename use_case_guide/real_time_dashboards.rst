@@ -199,7 +199,7 @@ its own function to figure that out:
       FROM pg_dist_shard a
       JOIN pg_dist_shard b USING (shardminvalue)
       JOIN pg_dist_placement p ON (a.shardid = p.shardid)
-      JOIN pg_node n ON (p.groupid = n.groupid)
+      JOIN pg_dist_node n ON (p.groupid = n.groupid)
       WHERE a.logicalrelid = left_table AND b.logicalrelid = right_table;
     $$ LANGUAGE 'sql';
 
