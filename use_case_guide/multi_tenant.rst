@@ -494,8 +494,11 @@ Next we move the data across the network to a new dedicated node. Create a new n
   -- find the node currently holding the new shard
 
   SELECT nodename, nodeport
-    FROM pg_dist_shard_placement
-   WHERE shardid = 102240;
+    FROM pg_dist_placement AS placement,
+         pg_dist_node AS node
+   WHERE placement.groupid = node.groupid
+     AND node.noderole = 'primary'
+     AND shardid = 102240;
 
   -- move the shard to your choice of worker (it will also move the
   -- other shards created with the CASCADE option)
@@ -505,7 +508,7 @@ Next we move the data across the network to a new dedicated node. Create a new n
     'source_host', source_port,
     'dest_host', dest_port);
 
-You can confirm the shard movement by querying :ref:`pg_dist_shard_placement <placements>` again.
+You can confirm the shard movement by querying :ref:`pg_dist_placement <placements>` again.
 
 Where to Go From Here
 ---------------------

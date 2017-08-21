@@ -198,7 +198,8 @@ its own function to figure that out:
         nodename, nodeport
       FROM pg_dist_shard a
       JOIN pg_dist_shard b USING (shardminvalue)
-      JOIN pg_dist_shard_placement p ON (a.shardid = p.shardid)
+      JOIN pg_dist_placement p ON (a.shardid = p.shardid)
+      JOIN pg_node n ON (p.groupid = n.groupid)
       WHERE a.logicalrelid = left_table AND b.logicalrelid = right_table;
     $$ LANGUAGE 'sql';
 
