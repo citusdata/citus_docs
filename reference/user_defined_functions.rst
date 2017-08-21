@@ -335,7 +335,7 @@ servers, relevant only for streaming replication.  Default 0
 
 **node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
 
-**node_cluster:** The sub-64-character cluster name. Default 'default'
+**node_cluster:** The cluster name. Default 'default'
 
 Return Value
 ******************************
@@ -377,7 +377,7 @@ servers, relevant only for streaming replication.  Default 0
 
 **node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
 
-**node_cluster:** The sub-64-character cluster name. Default 'default'
+**node_cluster:** The cluster name. Default 'default'
 
 Return Value
 ******************************
