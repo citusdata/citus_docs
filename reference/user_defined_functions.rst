@@ -330,6 +330,13 @@ Arguments
 
 **node_port:** The port on which PostgreSQL is listening on the worker node.
 
+**group_id:** A group of one primary server and zero or more secondary
+servers, relevant only for streaming replication.  Default 0
+
+**node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
+
+**node_cluster:** The cluster name. Default 'default'
+
 Return Value
 ******************************
 
@@ -343,9 +350,9 @@ Example
 ::
 
     select * from master_add_node('new-node', 12345);
-     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive
-    --------+---------+----------+----------+----------+-------------+----------
-          7 |       7 | new-node |    12345 | default  | f           | t
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive | groupid | noderole | nodecluster
+    --------+---------+----------+----------+----------+-------------+----------+---------+----------+ ------------
+          7 |       7 | new-node |    12345 | default  | f           | t        |       0 | primary  | default
     (1 row)
 
 .. _master_add_inactive_node:
@@ -365,12 +372,17 @@ Arguments
 
 **node_port:** The port on which PostgreSQL is listening on the worker node.
 
+**group_id:** A group of one primary server and zero or more secondary
+servers, relevant only for streaming replication.  Default 0
+
+**node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
+
+**node_cluster:** The cluster name. Default 'default'
+
 Return Value
 ******************************
 
-A tuple which represents a row from :ref:`pg_dist_node
-<pg_dist_node>` table.
-
+A tuple which represents a row from :ref:`pg_dist_node <pg_dist_node>` table.
 
 Example
 ***********************
@@ -378,9 +390,9 @@ Example
 ::
 
     select * from master_add_inactive_node('new-node', 12345);
-     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive
-    --------+---------+----------+----------+----------+-------------+----------
-          7 |       7 | new-node |    12345 | default  | f           | f
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive | groupid | noderole | nodecluster
+    --------+---------+----------+----------+----------+-------------+----------+---------+----------+ -------------
+          7 |       7 | new-node |    12345 | default  | f           | f        |       0 | primary  | default
     (1 row)
 
 master_activate_node

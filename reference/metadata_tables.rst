@@ -203,15 +203,19 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 +----------------+----------------------+---------------------------------------------------------------------------+
 | isactive       |        boolean       | | Whether the node is active accepting shard placements.                  |
 +----------------+----------------------+---------------------------------------------------------------------------+
+| noderole       |        text          | | Whether the node is a primary or secondary                              |
++----------------+----------------------+---------------------------------------------------------------------------+
+| nodecluster    |        text          | | The name of the cluster containing this node                            |
++----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
     SELECT * from pg_dist_node;
-     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata | isactive
-    --------+---------+-----------+----------+----------+-------------+----------
-          1 |       1 | localhost |    12345 | default  | f           | t
-          2 |       2 | localhost |    12346 | default  | f           | t
-          3 |       3 | localhost |    12347 | default  | f           | t
+     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata | isactive | noderole | nodecluster
+    --------+---------+-----------+----------+----------+-------------+----------+----------+ -------------
+          1 |       1 | localhost |    12345 | default  | f           | t        | primary  | default
+          2 |       2 | localhost |    12346 | default  | f           | t        | primary  | default
+          3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default
     (3 rows)
 
 .. _colocation_group_table:
