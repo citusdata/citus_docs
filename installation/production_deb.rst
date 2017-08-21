@@ -56,7 +56,7 @@ Before starting the database let's change its access permissions. By default the
   host    all             all             ::1/128                 trust
 
 .. note::
-  Your DNS settings may differ. Also these settings are too permissive for some environments, see our notes about :ref:`worker_security`. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/9.6/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
+  Your DNS settings may differ. Also these settings are too permissive for some environments, see our notes about :ref:`worker_security`. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
 
 **4. Start database servers, create Citus extension**
 

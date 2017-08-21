@@ -83,4 +83,4 @@ Citus propagates the ANALYZE command to all worker node placements.
 
 .. _freemap: https://www.postgresql.org/docs/current/static/storage-fsm.html
 .. _vismap: https://www.postgresql.org/docs/current/static/storage-vm.html
-.. _forks: https://www.postgresql.org/docs/9.6/static/storage-file-layout.html
+.. _forks: https://www.postgresql.org/docs/current/static/storage-file-layout.html
