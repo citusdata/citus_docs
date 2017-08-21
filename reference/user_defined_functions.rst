@@ -258,7 +258,7 @@ Behind the covers, this function connects to all the worker nodes which have sha
 Arguments
 *********************
 
-**delete_command:** valid `SQL DELETE <http://www.postgresql.org/docs/9.6/static/sql-delete.html>`_ command
+**delete_command:** valid `SQL DELETE <http://www.postgresql.org/docs/current/static/sql-delete.html>`_ command
 
 Return Value
 **************************

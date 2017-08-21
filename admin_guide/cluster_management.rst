@@ -73,7 +73,7 @@ coordinator node fails, the standby can be promoted to the primary automatically
 serve queries to your cluster. For details on setting this up, please refer to the `PostgreSQL wiki <https://wiki.postgresql.org/wiki/Streaming_Replication>`_.
 
 2. Since the metadata tables are small, users can use EBS volumes, or `PostgreSQL
-backup tools <http://www.postgresql.org/docs/9.6/static/backup.html>`_ to backup the metadata. Then, they can easily
+backup tools <https://www.postgresql.org/docs/current/static/backup.html>`_ to backup the metadata. Then, they can easily
 copy over that metadata to new nodes to resume operation.
 
 .. _tenant_isolation:

@@ -150,7 +150,7 @@ The situation changes when dealing with late arriving data, or running the rollu
 Single-Shard Updates and Deletion
 ---------------------------------
 
-You can update or delete rows from your tables, using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/9.6/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/9.6/static/sql-delete.html>`_ commands.
+You can update or delete rows from your tables, using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/current/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/current/static/sql-delete.html>`_ commands.
 
 ::
 
