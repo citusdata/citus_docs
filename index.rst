@@ -162,6 +162,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
    articles/aggregation.rst
    articles/scale_on_aws.rst
    articles/heroku_addon.rst
+   articles/outer_joins.rst
 
 .. toctree::
    :caption: FAQ
