@@ -1,7 +1,9 @@
 .. _why_cloud:
 
-Why We Built Cloud
-##################
+How to Scale PostgreSQL on AWS
+##############################
+
+**Learnings from Citus Cloud**
 
 One challenge associated with building a distributed relational database
 (RDBMS) is that they require notable effort to deploy and operate. To

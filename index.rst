@@ -80,8 +80,6 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
 
    tutorials/multi-tenant-tutorial.rst
    tutorials/real-time-analytics-tutorial.rst
-   tutorials/faceted-search.rst
-   tutorials/aggregation.rst
 
 .. toctree::
    :caption: Distributed Data Modeling
@@ -119,7 +117,6 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
    :caption: Cloud
    :hidden:
 
-   cloud/why.rst
    cloud/availability.rst
    cloud/security.rst
    cloud/scaling.rst
@@ -155,6 +152,15 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
    reference/metadata_tables.rst
    reference/configuration.rst
    reference/append.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Articles
+
+   articles/parallel_indexing.rst
+   articles/faceted-search.rst
+   articles/aggregation.rst
+   articles/scale_on_aws.rst
 
 .. toctree::
    :caption: FAQ
