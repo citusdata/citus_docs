@@ -22,11 +22,6 @@ Citus Cloud is a fully managed "Citus-as-a-Service" built on top of Amazon Web S
     </a>
   </p>
 
-Heroku Add-On
--------------
-
-For Heroku apps we offer a special `Citus add-on <https://elements.heroku.com/addons/citus>`__ which connects the app directly to a Citus Cloud formation. Now with ``heroku addons:create citus`` you can get a database that scales out just as easily as your app does. You can also manage the formation from right inside the Heroku dashboard.
-
 .. _multi_machine_manual:
 
 Manual CloudFormation Deployment
