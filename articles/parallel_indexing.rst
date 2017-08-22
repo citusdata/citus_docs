@@ -37,7 +37,7 @@ You can download the sample data by running the following commands:
 Next let's create the table for the GitHub events once as a regular
 PostgreSQL table and then distribute it across the four nodes:
 
-.. code-block:: postgresql
+.. code-block:: psql
 
     CREATE TABLE github_events (
         event_id bigint,

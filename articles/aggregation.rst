@@ -58,7 +58,7 @@ table with several indexes:
 Next, we generate 100 million rows of fake data (takes a few minutes)
 and load it into the database:
 
-.. code-block:: postgres
+.. code-block:: psql
 
     \COPY (SELECT s % 307, (random()*5000)::int, '203.0.113.' || (s % 251), now() + random() * interval '60 seconds' FROM generate_series(1,100000000) s) TO '/tmp/views.csv' WITH CSV
 
