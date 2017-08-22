@@ -117,6 +117,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
    :caption: Cloud
    :hidden:
 
+   cloud/index.rst
    cloud/availability.rst
    cloud/security.rst
    cloud/scaling.rst
