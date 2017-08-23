@@ -88,7 +88,7 @@ queries such as:
   FROM http_request
   WHERE site_id = 1 AND date_trunc('minute', ingest_time) > now() - interval '5 minutes'
   GROUP BY minute;
- 
+
 The setup described above works, but has two drawbacks:
 
 * Your HTTP analytics dashboard must go over each row every time it needs to generate a
@@ -123,7 +123,7 @@ for each of the last 30 days.
   );
 
   SELECT create_distributed_table('http_request_1min', 'site_id');
-  
+
   -- indexes aren't automatically created by Citus
   -- this will create the index on all shards
   CREATE INDEX http_request_1min_idx ON http_request_1min (site_id, ingest_time);
@@ -155,7 +155,7 @@ on every matching pair of shards. This is possible because the tables are co-loc
         -- N.B. make sure the int constant (29999) you use here is unique within your system
         RETURN;
       END IF;
-    
+
       EXECUTE format($insert$
         INSERT INTO %2$I (
           site_id, ingest_time, request_count,
@@ -209,16 +209,16 @@ each pair of shards:
 .. code-block:: bash
 
    #!/usr/bin/env bash
-   
+
    QUERY=$(cat <<END
      SELECT * FROM colocated_shard_placements(
        'http_request'::regclass, 'http_request_1min'::regclass
      );
    END
    )
-   
+
    COMMAND="psql -h \$2 -p \$3 -c \"SELECT rollup_1min('\$0', '\$1')\""
-   
+
    psql -tA -F" " -c "$QUERY" | xargs -P32 -n4 sh -c "$COMMAND"
 
 .. NOTE::
@@ -229,7 +229,7 @@ each pair of shards:
   as simple as this:
 
   .. code-block:: bash
-  
+
      * * * * * /some/path/run_rollups.sh
 
 The dashboard query from earlier is now a lot nicer:
@@ -269,7 +269,7 @@ keep raw data for one day and 1-minute aggregations for one month.
   entry on the coordinator node:
 
   .. code-block:: bash
-  
+
     * * * * * psql -c "SELECT expire_old_request_data();"
 
 That's the basic architecture! We provided an architecture that ingests HTTP events and
@@ -309,6 +309,25 @@ to enable it:
   -- this part runs on the coordinator
   ALTER TABLE http_request_1min ADD COLUMN distinct_ip_addresses hll;
 
+To make hll functions work with distributed tables, we should define hll aggregate functions
+with the name `sum` on all nodes and let Citus use these functions for distributed queries:
+
+.. code-block:: sql
+
+  -- alias for hll_add_agg
+  CREATE AGGREGATE sum(hll_hashval) (
+       SFUNC = hll_add_trans0,
+       STYPE = internal,
+       FINALFUNC = hll_pack
+  );
+
+  -- alias for hll_union_agg
+  CREATE AGGREGATE sum(hll)(
+      sfunc = hll_union_trans,
+      stype = internal,
+      finalfunc = hll_pack
+  );
+
 When doing our rollups, we can now aggregate sessions into an hll column with queries
 like this:
 
@@ -316,12 +335,12 @@ like this:
 
   SELECT
     site_id, date_trunc('minute', ingest_time) as minute,
-    hll_add_agg(hll_hash_text(ip_address)) AS distinct_ip_addresses
+    sum(hll_hash_text(ip_address)) AS distinct_ip_addresses
   FROM http_request
   WHERE date_trunc('minute', ingest_time) = date_trunc('minute', now())
   GROUP BY site_id, minute;
 
-Now dashboard queries are a little more complicated, you have to read out the distinct
+Dashboard queries are a little more complicated, you have to read out the distinct
 number of ip addresses by calling the ``hll_cardinality`` function:
 
 .. code-block:: sql
