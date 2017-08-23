@@ -57,7 +57,7 @@ In this technique we use PL/pgSQL to construct and execute one statement based o
 
   -- create temporary table with results
   do language plpgsql $$
-    declare user_ids integer[];
+    declare user_ids bigint[];
   begin
     execute
       'select user_id'

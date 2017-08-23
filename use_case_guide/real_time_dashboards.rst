@@ -195,7 +195,7 @@ its own function to figure that out:
       SELECT
         a.logicalrelid::regclass||'_'||a.shardid,
         b.logicalrelid::regclass||'_'||b.shardid,
-        nodename, nodeport::BIGINT
+        nodename, nodeport
       FROM pg_dist_shard a
       JOIN pg_dist_shard b USING (shardminvalue)
       JOIN pg_dist_placement p ON (a.shardid = p.shardid)
