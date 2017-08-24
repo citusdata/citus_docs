@@ -49,6 +49,16 @@ This value defaults to true, and is effective on the coordinator. In rare cases,
 complex upgrade processes may require setting this parameter to false, thus
 disabling the check.
 
+citus.log_distributed_deadlock_detection (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Whether to log distributed deadlock detection related processing in the server log. It defaults to false.
+
+citus.distributed_deadlock_detection_factor (floating point)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Sets the time to wait before checking for distributed deadlocks. In particular the time to wait will be this value multiplied with PostgreSQL's deadlock_timeout setting. If the detection factor is set to its maximum value of 1000, then distributed deadlock detection is disabled. The default value is 2.
+
 Data Loading
 ---------------------------
 
