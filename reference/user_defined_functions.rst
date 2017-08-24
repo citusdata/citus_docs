@@ -415,16 +415,15 @@ Return Value
 A tuple which represents a row from :ref:`pg_dist_node
 <pg_dist_node>` table.
 
-
 Example
 ***********************
 
 ::
 
     select * from master_activate_node('new-node', 12345);
-     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive
-    --------+---------+----------+----------+----------+-------------+----------
-          7 |       7 | new-node |    12345 | default  | f           | t
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive| noderole | nodecluster
+    --------+---------+----------+----------+----------+-------------+---------+----------+ -------------
+          7 |       7 | new-node |    12345 | default  | f           | t       | primary  | default
     (1 row)
 
 master_disable_node
@@ -718,6 +717,35 @@ Example
   pg_size_pretty
   --------------
   73 MB
+
+citus.find_groupid_for_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This function returns the group id used in streaming replication to associate primary and secondary servers.
+
+Arguments
+************************
+
+**node_name:** DNS name or IP address of the node.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+The group id for the node in question, or else an error if there is no node running on the given host and port.
+
+Example
+***********************
+
+::
+
+    select citus.find_groupid_for_node('localhost', '5433');
+
+    find_groupid_for_node
+    ---------------------
+                       2
+    (1 row)
 
 .. _cluster_management_functions:
 
