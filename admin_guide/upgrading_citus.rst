@@ -15,21 +15,21 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 6.2 is currently installed:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 7.0 is currently installed:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-9.6-citus-6.2
+  sudo apt-get install --only-upgrade postgresql-9.6-citus-7.0
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus62_96
+  sudo yum update citus70_96
   sudo service postgresql-9.6 restart
 
 .. _major_minor_upgrade:
