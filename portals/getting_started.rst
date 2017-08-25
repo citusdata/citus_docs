@@ -1,7 +1,5 @@
 :orphan:
 
-.. _portal_started:
-
 Getting Started
 ###############
 

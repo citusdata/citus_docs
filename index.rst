@@ -7,47 +7,53 @@ Welcome to the documentation for Citus 6.2! Citus horizontally scales PostgreSQL
 
   <div class="front-menu row">
     <div class="col-xs-4">
-      <a class="box" href="/portals/overview.html">
-        <h3>Overview</h3>
-        <img src="_images/ico1.png" />
-        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
-      </a>
-    </div>
-    <div class="col-xs-4">
       <a class="box" href="/portals/getting_started.html">
         <h3>Getting Started</h3>
-        <img src="_images/ico2.png" />
-        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+        <img src="_images/number-one.png" />
+        Learn the Citus architecture, install locally,
+        and follow some ten-minute tutorials.
       </a>
     </div>
     <div class="col-xs-4">
-      <a class="box" href="/portals/awesome_stuff.html">
-        <h3>Awesome Stuff</h3>
-        <img src="_images/ico3.png" />
-        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      <a class="box" href="/portals/use_cases.html">
+        <h3>Use Cases</h3>
+        <img src="_images/use-cases.png" />
+        See how Citus allows multi-tenant applications
+        to scale with minimal database changes.
+      </a>
+    </div>
+    <div class="col-xs-4">
+      <a class="box" href="/portals/migrating.html">
+        <h3>Migrating to Citus</h3>
+        <img src="_images/migrating.png" />
+        Move from plain PostgreSQL to Citus, and discover
+        data modeling techniques for distributed systems.
       </a>
     </div>
   </div>
   <div class="front-menu row">
     <div class="col-xs-4">
-      <a class="box" href="/portals/total_mastery.html">
-        <h3>Total Mastery</h3>
-        <img src="_images/ico4.png" />
-        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      <a class="box" href="/portals/citus_cloud.html">
+        <h3>Citus Cloud</h3>
+        <img src="_images/cloud.png" />
+        Explore our secure, scalable, highly available
+        database-as-a-service.
       </a>
     </div>
     <div class="col-xs-4">
-      <a class="box" href="/portals/beyond_infinity.html">
-        <h3>Beyond Infinity</h3>
-        <img src="_images/ico5.png" />
-        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      <a class="box" href="/portals/reference.html">
+        <h3>API / Reference</h3>
+        <img src="_images/reference.png" />
+        Get the most out of Citus by learning its
+        functions and configuration.
       </a>
     </div>
     <div class="col-xs-4">
-      <a class="box" href="/portals/transcendence.html">
-        <h3>Transcendence</h3>
-        <img src="_images/ico6.png" />
-        Ignota autem nostrud albucius sagittis no fabulas erat eam ridens et per moderatius 98 movet? Sea iure est integre metus adipisci justo id con ultrices omnes minim odioaccommodare. Consul omnium enim volumus lectus habeo fuisset pri utinam sem tamquam no.
+      <a class="box" href="/portals/support.html">
+        <h3>Help and Support</h3>
+        <img src="_images/help.png" />
+        See the frequently asked questions, and
+        contact us. This is the page to get unstuck.
       </a>
     </div>
   </div>
@@ -117,7 +123,6 @@ Welcome to the documentation for Citus 6.2! Citus horizontally scales PostgreSQL
    cloud/scaling.rst
    cloud/logging.rst
    cloud/monitoring.rst
-   cloud/forking.rst
    cloud/mx.rst
    cloud/support.rst
 
@@ -154,17 +159,21 @@ Welcome to the documentation for Citus 6.2! Citus horizontally scales PostgreSQL
 
    faq/faq.rst
 
-.. image:: images/demo/ico1.png
+.. Declare these images as dependencies so that
+.. sphinx copies them. It can't detect them in
+.. the embedded raw html
+
+.. image:: images/icons/number-one.png
   :width: 0%
-.. image:: images/demo/ico2.png
+.. image:: images/icons/use-cases.png
   :width: 0%
-.. image:: images/demo/ico3.png
+.. image:: images/icons/migrating.png
   :width: 0%
-.. image:: images/demo/ico4.png
+.. image:: images/icons/cloud.png
   :width: 0%
-.. image:: images/demo/ico5.png
+.. image:: images/icons/reference.png
   :width: 0%
-.. image:: images/demo/ico6.png
+.. image:: images/icons/help.png
   :width: 0%
 
 .. raw:: html
