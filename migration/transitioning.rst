@@ -509,11 +509,11 @@ Next we'll add a custom migration to remove simple primary keys which will becom
       # the database mustn't, because the primary key will be composite
       migrations.RunSQL(
         "ALTER TABLE mtdjango_product DROP CONSTRAINT mtdjango_product_pkey;",
-        "ALTER TABLE mtdjango_product ADD CONSTRAINT mtdjango_product_pkey PRIMARY KEY (id)"
+        "ALTER TABLE mtdjango_product ADD CONSTRAINT mtdjango_product_pkey PRIMARY KEY (store_id, id)"
       ),
       migrations.RunSQL(
         "ALTER TABLE mtdjango_purchase DROP CONSTRAINT mtdjango_purchase_pkey;",
-        "ALTER TABLE mtdjango_purchase ADD CONSTRAINT mtdjango_purchase_pkey PRIMARY KEY (id)"
+        "ALTER TABLE mtdjango_purchase ADD CONSTRAINT mtdjango_purchase_pkey PRIMARY KEY (store_id, id)"
       ),
     ]
 
@@ -573,7 +573,7 @@ At this point the Django application models are ready to work with a Citus backe
 Updating the Django Application
 *******************************
 
-To simplify queries in the Django application, Citus has developed a Python library called `django-multitenant <https://github.com/citusdata/django-multitenant>`_. Include :code:`django-multitenant` in the :code:`requirements.txt` package file for your project, and then modify your models.
+To simplify queries in the Django application, Citus has developed a Python library called `django-multitenant <https://github.com/citusdata/django-multitenant>`_ (still in beta as of this writing). Include :code:`django-multitenant` in the :code:`requirements.txt` package file for your project, and then modify your models.
 
 First, include the library in models.py:
 
