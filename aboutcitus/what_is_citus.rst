@@ -1,3 +1,5 @@
+.. _what_is_citus:
+
 What is Citus?
 ==============
 
