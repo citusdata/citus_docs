@@ -415,16 +415,15 @@ Return Value
 A tuple which represents a row from :ref:`pg_dist_node
 <pg_dist_node>` table.
 
-
 Example
 ***********************
 
 ::
 
     select * from master_activate_node('new-node', 12345);
-     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive
-    --------+---------+----------+----------+----------+-------------+----------
-          7 |       7 | new-node |    12345 | default  | f           | t
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive| noderole | nodecluster
+    --------+---------+----------+----------+----------+-------------+---------+----------+ -------------
+          7 |       7 | new-node |    12345 | default  | f           | t       | primary  | default
     (1 row)
 
 master_disable_node
@@ -455,6 +454,45 @@ Example
 ::
 
     select * from master_disable_node('new-node', 12345);
+
+.. _master_add_secondary_node:
+
+master_add_secondary_node
+$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The master_add_secondary_node() function registers a new secondary
+node in the cluster for an existing primary node. It updates the Citus
+metadata table pg_dist_node.
+
+Arguments
+************************
+
+**node_name:** DNS name or IP address of the new node to be added.
+
+**node_port:** The port on which PostgreSQL is listening on the worker node.
+
+**primary_name:** DNS name or IP address of the primary node for this secondary.
+
+**primary_port:** The port on which PostgreSQL is listening on the primary node.
+
+**node_cluster:** The cluster name. Default 'default'
+
+Return Value
+******************************
+
+A tuple which represents a row from :ref:`pg_dist_node <pg_dist_node>` table.
+
+Example
+***********************
+
+::
+
+    select * from master_add_secondary_node('new-node', 12345, 'primary-node', 12345);
+     nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive | noderole  | nodecluster
+    --------+---------+----------+----------+----------+-------------+----------+-----------+-------------
+          7 |       7 | new-node |    12345 | default  | f           | t        | secondary | default
+    (1 row)
+
 
 master_remove_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
