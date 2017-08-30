@@ -107,7 +107,7 @@ An important aspect to consider is that horizontally scaling out your processing
 Limitations Compared to Citus
 -----------------------------
 
-All Citus 6.2 features are supported in Citus MX with the following exceptions:
+All Citus 7.0 features are supported in Citus MX with the following exceptions:
 
 Append-distributed tables currently cannot be made available from workers. They can still be used in the traditional way, with queries going through the coordinator. However, append-distributed tables already allowed you to :ref:`bulk_copy`.
 
