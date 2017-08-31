@@ -13,6 +13,87 @@ subset of SQL statements. We are continuously working to increase SQL coverage
 to better support other use-cases such as data warehousing queries. Also many of
 the unsupported features have workarounds; below are a number of the most useful.
 
+Cross-Shard Aggregations in Views
+---------------------------------
+
+Internally PostgreSQL rewrites queries on views into queries using subqueries. Citus currently lacks support for cross-shard joins or aggregations in subqueries, so you will need a workaround for certain views.
+
+For instance, suppose we have a table of todos with priorities:
+
+.. code-block:: postgres
+
+  CREATE TYPE prio AS ENUM ('low', 'med', 'high');
+
+  CREATE TABLE todos (
+    id serial,
+    project_id int,
+    priority prio DEFAULT 'med',
+    what text NOT NULL,
+    done boolean DEFAULT FALSE,
+    PRIMARY KEY (id, project_id)
+  );
+
+First we'll load it with some medium priority tasks and then a handful of some with high priority.
+
+.. code-block:: postgres
+
+  INSERT INTO todos (project_id, what)
+  SELECT random() * 4, 'usual thing'
+  FROM generate_series(1, 100);
+
+  INSERT INTO todos (project_id, what, priority)
+  SELECT random() * 4, 'important thing', 'high'
+  FROM generate_series(1, 10);
+
+Then, we'll distribute the table by project id:
+
+.. code-block:: postgres
+
+  SELECT run_command_on_workers ($cmd$
+    CREATE TYPE prio AS ENUM ('low', 'med', 'high');
+  $cmd$);
+
+  SELECT create_distributed_table ('todos', 'project_id');
+
+An aggregate query works fine, but when run as a view it fails.
+
+.. code-block:: postgres
+
+  SELECT priority, count(*)
+  FROM todos
+  GROUP BY priority;
+
+  ┌──────────┬───────┐
+  │ priority │ count │
+  ├──────────┼───────┤
+  │ med      │   100 │
+  │ high     │    10 │
+  └──────────┴───────┘
+
+  CREATE VIEW prio_count AS
+  SELECT priority, count(*)
+  FROM todos
+  GROUP BY priority;
+
+  SELECT * FROM prio_count;
+
+  ERROR:  XX000: Unrecognized range table id 1
+  LOCATION:  NewTableId, multi_physical_planner.c:1547
+
+To solve the problem, we must restrict the view to a single shard. It will continue to aggregate by priority but we must filter it on the distribution column, project_id. One workaround is to make a similar view for each project as needed, like this one:
+
+.. code-block:: postgres
+
+  -- This view is specific to project 1
+
+  CREATE VIEW prio_count_1 AS
+  SELECT priority, count(*)
+  FROM todos
+  WHERE project_id = 1
+  GROUP BY priority;
+
+The same kind of workaround is required for views which join distributed tables by a non-distribution column.
+
 Subqueries in WHERE
 -------------------
 
