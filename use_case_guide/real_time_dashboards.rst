@@ -309,6 +309,25 @@ to enable it:
   -- this part runs on the coordinator
   ALTER TABLE http_request_1min ADD COLUMN distinct_ip_addresses hll;
 
+To make hll functions work with distributed tables, we should define hll aggregate functions
+with the name `sum` on all nodes and let Citus use these functions for distributed queries:
+
+.. code-block:: sql
+
+  -- alias for hll_add_agg
+  CREATE AGGREGATE sum(hll_hashval) (
+       SFUNC = hll_add_trans0,
+       STYPE = internal,
+       FINALFUNC = hll_pack
+  );
+
+  -- alias for hll_union_agg
+  CREATE AGGREGATE sum(hll)(
+      sfunc = hll_union_trans,
+      stype = internal,
+      finalfunc = hll_pack
+  );
+
 When doing our rollups, we can now aggregate sessions into an hll column with queries
 like this:
 
@@ -316,12 +335,12 @@ like this:
 
   SELECT
     site_id, date_trunc('minute', ingest_time) as minute,
-    hll_add_agg(hll_hash_text(ip_address)) AS distinct_ip_addresses
+    sum(hll_hash_text(ip_address)) AS distinct_ip_addresses
   FROM http_request
   WHERE date_trunc('minute', ingest_time) = date_trunc('minute', now())
   GROUP BY site_id, minute;
 
-Now dashboard queries are a little more complicated, you have to read out the distinct
+Dashboard queries are a little more complicated, you have to read out the distinct
 number of ip addresses by calling the ``hll_cardinality`` function:
 
 .. code-block:: sql
