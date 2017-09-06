@@ -115,6 +115,7 @@ html_theme_path = ['_themes',]
 html_context = {
   'css_files': [
     '_static/css/theme.css',
+    '_static/css/flexboxgrid.min.css',
   ]
 }
 

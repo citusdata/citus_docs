@@ -1,4 +1,4 @@
-.. _introduction:
+.. _rt_use_case:
 
 Real Time Dashboards
 #####################
