@@ -1,5 +1,6 @@
-.. _multi_tenant_tutorial:
 .. highlight:: sql
+
+.. _multi_tenant_tutorial:
 
 Multi-tenant Applications
 #########################

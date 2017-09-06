@@ -1,5 +1,6 @@
-.. _real_time_analytics_tutorial:
 .. highlight:: sql
+
+.. _real_time_analytics_tutorial:
 
 Real-time Analytics
 ###################
