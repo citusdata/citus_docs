@@ -7,7 +7,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
 
   <div class="front-menu row">
     <div class="col-xs-4">
-      <a class="box" href="/portals/getting_started.html">
+      <a class="box" href="portals/getting_started.html">
         <h3>Getting Started</h3>
         <img src="_images/number-one.png" />
         Learn the Citus architecture, install locally,
@@ -15,7 +15,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
       </a>
     </div>
     <div class="col-xs-4">
-      <a class="box" href="/portals/use_cases.html">
+      <a class="box" href="portals/use_cases.html">
         <h3>Use Cases</h3>
         <img src="_images/use-cases.png" />
         See how Citus allows multi-tenant applications
@@ -23,7 +23,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
       </a>
     </div>
     <div class="col-xs-4">
-      <a class="box" href="/portals/migrating.html">
+      <a class="box" href="portals/migrating.html">
         <h3>Migrating to Citus</h3>
         <img src="_images/migrating.png" />
         Move from plain PostgreSQL to Citus, and discover
@@ -33,7 +33,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
   </div>
   <div class="front-menu row">
     <div class="col-xs-4">
-      <a class="box" href="/portals/citus_cloud.html">
+      <a class="box" href="portals/citus_cloud.html">
         <h3>Citus Cloud</h3>
         <img src="_images/cloud.png" />
         Explore our secure, scalable, highly available
@@ -41,7 +41,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
       </a>
     </div>
     <div class="col-xs-4">
-      <a class="box" href="/portals/reference.html">
+      <a class="box" href="portals/reference.html">
         <h3>API / Reference</h3>
         <img src="_images/reference.png" />
         Get the most out of Citus by learning its
@@ -49,7 +49,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
       </a>
     </div>
     <div class="col-xs-4">
-      <a class="box" href="/portals/support.html">
+      <a class="box" href="portals/support.html">
         <h3>Help and Support</h3>
         <img src="_images/help.png" />
         See the frequently asked questions, and
