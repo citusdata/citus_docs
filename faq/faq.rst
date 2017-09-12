@@ -17,9 +17,9 @@ How do I change the shard count for a hash partitioned table?
 
 Shard count is a variable in citus and you can always set it by `SET citus.shard_count=[Shard Count];`. After setting the shard count, your new tables are going to be distributed according to the new value.
 
-Note that it is not allowed to change the shard count of an already distributed table. However, if it is really necessary, you can create a new table with the same schema, set the shard_count and `INSERT INTO new_table SELECT * FROM old_table;` but this process will take a large amount of time depending on the size of your table.
+Note that it is not allowed to change the shard count of an already distributed table. If you need to do so, please `Contact Us <https://www.citusdata.com/about/contact_us>`_.
 
-If you need further information on choosing the right shard count for your table, please check "How do I choose the shard count when I hash-partition my data?"
+For any further information on shard count for your table, you can check "`How do I choose the shard count when I hash-partition my data? <https://docs.citusdata.com/en/v7.0/faq/faq.html#how-do-i-choose-the-shard-count-when-i-hash-partition-my-data>`_"
 
 How does Citus handle failure of a worker node?
 -----------------------------------------------
