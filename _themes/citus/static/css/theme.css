@@ -3711,7 +3711,7 @@ h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
 p {
   line-height: 24px;
   margin: 0;
-  font-size: 16px;
+  font-size: 12px;
   margin-bottom: 24px;
 }
 
@@ -4228,19 +4228,19 @@ div[class^='highlight'] pre {
   border-right: solid 1px #404040;
 }
 .wy-menu-horiz a {
-  height: 32px;
+  height: 24px;
   display: inline-block;
-  line-height: 32px;
-  padding: 0 16px;
+  line-height: 24px;
+  padding: 0 12px;
 }
 
 .wy-menu-vertical {
   width: 300px;
 }
 .wy-menu-vertical header, .wy-menu-vertical p.caption {
-  height: 32px;
+  height: 24px;
   display: inline-block;
-  line-height: 32px;
+  line-height: 24px;
   padding: 0 1.618em;
   margin-bottom: 0;
   display: block;
