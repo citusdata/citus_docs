@@ -17,9 +17,11 @@ You can add nodes to a Citus cluster by calling the master_add_node UDF with the
 How do I change the shard count for a hash partitioned table?
 -------------------------------------------------------------
 
-Optimal shard count is related to the total number of cores on the workers. Citus partitions an incoming query into its fragment queries which run on individual worker shards. Hence the degree of parallelism for each query is governed by the number of shards the query hits. To ensure maximum parallelism, you should create enough shards on each node such that there is at least one shard per CPU core.
+Shard count is a variable in citus and you can always set it by `SET citus.shard_count=[Shard Count];`. After setting the shard count, your new tables are going to be distributed according to the new value.
 
-We typically recommend creating a high number of initial shards, e.g. 2x or 4x the number of current CPU cores. This allows for future scaling if you add more workers and CPU cores.
+Note that it is not allowed to change the shard count of an already distributed table. If you need to do so, please `Contact Us <https://www.citusdata.com/about/contact_us>`_.
+
+For any further information on shard count for your table, you can check "`How do I choose the shard count when I hash-partition my data? <https://docs.citusdata.com/en/v7.0/faq/faq.html#how-do-i-choose-the-shard-count-when-i-hash-partition-my-data>`_"
 
 How does Citus handle failure of a worker node?
 -----------------------------------------------
