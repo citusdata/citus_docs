@@ -20,7 +20,7 @@ This section describes setting up a Citus cluster on a single machine using dock
   sudo usermod -aG docker $USER && exec sg docker newgrp `id -gn`
   sudo systemctl start docker
 
-  sudo curl -sSL https://github.com/docker/compose/releases/download/1.11.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+  sudo curl -sSL https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
   sudo chmod +x /usr/local/bin/docker-compose
 
 The above version of Docker Compose is sufficient for running Citus, or you can install the `latest version <https://github.com/docker/compose/releases/latest>`_.
@@ -34,7 +34,7 @@ Citus uses Docker Compose to run and connect containers holding the database coo
 .. code-block:: bash
 
   curl -L https://raw.githubusercontent.com/citusdata/docker/master/docker-compose.yml > docker-compose.yml
-  docker-compose -p citus up -d
+  COMPOSE_PROJECT_NAME=citus docker-compose up -d
 
 The first time you start the cluster it builds its containers. Subsequent startups take a matter of seconds.
 
@@ -78,4 +78,4 @@ When you wish to stop the docker containers, use Docker Compose:
 
 .. code-block:: bash
 
-  docker-compose -p citus down
+  COMPOSE_PROJECT_NAME=citus docker-compose down -v
