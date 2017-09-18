@@ -105,19 +105,6 @@ Interpolate the list of ids into a new query
    where page_id in (2,3,5,7,13)
   group by page_id
 
-SELECT DISTINCT
----------------
-
-Citus does not yet support SELECT DISTINCT but you can use GROUP BY for a simple workaround:
-
-.. code-block:: sql
-
-  -- rather than this
-  -- select distinct col from table;
-
-  -- use this
-  select col from table group by col;
-
 JOIN a local and a distributed table
 ------------------------------------
 
