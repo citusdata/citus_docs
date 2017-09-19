@@ -14,15 +14,6 @@ How do I add nodes to an existing Citus cluster?
 
 You can add nodes to a Citus cluster by calling the master_add_node UDF with the hostname (or IP address) and port number of the new node. After adding a node to an existing cluster, it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, the Citus Enterprise edition provides a shard rebalancer utility. You can find more information about shard rebalancing in the :ref:`cluster_management` section.
 
-How do I change the shard count for a hash partitioned table?
--------------------------------------------------------------
-
-Optimal shard count depends on use-case. It is possible, but difficult, to change the count after cluster creation, so use these guidelines to choose the right size.
-
-In the :ref:`mt_blurb` use-case we recommend choosing between 32 - 128 shards.  For smaller workloads say <100GB, you could start with 32 shards and for larger workloads you could choose 64 or 128. This means that you have the leeway to scale from 32 to 128 worker machines.
-
-In the :ref:`rt_blurb` use-case, shard count should be related to the total number of cores on the workers. To ensure maximum parallelism, you should create enough shards on each node such that there is at least one shard per CPU core. We typically recommend creating a high number of initial shards, e.g. 2x or 4x the number of current CPU cores. This allows for future scaling if you add more workers and CPU cores.
-
 How does Citus handle failure of a worker node?
 -----------------------------------------------
 
@@ -61,13 +52,29 @@ Other queries which, by contrast, combine data from multiple nodes, do not suppo
 * Set operations
 * Transactional semantics for queries that span across multiple shards
 
-How do I choose the shard count when I hash-partition my data?
---------------------------------------------------------------
 .. _faq_choose_shard_count:
 
-Optimal shard count is related to the total number of cores on the workers. Citus partitions an incoming query into its fragment queries which run on individual worker shards. Hence, the degree of parallelism for each query is governed by the number of shards the query hits. To ensure maximum parallelism, you should create enough shards on each node such that there is at least one shard per CPU core.
+How do I choose the shard count when I hash-partition my data?
+--------------------------------------------------------------
 
-We typically recommend creating a high number of initial shards, e.g. 2x or 4x the number of current CPU cores. This allows for future scaling if you add more workers and CPU cores.
+One of the choices when first distributing a table is its shard count. This setting can be set differently for each table, and the optimal value depends on use-case. It is possible, but difficult, to change the count after cluster creation, so use these guidelines to choose the right size.
+
+In the :ref:`mt_blurb` use-case we recommend choosing between 32 - 128 shards.  For smaller workloads say <100GB, you could start with 32 shards and for larger workloads you could choose 64 or 128. This means that you have the leeway to scale from 32 to 128 worker machines.
+
+In the :ref:`rt_blurb` use-case, shard count should be related to the total number of cores on the workers. To ensure maximum parallelism, you should create enough shards on each node such that there is at least one shard per CPU core. We typically recommend creating a high number of initial shards, e.g. 2x or 4x the number of current CPU cores. This allows for future scaling if you add more workers and CPU cores.
+
+To choose a shard count for a table you wish to distribute, update the :code:`citus.shard_count` variable. This affects subsequent calls to :ref:`create_distributed_table`. For example
+
+.. code-block:: postgres
+
+  SET citus.shard_count = 64;
+  -- any tables distributed at this point will have
+  -- sixty-four shards
+
+How do I change the shard count for a hash partitioned table?
+-------------------------------------------------------------
+
+Note that it is not straightforward to change the shard count of an already distributed table. If you need to do so, please `Contact Us <https://www.citusdata.com/about/contact_us>`_. It's good to think about shard count carefully at distribution time, see :ref:`faq_choose_shard_count`.
 
 How does citus support count(distinct) queries?
 -----------------------------------------------
