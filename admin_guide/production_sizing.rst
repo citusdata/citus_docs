@@ -28,7 +28,7 @@ Multi-Tenant SaaS Use-Case
 
 For those migrating to Citus from an existing single-node database instance, we recommend choosing a cluster where the number of worker cores and RAM in total equals that of the original instance. In such scenarios we have seen 2-3x performance improvements because sharding improves resource utilization, allowing smaller indices etc.
 
-For the coordinator node, choose a compute-optimized machine. The coordinator is responsible for the computationally intensive job of routing queries to the right workers. The number of cores needed on the coordinator depends on your existing workload (write/read throughput). By default in Citus Cloud the workers use Amazon EC2 instance type R4S, and the coordinator uses C4S.
+The coordinator node needs less memory than workers, so you can choose a compute-optimized machine for running the coordinator. The number of cores required depends on your existing workload (write/read throughput). By default in Citus Cloud the workers use Amazon EC2 instance type R4S, and the coordinator uses C4S.
 
 Real-Time Analytics Use-Case
 ----------------------------
