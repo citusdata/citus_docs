@@ -106,7 +106,3 @@ scaling your Heroku app. Which is why we're excited to roll out the
 Citus add-on to help you grow. If you’re using Heroku Postgres and are
 looking for scale, `give the Citus add-on for
 Heroku <https://elements.heroku.com/addons/citus>`__ a try today.
-
-p.s. And if you have any questions at all for our team at Citus Data,
-just `contact us <https://www.citusdata.com/about/contact_us>`__ and let
-us know how we can help.

@@ -149,4 +149,3 @@ pipeline. A particular sweet spot for Citus is parallel ingestion and
 single-shard queries, which gives querying performance that is better
 than regular PostgreSQL, but with much higher and more scalable write
 throughput.
-
