@@ -85,3 +85,5 @@ To verify that the installation has succeeded we check that the coordinator node
   psql -p 9700 -c "select * from master_get_active_worker_nodes();"
 
 You should see a row for each worker node including the node name and port.
+
+At this step, you have completed the installation process and are ready to use your Citus cluster. To help you get started, we have a :ref:`tutorial<multi_tenant_tutorial>` which has instructions on setting up a Citus cluster with sample data in minutes.

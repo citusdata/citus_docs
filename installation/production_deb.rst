@@ -106,9 +106,7 @@ shell should output the worker nodes we added to the pg_dist_node table above.
 
 **Ready to use Citus**
 
-At this step, you have completed the installation process and are ready to use your Citus cluster. To help you get started, we have a :ref:`tutorial<multi_tenant_tutorial>` which has instructions on setting up a Citus cluster with sample data in minutes.
-
-Your new Citus database is accessible in psql through the postgres user:
+At this step, you have completed the installation process and are ready to use your Citus cluster. The new Citus database is accessible in psql through the postgres user:
 
 ::
 
