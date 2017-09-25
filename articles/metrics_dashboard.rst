@@ -163,9 +163,7 @@ And the graphs look like
    :alt: 
 
 This clearly shows a time period of something not quite right. Sometimes
-we've gone into
-`psql <http://www.craigkerstiens.com/2013/02/13/How-I-Work-With-Postgres/>`__
-to look at the
+we've gone into psql to look at the
 `jsonb <https://www.citusdata.com/blog/2016/07/14/choosing-nosql-hstore-json-jsonb/>`__
 to get details if there is a high rate of some particular error to
 figure out which server is causing it. That is currently a manual

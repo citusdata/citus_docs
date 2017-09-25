@@ -4,13 +4,12 @@ Sharding with Semi-Structured Data
 ##################################
 
 If you're looking at Citus its likely you've outgrown a single node
-database. In most cases your application is no longer `performing as
-you’d
-like <http://www.craigkerstiens.com/2012/10/01/understanding-postgres-performance/>`__.
-In cases where your data is still under 100 GB a single Postgres
-instance will still work well for you, and is a great choice. At levels
-beyond that Citus can help, but how you model your data has a major
-impact on how much performance you're able to get out of the system.
+database. In most cases your application is no longer performing
+as you’d like.  In cases where your data is still under 100 GB a
+single Postgres instance will still work well for you, and is a great
+choice. At levels beyond that Citus can help, but how you model your
+data has a major impact on how much performance you're able to get out
+of the system.
 
 Some applications fit naturally in this scaled out model, but others
 require changes in your application. The model you choose can determine

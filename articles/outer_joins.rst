@@ -117,21 +117,24 @@ join behaviors:
 Distributed Outer Joins with Citus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Citus extension allows PostgreSQL to distribute big tables into
-smaller fragments called
-`"shards" <http://www.craigkerstiens.com/2012/11/30/sharding-your-database/>`__
-and performing outer joins on these distributed tables becomes a bit
-more challenging, since the union of outer joins between individual
-shards does not always give the correct result. Currently, Citus support
-distributed outer joins under some criteria: - Outer joins should be
-between distributed(sharded) tables only, i.e. it is not possible to
-outer join a sharded table with a regular PostgreSQL table. - Join
-criteria should be on `partition
-columns <https://docs.citusdata.com/en/v5.2/dist_tables/concepts.html>`__
-of the distributed tables. - The query should join the distributed
-tables on the equality of partition columns (table1.a = table2.a) -
-Shards of the distributed table should match one to one, i.e. each shard
-of table A should overlap with one and only one shard from table B.
+The Citus extension allows PostgreSQL to distribute big tables
+into smaller fragments called "shards" and performing outer joins
+on these distributed tables becomes a bit more challenging,
+since the union of outer joins between individual shards does
+not always give the correct result. Currently, Citus support
+distributed outer joins under some criteria:
+
+- Outer joins should be between distributed(sharded) tables only,
+i.e. it is not possible to outer join a sharded table with a regular
+PostgreSQL table.
+- Join criteria should be on `partition columns
+<https://docs.citusdata.com/en/v5.2/dist_tables/concepts.html>`__ of the
+distributed tables.
+- The query should join the distributed tables on the equality of
+partition columns (table1.a = table2.a)
+- Shards of the distributed table should match one to one, i.e. each
+shard of table A should overlap with one and only one shard from table
+B.
 
 For example lets assume we 3 hash distributed tables X, Y and Z and let
 X and Y have 4 shards while Z has 8 shards.
