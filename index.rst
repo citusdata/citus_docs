@@ -168,6 +168,8 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
    articles/semi_structured_data.rst
    articles/sharding_mt_app.rst
    articles/designing_saas.rst
+   articles/hll_count_distinct.rst
+   articles/efficient_rollup.rst
 
 .. toctree::
    :caption: FAQ
