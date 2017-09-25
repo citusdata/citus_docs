@@ -12,7 +12,7 @@ however, you need to think about ways to scale your multi-tenant
 database across dozens or hundreds of machines.
 
 After our blog post on `sharding a multi-tenant app with
-Postgres </blog/2016/08/10/sharding-for-a-multi-tenant-app-with-postgres/>`__,
+Postgres <https://citusdata.com/blog/2016/08/10/sharding-for-a-multi-tenant-app-with-postgres/>`__,
 we received a number of questions on architectural patterns for
 multi-tenant databases and when to use which. At a high level,
 developers have three options:
@@ -103,7 +103,7 @@ mentioned issues. In its simplest form, you add a
 customer\_id/tenant\_id column to your tables and shard them on
 customer\_id. This ensures that data from the same customer gets
 `colocated
-together </blog/2016/08/10/sharding-for-a-multi-tenant-app-with-postgres/>`__
+together <https://citusdata.com/blog/2016/08/10/sharding-for-a-multi-tenant-app-with-postgres/>`__
 -- co-location dramatically reduces the cost associated with distributed
 transactions, joins, and `foreign key
 constraints <https://github.com/citusdata/citus/issues/698>`__.
@@ -162,7 +162,7 @@ Fortunately, designing your database to account for "flexible" columns
 became significantly easier with the introduction of semi-structured
 data types. PostgreSQL has a rich set of semi-structured data types that
 include `hstore, json, and
-jsonb </blog/2016/07/14/choosing-nosql-hstore-json-jsonb/>`__. You can
+jsonb <https://citusdata.com/blog/2016/07/14/choosing-nosql-hstore-json-jsonb/>`__. You can
 now represent the previous database schema by simply declaring a jsonb
 column and scale to thousands of tenants.
 
