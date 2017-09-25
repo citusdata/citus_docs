@@ -1,3 +1,5 @@
+.. _semi_structured_sharding:
+
 Sharding with Semi-Structured Data
 ##################################
 
