@@ -18,8 +18,6 @@ with the data.
 We're going to look at two cases here: a time-series metrics table and
 an events table.
 
-READMORE
-
 Time-Series Metrics
 ~~~~~~~~~~~~~~~~~~~
 

@@ -15,7 +15,7 @@ After our blog post on `sharding a multi-tenant app with
 Postgres </blog/2016/08/10/sharding-for-a-multi-tenant-app-with-postgres/>`__,
 we received a number of questions on architectural patterns for
 multi-tenant databases and when to use which. At a high level,
-developers have three options: READMORE
+developers have three options:
 
 1. Create one database per tenant
 2. Create one schema per tenant
@@ -39,7 +39,7 @@ building/optimizing for. The tldr:
    table(s)
 -  If you’re building for isolation: Create one database per tenant
 
-In this blog post, we’ll focus on the scaling dimension, as we found
+In this article, we’ll focus on the scaling dimension, as we found
 that more users who talked to us had questions in that area. (We also
 intend to describe considerations around isolation in a follow-up blog
 post.)
@@ -158,7 +158,7 @@ native types. When you’re storing data associated with a particular
 tenant, you can then use these custom columns and tailor them to each
 tenant’s special needs.
 
-Fortunately, designing your database to account for “flexible” columns
+Fortunately, designing your database to account for "flexible" columns
 became significantly easier with the introduction of semi-structured
 data types. PostgreSQL has a rich set of semi-structured data types that
 include `hstore, json, and
@@ -174,7 +174,7 @@ column and scale to thousands of tenants.
 Of course, these aren’t the only design criteria and questions to be
 aware of. If you shard your database tables, how do you handle isolation
 or integrate with ORM libraries? What happens if you have a table that
-you can’t easily add a tenant\_id column? In this blog post, we focused
+you can’t easily add a tenant\_id column? In this article, we focused
 on building multi-tenant databases with scaling as the primary
 consideration in mind; and skipped over certain points. If you’re
 looking to learn more about designing multi-tenant databases, please

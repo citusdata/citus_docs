@@ -14,7 +14,6 @@ awesome customer experience we strive to create at Citus. With Citus
 Cloud (our fully-managed `database as a
 service <https://www.citusdata.com/product/cloud>`__), you can simply
 drag and save—then voila, you've scaled the resources to your database.
-READMORE
 
 Today we are excited to announce our `Citus add-on for
 Heroku <https://elements.heroku.com/addons/citus>`__. Now with

@@ -15,7 +15,7 @@ you want to see all purchases of customers, you may want to see all
 customers in the result even if they did not do any purchases yet. Then,
 you need an outer join. Within this post we’ll analyze a bit on what
 outer joins are, and then how we support them in a distributed fashion
-on Citus. READMORE
+on Citus.
 
 Let’s say we have two tables, customer and purchase:
 
@@ -111,7 +111,7 @@ Distributed Outer Joins with Citus
 
 The Citus extension allows PostgreSQL to distribute big tables into
 smaller fragments called
-`“shards” <http://www.craigkerstiens.com/2012/11/30/sharding-your-database/>`__
+`"shards" <http://www.craigkerstiens.com/2012/11/30/sharding-your-database/>`__
 and performing outer joins on these distributed tables becomes a bit
 more challenging, since the union of outer joins between individual
 shards does not always give the correct result. Currently, Citus support

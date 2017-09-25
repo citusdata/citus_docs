@@ -9,7 +9,6 @@ In cases where your data is still under 100 GB a single Postgres
 instance will still work well for you, and is a great choice. At levels
 beyond that Citus can help, but how you model your data has a major
 impact on how much performance you're able to get out of the system.
-READMORE
 
 Some applications fit naturally in this scaled out model, but others
 require changes in your application. The model you choose can determine

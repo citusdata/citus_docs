@@ -19,7 +19,7 @@ bullish on the cloud then ever.
 
 It turns out that targeting an important use case for your customers and
 delivering it to them in a way that removes their pain points, matters
-more than anything else. In this blog post, we’ll only focus on removing
+more than anything else. In this article, we’ll only focus on removing
 operational pain points and not on use cases: Why is cloud changing the
 way databases are delivered to customers? What AWS technologies Citus
 Cloud is using to enable that in a unique way?
