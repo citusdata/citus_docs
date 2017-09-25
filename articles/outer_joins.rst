@@ -52,6 +52,8 @@ join behaviors:
       Jalda Francis | Good Read, cheap price
       Corra Ignacio | Nice to Have!
 
+.. image:: ../images/articles-join-inner.png
+
 .. code:: sql
 
      SELECT customer.name, purchase.comment
@@ -63,6 +65,8 @@ join behaviors:
       Corra Ignacio | Comfortable
       Jalda Francis | Good Read, cheap price
       Corra Ignacio | Nice to Have!
+
+.. image:: ../images/articles-join-left.png
 
 .. code:: sql
 
@@ -77,7 +81,9 @@ join behaviors:
       Corra Ignacio   | Nice to Have!
       Warren Brooklyn |
 
-::
+.. image:: ../images/articles-join-right.png
+
+.. code:: sql
 
      SELECT customer.name, purchase.comment
      FROM customer RIGHT JOIN purchase ON customer.customer_id = purchase.customer_id
@@ -90,6 +96,8 @@ join behaviors:
                     | Good laptop but expensive...
       Corra Ignacio | Nice to Have!
                     | Not very cheap
+
+.. image:: ../images/articles-join-full.png
 
 .. code:: sql
 
