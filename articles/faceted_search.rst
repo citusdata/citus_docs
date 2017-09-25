@@ -1,5 +1,5 @@
-Real-Time Faceted Search
-========================
+Scalable Real-time Product Search using PostgreSQL with Citus
+=============================================================
 
 Product search is a common, yet sometimes challenging use-case for
 online retailers and marketplaces. It typically involves a combination

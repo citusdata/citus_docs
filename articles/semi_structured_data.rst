@@ -1,7 +1,7 @@
 .. _semi_structured_sharding:
 
-Sharding with Semi-Structured Data
-##################################
+Sharding Postgres with Semi-Structured Data and Its Performance Implications
+############################################################################
 
 If you're looking at Citus its likely you've outgrown a single node
 database. In most cases your application is no longer performing

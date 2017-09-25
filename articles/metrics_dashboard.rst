@@ -1,5 +1,5 @@
-Building a Scalable Metrics Backend
-###################################
+Building a Scalable Postgres Metrics Backend using the Citus Extension
+######################################################################
 
 From nearly the beginning of the `Citus
 Cloud <https://www.citusdata.com/product/cloud/>`__ service, we've had

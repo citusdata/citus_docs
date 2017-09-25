@@ -1,5 +1,5 @@
-How Distributed Outer Joins Work
-################################
+How Distributed Outer Joins on PostgreSQL with Citus Work
+#########################################################
 
 SQL is a very powerful language for analyzing and reporting against
 data. At the core of SQL is the idea of joins and how you combine

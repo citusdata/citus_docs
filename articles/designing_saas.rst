@@ -1,5 +1,5 @@
-Designing a SaaS DB for Scale
-#############################
+Designing your SaaS Database for Scale with Postgres
+####################################################
 
 If you’re building a SaaS application, you probably already have the
 notion of tenancy built in your data model. Typically, most information

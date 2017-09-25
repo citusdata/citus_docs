@@ -1,5 +1,5 @@
-Real-Time Event Aggregation
-===========================
+Real-time Event Aggregation at Scale Using Postgres with Citus
+==============================================================
 
 Citus is commonly used to scale out event data pipelines on top of
 PostgreSQL. Its ability to transparently shard data and parallelise
