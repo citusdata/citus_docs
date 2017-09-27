@@ -27,7 +27,7 @@ these implications have been discussed in detail across many
 `StackOverflow
 questions <http://stackoverflow.com/search?tab=votes&q=multi-tenant%20database>`__
 and `database
-articles <https://msdn.microsoft.com/en-us/library/aa479086.aspx>`__.
+articles </_static/mt-data-arch.pdf>`__.
 So, what is the best solution?
 
 In practice, each of the three design options -with enough effort- can
@@ -177,9 +177,7 @@ or integrate with ORM libraries? What happens if you have a table that
 you can’t easily add a tenant\_id column? In this article, we focused
 on building multi-tenant databases with scaling as the primary
 consideration in mind; and skipped over certain points. If you’re
-looking to learn more about designing multi-tenant databases, please
-sign up for our `upcoming webinar on the
-topic! <https://attendee.gotowebinar.com/register/46885752336450820>`__
+looking to learn more about designing multi-tenant databases, see :ref:`mt_use_case`.
 
 The good news is, databases have advanced quite a bit in the past ten
 years in accommodating SaaS applications at scale. What was once only
