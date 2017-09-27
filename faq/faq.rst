@@ -71,6 +71,8 @@ To choose a shard count for a table you wish to distribute, update the :code:`ci
   -- any tables distributed at this point will have
   -- sixty-four shards
 
+For more guidance on this topic, see :ref:`production_sizing`.
+
 How do I change the shard count for a hash partitioned table?
 -------------------------------------------------------------
 
