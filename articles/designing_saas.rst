@@ -29,7 +29,7 @@ these implications have been discussed in detail across many
 `StackOverflow
 questions <http://stackoverflow.com/search?tab=votes&q=multi-tenant%20database>`__
 and `database
-articles </_static/mt-data-arch.pdf>`__.
+articles <../_static/mt-data-arch.pdf>`__.
 So, what is the best solution?
 
 In practice, each of the three design options -with enough effort- can
