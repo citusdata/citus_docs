@@ -69,6 +69,7 @@ monitoring component that watches the primary and secondary nodes and
 reliably initiates their failovers.
 
 .. image:: ../images/citus-cloud-diagrams.png
+  :align: center
 
 A common way to do that is through integrating PostgreSQL streaming
 replication with a distributed synchronization solution such as etcd or
@@ -102,6 +103,7 @@ newly promoted machine. This way, the application doesn’t need to change
 the endpoint it talks to -- it happens magically.
 
 .. image:: ../images/citus-cloud-elastic-ip.png
+  :align: center
 
 Having a powerful SDN stack also helps with consistency. When the
 monitoring agent decides to failover the primary node, it can ask the
@@ -126,6 +128,7 @@ can encrypt the data at rest and securely wipe out an EBS volume before
 terminating it.
 
 .. image:: ../images/citus-cloud-vertical-scale.png
+  :align: center
 
 One known drawback to attaching storage over the network, instead of
 using your local storage, is performance. If your working set doesn’t
@@ -166,6 +169,7 @@ distributed database stays within reasonable connection limits. The
 following shows a simplified architecture diagram.
 
 .. image:: ../images/citus-cloud-horizontal-scale.png
+  :align: center
 
 5. Automatic Backups for Disaster Recovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -186,6 +190,7 @@ words, wal-e make sure that your backup solution does the right thing,
 and cloud service providers make sure that your backups don’t get lost.
 
 .. image:: ../images/citus-cloud-auto-backup.png
+  :align: center
 
 For Citus backups, wal-e helps with part of the picture. Taking
 distributed database backups are even harder. In this case, it helps
@@ -214,6 +219,7 @@ that accomplishes this can run collectd on database instances, Graphite
 to store them, and Grafana to display them.
 
 .. image:: ../images/citus-cloud-monitoring.png
+  :align: center
 
 If you’re thinking of setting up a monitoring infrastructure for
 PostgreSQL, two good resources to read are Compose’s blog post on
@@ -233,6 +239,7 @@ Cloud team. We also only needed to provide this only on the AWS platform
 and that helped us deliver production-grade monitoring much simple.
 
 .. image:: ../images/citus-cloud-monitoring-2.png
+  :align: center
 
 7. Auto-configure, patch, and upgrade
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
