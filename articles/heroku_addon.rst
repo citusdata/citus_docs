@@ -77,8 +77,6 @@ disk i/o, network i/o, and perhaps most key, the CPU load:
 .. figure:: ../images/articles-heroku-cpu.png
    :alt: CPU utilization in Citus Cloud dashboard
 
-   CPU utilization in Citus Cloud dashboard
-
 Granular access control in Citus Cloud
 --------------------------------------
 

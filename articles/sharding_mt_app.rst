@@ -145,8 +145,6 @@ now may look something like:
 .. figure:: ../images/sharding-store-tenant.png
    :alt: Example of multi-tenant sharded tables
 
-   Example of multi-tenant sharded tables
-
 The alternative to colocation is to choose some lower level shard key
 such as orders or products. This has a trade-off of making joins and
 querying more difficult because you have to send more data over the

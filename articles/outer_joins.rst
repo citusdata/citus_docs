@@ -181,8 +181,6 @@ combining outer join results of corresponding shards.
 .. figure:: ../images/articles-join-example.png
    :alt: Distributed outer join example
 
-   Distributed outer join example
-
 Let’s look at how Citus handles an outer join query:
 
 .. code:: sql

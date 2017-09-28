@@ -160,7 +160,6 @@ to spot outliers. The query to gather data is for the graphs is
 And the graphs look like
 
 .. figure:: ../images/articles-metrics-screenshot.png
-   :alt: 
 
 This clearly shows a time period of something not quite right. Sometimes
 we've gone into psql to look at the

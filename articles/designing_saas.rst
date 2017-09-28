@@ -54,8 +54,6 @@ much better way.
 .. figure:: ../images/articles-saas-fig-1.png
    :alt: Sharding tables for multi-tenant applications
 
-   Sharding tables for multi-tenant applications
-
 Common benefits of having all tenants share the same database are:
 
 Resource pooling (reduced cost): If you create a separate database for
@@ -82,8 +80,6 @@ data to support many tenants/customers in a distributed database.
 
 .. figure:: ../images/articles-saas-fig-2.png
    :alt: Google F1 diagram on relational and hierarchical database models
-
-   Google F1 diagram on relational and hierarchical database models
 
 The data model on the left-hand side follows the relational database
 model and uses foreign key constraints to ensure data integrity in the
@@ -149,8 +145,6 @@ architecture <http://www.developerforce.com/media/ForcedotcomBookLibrary/Force.c
 .. figure:: ../images/articles-saas-fig-3.png
    :alt: Representing data that varies across tenants, traditional method
 
-   Representing data that varies across tenants, traditional method
-
 In this database model, your tables have a preset collection of custom
 columns, labeled in this image as V1, V2, and V3. Dates and Numbers are
 stored as strings in a format such that they can be converted to their
@@ -168,8 +162,6 @@ column and scale to thousands of tenants.
 
 .. figure:: ../images/articles-saas-fig-4.png
    :alt: Representing data that varies across tenants, modern method
-
-   Representing data that varies across tenants, modern method
 
 Of course, these aren’t the only design criteria and questions to be
 aware of. If you shard your database tables, how do you handle isolation
