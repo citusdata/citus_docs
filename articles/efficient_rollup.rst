@@ -1,6 +1,9 @@
 Efficient Rollup Tables with HyperLogLog in Postgres
 ====================================================
 
+(Copy of `original publication <https://www.citusdata.com/blog/2017/06/30/efficient-rollup-with-hyperloglog-on-postgres/>`__)
+
+
 Rollup tables are commonly used in Postgres when you don’t need to
 perform detailed analysis, but you still need to answer basic
 aggregation queries on older data.

@@ -3,6 +3,8 @@
 Distributed Distinct Count with HyperLogLog on Postgres
 =======================================================
 
+(Copy of `original publication <https://www.citusdata.com/blog/2017/04/04/distributed_count_distinct_with_postgresql/>`__)
+
 Running ``SELECT COUNT(DISTINCT)`` on your database is all too common.
 In applications it's typical to have some analytics dashboard
 highlighting the number of unique items such as unique users, unique

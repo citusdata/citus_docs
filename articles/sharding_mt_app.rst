@@ -1,6 +1,8 @@
 Sharding a Multi-Tenant App with Postgres
 =========================================
 
+(Copy of `original publication <https://www.citusdata.com/blog/2016/08/10/sharding-for-a-multi-tenant-app-with-postgres/>`__)
+
 Whether you’re building marketing analytics, a portal for e-commerce
 sites, or an application to cater to schools, if you’re building an
 application and your customer is another business then a multi-tenant

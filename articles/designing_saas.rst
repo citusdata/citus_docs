@@ -1,6 +1,8 @@
 Designing your SaaS Database for Scale with Postgres
 ####################################################
 
+(Copy of `original publication <https://www.citusdata.com/blog/2016/10/03/designing-your-saas-database-for-high-scalability/>`__)
+
 If you’re building a SaaS application, you probably already have the
 notion of tenancy built in your data model. Typically, most information
 relates to tenants / customers / accounts and your database tables

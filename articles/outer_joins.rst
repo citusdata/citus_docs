@@ -1,6 +1,8 @@
 How Distributed Outer Joins on PostgreSQL with Citus Work
 #########################################################
 
+(Copy of `original publication <https://www.citusdata.com/blog/2016/10/10/outer-joins-in-citus/>`__)
+
 SQL is a very powerful language for analyzing and reporting against
 data. At the core of SQL is the idea of joins and how you combine
 various tables together. One such type of join: outer joins are useful

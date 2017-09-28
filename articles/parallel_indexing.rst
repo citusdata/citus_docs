@@ -1,6 +1,8 @@
 Postgres Parallel Indexing in Citus
 ###################################
 
+(Copy of `original publication <https://www.citusdata.com/blog/2017/01/17/parallel-indexing-with-citus/>`__)
+
 Indexes are an essential tool for optimizing database performance and
 are becoming ever more important with big data. However, as the volume
 of data increases, index maintenance often becomes a write bottleneck,

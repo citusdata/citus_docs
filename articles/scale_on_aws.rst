@@ -3,6 +3,8 @@
 How to Scale PostgreSQL on AWS: Learnings from Citus Cloud
 ##########################################################
 
+(Copy of `original publication <https://www.citusdata.com/blog/2017/03/10/how-to-scale-postgresql-on-aws/>`__)
+
 One challenge associated with building a distributed relational database
 (RDBMS) is that they require notable effort to deploy and operate. To
 remove these operational barriers, we had been thinking about offering

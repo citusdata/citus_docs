@@ -1,6 +1,8 @@
 Introducing Citus Add-on for Heroku: Scale out your Postgres
 ############################################################
 
+(Copy of `original publication <https://www.citusdata.com/blog/2017/07/13/citus-addon-for-heroku/>`__)
+
 Just as Heroku has made it simple for you to deploy applications, at
 `Citus Data <https://www.citusdata.com/>`__ we aim to make it simple for
 you to scale out your Postgres database.

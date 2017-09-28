@@ -1,6 +1,8 @@
 Scalable Real-time Product Search using PostgreSQL with Citus
 =============================================================
 
+(Copy of `original publication <https://www.citusdata.com/blog/2016/04/28/scalable-product-search/>`__)
+
 Product search is a common, yet sometimes challenging use-case for
 online retailers and marketplaces. It typically involves a combination
 of full-text search and filtering by attributes which differ for every

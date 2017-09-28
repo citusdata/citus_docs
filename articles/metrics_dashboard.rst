@@ -1,6 +1,8 @@
 Building a Scalable Postgres Metrics Backend using the Citus Extension
 ######################################################################
 
+(Copy of `original publication <https://www.citusdata.com/blog/2016/08/30/citus-clouds-usage-of-citus-cloud/>`__)
+
 From nearly the beginning of the `Citus
 Cloud <https://www.citusdata.com/product/cloud/>`__ service, we've had
 an internal formation provisioned and managed by the service itself.

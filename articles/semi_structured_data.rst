@@ -3,6 +3,8 @@
 Sharding Postgres with Semi-Structured Data and Its Performance Implications
 ############################################################################
 
+(Copy of `original publication <https://www.citusdata.com/blog/2016/07/25/sharding-json-in-postgres-and-performance/>`__)
+
 If you're looking at Citus its likely you've outgrown a single node
 database. In most cases your application is no longer performing
 as you’d like.  In cases where your data is still under 100 GB a
