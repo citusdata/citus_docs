@@ -104,8 +104,8 @@ Top page views over the last 7 days for a given site:
     SELECT page, 
            count(*)
     FROM visits
-    WHERE site_id = ‘foo’
-      AND visited_at > now() - ‘7 days’::interval
+    WHERE site_id = 'foo'
+      AND visited_at > now() - '7 days'::interval
     GROUP BY page
     ORDER BY 2 DESC;
 
@@ -115,7 +115,7 @@ Unique sessions today:
 
     SELECT distinct(session_id)
     FROM visits
-    WHERE site_id = ‘foo’
+    WHERE site_id = 'foo'
       AND visited_at > date_trunc('date', now())
 
 And assuming you have an index on ``url_params`` you could easily do

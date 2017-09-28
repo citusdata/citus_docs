@@ -83,7 +83,7 @@ List the products for a particular store:
            name,
            price
     FROM products
-    WHERE store_id = foo;
+    WHERE store_id = 'foo';
 
 Or let’s say you want to compute how many purchases exist weekly for a
 given store:
@@ -95,7 +95,7 @@ given store:
     FROM purchases,
          stores
     WHERE stores.id = products.stores_id
-      AND store_id = ‘foo’
+      AND store_id = 'foo'
 
 From here you could envision how to give each store its own presence and
 analytics. Now if we fast-forward a bit and start to look at scaling
