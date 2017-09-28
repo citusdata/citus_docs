@@ -75,7 +75,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
    installation/production.rst
 
 .. toctree::
-   :caption: Tutorial
+   :caption: Tutorials
    :hidden:
 
    tutorials/multi-tenant-tutorial.rst
@@ -90,7 +90,7 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
 
 .. toctree::
    :maxdepth: 1
-   :caption: Distributed Tables
+   :caption: SQL Reference
    :hidden:
 
    dist_tables/ddl.rst
