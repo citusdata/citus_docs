@@ -55,12 +55,14 @@ join behaviors:
       Corra Ignacio | Nice to Have!
 
 .. image:: ../images/articles-join-inner.png
+   :align: right
 
 .. code:: sql
 
      SELECT customer.name, purchase.comment
      FROM customer INNER JOIN purchase ON customer.customer_id = purchase.customer_id
      ORDER BY purchase.comment;
+
 
           name      |        comment
      ---------------+------------------------
@@ -69,6 +71,7 @@ join behaviors:
       Corra Ignacio | Nice to Have!
 
 .. image:: ../images/articles-join-left.png
+   :align: left
 
 .. code:: sql
 
@@ -84,6 +87,7 @@ join behaviors:
       Warren Brooklyn |
 
 .. image:: ../images/articles-join-right.png
+   :align: right
 
 .. code:: sql
 
@@ -100,6 +104,7 @@ join behaviors:
                     | Not very cheap
 
 .. image:: ../images/articles-join-full.png
+   :align: left
 
 .. code:: sql
 
@@ -179,6 +184,7 @@ combining outer join results of corresponding shards.
 
 .. figure:: ../images/articles-join-example.png
    :alt: Distributed outer join example
+   :align: right
 
 Let’s look at how Citus handles an outer join query:
 
