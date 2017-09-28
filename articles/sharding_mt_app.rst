@@ -130,13 +130,9 @@ this case stores:
 
 .. code:: sql
 
-    SELECT master_create_distributed_table('stores', 'id', 'hash');
-    SELECT master_create_distributed_table('products', 'store_id', 'hash');
-    SELECT master_create_distributed_table('purchases', 'store_id', 'hash');
-
-    SELECT master_create_worker_shards('stores', 16);
-    SELECT master_create_worker_shards('products', 16);
-    SELECT master_create_worker_shards('purchases', 16);
+    SELECT create_distributed_table('stores', 'id');
+    SELECT create_distributed_table('products', 'store_id');
+    SELECT create_distributed_table('purchases', 'store_id');
 
 Now you’re all set. *Again, you’ll notice that we shard everything by
 store\_id–this allows all queries to be routed to a single Postgres

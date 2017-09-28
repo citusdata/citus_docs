@@ -144,16 +144,13 @@ X and Y have 4 shards while Z has 8 shards.
 .. code:: sql
 
     CREATE TABLE user (user_id int, name text);
-    SELECT master_create_distributed_table('user', 'user_id', 'hash');
-    SELECT master_create_worker_shards('user', 4, 1);
+    SELECT create_distributed_table('user', 'user_id');
 
     CREATE TABLE purchase (user_id int, amount int);
-    SELECT master_create_distributed_table('purchase', 'user_id', 'hash');
-    SELECT master_create_worker_shards('purchase', 4, 1);
+    SELECT create_distributed_table('purchase', 'user_id');
 
     CREATE TABLE comment (user_id int, comment text, rating int);
-    SELECT master_create_distributed_table('comment', 'user_id', 'hash');
-    SELECT master_create_worker_shards('comment', 8, 1);
+    SELECT create_distributed_table('comment', 'user_id');
 
 The following query would work since distributed tables user and
 purchase have the same number of shards and the join criteria is
