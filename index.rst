@@ -157,19 +157,20 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
 .. toctree::
    :maxdepth: 1
    :caption: Articles
+   :hidden:
 
-   articles/parallel_indexing.rst
-   articles/faceted_search.rst
-   articles/aggregation.rst
-   articles/scale_on_aws.rst
    articles/heroku_addon.rst
-   articles/outer_joins.rst
-   articles/metrics_dashboard.rst
-   articles/semi_structured_data.rst
-   articles/sharding_mt_app.rst
-   articles/designing_saas.rst
-   articles/hll_count_distinct.rst
    articles/efficient_rollup.rst
+   articles/hll_count_distinct.rst
+   articles/scale_on_aws.rst
+   articles/parallel_indexing.rst
+   articles/aggregation.rst
+   articles/outer_joins.rst
+   articles/designing_saas.rst
+   articles/metrics_dashboard.rst
+   articles/sharding_mt_app.rst
+   articles/semi_structured_data.rst
+   articles/faceted_search.rst
 
 .. toctree::
    :caption: FAQ
