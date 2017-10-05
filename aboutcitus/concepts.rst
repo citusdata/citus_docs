@@ -4,100 +4,155 @@
 Concepts
 ========
 
-This section is a brief glossary of common terms in our documentation, with links to more complete information.
+This section is a brief introduction to common terms in our documentation, with links to more complete information.
 
 Distributed Architecture
 ------------------------
 
-Citus is a PostgreSQL `extension <https://www.postgresql.org/docs/9.6/static/external-extensions.html>`_ that allows commodity database servers (called *nodes*) to coordinate with one another in a "shared nothing" architecture. The nodes form a *cluster* that allows PostgreSQL to hold more data and use more CPU cores than would be possible on a single computer. This architecture also allows the database to scale simply by adding more nodes into the cluster.
+Citus is a PostgreSQL `extension <https://www.postgresql.org/docs/9.6/static/external-extensions.html>`_ that allows commodity database servers (called *nodes*) to coordinate with one another in a "shared nothing" architecture. The nodes form a *cluster* that allows PostgreSQL to hold more data and use more CPU cores than would be possible on a single computer. This architecture also allows the database to scale by simply adding more nodes to the cluster.
 
-[Find updated picture of architecture]
+Every cluster has one special node called the *coordinator* (the others are known as workers). Applications send their queries to the coordinator node which relays it to the relevant workers and accumulates the results.
 
-Every cluster has one special node called the *coordinator.* Applications send their queries to the coordinator node which relays it to the relevant workers and accumulates the results. Each query is either *routed* or *parallelized,* depending on whether the required data lives on a single node or multiple.
+For each query, the coordinator either *routes* it to a single worker node, or *parallelizes* it across several depending on whether the required data lives on a single node or multiple.  The coordinator knows how to do this by consulting its metadata tables. These Citus-specific tables track the DNS names and health of worker nodes, and the distribution of data across nodes. For more information, see our :ref:`metadata_tables`.
 
-.. The existing section: https://docs.citusdata.com/en/v7.0/aboutcitus/introduction_to_citus.html is out of date. I think we should get rid of it, and fold pieces of it into this Concepts section. I’m thinking of something like:
-.. Shared nothing, scale out.
-.. Data is partitioned, queries are either routed/parallelized.
-.. Is an extension of PostgreSQL (not a fork)
-.. What are the cluster components (see: https://docs.memsql.com/concepts/v5.8/distributed-architecture/)
-.. Coordinator (What does it contain? What does it do?)
-.. Worker (See above)
-.. (Maybe we also provide an updated diagram? Could scour through Citus presentations to see if there is something new).
-
-At a high level, Citus distributes the data across a cluster of commodity servers.  Incoming SQL queries are then parallel processed across these servers.
-
-.. image:: ../images/citus-basic-arch.png
-
-In the sections below, we briefly explain the concepts relating to Citus’s architecture.
-
-Coordinator / Worker Nodes
-$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-You first choose one of the PostgreSQL instances in the cluster as the Citus coordinator. You then add the DNS names of worker PostgreSQL instances (Citus workers) to a metadata table on the coordinator. From that point on, you interact with the coordinator through standard PostgreSQL interfaces for data loading and querying. All the data is distributed across the workers.  The coordinator only stores metadata about the shards.
-
-Logical Sharding
-$$$$$$$$$$$$$$$$$$$$$$$
-
-Citus utilizes a modular block architecture which is similar to Hadoop Distributed File System blocks but uses PostgreSQL tables on the workers instead of files. Each of these tables is a horizontal partition or a logical “shard”. The Citus coordinator then maintains metadata tables which track all the workers and the locations of the shards on the workers.
-
-Each shard is replicated on at least two of the workers (Users can configure this to a higher value). As a result, the loss of a single machine does not impact data availability. The Citus logical sharding architecture also allows new workers to be added at any time to increase the capacity and processing power of the cluster.
-
-Metadata Tables
-$$$$$$$$$$$$$$$$$
-
-The Citus coordinator maintains metadata tables to track all the workers and the locations of the database shards on them. These tables also maintain statistics like size and min/max values about the shards which help Citus’s distributed query planner to optimize the incoming queries. The metadata tables are small (typically a few MBs in size) and can be replicated and quickly restored if the coordinator ever experiences a failure.
-
-To learn more about the metadata tables and their schema, please visit the :ref:`metadata_tables` section of our documentation.
-
-Query Processing
-$$$$$$$$$$$$$$$$
-
-When the user issues a query, the Citus coordinator partitions it into smaller query fragments where each query fragment can be run independently on a worker shard. This allows Citus to distribute each query across the cluster, utilizing the processing power of all of the involved nodes and also of individual cores on each node. The coordinator then assigns the query fragments to workers, oversees their execution, merges their results, and returns the final result to the user. To ensure that all queries are executed in a scalable manner, the coordinator also applies optimizations that minimize the amount of data transferred across the network.
-
-Failure Handling
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-Citus can easily tolerate worker failures because of its logical sharding-based architecture. If a worker fails mid-query, Citus completes the query by re-routing the failed portions of the query to other workers which have a copy of the shard. If a worker is permanently down, users can easily rebalance the shards onto other workers to maintain the same level of availability.
-
-.. _define_node:
-
-Node
-----
-
+[picture of routed vs parallelized]
 
 Citus also supports an :ref:`mx` mode to allow queries directly against workers. An MX cluster still has a coordinator node, but clients use the coordinator only for :ref:`ddl`.
 
-.. _define_shard:
+Table Types
+-----------
 
-Shards and Partitioning
------------------------
+There are three types of tables in a Citus cluster, each used for different purposes. We have already mentioned the first: local metadata tables, which exist only on the coordinator node.
 
-Citus horizontally *partitions* distributed tables, meaning it splits the table into logical pieces, storing different rows on different nodes. A *shard* is a bundle of rows for a certain table stored on a certain node. A node may hold more than one shard per table.
+The next type, and most common, is *distributed* tables. These appear to be normal tables to SQL statements, but are stored internally as many smaller physical tables across worker nodes.
 
-Citus uses algorithmic sharding to assign rows to shards. This means the assignment is made deterministically based on a value in each row rather than by consulting an external service. Every shard has a "hash range" which is a range of numbers disjoint from those of the other shards. For each table row, Citus hashes the value in a designated column, and assigns the row to that shard whose hash range contains the hashed value.
+[image of a table sliced horizontally, with slices placed on workers]
 
-Placement
----------
+Citus horizontally *partitions* distributed tables, meaning it splits the table into logical pieces, storing different rows in smaller tables on workers. These smaller tables are called *shards*. Note that one node may hold more than one shard per distributed table.
 
-We've already seen the assignment of rows to shards. There's another assignment: shards to nodes. This is called *shard placement.* The latter is not algorithmic, but dynamic. Citus tracks shard placements in a metadata table on the coordinator node. This allows shards to be moved between nodes as desired. To learn more, see :ref:`placements`.
+Citus uses algorithmic sharding to assign rows to shards. This means the assignment is made deterministically -- in our case based on the value of a particular column called the *distribution column.* The cluster administrator must designate this column when distributing a table. Making the right choice is important for performance and functionality, as described in the general topic of :ref:`Distributed Data Modeling <distributed_data_modeling>`.
 
-Citus can optionally store extra copies of shards for safe keeping, and those replicas have placements as well.
+The final type of table in Citus is the *reference* table, which is a species of distributed table. Its entire contents are concentrated into a single shard which is replicated on every worker. Thus any query on any worker can access the reference information locally, without the network overhead of requesting rows from another node.
+
+Citus runs not only SQL but DDL statements throughout a cluster, so changing the schema of a distributed table cascades to update all the table's shards across workers. See :ref:`ddl`.
+
+Shards and Placements
+---------------------
+
+The previous section described a shard as containing a subset of the rows of a distributed table in a smaller table within a worker node. This section gets more into the technical details.
+
+The :ref:`pg_dist_shard <pg_dist_shard>` metadata table on the coordinator contains a row for each shard of each distributed table in the system. The row matches a shardid with a range of integers in a hash space (shardminvalue, shardmaxvalue):
+
+.. code-block:: sql
+
+    SELECT * from pg_dist_shard;
+     logicalrelid  | shardid | shardstorage | shardminvalue | shardmaxvalue 
+    ---------------+---------+--------------+---------------+---------------
+     github_events |  102026 | t            | 268435456     | 402653183
+     github_events |  102027 | t            | 402653184     | 536870911
+     github_events |  102028 | t            | 536870912     | 671088639
+     github_events |  102029 | t            | 671088640     | 805306367
+     (4 rows)
+
+If the coordinator node wants to determine which shard holds a row of ``github_events``, it hashes the value of the distribution column in the row, and checks which shard's range contains the hashed value. (The ranges are defined so that the image of the hash function is their disjoint union.)
+
+Suppose that shard 102027 is associated with the row in question. This means the row should be read or written to a table called ``github_events_102027`` in one of the workers. Which worker? That is determined entirely by the metadata tables, and the mapping of shard to worker is known as the shard *placement*.
+
+.. code-block:: sql
+
+  SELECT
+      shardid,
+      node.nodename,
+      node.nodeport
+  FROM pg_dist_placement placement
+  JOIN pg_dist_node node
+    ON placement.groupid = node.groupid
+   AND node.noderole = 'primary'::noderole
+  WHERE shardid = 102027;
+
+  ┌─────────┬───────────┬──────────┐
+  │ shardid │ nodename  │ nodeport │
+  ├─────────┼───────────┼──────────┤
+  │  102027 │ localhost │     5433 │
+  └─────────┴───────────┴──────────┘
+
+Joining some :ref:`metadata tables <metadata_tables>` gives us the answer. These are the types of lookups that the coordinator does to route queries. It rewrites queries into fragments that refer to the specific tables like ``github_events_102027``, and runs those fragments on the appropriate workers.
+
+In our example of ``github_events`` there were four shards. The number of shards is configurable per table at the time of its distribution across the cluster. The best choice of shard count depends on your use case, see :ref:`prod_shard_count`.
+
+Finally note that Citus allows shards to be replicated for protection against data loss. There are two replication "modes:" Citus replication and streaming replication. The former creates extra backup shard placements and runs queries against all of them that update any of them. The latter is more efficient and utilizes PostgreSQL's streaming replication to back up the entire database of each node to a follower database. This is transparent and does not require the involvement of Citus metadata tables.
 
 Co-Location
 -----------
 
 Since shards and their replicas can be placed on nodes as desired, it makes sense to place shards containing related rows of related tables together on the same nodes. That way join queries between them can avoid sending as much information over the network, and can be performed inside a single Citus node.
 
+For example, imagine an adventure game with players and their belongings. Distributing the ``player`` and ``player_item`` tables by the same type of column (bigint) and same number of shards (the default) puts them both into the same *colocation group.*
+
+.. code-block:: sql
+
+  CREATE TABLE player
+  (
+    id bigint PRIMARY KEY,
+    name text,
+    hit_points int,
+    armor int
+  );
+
+  CREATE TABLE player_item
+  (
+    player_id bigint REFERENCES player (id),
+    id bigint,
+    title text,
+    worth numeric(7,2),
+
+    PRIMARY KEY (player_id, id)
+  );
+
+  SELECT create_distributed_table('player', 'id');
+  SELECT create_distributed_table('player_item', 'player_id');
+
+This means that a player and his items will be stored on shards located on the same workers. For instance, assume we had populated this table. Then this query would get player 1's name and net worth:
+
+.. code-block:: sql
+
+  EXPLAIN
+  SELECT
+      player.id,
+      name,
+      sum(worth) AS net_worth
+  FROM
+      player,
+      player_item
+  WHERE
+      player.id = player_id
+      AND player_id = 1
+  GROUP BY
+      player.id,
+      name;
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │                                                QUERY PLAN                                                  │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Custom Scan (Citus Router)  (cost=0.00..0.00 rows=0 width=0)                                               │
+  │   Task Count: 1                                                                                            │
+  │   Tasks Shown: All                                                                                         │
+  │   ->  Task                                                                                                 │
+  │     Node: host=localhost port=5434 dbname=citus                                                            │
+  │     ->  GroupAggregate  (cost=4.33..20.88 rows=1 width=72)                                                 │
+  │       Group Key: player.id                                                                                 │
+  │       ->  Nested Loop  (cost=4.33..20.85 rows=4 width=54)                                                  │
+  │         ->  Index Scan using player_pkey_102169 on player_102169 player  (cost=0.15..8.17 rows=1 width=40) │
+  │               Index Cond: (id = 1)                                                                         │
+  │         ->  Bitmap Heap Scan on player_item_102201 player_item  (cost=4.18..12.64 rows=4 width=22)         │
+  │               Recheck Cond: (player_id = 1)                                                                │
+  │           ->  Bitmap Index Scan on player_item_pkey_102201  (cost=0.00..4.18 rows=4 width=0)               │
+  │                 Index Cond: (player_id = 1)                                                                │
+  └────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+The keyword "Citus Router" in the EXPLAIN output indicates that this whole query was routed to one worker node and run there. The query passed from the coordinator to one worker and was able to run inside the single worker because the shards for the query were all available locally -- i.e. the tables were co-located.
+
 For a full explanation and examples of this concept, see :ref:`colocation`.
-
-Query Routing
--------------
-
-When an application sends a query to the coordinator node of a cluster, that node examines the query. It looks at the query structure, including the WHERE clause, to determine which shards hold the required information.
-
-When these shards are placed on multiple nodes, the coordinator opens one PostgreSQL connection per-shard to the workers and executes a *fragment query* on each connection. A fragment query is a modification of the original query that requests just the data stored in that shard (for instance it may have a stricter filter in the WHERE clause). The coordinator fetches the results from each fragment, merges them, and gives the final results back to the application.
-
-Alternately, when all shards needed for the query are placed on the same worker node, the coordinator *pushes down*, or *routes* the query unmodified to that worker. The coordinator also passes the results back to the application unmodified. Router execution is typical for multi-tenant SaaS applications on Citus.
 
 Parallelism
 -----------
@@ -105,57 +160,3 @@ Parallelism
 Spreading queries across multiple machines allows more queries to run at once, and allows processing speed to scale by adding new machines to the cluster. Additionally splitting a single query into fragments as described in the previous section boosts the processing power devoted to it. The latter situation achieves the greatest *parallelism,* meaning utilization of CPU cores.
 
 Queries reading or affecting shards spread evenly across many nodes are able to run at "real-time" speed. Note that the results of the query still need to pass back through the coordinator node, so the speedup is most apparent when the final results are compact, such as aggregate functions like counting and descriptive statistics.
-
-Table Types
------------
-
-Citus treats every table in one of three ways, depending on configuration by the cluster administrator.
-
-1. **Local tables.** These are ordinary tables on the coordinator node. Queries that consult them will not propagate to workers. Examples of these include temp tables and Citus metadata tables.
-2. **Distributed tables.** The most common case, where the table is broken into shards distributed across the workers. Queries on distributed tables are processed as described above in Query Routing.
-3. **Reference tables.** These are a special kind of a distributed table. Their entire contents are concentrated into a single shard which is replicated on every worker. A reference table can thus be joined with any other distributed table without network overhead.
-
-
-
-
-.. Table Types:
-.. Distributed tables 
-.. Normal use-case
-.. Hash-partitioned into smaller shards.
-.. Partitioned using one of the table columns.
-.. Reference Tables
-.. Shared data across nodes
-.. Local tables
-.. Tables on the master only. Not partitioned/distributed.
-
-.. (Also provide links to DML section, possibly example create-table statements…)
-
-.. Partition Column:
-.. (I am not sure if it should be above, but maybe it needs its own section)
-.. Citus computes a hash of the values of this column, and routes them to different nodes.
-.. Important because of performance/functionality reasons.
-.. See links to “choosing a partition column”
-.. Shard/Partition:
-
-.. Contains a subset of the hash-values of the partition column.
-.. Show how hash-space is divided amongst shards.
-.. Links to Production sizing for choosing shard-count.
-.. Show example output of pg_dist_shard.
-.. On worker node, is just a regular PostgreSQL table.
-.. Talk about shard_id, and worker table is just <tablename>_<shardid>.
-.. (Not all above needs to be covered, just putting in some thoughts)
-
-.. Placement:
-.. Represents physical location of above Shard.
-.. Shows hostname where it lives.
-.. If you use Citus replication, we can have multiple of these per shard.
-.. Usually with streaming replication, only one placement per shard.
-.. Show query to see where these live.
-.. (It’s also an option to omit this section entirely. We can chat with @Samay/Sai on this)
-
-.. Co-location:
-.. (The explanation you have in PR makes sense, could you also provide an example of what we mean by ‘related’ rows? E.g. sharding by say user-id, so all data for a user is on on node).
-
-.. Query Processing:
-.. (I think existing content in your PR is good for planning. I don’t think we need something separate for execution).
-
