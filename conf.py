@@ -116,7 +116,21 @@ html_context = {
   'css_files': [
     '_static/css/theme.css',
     '_static/css/flexboxgrid.min.css',
-  ]
+  ],
+  'canonical_urls': {
+    'articles/heroku_addon': 'https://www.citusdata.com/blog/2017/07/13/citus-addon-for-heroku/',
+    'articles/efficient_rollup': 'https://www.citusdata.com/blog/2017/06/30/efficient-rollup-with-hyperloglog-on-postgres/',
+    'articles/hll_count_distinct': 'https://www.citusdata.com/blog/2017/04/04/distributed_count_distinct_with_postgresql/',
+    'articles/scale_on_aws': 'https://www.citusdata.com/blog/2017/03/10/how-to-scale-postgresql-on-aws/',
+    'articles/parallel_indexing': 'https://www.citusdata.com/blog/2017/01/17/parallel-indexing-with-citus/',
+    'articles/aggregation': 'https://www.citusdata.com/blog/2016/11/29/event-aggregation-at-scale-with-postgresql/',
+    'articles/outer_joins': 'https://www.citusdata.com/blog/2016/10/10/outer-joins-in-citus/',
+    'articles/designing_saas': 'https://www.citusdata.com/blog/2016/10/03/designing-your-saas-database-for-high-scalability/',
+    'articles/metrics_dashboard': 'https://www.citusdata.com/blog/2016/08/30/citus-clouds-usage-of-citus-cloud/',
+    'articles/sharding_mt_app': 'https://www.citusdata.com/blog/2016/08/10/sharding-for-a-multi-tenant-app-with-postgres/',
+    'articles/semi_structured_data': 'https://www.citusdata.com/blog/2016/07/25/sharding-json-in-postgres-and-performance/',
+    'articles/faceted_search': 'https://www.citusdata.com/blog/2016/04/28/scalable-product-search/'
+  }
 }
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -295,3 +309,4 @@ texinfo_documents = [
 
 pdf_documents = [('index', u'Citus Documentation', u'Citus Documentation', u'Citus Data')]
 pdf_fit_mode = "shrink"
+

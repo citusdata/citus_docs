@@ -23,6 +23,11 @@
     <link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}"/>
   {% endif %}
 
+  {# ARTICLE CANONICAL URL #}
+  {% if pagename in canonical_urls %}
+    <link rel="canonical" href="{{ canonical_urls[pagename] }}" />
+  {% endif %}
+
   {# CSS #}
 
   {# OPENSEARCH #}
