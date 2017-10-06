@@ -71,7 +71,7 @@ join behaviors:
       Corra Ignacio | Nice to Have!
 
 .. image:: ../images/articles-join-left.png
-   :align: left
+   :align: right
 
 .. code:: sql
 
@@ -104,7 +104,7 @@ join behaviors:
                     | Not very cheap
 
 .. image:: ../images/articles-join-full.png
-   :align: left
+   :align: right
 
 .. code:: sql
 
