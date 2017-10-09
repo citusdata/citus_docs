@@ -11,6 +11,9 @@ Distributed Architecture
 
 Citus is a PostgreSQL `extension <https://www.postgresql.org/docs/9.6/static/external-extensions.html>`_ that allows commodity database servers (called *nodes*) to coordinate with one another in a "shared nothing" architecture. The nodes form a *cluster* that allows PostgreSQL to hold more data and use more CPU cores than would be possible on a single computer. This architecture also allows the database to scale by simply adding more nodes to the cluster.
 
+Nodes: Coordinator and Workers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Every cluster has one special node called the *coordinator* (the others are known as workers). Applications send their queries to the coordinator node which relays it to the relevant workers and accumulates the results.
 
 For each query, the coordinator either *routes* it to a single worker node, or *parallelizes* it across several depending on whether the required data lives on a single node or multiple.  The coordinator knows how to do this by consulting its metadata tables. These Citus-specific tables track the DNS names and health of worker nodes, and the distribution of data across nodes. For more information, see our :ref:`metadata_tables`.
@@ -22,22 +25,39 @@ Citus also supports an :ref:`mx` mode to allow queries directly against workers.
 Table Types
 -----------
 
-There are three types of tables in a Citus cluster, each used for different purposes. We have already mentioned the first: local metadata tables, which exist only on the coordinator node.
+There are three types of tables in a Citus cluster, each used for different purposes.
 
-The next type, and most common, is *distributed* tables. These appear to be normal tables to SQL statements, but are stored internally as many smaller physical tables across worker nodes.
+Distributed Tables
+~~~~~~~~~~~~~~~~~~
+
+The first type, and most common, is *distributed* tables. These appear to be normal tables to SQL statements, but are stored internally as many smaller physical tables across worker nodes.
 
 [image of a table sliced horizontally, with slices placed on workers]
 
+Shards
+~~~~~~
+
 Citus horizontally *partitions* distributed tables, meaning it splits the table into logical pieces, storing different rows in smaller tables on workers. These smaller tables are called *shards*. Note that one node may hold more than one shard per distributed table.
+
+Distribution Column
+~~~~~~~~~~~~~~~~~~~
 
 Citus uses algorithmic sharding to assign rows to shards. This means the assignment is made deterministically -- in our case based on the value of a particular column called the *distribution column.* The cluster administrator must designate this column when distributing a table. Making the right choice is important for performance and functionality, as described in the general topic of :ref:`Distributed Data Modeling <distributed_data_modeling>`.
 
-The final type of table in Citus is the *reference* table, which is a species of distributed table. Its entire contents are concentrated into a single shard which is replicated on every worker. Thus any query on any worker can access the reference information locally, without the network overhead of requesting rows from another node.
+Reference Tables
+~~~~~~~~~~~~~~~~
+
+The next type of table in Citus is the *reference* table, which is a species of distributed table. Its entire contents are concentrated into a single shard which is replicated on every worker. Thus any query on any worker can access the reference information locally, without the network overhead of requesting rows from another node.
 
 Citus runs not only SQL but DDL statements throughout a cluster, so changing the schema of a distributed table cascades to update all the table's shards across workers. See :ref:`ddl`.
 
-Shards and Placements
----------------------
+Local Tables
+~~~~~~~~~~~~
+
+We have already mentioned the final type of tables: local metadata tables, which exist only on the coordinator node.
+
+Shard Placements
+----------------
 
 The previous section described a shard as containing a subset of the rows of a distributed table in a smaller table within a worker node. This section gets more into the technical details.
 
