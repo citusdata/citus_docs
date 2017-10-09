@@ -27,37 +27,34 @@ Table Types
 
 There are three types of tables in a Citus cluster, each used for different purposes.
 
-Distributed Tables
-~~~~~~~~~~~~~~~~~~
+Type 1: Distributed Tables
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The first type, and most common, is *distributed* tables. These appear to be normal tables to SQL statements, but are stored internally as many smaller physical tables across worker nodes.
 
 [image of a table sliced horizontally, with slices placed on workers]
 
-Shards
-~~~~~~
-
 Citus horizontally *partitions* distributed tables, meaning it splits the table into logical pieces, storing different rows in smaller tables on workers. These smaller tables are called *shards*. Note that one node may hold more than one shard per distributed table.
 
 Distribution Column
-~~~~~~~~~~~~~~~~~~~
+!!!!!!!!!!!!!!!!!!!
 
 Citus uses algorithmic sharding to assign rows to shards. This means the assignment is made deterministically -- in our case based on the value of a particular column called the *distribution column.* The cluster administrator must designate this column when distributing a table. Making the right choice is important for performance and functionality, as described in the general topic of :ref:`Distributed Data Modeling <distributed_data_modeling>`.
 
-Reference Tables
-~~~~~~~~~~~~~~~~
+Type 2: Reference Tables
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-The next type of table in Citus is the *reference* table, which is a species of distributed table. Its entire contents are concentrated into a single shard which is replicated on every worker. Thus any query on any worker can access the reference information locally, without the network overhead of requesting rows from another node.
+The next type of table in Citus is the *reference* table, which is a species of distributed table. Its entire contents are concentrated into a single shard which is replicated on every worker. Thus any query on any worker can access the reference information locally, without the network overhead of requesting rows from another node. Reference tables have no distribution column because there is no need to distinguish separate shards per row.
 
 Citus runs not only SQL but DDL statements throughout a cluster, so changing the schema of a distributed table cascades to update all the table's shards across workers. See :ref:`ddl`.
 
-Local Tables
-~~~~~~~~~~~~
+Type 3: Local Tables
+~~~~~~~~~~~~~~~~~~~~
 
 We have already mentioned the final type of tables: local metadata tables, which exist only on the coordinator node.
 
-Shard Placements
-----------------
+Shards
+------
 
 The previous section described a shard as containing a subset of the rows of a distributed table in a smaller table within a worker node. This section gets more into the technical details.
 
@@ -75,6 +72,9 @@ The :ref:`pg_dist_shard <pg_dist_shard>` metadata table on the coordinator conta
      (4 rows)
 
 If the coordinator node wants to determine which shard holds a row of ``github_events``, it hashes the value of the distribution column in the row, and checks which shard's range contains the hashed value. (The ranges are defined so that the image of the hash function is their disjoint union.)
+
+Shard Placements
+~~~~~~~~~~~~~~~~
 
 Suppose that shard 102027 is associated with the row in question. This means the row should be read or written to a table called ``github_events_102027`` in one of the workers. Which worker? That is determined entirely by the metadata tables, and the mapping of shard to worker is known as the shard *placement*.
 
