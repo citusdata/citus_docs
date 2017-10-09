@@ -107,70 +107,7 @@ Co-Location
 
 Since shards and their replicas can be placed on nodes as desired, it makes sense to place shards containing related rows of related tables together on the same nodes. That way join queries between them can avoid sending as much information over the network, and can be performed inside a single Citus node.
 
-For example, imagine an adventure game with players and their belongings. Distributing the ``player`` and ``player_item`` tables by the same type of column (bigint) and same number of shards (the default) puts them both into the same *colocation group.*
-
-.. code-block:: sql
-
-  CREATE TABLE player
-  (
-    id bigint PRIMARY KEY,
-    name text,
-    hit_points int,
-    armor int
-  );
-
-  CREATE TABLE player_item
-  (
-    player_id bigint REFERENCES player (id),
-    id bigint,
-    title text,
-    worth numeric(7,2),
-
-    PRIMARY KEY (player_id, id)
-  );
-
-  SELECT create_distributed_table('player', 'id');
-  SELECT create_distributed_table('player_item', 'player_id');
-
-This means that a player and his items will be stored on shards located on the same workers. For instance, assume we had populated this table. Then this query would get player 1's name and net worth:
-
-.. code-block:: sql
-
-  EXPLAIN
-  SELECT
-      player.id,
-      name,
-      sum(worth) AS net_worth
-  FROM
-      player,
-      player_item
-  WHERE
-      player.id = player_id
-      AND player_id = 1
-  GROUP BY
-      player.id,
-      name;
-
-  ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │                                                QUERY PLAN                                                  │
-  ├────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ Custom Scan (Citus Router)  (cost=0.00..0.00 rows=0 width=0)                                               │
-  │   Task Count: 1                                                                                            │
-  │   Tasks Shown: All                                                                                         │
-  │   ->  Task                                                                                                 │
-  │     Node: host=localhost port=5434 dbname=citus                                                            │
-  │     ->  GroupAggregate  (cost=4.33..20.88 rows=1 width=72)                                                 │
-  │       Group Key: player.id                                                                                 │
-  │       ->  Nested Loop  (cost=4.33..20.85 rows=4 width=54)                                                  │
-  │         ->  Index Scan using player_pkey_102169 on player_102169 player  (cost=0.15..8.17 rows=1 width=40) │
-  │               Index Cond: (id = 1)                                                                         │
-  │         ->  Bitmap Heap Scan on player_item_102201 player_item  (cost=4.18..12.64 rows=4 width=22)         │
-  │               Recheck Cond: (player_id = 1)                                                                │
-  │           ->  Bitmap Index Scan on player_item_pkey_102201  (cost=0.00..4.18 rows=4 width=0)               │
-  │                 Index Cond: (player_id = 1)                                                                │
-  └────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-
-The keyword "Citus Router" in the EXPLAIN output indicates that this whole query was routed to one worker node and run there. The query passed from the coordinator to one worker and was able to run inside the single worker because the shards for the query were all available locally -- i.e. the tables were co-located.
+One example is a database with stores, products, and purchases. If all three tables contain -- and are distributed by -- a store_id column, then all queries restricted to a single store can run efficiently on a single worker node. This is true even when the queries involve any combination of these tables.
 
 For a full explanation and examples of this concept, see :ref:`colocation`.
 
