@@ -23,6 +23,31 @@ The key items you'll care about for each node:
 - Memory - The memory on each node varies based on the size of node you select
 - Cores - The cores on each node varies based on the size of node you select
 
+Supported Regions
+-----------------
+
+Citus Cloud runs on top of Amazon Web Services. During provisioning you're able to select your database region. We currently support:
+
+- US East (N. Virginia) [us-east-1]
+- US East (Ohio) [us-east-2]
+- Asia Pacific (Tokyo) [ap-northeast-1]
+- Asia Pacific (Seoul) [ap-northeast-2]
+- Asia Pacific (Singapore) [ap-southeast-1]
+- Asia Pacific (Sydney) [ap-southeast-2]
+- Asia Pacific (Mumbai) [ap-south-1]
+- EU (Frankfurt) [us-central-1]
+- EU (Ireland) [us-west-1]
+- South America (São Paulo) [sa-east-1]
+- US West (N. California) [us-west-1]
+- US West (Oregon) [us-west-2]
+
+If there is an AWS region you do not see listed but would like for us to add support for please `contact us <https://www.citusdata.com/about/contact_us/>`_ and we'd be happy to look into it.
+
+Other infrastructure providers
+------------------------------
+
+At this time we only support Citus Cloud on top of Amazon Web Services. We are continually exploring other infrastructure providers to make Citus Cloud available on. If you have immediate needs you could consider running Citus Community Edition or Citus Enterprise Edition. Or if you have questions about our timeline for other infrastructure providers please feel free to `reach out <https://www.citusdata.com/about/contact_us/>`_.
+
 .. _connection:
 
 Connecting
