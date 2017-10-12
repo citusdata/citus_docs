@@ -15,7 +15,7 @@ Once you've created your account at `https://console.citusdata.com <https://cons
 Configuring Your Plan
 ---------------------
 
-Citus Cloud plans vary based on the size of your primary node, size of your distributed nodes, number of distributed nodes and whether you have high availability or not. From within the Citus console you can configure your plan or you can preview what it might look like within the `pricing calculator <https://console.citusdata.com/pricing>`_.
+Citus Cloud plans vary based on the size of your primary node, size of your distributed nodes, number of distributed nodes and whether you have high availability or not. From within the Citus console you can configure your plan or you can preview what it might look like within the `pricing calculator <https://www.citusdata.com/pricing>`_.
 
 The key items you'll care about for each node:
 
