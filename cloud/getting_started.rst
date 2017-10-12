@@ -19,7 +19,7 @@ Citus Cloud plans vary based on the size of your primary node, size of your dist
 
 The key items you'll care about for each node:
 
-- Storage - All nodes come with 512 GB of storage
+- Storage - All nodes come with 1 TB of storage
 - Memory - The memory on each node varies based on the size of node you select
 - Cores - The cores on each node varies based on the size of node you select
 
