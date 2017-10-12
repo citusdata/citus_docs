@@ -1,21 +1,8 @@
-.. _connection:
+Security
+########
 
-Connection and Security
-#######################
-
-Applications connect to Citus the same way they would PostgreSQL, using a `connection URI <https://www.postgresql.org/docs/current/static/libpq-connect.html#AEN45571>`_. This is a string which includes network and authentication information, and has the form:
-
-::
-
-  postgresql://[user[:password]@][host][:port][/dbname][?param1=value1&...]
-
-The connection string for each Cloud Formation is provided on the Overview tab in Citus Console.
-
-.. image:: ../images/cloud-overview-1.png
-
-By default the URL displays only the hostname of the connection, but the full URL is available by clicking the "Show Full URL" link.
-
-.. image:: ../images/cloud-overview-2.png
+Connection Encryption
+=====================
 
 For security Citus Cloud accepts only SSL connections, which is why the URL contains the :code:`?sslmode=require` parameter. To avoid a man-in-the-middle attack, you can also verify that the server certificate is correct. Download the official `Citus Cloud certificate <https://console.citusdata.com/citus.crt>`_ and refer to it in connection string parameters:
 
@@ -38,6 +25,11 @@ To measure the number of active connections at a given time, run:
   SELECT COUNT(*)
     FROM pg_stat_activity
    WHERE state <> 'idle';
+
+Two-Factor Authentication
+-------------------------
+
+We support two factor authentication for all Citus accounts. You can enable it from within your Citus Cloud account. We support Google Authenticator and Authy as two primary apps for setting up your two factor authentication.
 
 Users and Permissions
 =====================
@@ -124,19 +116,10 @@ Citus propagates single-table GRANT statements through the entire cluster, makin
   analytics.track('Doc', {page: 'overview', section: 'cloud'});
   </script>
 
-Cloud Security
-==============
-
-Encryption
-----------
+Encryption at Rest
+==================
 
 All data within Citus Cloud is encrypted at rest, including data on the instance as well as all backups for disaster recovery. As mentioned in the connection section, we also require that you connect to your database with TLS.
-
-Two-Factor Authentication
--------------------------
-
-We support two factor authentication for all Citus accounts. You can enable it from within your Citus Cloud account. We support Google Authenticator and Authy as two primary apps for setting up your two factor authentication.
-
 
 .. raw:: html
 
