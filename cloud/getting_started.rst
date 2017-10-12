@@ -19,7 +19,7 @@ Citus Cloud plans vary based on the size of your primary node, size of your dist
 
 The key items you'll care about for each node:
 
-- Storage - All nodes come with 512 GB of storage
+- Storage - All nodes come with 1 TB of storage
 - Memory - The memory on each node varies based on the size of node you select
 - Cores - The cores on each node varies based on the size of node you select
 
@@ -70,12 +70,17 @@ By default the URL displays only the hostname of the connection, but the full UR
 Support and Billing
 ===================
 
-All Citus Cloud plans come with email support included. Premium support including SLA around response time and phone escalation is available on a contract basis for customers that may need a more premium level of support.
+All Citus Cloud plans come with support included. Premium support including SLA around response time and phone escalation is available on a contract basis for customers that may need a more premium level of support.
 
 Support
 -------
 
-Email and web based support is available on all Citus Cloud plans. You can open a support inquiry by emailing cloud-support@citusdata.com or clicking on the support icon in the lower right of your screen within Citus Cloud.
+Web based support is available on all Citus Cloud plans. You can open a `support inquiry <https://console.citusdata.com/support>`_ within the Citus Cloud console. Support response times for ticket classification of Citus Cloud are:
+
+- Urgent (production database offline) - 1 hour response time
+- High (production database impacted) - 4 hour response time
+- Normal (general support) - 1 business day response time
+- Low (general question) - 3 business days response time
 
 Billing and pricing 
 -------------------
@@ -87,13 +92,7 @@ Citus Cloud bills on a per minute basis. We bill for a minimum of one hour of us
 - Whether you have high availability enabled, both on the primary node and on distributed nodes
 - Size of your primary node
 
-You can see pricing of various configurations directly within our `pricing calculator <https://console.citusdata.com/pricing>`_.
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'support', section: 'cloud'});
-  </script>
+You can see pricing of various configurations directly within our `pricing calculator <https://www.citusdata.com/pricing>`_.
 
 .. _cloud_extensions:
 
@@ -163,3 +162,9 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | xml2               | 1.1     | public     | XPath querying and XSLT                                            |
 +--------------------+---------+------------+--------------------------------------------------------------------+
+
+.. raw:: html
+
+  <script type="text/javascript">
+  analytics.track('Doc', {page: 'support', section: 'cloud'});
+  </script>
