@@ -40,14 +40,15 @@ The :code:`run_command_on_shards` function applies a SQL command to each shard, 
   -- Get the estimated row count for a distributed table by summing the
   -- estimated counts of rows for each shard.
   SELECT sum(result::bigint) AS estimated_count
-    FROM run_command_on_shards(
-      'my_distributed_table',
-      $cmd$
-        SELECT reltuples
-          FROM pg_class
-         WHERE relname = '%I';
-      $cmd$
-    );
+  FROM run_command_on_shards(
+    'my_distributed_table',
+    $cmd$
+      SELECT reltuples
+        FROM pg_class c
+        JOIN pg_catalog.pg_namespace n on n.oid=c.relnamespace
+       WHERE n.nspname||'.'||relname = '%s';
+    $cmd$
+  );
 
 Running on all Placements
 -------------------------
@@ -65,7 +66,7 @@ For example, suppose a distributed table has an :code:`updated_at` field, and we
   SELECT run_command_on_placements(
     'my_distributed_table',
     $cmd$
-      UPDATE %I SET updated_at = '2017-01-01';
+      UPDATE %s SET updated_at = '2017-01-01';
     $cmd$
   );
 
