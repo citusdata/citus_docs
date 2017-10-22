@@ -66,6 +66,16 @@ Citus will output the progress as it moves each shard.
 
 .. _mx:
 
+Connections
+===========
+
+Citus cloud has a limit of 300 connections directly into Postgres. We limit you to 300 because each connection you take against Postgres consumes a noticable amount of resources. 
+
+To allow you scale even further we provide pgBouncer out of the box for you. PgBouncer is a connection pooler that you can connect directly to allowing you to have a higher number of idle connections. To connect to pgBouncer you should connect to port `6432` instead of `5432`. When connecting to pgBouncer you have:
+
+- 1800 idle connections available
+- 300 active connections to Citus available
+
 Masterless Mode (beta)
 ======================
 
