@@ -19,29 +19,38 @@ Citus supports and parallelizes most aggregate functions supported by PostgreSQL
 Count (Distinct) Aggregates
 ---------------------------
 
-Citus supports count(distinct) aggregates in several ways. If the count(distinct) aggregate is on the distribution column, Citus can directly push down the query to the workers. If not, Citus needs to repartition the underlying data in the cluster to parallelize count(distinct) aggregates and avoid pulling all rows to the coordinator.
+Citus supports count(distinct) aggregates in several ways. If the count(distinct) aggregate is on the distribution column, Citus can directly push down the query to the workers. If not, Citus runs select distinct statements on each worker, and returns the list to the coordinator where it obtains the final count.
 
-To address the common use case of count(distinct) approximations, Citus provides an option of using the HyperLogLog algorithm to efficiently calculate approximate values for the count distincts on non-distribution key columns.
+Note that transferring this data becomes slower when workers have a greater number of distinct items. This is especially true for queries containing multiple count(distinct) aggregates, e.g.:
 
-To enable count distinct approximations, you can follow the steps below:
+.. code-block:: sql
 
-(1) Download and install the hll extension on all PostgreSQL instances (the coordinator and all the workers).
+  -- multiple distinct counts in one query tend to be slow
+  SELECT count(distinct a), count(distinct b), count(distinct c)
+  FROM table_abc;
 
-Please visit the PostgreSQL hll `github repository <https://github.com/aggregateknowledge/postgresql-hll>`_ for specifics on obtaining the extension.
 
-(2) Create the hll extension on all the PostgreSQL instances
+For these kind of queries, the resulting select distinct statements on the workers essentially produce a cross-product of rows to be transferred to the coordinator.
 
-::
+For increased performance you can choose to make an approximate count instead. Follow the steps below:
 
-    CREATE EXTENSION hll;
+1. Download and install the hll extension on all PostgreSQL instances (the coordinator and all the workers).
 
-(3) Enable count distinct approximations by setting the citus.count_distinct_error_rate configuration value. Lower values for this configuration setting are expected to give more accurate results but take more time for computation. We recommend setting this to 0.005.
+   Please visit the PostgreSQL hll `github repository <https://github.com/aggregateknowledge/postgresql-hll>`_ for specifics on obtaining the extension.
 
-::
+1. Create the hll extension on all the PostgreSQL instances
 
-    SET citus.count_distinct_error_rate to 0.005;
+   ::
 
-After this step, you should be able to run approximate count distinct queries on any column of the table.
+       CREATE EXTENSION hll;
+
+3. Enable count distinct approximations by setting the Citus.count_distinct_error_rate configuration value. Lower values for this configuration setting are expected to give more accurate results but take more time for computation. We recommend setting this to 0.005.
+
+   ::
+
+       SET citus.count_distinct_error_rate to 0.005;
+
+   After this step, count(distinct) aggregates automatically switch to using HLL, with no changes necessary to your queries. You should be able to run approximate count distinct queries on any column of the table.
 
 HyperLogLog Column
 -------------------
