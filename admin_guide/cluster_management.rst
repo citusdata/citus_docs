@@ -34,6 +34,11 @@ In addition to the above, if you want to move existing shards to the newly added
 
 	select rebalance_table_shards('github_events');
 
+.. note::
+
+  Citus' shard rebalancing is fully "online," meaning applications communicating with the database do not experience downtime. Read queries to the cluster can continue without any interruption during the process.
+
+  Even write queries are supported during rebalancing, but the coordinator node queues them until the shards they reference are in their new places. Although a full rebalance can take hours, it touches individual shards for only a few minutes each and subsequently unblocks writes to those shards.
 
 Adding a coordinator
 ----------------------
