@@ -430,11 +430,11 @@ master_disable_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The :code:`master_disable_node` function is the opposite of
-:code:`master_activate_node`. It marks a node as inactive in
-the Citus metadata table :code:`pg_dist_node`, removing it from
-the cluster temporarily. The function also deletes all reference table
-placements from the disabled node. To reactivate the node, just run
-:code:`master_activate_node` again.
+:code:`master_activate_node`. It marks a node as inactive in the Citus
+metadata table :code:`pg_dist_node`, removing copies of reference
+tables from the node and preventing the creation of new shards there. A
+disabled node is still available for reading and writing data, it is
+just temporarily ineligible for new shards.
 
 Arguments
 ************************
