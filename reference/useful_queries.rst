@@ -44,12 +44,16 @@ This query will run across all worker nodes and identify locks, how long they've
 Querying size of your shards
 ----------------------------
 
-This query will provide you with the size of each of your shards (tables):
+This query will provide you with the size of every shard of a given distributed table, designated here with the placeholder :code:`my_distributed_table`:
 
 .. code-block:: sql
 
     SELECT pg_size_pretty(result::bigint) 
-    FROM run_command_on_shards('queries',$cmd$SELECT pg_table_size('%s');$cmd$);
+    FROM run_command_on_shards('my_distributed_table', $cmd$
+      SELECT pg_table_size('%s');
+    $cmd$);
+
+For more info about distributed table size, see :ref:`table_size`.
 
 Identifying unused indexes
 --------------------------
