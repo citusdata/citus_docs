@@ -58,22 +58,31 @@ For more info about distributed table size, see :ref:`table_size`.
 Identifying unused indexes
 --------------------------
 
-This query will run across all worker nodes and identify any unused indexes:
+This query will run across all worker nodes and identify any unused indexes for a given distributed table, designated here with the placeholder :code:`my_distributed_table`:
 
 .. code-block:: sql
 
-    SELECT * FROM run_command_on_shards('filters'::text,
-                $cmd$ SELECT array_agg(a) as infos FROM (SELECT schemaname || '.' || relname || '##' || indexrelname || '##' ||
-                         CAST(Pg_size_pretty(pg_relation_size(i.indexrelid)) as TEXT) || '##' || CAST(idx_scan as TEXT) a
-                FROM     pg_stat_user_indexes ui
-                JOIN     pg_index i
-                ON       ui.indexrelid = i.indexrelid
-                WHERE    NOT indisunique
-                AND      idx_scan < 50
-                AND      Pg_relation_size(relid) > 5 * 8192
-                AND      schemaname || '.' || relname = '%s'
-                ORDER BY Pg_relation_size(i.indexrelid) / NULLIF(idx_scan, 0) DESC nulls first,
-                         Pg_relation_size(i.indexrelid) DESC) sub $cmd$);
+  SELECT *
+  FROM run_command_on_shards('my_distributed_table', $cmd$
+    SELECT array_agg(a) as infos
+    FROM (
+      SELECT (
+        schemaname || '.' || relname || '##' || indexrelname || '##'
+                   || pg_size_pretty(pg_relation_size(i.indexrelid))::text
+                   || '##' || idx_scan::text
+      ) AS a
+      FROM     pg_stat_user_indexes ui
+      JOIN     pg_index i
+      ON       ui.indexrelid = i.indexrelid
+      WHERE    NOT indisunique
+      AND      idx_scan < 50
+      AND      pg_relation_size(relid) > 5 * 8192
+      AND      schemaname || '.' || relname = '%s'
+      ORDER BY
+        pg_relation_size(i.indexrelid) / NULLIF(idx_scan, 0) DESC nulls first,
+        pg_relation_size(i.indexrelid) DESC
+    ) sub
+  $cmd$);
 
 Monitoring your connection count
 --------------------------------
