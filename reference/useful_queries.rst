@@ -10,7 +10,8 @@ Detecting locks
 
 This query will run across all worker nodes and identify locks, how long they've been open, and the offending query:
 
-::sql
+.. code-block:: sql
+
     SELECT run_command_on_workers($cmd$SELECT array_agg(blocked_statement || ' $ ' || cur_stmt_blocking_proc || ' $ ' ||cnt::text || ' $ ' || age) FROM (
     SELECT   blocked_activity.query    AS blocked_statement,
              blocking_activity.query   AS cur_stmt_blocking_proc,
@@ -45,7 +46,8 @@ Querying size of your shards
 
 This query will provide you with the size of each of your shards (tables):
 
-::sql
+.. code-block:: sql
+
     SELECT pg_size_pretty(result::bigint) 
     FROM run_command_on_shards('queries',$cmd$SELECT pg_table_size('%s');$cmd$);
 
@@ -54,7 +56,8 @@ Identifying unused indexes
 
 This query will run across all worker nodes and identify any unused indexes:
 
-::sql
+.. code-block:: sql
+
     SELECT * FROM run_command_on_shards('filters'::text,
                 $cmd$ SELECT array_agg(a) as infos FROM (SELECT schemaname || '.' || relname || '##' || indexrelname || '##' ||
                          CAST(Pg_size_pretty(pg_relation_size(i.indexrelid)) as TEXT) || '##' || CAST(idx_scan as TEXT) a
@@ -73,7 +76,8 @@ Monitoring your connection count
 
 This query will give you the connection count by each type that are open on the coordinator:
 
-::sql
+.. code-block:: sql
+
     SELECT state,
            count(*) 
     FROM pg_stat_activity 
@@ -84,9 +88,9 @@ Index hit rate
 
 This query will provide you with your index hit rate across all nodes. Index hit rate is useful in determing how often when querying your indexes are used:
 
-::sql
+.. code-block:: sql
+
     SELECT nodename,result as index_hit_rate 
     FROM run_command_on_workers($cmd$
         SELECT case sum(idx_blks_hit) when 0 then 'NaN'::numeric else to_char((sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit + idx_blks_read), '99.99')::numeric end as ratio 
         FROM pg_statio_user_indexes$cmd$);
-
