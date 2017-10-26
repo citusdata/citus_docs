@@ -16,16 +16,6 @@ The string may need to be quoted in your shell to preserve the ampersand.
 
   Database clients must support SSL to connect to Citus Cloud. In particular :code:`psql` needs to be compiled :code:`--with-openssl` if building PostgreSQL from source.
 
-A coordinator node on Citus Cloud has a hard limit of three hundred simultaneous active connections to limit memory consumption. If more connections are required, change the port in the connection URL from 5432 to 6432. This will connect to PgBouncer rather than directly to the coordinator, allowing up to roughly two thousand simultaneous connections. The coordinator can still only process three hundred at a time, but more can connect and PgBouncer will queue them.
-
-To measure the number of active connections at a given time, run:
-
-.. code-block:: postgresql
-
-  SELECT COUNT(*)
-    FROM pg_stat_activity
-   WHERE state <> 'idle';
-
 Two-Factor Authentication
 -------------------------
 
