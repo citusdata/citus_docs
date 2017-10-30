@@ -40,14 +40,15 @@ The :code:`run_command_on_shards` function applies a SQL command to each shard, 
   -- Get the estimated row count for a distributed table by summing the
   -- estimated counts of rows for each shard.
   SELECT sum(result::bigint) AS estimated_count
-    FROM run_command_on_shards(
-      'my_distributed_table',
-      $cmd$
-        SELECT reltuples
-          FROM pg_class
-         WHERE relname = '%I';
-      $cmd$
-    );
+  FROM run_command_on_shards(
+    'my_distributed_table',
+    $cmd$
+      SELECT reltuples
+        FROM pg_class c
+        JOIN pg_catalog.pg_namespace n on n.oid=c.relnamespace
+       WHERE n.nspname||'.'||relname = '%s';
+    $cmd$
+  );
 
 Running on all Placements
 -------------------------
@@ -65,7 +66,7 @@ For example, suppose a distributed table has an :code:`updated_at` field, and we
   SELECT run_command_on_placements(
     'my_distributed_table',
     $cmd$
-      UPDATE %I SET updated_at = '2017-01-01';
+      UPDATE %s SET updated_at = '2017-01-01';
     $cmd$
   );
 
@@ -82,14 +83,17 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
   -- We want to synchronise them so that every time little_vals
   -- are created, big_vals appear with double the value
   --
-  -- First we make a trigger function for each placement
-  SELECT run_command_on_placements('big_vals', $cmd$
-    CREATE OR REPLACE FUNCTION embiggen_%1$I() RETURNS TRIGGER AS $$
+  -- First we make a trigger function on each worker, which will
+  -- take the destination table placement as an argument
+  SELECT run_command_on_workers($cmd$
+    CREATE OR REPLACE FUNCTION embiggen() RETURNS TRIGGER AS $$
       BEGIN
         IF (TG_OP = 'INSERT') THEN
-          INSERT INTO %1$I (key, val) VALUES (NEW.key, NEW.val*2);
+          EXECUTE format(
+            'INSERT INTO %s (key, val) SELECT ($1).key, ($1).val*2;',
+            TG_ARGV[0]
+          ) USING NEW;
         END IF;
-
         RETURN NULL;
       END;
     $$ LANGUAGE plpgsql;
@@ -101,8 +105,8 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
     'little_vals',
     'big_vals',
     $cmd$
-      CREATE TRIGGER after_insert AFTER INSERT ON %I
-        FOR EACH ROW EXECUTE PROCEDURE embiggen_%I()
+      CREATE TRIGGER after_insert AFTER INSERT ON %s
+        FOR EACH ROW EXECUTE PROCEDURE embiggen(%I)
     $cmd$
   );
 
