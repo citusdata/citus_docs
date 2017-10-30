@@ -12,34 +12,39 @@ This query will run across all worker nodes and identify locks, how long they've
 
 .. code-block:: sql
 
-    SELECT run_command_on_workers($cmd$SELECT array_agg(blocked_statement || ' $ ' || cur_stmt_blocking_proc || ' $ ' ||cnt::text || ' $ ' || age) FROM (
-    SELECT   blocked_activity.query    AS blocked_statement,
+  SELECT run_command_on_workers($cmd$
+    SELECT array_agg(
+      blocked_statement || ' $ ' || cur_stmt_blocking_proc
+      || ' $ ' || cnt::text || ' $ ' || age
+    )
+    FROM (
+      SELECT blocked_activity.query    AS blocked_statement,
              blocking_activity.query   AS cur_stmt_blocking_proc,
-             count(*) cnt,
-             --now() - min(current_timestamp) AS how_long,
+             count(*)                  AS cnt,
              age(now(), min(blocked_activity.query_start)) AS "age"
-       FROM  pg_catalog.pg_locks         blocked_locks
-        JOIN pg_catalog.pg_stat_activity blocked_activity  ON blocked_activity.pid = blocked_locks.pid
-        JOIN pg_catalog.pg_locks         blocking_locks
-            ON blocking_locks.locktype = blocked_locks.locktype
-            AND blocking_locks.DATABASE IS NOT DISTINCT FROM blocked_locks.DATABASE
-            AND blocking_locks.relation IS NOT DISTINCT FROM blocked_locks.relation
-            AND blocking_locks.page IS NOT DISTINCT FROM blocked_locks.page
-            AND blocking_locks.tuple IS NOT DISTINCT FROM blocked_locks.tuple
-            AND blocking_locks.virtualxid IS NOT DISTINCT FROM blocked_locks.virtualxid
-            AND blocking_locks.transactionid IS NOT DISTINCT FROM blocked_locks.transactionid
-            AND blocking_locks.classid IS NOT DISTINCT FROM blocked_locks.classid
-            AND blocking_locks.objid IS NOT DISTINCT FROM blocked_locks.objid
-            AND blocking_locks.objsubid IS NOT DISTINCT FROM blocked_locks.objsubid
-            AND blocking_locks.pid != blocked_locks.pid
-        JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
-       WHERE NOT blocked_locks.GRANTED
-         AND blocking_locks.GRANTED
-       GROUP BY blocked_activity.query,
-                blocking_activity.query
-       ORDER BY 4
-    )a$cmd$);
-
+      FROM pg_catalog.pg_locks         blocked_locks
+      JOIN pg_catalog.pg_stat_activity blocked_activity
+        ON blocked_activity.pid = blocked_locks.pid
+      JOIN pg_catalog.pg_locks         blocking_locks
+        ON blocking_locks.locktype = blocked_locks.locktype
+       AND blocking_locks.DATABASE IS NOT DISTINCT FROM blocked_locks.DATABASE
+       AND blocking_locks.relation IS NOT DISTINCT FROM blocked_locks.relation
+       AND blocking_locks.page IS NOT DISTINCT FROM blocked_locks.page
+       AND blocking_locks.tuple IS NOT DISTINCT FROM blocked_locks.tuple
+       AND blocking_locks.virtualxid IS NOT DISTINCT FROM blocked_locks.virtualxid
+       AND blocking_locks.transactionid IS NOT DISTINCT FROM blocked_locks.transactionid
+       AND blocking_locks.classid IS NOT DISTINCT FROM blocked_locks.classid
+       AND blocking_locks.objid IS NOT DISTINCT FROM blocked_locks.objid
+       AND blocking_locks.objsubid IS NOT DISTINCT FROM blocked_locks.objsubid
+       AND blocking_locks.pid != blocked_locks.pid
+      JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
+      WHERE NOT blocked_locks.GRANTED
+       AND blocking_locks.GRANTED
+      GROUP BY blocked_activity.query,
+               blocking_activity.query
+      ORDER BY 4
+    ) a
+  $cmd$);
 
 Querying size of your shards
 ----------------------------
@@ -48,10 +53,10 @@ This query will provide you with the size of every shard of a given distributed 
 
 .. code-block:: sql
 
-    SELECT pg_size_pretty(result::bigint) 
-    FROM run_command_on_shards('my_distributed_table', $cmd$
-      SELECT pg_table_size('%s');
-    $cmd$);
+  SELECT pg_size_pretty(result::bigint) 
+  FROM run_command_on_shards('my_distributed_table', $cmd$
+    SELECT pg_table_size('%s');
+  $cmd$);
 
 For more info about distributed table size, see :ref:`table_size`.
 
@@ -71,13 +76,13 @@ This query will run across all worker nodes and identify any unused indexes for 
                    || pg_size_pretty(pg_relation_size(i.indexrelid))::text
                    || '##' || idx_scan::text
       ) AS a
-      FROM     pg_stat_user_indexes ui
-      JOIN     pg_index i
-      ON       ui.indexrelid = i.indexrelid
-      WHERE    NOT indisunique
-      AND      idx_scan < 50
-      AND      pg_relation_size(relid) > 5 * 8192
-      AND      schemaname || '.' || relname = '%s'
+      FROM  pg_stat_user_indexes ui
+      JOIN  pg_index i
+      ON    ui.indexrelid = i.indexrelid
+      WHERE NOT indisunique
+      AND   idx_scan < 50
+      AND   pg_relation_size(relid) > 5 * 8192
+      AND   schemaname || '.' || relname = '%s'
       ORDER BY
         pg_relation_size(i.indexrelid) / NULLIF(idx_scan, 0) DESC nulls first,
         pg_relation_size(i.indexrelid) DESC
@@ -91,10 +96,9 @@ This query will give you the connection count by each type that are open on the 
 
 .. code-block:: sql
 
-    SELECT state,
-           count(*) 
-    FROM pg_stat_activity 
-    GROUP BY state;
+  SELECT state, count(*)
+  FROM pg_stat_activity
+  GROUP BY state;
 
 Index hit rate
 --------------
@@ -103,7 +107,11 @@ This query will provide you with your index hit rate across all nodes. Index hit
 
 .. code-block:: sql
 
-    SELECT nodename,result as index_hit_rate 
-    FROM run_command_on_workers($cmd$
-        SELECT case sum(idx_blks_hit) when 0 then 'NaN'::numeric else to_char((sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit + idx_blks_read), '99.99')::numeric end as ratio 
-        FROM pg_statio_user_indexes$cmd$);
+  SELECT nodename, result as index_hit_rate
+  FROM run_command_on_workers($cmd$
+    SELECT CASE sum(idx_blks_hit)
+      WHEN 0 THEN 'NaN'::numeric
+      ELSE to_char((sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit + idx_blks_read), '99.99')::numeric
+      END AS ratio
+    FROM pg_statio_user_indexes
+  $cmd$);
