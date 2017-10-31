@@ -150,7 +150,7 @@ The situation changes when dealing with late arriving data, or running the rollu
 Updates and Deletion
 --------------------
 
-You can update or delete rows from your distributed tables using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/current/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/current/static/sql-delete.html>`_ commands. These commands will seamlessly apply across shards if necessary.
+You can update or delete rows from your distributed tables using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/current/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/current/static/sql-delete.html>`_ commands.
 
 ::
 
@@ -160,6 +160,22 @@ You can update or delete rows from your distributed tables using the standard Po
     UPDATE github_events
     SET event_public = TRUE
     WHERE org = 'happy_devs';
+
+When updates/deletes affect multiple shards as in the above example, Citus defaults to using a one-phase commit protocol. For greater safety you can enable two-phase commits by setting
+
+.. code-block:: postgresql
+
+  SET citus.multi_shard_commit_protocol = '2pc';
+
+If an update or delete affects only a single shard then it runs within a single worker node. In this case enabling 2PC is unnecessary. This often happens when updates or deletes filter by a table's distribution column:
+
+.. code-block:: postgresql
+
+  -- supposing github_events is distributed by user_id,
+  -- this will execute in a single worker node
+
+  DELETE FROM github_events
+  WHERE user_id = 120316;
 
 Maximizing Write Performance
 ----------------------------
