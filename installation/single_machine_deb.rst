@@ -76,6 +76,10 @@ Finally, the coordinator needs to know where it can find the workers. To tell it
   psql -p 9700 -c "SELECT * from master_add_node('localhost', 9701);"
   psql -p 9700 -c "SELECT * from master_add_node('localhost', 9702);"
 
+.. note::
+
+  By default Citus reports anonymous usage information to Citus Data company servers. To learn more about this, including how to opt out, see :ref:`phone_home`.
+
 **4. Verify that installation has succeeded**
 
 To verify that the installation has succeeded we check that the coordinator node has picked up the desired worker configuration. First start the psql shell on the coordinator node:

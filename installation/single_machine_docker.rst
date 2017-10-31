@@ -54,6 +54,10 @@ The first time you start the cluster it builds its containers. Subsequent startu
     - ports: ['5432:5432']
     + ports: ['5433:5432']
 
+.. note::
+
+  By default Citus reports anonymous usage information to Citus Data company servers. To learn more about this, including how to opt out, see :ref:`phone_home`.
+
 **3. Verify that installation has succeeded**
 
 To verify that the installation has succeeded we check that the coordinator node has picked up the desired worker configuration. First start the psql shell on the coordinator (master) node:

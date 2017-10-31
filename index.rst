@@ -65,7 +65,6 @@ Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL
 
    aboutcitus/what_is_citus.rst
    aboutcitus/introduction_to_citus.rst
-   aboutcitus/privacy.rst
 
 .. toctree::
    :caption: Installation
