@@ -147,29 +147,35 @@ The situation changes when dealing with late arriving data, or running the rollu
     ON CONFLICT (day, url, site_id) DO UPDATE SET
       view_count = daily_page_views.view_count + EXCLUDED.view_count;
 
-Single-Shard Updates and Deletion
----------------------------------
+Updates and Deletion
+--------------------
 
-You can update or delete rows from your tables, using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/current/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/current/static/sql-delete.html>`_ commands.
-
-::
-
-    UPDATE github_events SET org = NULL WHERE repo_id = 24509048;
-    DELETE FROM github_events WHERE repo_id = 24509048;
-
-Currently, Citus requires that standard UPDATE or DELETE statements involve exactly one shard. This means commands must include a WHERE qualification on the distribution column that restricts the query to a single shard. Such qualifications usually take the form of an equality clause on the table’s distribution column. To update or delete across shards see the section below.
-
-Cross-Shard Updates and Deletion
---------------------------------
-
-The most flexible way to modify or delete rows throughout a Citus cluster is the master_modify_multiple_shards command. It takes a regular SQL statement as argument and runs it on all workers:
+You can update or delete rows from your distributed tables using the standard PostgreSQL `UPDATE <http://www.postgresql.org/docs/current/static/sql-update.html>`_ and `DELETE <http://www.postgresql.org/docs/current/static/sql-delete.html>`_ commands.
 
 ::
 
-  SELECT master_modify_multiple_shards(
-    'DELETE FROM github_events WHERE repo_id IN (24509048, 24509049)');
+    DELETE FROM github_events
+    WHERE repo_id IN (24509048, 24509049);
 
-This uses a two-phase commit to remove or update data safely everywhere. Unlike the standard UPDATE statement, Citus allows it to operate on more than one shard. To learn more about the function, its arguments and its usage, please visit the :ref:`user_defined_functions` section of our documentation.
+    UPDATE github_events
+    SET event_public = TRUE
+    WHERE org = 'happy_devs';
+
+When updates/deletes affect multiple shards as in the above example, Citus defaults to using a one-phase commit protocol. For greater safety you can enable two-phase commits by setting
+
+.. code-block:: postgresql
+
+  SET citus.multi_shard_commit_protocol = '2pc';
+
+If an update or delete affects only a single shard then it runs within a single worker node. In this case enabling 2PC is unnecessary. This often happens when updates or deletes filter by a table's distribution column:
+
+.. code-block:: postgresql
+
+  -- supposing github_events is distributed by user_id,
+  -- this will execute in a single worker node
+
+  DELETE FROM github_events
+  WHERE user_id = 120316;
 
 Maximizing Write Performance
 ----------------------------

@@ -137,12 +137,13 @@ We've seen some of the benefits of Citus for single-tenant queries, but it can a
     FROM ads GROUP BY account_id
   ORDER BY total_clicks DESC;
 
-There is even a way to run DML statements on multiple tenants. As long as the update statement references data local to its own tenant it can be applied simultaneously to all tenants with a helper UDF called :code:`master_modify_multiple_shards`. Here is an example of modifying all image urls to use secure connections.
+Citus is also able to seamlessly run DML statements on multiple tenants. As long as the update statement references data local to its own tenant it can be applied simultaneously to all tenants. Here is an example of modifying all image urls to use secure connections.
 
 .. code-block:: sql
 
-  SELECT master_modify_multiple_shards(
-    'UPDATE ads SET image_url = replace(image_url, ''http:'', ''https:'')'
+  UPDATE ads
+  SET image_url = replace(
+    image_url, 'http:', 'https:'
   );
 
 .. _distributing_by_entity_id:
