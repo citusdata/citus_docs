@@ -71,6 +71,21 @@ data across your cluster after adding new worker nodes.
 
   Citus Cloud uses `streaming replication <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high availability and thus maintaining shard replicas would be redundant. In any production environment where streaming replication is unavailable, you should set ``citus.shard_replication_factor`` to 2 or higher for fault tolerance.
 
+.. code-block:: postgres
+
+  DO $$
+    BEGIN LOOP
+      INSERT INTO http_request (
+          site_id, ingest_time, url, request_country,
+          ip_address, status_code, response_time_msec
+      ) VALUES (
+          1, clock_timestamp(), 'http://example.com/path', 'USA',
+          inet '88.250.10.123', 200, 10
+      );
+      PERFORM pg_sleep(random() * 2);
+    END LOOP;
+  END $$;
+
 With this, the system is ready to accept data and serve queries! We've provided `a data
 ingest script
 <https://github.com/citusdata/realtime-dashboards-resources/blob/master/ingest_example_data.sql>`_
@@ -111,15 +126,15 @@ for each of the last 30 days.
 .. code-block:: sql
 
   CREATE TABLE http_request_1min (
-        site_id INT,
-        ingest_time TIMESTAMPTZ, -- which minute this row represents
+    site_id INT,
+    ingest_time TIMESTAMPTZ, -- which minute this row represents
 
-        error_count INT,
-        success_count INT,
-        request_count INT,
-        average_response_time_msec INT,
-        CHECK (request_count = error_count + success_count),
-        CHECK (ingest_time = date_trunc('minute', ingest_time))
+    error_count INT,
+    success_count INT,
+    request_count INT,
+    average_response_time_msec INT,
+    CHECK (request_count = error_count + success_count),
+    CHECK (ingest_time = date_trunc('minute', ingest_time))
   );
 
   SELECT create_distributed_table('http_request_1min', 'site_id');
@@ -144,102 +159,70 @@ on every matching pair of shards. This is possible because the tables are co-loc
 
 .. code-block:: plpgsql
 
-    -- this function is created on the workers
-    CREATE FUNCTION rollup_1min(p_source_shard text, p_dest_shard text) RETURNS void
-    AS $$
-    BEGIN
-      -- the dest shard will have a name like: http_request_1min_204566, where 204566 is the
-      -- shard id. We lock using that id, to make sure multiple instances of this function
-      -- never simultaneously write to the same shard.
-      IF pg_try_advisory_xact_lock(29999, split_part(p_dest_shard, '_', 4)::int) = false THEN
-        -- N.B. make sure the int constant (29999) you use here is unique within your system
-        RETURN;
-      END IF;
+  CREATE OR REPLACE FUNCTION rollup_http_request() RETURNS void AS $$
+  DECLARE max_rollup_time TIMESTAMPTZ;
+  BEGIN
+    SELECT COALESCE(max(ingest_time), timestamp '10-10-1901')
+    FROM http_request_1min
+    INTO max_rollup_time;
 
-      EXECUTE format($insert$
-        INSERT INTO %2$I (
-          site_id, ingest_time, request_count,
-          success_count, error_count, average_response_time_msec
-        ) SELECT
-          site_id,
-          date_trunc('minute', ingest_time) as minute,
-          COUNT(1) as request_count,
-          SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
-          SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
-          SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
-        FROM %1$I
-        WHERE
-          date_trunc('minute', ingest_time)
-            > (SELECT COALESCE(max(ingest_time), timestamp '10-10-1901') FROM %2$I)
-          AND date_trunc('minute', ingest_time) < date_trunc('minute', now())
-        GROUP BY site_id, minute
-        ORDER BY minute ASC;
-      $insert$, p_source_shard, p_dest_shard);
-    END;
-    $$ LANGUAGE 'plpgsql';
+    INSERT INTO http_request_1min (
+      site_id, ingest_time, distinct_ip_addresses, request_count,
+      success_count, error_count, average_response_time_msec,
+      country_counters
+    ) SELECT
+      site_id,
+      minute,
+      COUNT(1) as request_count,
+      SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
+      SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
+      SUM(response_time_msec) / COUNT(1) AS average_response_time_msec,
+      jsonb_object_agg(request_country, country_count)
+    FROM (
+      SELECT
+        site_id,
+        date_trunc('minute', ingest_time) AS minute,
+        SUM(hll_hash_text(ip_address)) as distinct_ip_addresses,
+        request_country,
+        count(*) AS country_count
+      FROM http_request
+      GROUP BY site_id, minute, request_country
+    ) AS subquery
+    WHERE
+      minute > max_rollup_time
+      AND minute < date_trunc('minute', now())
+    GROUP BY site_id, minute
+    ORDER BY minute ASC;
+  END;
+  $$ LANGUAGE plpgsql;
 
 Inside this function you can see the dashboard query from earlier. It's been wrapped in
 some machinery which writes the results into ``http_request_1min`` and allows passing in
 the name of the shards to read and write from. It also takes out an advisory lock, to
 ensure there aren't any concurrency bugs where the same rows are written multiple times.
 
-The machinery above which accepts the names of the shards to read and write is necessary
-because only the coordinator has the metadata required to know what the shard pairs are. It has
-its own function to figure that out:
-
-.. code-block:: plpgsql
-
-    -- this function is created on the coordinator
-    CREATE FUNCTION colocated_shard_placements(left_table REGCLASS, right_table REGCLASS)
-    RETURNS TABLE (left_shard TEXT, right_shard TEXT, nodename TEXT, nodeport INT4) AS $$
-      SELECT
-        a.logicalrelid::regclass||'_'||a.shardid,
-        b.logicalrelid::regclass||'_'||b.shardid,
-        nodename, nodeport
-      FROM pg_dist_shard a
-      JOIN pg_dist_shard b USING (shardminvalue)
-      JOIN pg_dist_placement p ON (a.shardid = p.shardid)
-      JOIN pg_dist_node n ON (p.groupid = n.groupid)
-      WHERE a.logicalrelid = left_table AND b.logicalrelid = right_table;
-    $$ LANGUAGE 'sql';
-
 Using that metadata, every minute it runs a script which calls ``rollup_1min`` once for
 each pair of shards:
 
-.. code-block:: bash
+.. note::
 
-   #!/usr/bin/env bash
-
-   QUERY=$(cat <<END
-     SELECT * FROM colocated_shard_placements(
-       'http_request'::regclass, 'http_request_1min'::regclass
-     );
-   END
-   )
-
-   COMMAND="psql -h \$2 -p \$3 -c \"SELECT rollup_1min('\$0', '\$1')\""
-
-   psql -tA -F" " -c "$QUERY" | xargs -P32 -n4 sh -c "$COMMAND"
-
-.. NOTE::
-
-  There are many ways to make sure the function is called periodically and no answer that
-  works well for every system. If you're able to run cron on the same machine as the
-  coordinator, and assuming you named the above script ``run_rollups.sh``, you can do something
-  as simple as this:
+  The above function should be called every minute. You could do this by
+  adding a crontab entry on the coordinator node:
 
   .. code-block:: bash
 
-     * * * * * /some/path/run_rollups.sh
+    * * * * * psql -c 'SELECT rollup_http_request();'
 
 The dashboard query from earlier is now a lot nicer:
 
 .. code-block:: sql
 
-  SELECT
-    request_count, success_count, error_count, average_response_time_msec
-  FROM http_request_1min
-  WHERE site_id = 1 AND date_trunc('minute', ingest_time) > date_trunc('minute', now()) - interval '5 minutes';
+  SELECT date_trunc('minute', ingest_time) as minute, request_count,
+         success_count, error_count, average_response_time_msec
+   FROM http_request_1min
+  WHERE site_id = 1
+    AND date_trunc('minute', ingest_time)
+        > date_trunc('minute', now()) - interval '5 minutes';
 
 Expiring Old Data
 -----------------
@@ -249,24 +232,18 @@ storage costs. Once you decide how long you'd like to keep data for each granula
 could easily write a function to expire old data. In the following example, we decided to
 keep raw data for one day and 1-minute aggregations for one month.
 
-.. code-block:: plpgsql
+.. code-block:: postgres
 
-  -- another function for the coordinator
   CREATE OR REPLACE FUNCTION expire_old_request_data() RETURNS void
   AS $$
-  BEGIN
-    SET citus.all_modification_commutative TO TRUE;
-    PERFORM master_modify_multiple_shards(
-              'DELETE FROM http_request WHERE ingest_time < now() - interval ''1 day'';');
-    PERFORM master_modify_multiple_shards(
-              'DELETE FROM http_request_1min WHERE ingest_time < now() - interval ''1 month'';');
-  END;
-  $$ LANGUAGE 'plpgsql';
+    DELETE FROM http_request WHERE ingest_time < now() - interval '1 day';
+    DELETE FROM http_request_1min WHERE ingest_time < now() - interval '1 month';
+  $$ LANGUAGE sql;
 
-.. NOTE::
+.. note::
 
-  The above function should be called every minute. You could do this by adding a crontab
-  entry on the coordinator node:
+  The above function should be called every minute. You could do this by
+  adding a crontab entry on the coordinator node:
 
   .. code-block:: bash
 
@@ -316,16 +293,9 @@ with the name `sum` on all nodes and let Citus use these functions for distribut
 
   -- alias for hll_add_agg
   CREATE AGGREGATE sum(hll_hashval) (
-       SFUNC = hll_add_trans0,
-       STYPE = internal,
-       FINALFUNC = hll_pack
-  );
-
-  -- alias for hll_union_agg
-  CREATE AGGREGATE sum(hll)(
-      sfunc = hll_union_trans,
-      stype = internal,
-      finalfunc = hll_pack
+    SFUNC = hll_add_trans0,
+    STYPE = internal,
+    FINALFUNC = hll_pack
   );
 
 When doing our rollups, we can now aggregate sessions into an hll column with queries
@@ -345,11 +315,13 @@ number of ip addresses by calling the ``hll_cardinality`` function:
 
 .. code-block:: sql
 
-  SELECT
-    request_count, success_count, error_count, average_response_time_msec,
-    hll_cardinality(distinct_ip_addresses) AS distinct_ip_address_count
+  SELECT date_trunc('minute', ingest_time) as minute, request_count,
+         success_count, error_count, average_response_time_msec,
+         hll_cardinality(distinct_ip_addresses) AS distinct_ip_address_count
   FROM http_request_1min
-  WHERE site_id = 1 AND ingest_time = date_trunc('minute', now());
+  WHERE site_id = 1
+    AND date_trunc('minute', ingest_time)
+        > date_trunc('minute', now()) - interval '5 minutes';
 
 HLLs aren't just faster, they let you do things you couldn't previously. Say we did our
 rollups, but instead of using HLLs we saved the exact unique counts. This works fine, but
@@ -375,10 +347,9 @@ You can then compute distinct ip counts over a time period with the following qu
 
 .. code-block:: sql
 
-  SELECT
-    hll_cardinality(SUM(distinct_ip_addresses))
+  SELECT hll_cardinality(SUM(distinct_ip_addresses))
   FROM http_request_1min
-  WHERE ingest_time BETWEEN timestamp '06-01-2016' AND '06-28-2016';
+  WHERE ingest_time > now() - '5 minutes'::interval;
 
 You can find more information on HLLs `in the project's GitHub repository
 <https://github.com/aggregateknowledge/postgresql-hll>`_.
