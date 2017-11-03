@@ -178,9 +178,10 @@ on every matching pair of shards. This is possible because the tables are co-loc
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
       SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
     FROM (
-      SELECT *, date_trunc('minute', ingest_time) AS minute
+      SELECT *,
+        date_trunc('minute', ingest_time) AS minute
       FROM http_request
-    ) subquery
+    ) AS h
     WHERE minute > max_rollup_time
       AND minute < date_trunc('minute', now())
     GROUP BY site_id, minute
@@ -386,7 +387,7 @@ Next, include it in the rollups by adding a clause like this to the rollup funct
       count(1) AS country_count
     FROM http_request
     GROUP BY site_id, minute, request_country
-  ) AS subquery
+  ) AS h
   GROUP BY site_id, minute;
 
 Now, if you want to get the number of requests which came from america in your dashboard,
