@@ -167,29 +167,20 @@ on every matching pair of shards. This is possible because the tables are co-loc
     INTO max_rollup_time;
 
     INSERT INTO http_request_1min (
-      site_id, ingest_time, distinct_ip_addresses, request_count,
-      success_count, error_count, average_response_time_msec,
-      country_counters
+      site_id, ingest_time, request_count,
+      success_count, error_count, average_response_time_msec
     ) SELECT
       site_id,
       minute,
       COUNT(1) as request_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
-      SUM(response_time_msec) / COUNT(1) AS average_response_time_msec,
-      jsonb_object_agg(request_country, country_count)
+      SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
     FROM (
-      SELECT
-        site_id,
-        date_trunc('minute', ingest_time) AS minute,
-        SUM(hll_hash_text(ip_address)) as distinct_ip_addresses,
-        request_country,
-        count(*) AS country_count
+      SELECT *, date_trunc('minute', ingest_time) AS minute
       FROM http_request
-      GROUP BY site_id, minute, request_country
-    ) AS subquery
-    WHERE
-      minute > max_rollup_time
+    ) subquery
+    WHERE minute > max_rollup_time
       AND minute < date_trunc('minute', now())
     GROUP BY site_id, minute
     ORDER BY minute ASC;
