@@ -293,14 +293,22 @@ with the name `sum` on all nodes and let Citus use these functions for distribut
 When doing our rollups, we can now aggregate sessions into an hll column with queries
 like this:
 
-.. code-block:: sql
+.. code-block:: diff
 
-  SELECT
-    site_id, date_trunc('minute', ingest_time) as minute,
-    sum(hll_hash_text(ip_address)) AS distinct_ip_addresses
-  FROM http_request
-  WHERE date_trunc('minute', ingest_time) = date_trunc('minute', now())
-  GROUP BY site_id, minute;
+  @@ -1,10 +1,12 @@
+    INSERT INTO http_request_1min (
+      site_id, ingest_time, request_count,
+      success_count, error_count, average_response_time_msec,
+  +   distinct_ip_addresses
+    ) SELECT
+      site_id,
+      minute,
+      COUNT(1) as request_count,
+      SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
+      SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
+      SUM(response_time_msec) / COUNT(1) AS average_response_time_msec,
+  +   sum(hll_hash_text(ip_address)) AS distinct_ip_addresses
+    FROM (
 
 Dashboard queries are a little more complicated, you have to read out the distinct
 number of ip addresses by calling the ``hll_cardinality`` function:
