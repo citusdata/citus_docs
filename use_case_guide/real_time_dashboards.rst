@@ -21,14 +21,6 @@ volume is also high, and both historical and live data are important.
 In this section we'll demonstrate how to build part of the first example, but this
 architecture would work equally well for the second and many other use-cases.
 
-Running It Yourself
--------------------
-
-There will be code snippets in this tutorial but they don't specify a complete system.
-There's `a github repo <https://github.com/citusdata/realtime-dashboards-resources>`_ with
-all the details in one place. If you've followed our installation instructions for running
-Citus on either a single or multiple machines you're ready to try it out.
-
 Data Model
 ----------
 
@@ -71,6 +63,8 @@ data across your cluster after adding new worker nodes.
 
   Citus Cloud uses `streaming replication <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high availability and thus maintaining shard replicas would be redundant. In any production environment where streaming replication is unavailable, you should set ``citus.shard_replication_factor`` to 2 or higher for fault tolerance.
 
+With this, the system is ready to accept data and serve queries! Keep the following loop running in a ``psql`` console in the background while you continue with the other commands in this article. It generates fake data every second or two.
+
 .. code-block:: postgres
 
   DO $$
@@ -86,11 +80,7 @@ data across your cluster after adding new worker nodes.
     END LOOP;
   END $$;
 
-With this, the system is ready to accept data and serve queries! We've provided `a data
-ingest script
-<https://github.com/citusdata/realtime-dashboards-resources/blob/master/ingest_example_data.sql>`_
-you can run to generate example data. Once you've ingested data, you can run dashboard
-queries such as:
+Once you're ingesting data, you can run dashboard queries such as:
 
 .. code-block:: sql
 
@@ -154,9 +144,9 @@ and Citus will place matching shards on the same worker. This is called
 .. image:: /images/colocation.png
   :alt: co-location in citus
 
-In order to populate ``http_request_1min`` we're going to periodically run the equivalent
-of an INSERT INTO SELECT. We'll run a function on all the workers which runs INSERT INTO SELECT
-on every matching pair of shards. This is possible because the tables are co-located.
+In order to populate ``http_request_1min`` we're going to periodically run
+an INSERT INTO SELECT. This is possible because the tables are co-located.
+The following function wraps the rollup query up for convenience.
 
 .. code-block:: plpgsql
 
@@ -189,14 +179,6 @@ on every matching pair of shards. This is possible because the tables are co-loc
   END;
   $$ LANGUAGE plpgsql;
 
-Inside this function you can see the dashboard query from earlier. It's been wrapped in
-some machinery which writes the results into ``http_request_1min`` and allows passing in
-the name of the shards to read and write from. It also takes out an advisory lock, to
-ensure there aren't any concurrency bugs where the same rows are written multiple times.
-
-Using that metadata, every minute it runs a script which calls ``rollup_1min`` once for
-each pair of shards:
-
 .. note::
 
   The above function should be called every minute. You could do this by
@@ -205,6 +187,9 @@ each pair of shards:
   .. code-block:: bash
 
     * * * * * psql -c 'SELECT rollup_http_request();'
+
+  Alternately, an extension such as `pg_cron <https://github.com/citusdata/pg_cron>`_
+  allows you to schedule recurring queries directly from the database.
 
 The dashboard query from earlier is now a lot nicer:
 
@@ -223,9 +208,9 @@ Expiring Old Data
 The rollups make queries faster, but we still need to expire old data to avoid unbounded
 storage costs. Once you decide how long you'd like to keep data for each granularity, you
 could easily write a function to expire old data. In the following example, we decided to
-keep raw data for one day and 1-minute aggregations for one month.
+keep raw data for one day, and per-minute aggregations for one month.
 
-.. code-block:: postgres
+.. code-block:: plpgsql
 
   CREATE OR REPLACE FUNCTION expire_old_request_data() RETURNS void
   AS $$
@@ -242,7 +227,7 @@ keep raw data for one day and 1-minute aggregations for one month.
 
     * * * * * psql -c "SELECT expire_old_request_data();"
 
-That's the basic architecture! We provided an architecture that ingests HTTP events and
+Those are the basics! We provided an architecture that ingests HTTP events and
 then rolls up these events into their pre-aggregated form. This way, you can both store
 raw events and also power your analytical dashboards with subsecond queries.
 
@@ -252,47 +237,57 @@ which often appear.
 Approximate Distinct Counts
 ---------------------------
 
-A common question in http analytics deals with :ref:`approximate distinct counts
+A common question in HTTP analytics deals with :ref:`approximate distinct counts
 <count_distinct>`: How many unique visitors visited your site over the last month?
-Answering this question exactly requires storing the list of all previously-seen visitors
-in the rollup tables, a prohibitively large amount of data. A datatype called hyperloglog,
-or HLL, can answer the query approximately; it takes a surprisingly small amount of space
-to tell you approximately how many unique elements are in a set you pass it. Its accuracy
-can be adjusted. We'll use ones which, using only 1280 bytes, will be able to count up to
-tens of billions of unique visitors with at most 2.2% error.
+Answering this question *exactly* requires storing the list of all previously-seen visitors
+in the rollup tables, a prohibitively large amount of data. However an approximate answer
+is much more manageable.
+
+A datatype called hyperloglog, or HLL, can answer the query
+approximately; it takes a surprisingly small amount of space to tell you
+approximately how many unique elements are in a set. Its accuracy can be
+adjusted. We'll use ones which, using only 1280 bytes, will be able to
+count up to tens of billions of unique visitors with at most 2.2% error.
 
 An equivalent problem appears if you want to run a global query, such as the number of
-unique ip addresses which visited any of your client's sites over the last month. Without
-HLLs this query involves shipping lists of ip addresses from the workers to the coordinator for
+unique IP addresses which visited any of your client's sites over the last month. Without
+HLLs this query involves shipping lists of IP addresses from the workers to the coordinator for
 it to deduplicate. That's both a lot of network traffic and a lot of computation. By using
 HLLs you can greatly improve query speed.
 
-First you must install the hll extension; `the github repo
+First you must install the HLL extension; `the github repo
 <https://github.com/aggregateknowledge/postgresql-hll>`_ has instructions. Next, you have
 to enable it:
 
 .. code-block:: sql
 
-  -- this part must be run on all nodes
+  -- Run on all nodes ------------------------------------
+
   CREATE EXTENSION hll;
 
-  -- this part runs on the coordinator
-  ALTER TABLE http_request_1min ADD COLUMN distinct_ip_addresses hll;
+  -- Run on the coordinator node -------------------------
 
-To make hll functions work with distributed tables, we should define hll aggregate functions
-with the name `sum` on all nodes and let Citus use these functions for distributed queries:
-
-.. code-block:: sql
-
-  -- alias for hll_add_agg
+  -- allow SUM to work on hashvals (alias for hll_add_agg)
   CREATE AGGREGATE sum(hll_hashval) (
     SFUNC = hll_add_trans0,
     STYPE = internal,
     FINALFUNC = hll_pack
   );
 
-When doing our rollups, we can now aggregate sessions into an hll column with queries
-like this:
+.. note::
+
+  This is not necessary on Citus Cloud, which has HLL already installed,
+  along with other useful :ref:`cloud_extensions`.
+
+Now we're ready to track IP addresses in our rollup with HLL. First
+add a column to the rollup table.
+
+.. code-block:: sql
+
+  ALTER TABLE http_request_1min ADD COLUMN distinct_ip_addresses hll;
+
+Next use our custom aggregation to populate the column. Just add it
+to the query in our rollup function:
 
 .. code-block:: diff
 
@@ -308,11 +303,11 @@ like this:
       SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
       SUM(response_time_msec) / COUNT(1) AS average_response_time_msec,
-  +   sum(hll_hash_text(ip_address)) AS distinct_ip_addresses
+  +   SUM(hll_hash_text(ip_address)) AS distinct_ip_addresses
     FROM (
 
 Dashboard queries are a little more complicated, you have to read out the distinct
-number of ip addresses by calling the ``hll_cardinality`` function:
+number of IP addresses by calling the ``hll_cardinality`` function:
 
 .. code-block:: sql
 
@@ -335,6 +330,8 @@ aggregate function and its semantics. You do this by running the following:
 .. code-block:: sql
 
   -- this should be run on the workers and coordinator
+  -- (not necessary on Citus Cloud)
+
   CREATE AGGREGATE sum (hll)
   (
     sfunc = hll_union_trans,
@@ -344,7 +341,7 @@ aggregate function and its semantics. You do this by running the following:
 
 
 Now, when you call SUM over a collection of HLLs, PostgreSQL will return the HLL for us.
-You can then compute distinct ip counts over a time period with the following query:
+You can then compute distinct IP counts over a time period with the following query:
 
 .. code-block:: sql
 
@@ -390,7 +387,7 @@ Next, include it in the rollups by adding a clause like this to the rollup funct
   ) AS h
   GROUP BY site_id, minute;
 
-Now, if you want to get the number of requests which came from america in your dashboard,
+Now, if you want to get the number of requests which came from America in your dashboard,
 your can modify the dashboard query to look like this:
 
 .. code-block:: sql
@@ -400,14 +397,6 @@ your can modify the dashboard query to look like this:
     country_counters->'USA' AS american_visitors
   FROM http_request_1min
   WHERE site_id = 1 AND ingest_time = date_trunc('minute', now());
-
-Resources
----------
-
-This article shows a complete system to give you an idea of what building a non-trivial
-application with Citus looks like. Again, there's `a github repo
-<https://github.com/citusdata/realtime-dashboards-resources>`_ with all the scripts
-mentioned here.
 
 .. raw:: html
 
