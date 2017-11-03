@@ -76,11 +76,11 @@ data across your cluster after adding new worker nodes.
   DO $$
     BEGIN LOOP
       INSERT INTO http_request (
-          site_id, ingest_time, url, request_country,
-          ip_address, status_code, response_time_msec
+        site_id, ingest_time, url, request_country,
+        ip_address, status_code, response_time_msec
       ) VALUES (
-          1, clock_timestamp(), 'http://example.com/path', 'USA',
-          inet '88.250.10.123', 200, 10
+        1, clock_timestamp(), 'http://example.com/path', 'USA',
+        inet '88.250.10.123', 200, 10
       );
       PERFORM pg_sleep(random() * 2);
     END LOOP;
@@ -101,7 +101,8 @@ queries such as:
     SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
     SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
   FROM http_request
-  WHERE site_id = 1 AND date_trunc('minute', ingest_time) > now() - interval '5 minutes'
+  WHERE site_id = 1
+    AND date_trunc('minute', ingest_time) > now() - interval '5 minutes'
   GROUP BY minute;
 
 The setup described above works, but has two drawbacks:
