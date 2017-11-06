@@ -74,7 +74,7 @@ To allow replication behavior customization, ``rebalance_table_shards`` accepts 
 
 * ``auto`` - the default behavior shown above
 * ``force_logical`` - use logical replication even if the table doesn't have a primary key or replica identity. Useful for applications which will be doing reads and inserts only on the table.
-* ``block_writes`` - use COPY (blocking writes) for tables lacking primary key or replica identity.
+* ``block_writes`` - use COPY (blocking writes) for tables lacking primary key or replica identity. If possible, it's better to add a primary key to tables and avoid this mode.
 
 Pass the named parameter like this:
 
