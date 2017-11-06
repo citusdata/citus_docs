@@ -796,6 +796,7 @@ The example below will repair an inactive shard placement of shard 12345 which i
 
     SELECT master_copy_shard_placement(12345, 'good_host', 5432, 'bad_host', 5432);
 
+.. _rebalance_table_shards:
 
 rebalance_table_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -815,6 +816,12 @@ Arguments
 **max_shard_moves:** (Optional) The maximum number of shards to move.
 
 **excluded_shard_list:** (Optional) Identifiers of shards which shouldn't be moved during the rebalance operation.
+
+**shard_transfer_mode:** (Optional) Specify the method of replication, whether to use PostgreSQL logical replication or a cross-worker COPY command. The possible values are:
+
+  * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
+  * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
+  * ``block_writes``: Use COPY (blocking writes) even if logical replication is possible.
 
 Return Value
 *********************************

@@ -33,7 +33,7 @@ The new node is available for shards of new distributed tables. Existing shards 
 Rebalancing Shards
 ------------------
 
-If you want to move existing shards to a newly added worker, Citus Enterprise and Citus Cloud provide a ``rebalance_table_shards`` function to make it easier. This function will move the shards of a given table to make them evenly distributed among the workers.
+If you want to move existing shards to a newly added worker, Citus Enterprise and Citus Cloud provide a :ref:`rebalance_table_shards` function to make it easier. This function will move the shards of a given table to make them evenly distributed among the workers.
 
 ::
 
@@ -72,7 +72,7 @@ By default ``rebalance_table_shards`` will use logical replication if Citus is r
 
 To allow replication behavior customization, ``rebalance_table_shards`` accepts a ``shard_transfer_mode`` argument with these possible values:
 
-* ``default`` - the behavior shown above
+* ``auto`` - the default behavior shown above
 * ``force_logical`` - use logical replication even if the table doesn't have a primary key or replica identity. Useful for applications which will be doing reads and inserts only on the table.
 * ``block_writes`` - use COPY blocking writes. Used when the table has no eligible replica identity.
 
