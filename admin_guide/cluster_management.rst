@@ -28,17 +28,62 @@ To add a new node to the cluster, you first need to add the DNS name or IP addre
 
    SELECT * from master_add_node('node-name', 5432);
 
-In addition to the above, if you want to move existing shards to the newly added worker, Citus Enterprise provides an additional rebalance_table_shards function to make this easier. This function will move the shards of the given table to make them evenly distributed among the workers.
+The new node is available for shards of new distributed tables. Existing shards will stay where they are unless redistributed, so adding a new worker may not help performance without further steps.
+
+Rebalancing Shards
+------------------
+
+If you want to move existing shards to a newly added worker, Citus Enterprise and Citus Cloud provide a ``rebalance_table_shards`` function to make it easier. This function will move the shards of a given table to make them evenly distributed among the workers.
 
 ::
 
-	select rebalance_table_shards('github_events');
+  SELECT rebalance_table_shards('github_events');
 
-.. note::
+Shard rebalancing is configurable to act by either of two methods:
 
-  Citus' shard rebalancing is fully "online," meaning applications communicating with the database do not experience downtime. Read queries to the cluster can continue without any interruption during the process.
+1. Logical replication or
+2. COPY with blocked writes
 
-  Even write queries are supported during rebalancing, but the coordinator node queues them until the shards they reference are in their new places. Although a full rebalance can take hours, it touches individual shards for only a few minutes each and subsequently unblocks writes to those shards.
+The first option is preferred because it is fully "online," meaning applications communicating with the database do not experience downtime for reads or writes, except a very brief block on writes at the end of replication during a metadata update. The second option is online for reads only; writes are blocked while copying data from source to destination shard, which can take time.
+
+Logical replication requires PostgreSQL version 10 or above. Only tables with a primary key or `replica identity <https://www.postgresql.org/docs/current/static/sql-altertable.html#sql-createtable-replica-identity>`_ support update and delete operations during logical replication.
+
+By default ``rebalance_table_shards`` will use logical replication if Citus is running on PostgreSQL >=10 and the distributed table has a primary key or replica identity. Otherwise it will fall back to COPY with blocked writes.
+
+.. code-block:: sql
+
+  -- creating the following table without REPLICA IDENTITY or PRIMARY KEY
+  CREATE TABLE test_table (key int, value text);
+  SELECT create_distributed_table('test_table', 'key');
+
+  -- running shard rebalancer with default behavior
+  SELECT rebalance_table_shards('test_table');
+
+  /*
+  NOTICE:  Moving shard 102040 from localhost:9701 to localhost:9700 ...
+  ERROR: cannot use logical replication to transfer shards of the
+    relation test_table since it doesn't have a REPLICA IDENTITY or
+    PRIMARY KEY
+  DETAIL:  UPDATE and DELETE commands on the shard will error out during
+    logical replication unless there is a REPLICA IDENTIY or PRIMARY KEY.
+  HINT:  If you wish to continue without a replica identity set the
+    shard_transfer_mode to 'force_logical' or 'block_writes'.
+  */
+
+To allow replication behavior customization, ``rebalance_table_shards`` accepts a ``shard_transfer_mode`` argument with these possible values:
+
+* ``default`` - the behavior shown above
+* ``force_logical`` - use logical replication even if the table doesn't have a primary key or replica identity. Useful for applications which will be doing reads and inserts only on the table.
+* ``block_writes`` - use COPY blocking writes. Used when the table has no eligible replica identity.
+
+Pass the named parameter like this:
+
+.. code-block:: sql
+
+  SELECT rebalance_table_shards(
+    'test_table',
+    shard_transfer_mode => 'force_logical'
+  );
 
 Adding a coordinator
 ----------------------
