@@ -48,7 +48,7 @@ The first option is preferred because it is fully "online," meaning applications
 
 Logical replication requires PostgreSQL version 10 or above. Only tables with a primary key or `replica identity <https://www.postgresql.org/docs/current/static/sql-altertable.html#sql-createtable-replica-identity>`_ support update and delete operations during logical replication.
 
-By default ``rebalance_table_shards`` will use logical replication if Citus is running on PostgreSQL >=10 and the distributed table has a primary key or replica identity. Otherwise it will fall back to COPY with blocked writes.
+By default ``rebalance_table_shards`` will use logical replication if Citus is running on PostgreSQL >=10 and the distributed table has a primary key or replica identity. Otherwise it will error with a message about falling back to using COPY with blocked writes.
 
 .. code-block:: sql
 
@@ -74,7 +74,7 @@ To allow replication behavior customization, ``rebalance_table_shards`` accepts 
 
 * ``auto`` - the default behavior shown above
 * ``force_logical`` - use logical replication even if the table doesn't have a primary key or replica identity. Useful for applications which will be doing reads and inserts only on the table.
-* ``block_writes`` - use COPY blocking writes. Used when the table has no eligible replica identity.
+* ``block_writes`` - use COPY (blocking writes) for tables lacking primary key or replica identity.
 
 Pass the named parameter like this:
 

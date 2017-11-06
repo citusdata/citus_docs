@@ -821,7 +821,7 @@ Arguments
 
   * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
-  * ``block_writes``: Use COPY (blocking writes) even if logical replication is possible.
+  * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
 
 Return Value
 *********************************
