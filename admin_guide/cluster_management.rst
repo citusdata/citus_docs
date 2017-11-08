@@ -198,7 +198,11 @@ Sometimes workers need to connect to one another, such as during :ref:`repartiti
 Checks For Updates and Cluster Statistics
 #########################################
 
-Unless you opt out, Citus checks if there is a newer version of itself during installation and every twenty-four hours thereafter. If a new version is available, Citus emits a notice to the database logs.
+Unless you opt out, Citus checks if there is a newer version of itself during installation and every twenty-four hours thereafter. If a new version is available, Citus emits a notice to the database logs:
+
+.. code-block::
+
+  a new minor release of Citus (X.Y.Z) is available
 
 During the check for updates, Citus also sends general information about the running cluster to Citus Data company servers. This helps us understand how Citus is commonly used and thereby improve the product. As explained below, the reporting is opt-out and does **not** contain personally identifying information about schemas, tables, queries, or data.
 
