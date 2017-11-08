@@ -29,6 +29,10 @@ The above version of Docker Compose is sufficient for running Citus, or you can 
 
 **2. Start the Citus Cluster**
 
+.. note::
+
+  Before starting the cluster, be aware that by default Citus reports anonymous usage information to Citus Data company servers. To learn more about this, including how to opt out, see :ref:`phone_home`.
+
 Citus uses Docker Compose to run and connect containers holding the database coordinator node, workers, and a persistent data volume. To create a local cluster download our Docker Compose configuration file and run it
 
 .. code-block:: bash
@@ -53,10 +57,6 @@ The first time you start the cluster it builds its containers. Subsequent startu
 
     - ports: ['5432:5432']
     + ports: ['5433:5432']
-
-.. note::
-
-  By default Citus reports anonymous usage information to Citus Data company servers. To learn more about this, including how to opt out, see :ref:`phone_home`.
 
 **3. Verify that installation has succeeded**
 

@@ -52,6 +52,10 @@ Citus is a Postgres extension, to tell Postgres to use this extension you'll nee
 
 **3. Start the coordinator and workers**
 
+.. note::
+
+  Before starting the cluster, be aware that by default Citus reports anonymous usage information to Citus Data company servers. To learn more about this, including how to opt out, see :ref:`phone_home`.
+
 We will start the PostgreSQL instances on ports 9700 (for the coordinator) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
 
 Let's start the databases::
@@ -75,10 +79,6 @@ Finally, the coordinator needs to know where it can find the workers. To tell it
 
   psql -p 9700 -c "SELECT * from master_add_node('localhost', 9701);"
   psql -p 9700 -c "SELECT * from master_add_node('localhost', 9702);"
-
-.. note::
-
-  By default Citus reports anonymous usage information to Citus Data company servers. To learn more about this, including how to opt out, see :ref:`phone_home`.
 
 **4. Verify that installation has succeeded**
 
