@@ -218,7 +218,7 @@ What we Collect
    * Total size of shards, rounded to a power of two
    * Whether Citus is running in Docker or natively
 
-Because Citus is an open-source PostgreSQL extension, the statistics reporting code is available for you to audit. See :code:`CitusMaintenanceDaemonMain` in `maintenanced.c <https://github.com/citusdata/citus/blob/master/src/backend/distributed/utils/maintenanced.c>`_ and the functions in `statistics_collection.c <https://github.com/citusdata/citus/blob/master/src/backend/distributed/utils/statistics_collection.c>`_.
+Because Citus is an open-source PostgreSQL extension, the statistics reporting code is available for you to audit. See `statistics_collection.c <https://github.com/citusdata/citus/blob/master/src/backend/distributed/utils/statistics_collection.c>`_.
 
 How to Opt Out
 --------------
