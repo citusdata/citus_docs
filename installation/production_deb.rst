@@ -60,10 +60,6 @@ Before starting the database let's change its access permissions. By default the
 
 **4. Start database servers, create Citus extension**
 
-.. note::
-
-  Before starting the cluster, be aware that by default Citus reports anonymous usage information to Citus Data company servers. To learn more about this, including how to opt out, see :ref:`phone_home`.
-
 ::
 
   # start the db server
@@ -115,3 +111,7 @@ At this step, you have completed the installation process and are ready to use y
 ::
 
   sudo -i -u postgres psql
+
+.. note::
+
+  Please note that Citus reports anonymous information about your cluster to the Citus Data company servers. To learn more about what information is collected and how to opt out of it, see :ref:`phone_home`.

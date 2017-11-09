@@ -204,7 +204,7 @@ Unless you opt out, Citus checks if there is a newer version of itself during in
 
   a new minor release of Citus (X.Y.Z) is available
 
-During the check for updates, Citus also sends general information about the running cluster to Citus Data company servers. This helps us understand how Citus is commonly used and thereby improve the product. As explained below, the reporting is opt-out and does **not** contain personally identifying information about schemas, tables, queries, or data.
+During the check for updates, Citus also sends general anonymized information about the running cluster to Citus Data company servers. This helps us understand how Citus is commonly used and thereby improve the product. As explained below, the reporting is opt-out and does **not** contain personally identifying information about schemas, tables, queries, or data.
 
 What we Collect
 ---------------
