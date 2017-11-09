@@ -200,7 +200,7 @@ Checks For Updates and Cluster Statistics
 
 Unless you opt out, Citus checks if there is a newer version of itself during installation and every twenty-four hours thereafter. If a new version is available, Citus emits a notice to the database logs:
 
-.. code-block::
+::
 
   a new minor release of Citus (X.Y.Z) is available
 
