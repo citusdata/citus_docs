@@ -193,6 +193,59 @@ The coordinator node needs to know roles' passwords in order to communicate with
 
 Sometimes workers need to connect to one another, such as during :ref:`repartition joins <repartition_joins>`. Thus each worker node requires a copy of the .pgpass file as well.
 
+.. _phone_home:
+
+Checks For Updates and Cluster Statistics
+#########################################
+
+Unless you opt out, Citus checks if there is a newer version of itself during installation and every twenty-four hours thereafter. If a new version is available, Citus emits a notice to the database logs:
+
+::
+
+  a new minor release of Citus (X.Y.Z) is available
+
+During the check for updates, Citus also sends general anonymized information about the running cluster to Citus Data company servers. This helps us understand how Citus is commonly used and thereby improve the product. As explained below, the reporting is opt-out and does **not** contain personally identifying information about schemas, tables, queries, or data.
+
+What we Collect
+---------------
+
+1. Citus checks if there is a newer version of itself, and if so emits a notice to the database logs.
+2. Citus collects and sends these statistics about your cluster:
+
+   * Randomly generated cluster identifier
+   * Number of workers
+   * OS version and hardware type (output of ``uname -psr`` command)
+   * Number of tables, rounded to a power of two
+   * Total size of shards, rounded to a power of two
+   * Whether Citus is running in Docker or natively
+
+Because Citus is an open-source PostgreSQL extension, the statistics reporting code is available for you to audit. See `statistics_collection.c <https://github.com/citusdata/citus/blob/master/src/backend/distributed/utils/statistics_collection.c>`_.
+
+How to Opt Out
+--------------
+
+If you wish to disable our anonymized cluster statistics gathering, set the following GUC in postgresql.conf on your coordinator node:
+
+.. code-block:: ini
+
+  citus.enable_statistics_collection = off
+
+This disables all reporting and in fact all communication with Citus Data servers, including checks for whether a newer version of Citus is available.
+
+If you have super-user SQL access you can also achieve this without needing to find and edit the configuration file. Just execute the following statement in psql:
+
+.. code-block:: postgresql
+
+  ALTER SYSTEM SET citus.enable_statistics_collection = 'off';
+
+Since Docker users won't have the chance to edit this PostgreSQL variable before running the image, we added a Docker flag to disable reports.
+
+.. code-block:: bash
+
+  # Docker flag prevents reports
+
+  docker run -e DISABLE_STATS_COLLECTION=true citusdata/citus:latest
+
 Diagnostics
 ###########
 
