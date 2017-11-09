@@ -209,8 +209,9 @@ During the check for updates, Citus also sends general information about the run
 What we Collect
 ---------------
 
-* Citus checks if there is a newer version of itself, and if so emits a notice to the database logs.
-* Citus collects and sends these statistics about your cluster:
+1. Citus checks if there is a newer version of itself, and if so emits a notice to the database logs.
+2. Citus collects and sends these statistics about your cluster:
+
    * Randomly generated cluster identifier
    * Number of workers
    * OS version and hardware type (output of ``uname -psr`` command)
