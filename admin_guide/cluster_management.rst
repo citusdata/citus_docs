@@ -83,7 +83,7 @@ Add a primary key to the table. If the desired key happens to be the distributio
 
 **Solution 2, add replica identity from index**
 
-Create a unique index on a column, and use that for a replica identity. As in option 1, the index must cover the distribution column. From our previous example:
+Create a unique index on a column, and use that for a replica identity. As in option one, the index must cover the distribution column. From our previous example:
 
 .. code-block:: sql
 
@@ -104,7 +104,7 @@ This example would definitely fix the error with ``rebalance_table_shards`` but 
 
 **Solution 3, force logical replication (on append-only tables)**
 
-If the distributed table doesn't have a primary key or replica identity, and adding one is unclear or undesirable, you can still force the use of logical replication on PostgreSQL 10 or above. It's OK to do this on a table which receives only reads and inserts (no deletes or updates). Use the ``shard_transfer_mode`` parameter again:
+If the distributed table doesn't have a primary key or replica identity, and adding one is unclear or undesirable, you can still force the use of logical replication on PostgreSQL 10 or above. It's OK to do this on a table which receives only reads and inserts (no deletes or updates). Include the optional ``shard_transfer_mode`` argument of ``rebalance_table_shards``:
 
 .. code-block:: sql
 
@@ -119,7 +119,7 @@ In this situation if an application does attempt an update or delete, the reques
 
 On PostgreSQL 9.x and lower, logical replication is not supported. In this case we must fall back to a less efficient solution: locking a shard for writes as we copy it to its new location. Unlike the previous two solutions, this one introduces downtime for write statements (read queries continue unaffected).
 
-To choose this replication mode, include the optional ``shard_transfer_mode`` argument of ``rebalance_table_shards``. Here is how to block writes and use the COPY command for replication:
+To choose this replication mode, use the ``shard_transfer_mode`` parameter again. Here is how to block writes and use the COPY command for replication:
 
 .. code-block:: sql
 
