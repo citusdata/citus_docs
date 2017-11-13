@@ -12,10 +12,6 @@ For most cases either approach to scaling is fine and will improve performance. 
 
 Both adjustments are available in the formation configuration panel of the settings tab:
 
-.. image:: ../images/cloud-formation-configuration.png
-
-Clicking the node change link provides two sliders:
-
 .. image:: ../images/cloud-nodes-slider.png
 
 The first slider, **count**, scales out the cluster by adding new nodes. The second, **RAM**, scales it up by changing the instance size (RAM and CPU cores) of existing nodes.
