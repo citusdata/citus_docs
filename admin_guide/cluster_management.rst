@@ -28,12 +28,107 @@ To add a new node to the cluster, you first need to add the DNS name or IP addre
 
    SELECT * from master_add_node('node-name', 5432);
 
-In addition to the above, if you want to move existing shards to the newly added worker, Citus Enterprise provides an additional rebalance_table_shards function to make this easier. This function will move the shards of the given table to make them evenly distributed among the workers.
+The new node is available for shards of new distributed tables. Existing shards will stay where they are unless redistributed, so adding a new worker may not help performance without further steps.
+
+Rebalancing Shards without Downtime
+-----------------------------------
+
+If you want to move existing shards to a newly added worker, Citus Enterprise and Citus Cloud provide a :ref:`rebalance_table_shards` function to make it easier. This function will move the shards of a given table to distribute them evenly among the workers.
 
 ::
 
-	select rebalance_table_shards('github_events');
+  SELECT rebalance_table_shards('github_events');
 
+Many products, like multi-tenant SaaS applications, cannot tolerate downtime, and Citus rebalancing is able to honor this requirement on PostgreSQL 10 or above. This means reads and writes from the application can continue with minimal interruption while data is being moved.
+
+How it Works
+~~~~~~~~~~~~
+
+Citus' shard rebalancing uses PostgreSQL logical replication to move data from the old shard (called the "publisher" in replication terms) to the new (the "subscriber.") Logical replication allows application reads and writes to continue uninterrupted while copying shard data. Citus puts a brief write-lock on a shard only during the time it takes to update metadata to promote the subscriber shard as active.
+
+As the PostgreSQL docs `explain <https://www.postgresql.org/docs/current/static/logical-replication-publication.html>`_, the source needs a *replica identity* configured:
+
+  A published table must have a "replica identity" configured in
+  order to be able to replicate UPDATE and DELETE operations, so
+  that appropriate rows to update or delete can be identified on the
+  subscriber side. By default, this is the primary key, if there is
+  one. Another unique index (with certain additional requirements) can
+  also be set to be the replica identity.
+
+In other words, if your distributed table has a primary key defined then it's ready for shard rebalancing with no extra work. However if it doesn't have a primary key or an explicitly defined replica identity, then attempting to rebalance it will cause an error. For instance:
+
+.. code-block:: sql
+
+  -- creating the following table without REPLICA IDENTITY or PRIMARY KEY
+  CREATE TABLE test_table (key int not null, value text not null);
+  SELECT create_distributed_table('test_table', 'key');
+
+  -- running shard rebalancer with default behavior
+  SELECT rebalance_table_shards('test_table');
+
+  /*
+  NOTICE:  Moving shard 102040 from localhost:9701 to localhost:9700 ...
+  ERROR: cannot use logical replication to transfer shards of the
+    relation test_table since it doesn't have a REPLICA IDENTITY or
+    PRIMARY KEY
+  DETAIL:  UPDATE and DELETE commands on the shard will error out during
+    logical replication unless there is a REPLICA IDENTIY or PRIMARY KEY.
+  HINT:  If you wish to continue without a replica identity set the
+    shard_transfer_mode to 'force_logical' or 'block_writes'.
+  */
+
+There are four solutions to this error.
+
+**Solution 1, add primary key**
+
+Add a primary key to the table. If the desired key happens to be the distribution column, then it's quite easy, just add the constraint. Otherwise, a primary key with a non-distribution column must be composite and contain the distribution column too.
+
+**Solution 2, add replica identity from index**
+
+Create a unique index on a column, and use that for a replica identity. As in option one, the index must cover the distribution column. From our previous example:
+
+.. code-block:: sql
+
+  -- we're indexing value, but the index must cover the
+  -- distribution column too
+  CREATE UNIQUE INDEX test_value_unique
+    ON test_table (value, key);
+
+  -- now set the replica identity to use the index
+  ALTER TABLE test_table REPLICA IDENTITY
+    USING INDEX test_value_unique;
+
+This example would definitely fix the error with ``rebalance_table_shards`` but it's unrealistic insofar as the index includes every column in the table. In a wider table you want to restrict this index to as few columns as you can, which helps replication performance.
+
+.. note::
+
+  While ``REPLICA IDENTITY USING INDEX`` is fine, we recommend **against** adding ``REPLICA IDENTITY FULL`` to a table. This setting would result in each update/delete doing a full-table-scan on the subscriber side to find the tuple with those rows. In our testing we’ve found this to result in worse performance than even solution four below.
+
+**Solution 3, force logical replication (on insert-only tables)**
+
+If the distributed table doesn't have a primary key or replica identity, and adding one is unclear or undesirable, you can still force the use of logical replication on PostgreSQL 10 or above. It's OK to do this on a table which receives only reads and inserts (no deletes or updates). Include the optional ``shard_transfer_mode`` argument of ``rebalance_table_shards``:
+
+.. code-block:: sql
+
+  SELECT rebalance_table_shards(
+    'test_table',
+    shard_transfer_mode => 'force_logical'
+  );
+
+In this situation if an application does attempt an update or delete, the request will merely return an error. If the application can tolerate these errors then solution three is fine.
+
+**Solution 4, use COPY with write-blocking, rather than replication**
+
+On PostgreSQL 9.x and lower, logical replication is not supported. In this case we must fall back to a less efficient solution: locking a shard for writes as we copy it to its new location. Unlike the previous two solutions, this one introduces downtime for write statements (read queries continue unaffected).
+
+To choose this replication mode, use the ``shard_transfer_mode`` parameter again. Here is how to block writes and use the COPY command for replication:
+
+.. code-block:: sql
+
+  SELECT rebalance_table_shards(
+    'test_table',
+    shard_transfer_mode => 'block_writes'
+  );
 
 Adding a coordinator
 ----------------------
