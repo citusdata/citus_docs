@@ -129,10 +129,10 @@ replicate that shard to every node in the cluster. Now Citus will accept a join 
 Window Functions
 ----------------
 
-Currently Citus does not have out-of-the-box support for window functions on queries involving distributed tables, but there is a straightforward workaround. Window functions will work on a distributed table if
+Currently Citus does not have out-of-the-box support for window functions on cross-shard queries, but there is a straightforward workaround. Window functions will work across shards on a distributed table if
 
-1. They are in a subquery and
-2. They :code:`partition by` the distribution column of a distributed table
+1. The window function is in a subquery and
+2. It includes a :code:`PARTITION BY` clause containing the table's distribution column
 
 Suppose you have table called :code:`github_events`, distributed by the column :code:`user_id`. This query will **not** work directly:
 
