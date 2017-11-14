@@ -25,12 +25,12 @@ model, as long as your tables share the same distribution column, you
 can leverage the INSERT .. SELECT syntax.
 
 INSERT .. SELECT queries that can be pushed down to the workers are
-supported, which excludes some SQL functionality such as limits, unions,
-and window functions. Since the result will be inserted into a
-co-located shard in the destination table, we need to make sure that the
-distribution column (e.g. tenant\_id) is preserved in the aggregation
-and is included in joins. INSERT .. SELECT commands on distributed
-tables will usually look like:
+supported, which excludes some SQL functionality such as limits, and
+unions. Since the result will be inserted into a co-located shard in the
+destination table, we need to make sure that the distribution column
+(e.g. tenant\_id) is preserved in the aggregation and is included in
+joins. INSERT .. SELECT commands on distributed tables will usually look
+like:
 
 .. code-block:: postgres
 
