@@ -124,6 +124,39 @@ There is a workaround: you can replicate the local table to a single shard on ev
 This will create a table with a single shard (non-distributed), but will
 replicate that shard to every node in the cluster. Now Citus will accept a join query between *here* and *there*, and each worker will have all the information it needs to work efficiently.
 
+.. _window_func_workaround:
+
+Window Functions
+----------------
+
+Currently Citus does not have out-of-the-box support for window functions on cross-shard queries, but there is a straightforward workaround. Window functions will work across shards on a distributed table if
+
+1. The window function is in a subquery and
+2. It includes a :code:`PARTITION BY` clause containing the table's distribution column
+
+Suppose you have table called :code:`github_events`, distributed by the column :code:`user_id`. This query will **not** work directly:
+
+.. code-block:: sql
+
+  -- won't work, see workaround
+
+  SELECT repo_id, org->'id' as org_id, count(*)
+    OVER (PARTITION BY user_id)
+    FROM github_events;
+
+You can make it work by moving the window function into a subquery like this:
+
+.. code-block:: sql
+
+  SELECT *
+  FROM (
+    SELECT repo_id, org->'id' as org_id, count(*)
+      OVER (PARTITION BY user_id)
+      FROM github_events
+  ) windowed;
+
+Remember that it specifies :code:`PARTITION BY user_id`, the distribution column.
+
 .. _data_warehousing_queries:
 
 Data Warehousing Queries
@@ -131,34 +164,34 @@ Data Warehousing Queries
 
 When queries have restrictive filters (i.e. when very few results need to be transferred to the coordinator) there is a general technique to run unsupported queries in two steps. First store the results of the inner queries in regular PostgreSQL tables on the coordinator. Then the next step can be executed on the coordinator like a regular PostgreSQL query.
 
-For example, currently Citus does not have out of the box support for window functions on queries involving distributed tables. Suppose you have a query with a window function on a table of github_events function like the following:
+For example, consider the :ref:`window_func_workaround` case above. If we're partitioning over a non-distribution column of a distributed table then the workaround mentioned in that section will not suffice.
 
-::
+.. code-block:: sql
 
-    select repo_id, actor->'id', count(*)
-      over (partition by repo_id)
-      from github_events
-     where repo_id = 1 or repo_id = 2;
+  -- this won't work, not even with the subquery workaround
 
-You can re-write the query like below:
+  SELECT repo_id, org->'id' as org_id, count(*)
+  OVER (PARTITION BY repo_id) -- repo_id is not distribution column
+  FROM github_events
+  WHERE repo_id IN (8514, 15435, 19438, 21692);
 
-Statement 1:
+We can use a more general trick though. We can pull the relevant information to the coordinator as a temporary table:
 
-::
+.. code-block:: sql
 
-    create temp table results as (
-      select repo_id, actor->'id' as actor_id
-        from github_events
-       where repo_id = 1 or repo_id = 2
-    );
+  -- grab the data, minus the aggregate, into a local table
 
-Statement 2:
+  CREATE TEMP TABLE results AS (
+    SELECT repo_id, org->'id' as org_id
+    FROM github_events
+    WHERE repo_id IN (8514, 15435, 19438, 21692)
+  );
 
-::
+  -- now run the aggregate locally
 
-    select repo_id, actor_id, count(*)
-      over (partition by repo_id)
-      from results;
+  SELECT repo_id, org_id, count(*)
+  OVER (PARTITION BY repo_id)
+  FROM results;
 
 Similar workarounds can be found for other data warehousing queries involving unsupported constructs.
 
