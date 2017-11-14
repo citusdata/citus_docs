@@ -14,13 +14,13 @@ Both adjustments are available in the formation configuration panel of the setti
 
 .. image:: ../images/cloud-nodes-slider.png
 
-The first slider, **count**, scales out the cluster by adding new nodes. The second, **RAM**, scales it up by changing the instance size (RAM and CPU cores) of existing nodes.
+The slider, **Total Nodes**, scales out the cluster by adding new nodes. The **RAM** buttons scale it up by changing the instance size (RAM and CPU cores) of existing nodes.
 
 For example, just drag the slider for node count:
 
 .. image:: ../images/cloud-nodes-slider-2.png
 
-After you adjust the sliders and accept the changes, Citus Cloud begins applying the changes. Increasing the number of nodes will begin immediately, whereas increasing node instance size will wait for a time in the user-specified maintenance window.
+After you adjust the slider and/or buttons and accept the changes, Citus Cloud begins applying the changes. Increasing the number of nodes will begin immediately, whereas increasing node instance size will wait for a time in the user-specified maintenance window.
 
 .. image:: ../images/cloud-maintenance-window.png
 
