@@ -37,8 +37,8 @@ Second, a more powerful Citus cluster that has about four times the CPU capacity
 
 Third, across all data ingest benchmarks, the network latency combined with the number of concurrent connections PostgreSQL can efficiently handle, becomes the  performance bottleneck. In a production environment with hundreds of tables and indexes, this bottleneck will likely shift to a different resource.
 
-Update Througput
-~~~~~~~~~~~~~~~~
+Update Throughput
+~~~~~~~~~~~~~~~~~
 
 To measure UPDATE throughputs with Citus, we used the :ref:`same benchmarking steps <citus_update_throughput_benchmark>` and ran pgbench across different Citus Cloud formations on AWS.
 
