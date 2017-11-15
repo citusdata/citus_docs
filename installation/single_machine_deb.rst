@@ -32,7 +32,7 @@ Let's create directories for those nodes to store their data. For convenience in
   sudo su - postgres
 
   # include path to postgres binaries
-  export PATH=$PATH:/usr/lib/postgresql/10.0/bin
+  export PATH=$PATH:/usr/lib/postgresql/10/bin
 
   cd ~
   mkdir -p citus/coordinator citus/worker1 citus/worker2
