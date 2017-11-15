@@ -36,7 +36,7 @@ For increased performance you can choose to make an approximate count instead. F
 
 1. Download and install the hll extension on all PostgreSQL instances (the coordinator and all the workers).
 
-   Please visit the PostgreSQL hll `github repository <https://github.com/aggregateknowledge/postgresql-hll>`_ for specifics on obtaining the extension.
+   Please visit the PostgreSQL hll `github repository <https://github.com/citusdata/postgresql-hll>`_ for specifics on obtaining the extension.
 
 1. Create the hll extension on all the PostgreSQL instances
 
