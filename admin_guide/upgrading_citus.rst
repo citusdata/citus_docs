@@ -100,10 +100,10 @@ Existing PostgreSQL installation path (e.g. /usr/pgsql-9.6)
   :code:`export OLD_PG_PATH=/usr/pgsql-9.6`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/10.0/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/10/data`
 
 New PostgreSQL installation path
-  :code:`export NEW_PG_PATH=/usr/pgsql-10.0`
+  :code:`export NEW_PG_PATH=/usr/pgsql-10`
 
 On the Coordinator Node
 -----------------------
