@@ -29,9 +29,9 @@ Steps to be executed on all nodes
   sudo apt-get -y install postgresql-10-citus-7.1
 
   # preload citus extension
-  sudo pg_conftool 10.0 main set shared_preload_libraries citus
+  sudo pg_conftool 10 main set shared_preload_libraries citus
 
-This installs centralized configuration in `/etc/postgresql/10.0/main`, and creates a database in `/var/lib/postgresql/10.0/main`.
+This installs centralized configuration in `/etc/postgresql/10/main`, and creates a database in `/var/lib/postgresql/10/main`.
 
 **3. Configure connection and authentication**
 
@@ -39,11 +39,11 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo pg_conftool 10.0 main set listen_addresses '*'
+  sudo pg_conftool 10 main set listen_addresses '*'
 
 ::
 
-  sudo vi /etc/postgresql/10.0/main/pg_hba.conf
+  sudo vi /etc/postgresql/10/main/pg_hba.conf
 
 ::
 
