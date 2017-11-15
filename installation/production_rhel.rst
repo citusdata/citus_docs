@@ -28,11 +28,11 @@ Steps to be executed on all nodes
   # install PostgreSQL with Citus extension
   sudo yum install -y citus71_10
   # initialize system database (using RHEL 6 vs 7 method as necessary)
-  sudo service postgresql-10.0 initdb || sudo /usr/pgsql-10.0/bin/postgresql96-setup initdb
+  sudo service postgresql-10 initdb || sudo /usr/pgsql-10/bin/postgresql-10-setup initdb
   # preload citus extension
-  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/10.0/data/postgresql.conf
+  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/10/data/postgresql.conf
 
-PostgreSQL adds version-specific binaries in `/usr/pgsql-10.0/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
+PostgreSQL adds version-specific binaries in `/usr/pgsql-10/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
 
 **3. Configure connection and authentication**
 
@@ -40,7 +40,7 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo vi /var/lib/pgsql/10.0/data/postgresql.conf
+  sudo vi /var/lib/pgsql/10/data/postgresql.conf
 
 ::
 
@@ -49,7 +49,7 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo vi /var/lib/pgsql/10.0/data/pg_hba.conf
+  sudo vi /var/lib/pgsql/10/data/pg_hba.conf
 
 ::
 
@@ -69,9 +69,9 @@ Before starting the database let's change its access permissions. By default the
 ::
 
   # start the db server
-  sudo service postgresql-10.0 restart
+  sudo service postgresql-10 restart
   # and make it start automatically when computer does
-  sudo chkconfig postgresql-10.0 on
+  sudo chkconfig postgresql-10 on
 
 You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
 
