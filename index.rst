@@ -1,7 +1,7 @@
 Citus Documentation
 ====================
 
-Welcome to the documentation for Citus 7.0! Citus horizontally scales PostgreSQL across commodity servers using sharding and replication. Its query engine parallelizes incoming SQL queries across these servers to enable real-time responses on large datasets.
+Welcome to the documentation for Citus 7.1! Citus horizontally scales PostgreSQL across commodity servers using sharding and replication. Its query engine parallelizes incoming SQL queries across these servers to enable real-time responses on large datasets.
 
 .. raw:: html
 
