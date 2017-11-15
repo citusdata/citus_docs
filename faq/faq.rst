@@ -81,7 +81,7 @@ Note that it is not straightforward to change the shard count of an already dist
 How does citus support count(distinct) queries?
 -----------------------------------------------
 
-Citus can push down count(distinct) entirely down to the worker nodes in certain situations (for example if the distinct is on the distribution column or is grouped by the distribution column in hash-partitioned tables). In other situations, Citus uses the HyperLogLog extension to compute approximate distincts. You can read more details on how to enable approximate :ref:`count_distinct`.
+Citus can evaluate count(distinct) aggregates both in and across worker nodes. When aggregating on a table's distribution column, Citus can push the counting down inside worker nodes and total the results. Otherwise it can pull distinct rows to the coordinator and calculate there. If transferring data to the coordinator is too expensive, fast approximate counts are also available. More details in :ref:`count_distinct`.
 
 In which situations are uniqueness constraints supported on distributed tables?
 -------------------------------------------------------------------------------
