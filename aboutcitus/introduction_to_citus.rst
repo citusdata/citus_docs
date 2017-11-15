@@ -24,7 +24,7 @@ $$$$$$$$$$$$$$$$$$$$$$$
 
 Citus utilizes a modular block architecture which is similar to Hadoop Distributed File System blocks but uses PostgreSQL tables on the workers instead of files. Each of these tables is a horizontal partition or a logical “shard”. The Citus coordinator then maintains metadata tables which track all the workers and the locations of the shards on the workers.
 
-Each shard is replicated on at least two of the workers (Users can configure this to a higher value). As a result, the loss of a single machine does not impact data availability. The Citus logical sharding architecture also allows new workers to be added at any time to increase the capacity and processing power of the cluster.
+Each shard has no replication by default. However, user can change :ref:`citus.shard_replication_factor <replication_factor>` to a higher value, which will allow the loss of a single machine to not impact data availability. The Citus logical sharding architecture also allows new workers to be added at any time to increase the capacity and processing power of the cluster.
 
 Metadata Tables
 $$$$$$$$$$$$$$$$$
