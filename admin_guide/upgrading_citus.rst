@@ -130,7 +130,9 @@ On the Coordinator Node
 
   * **DO NOT CREATE** Citus extension yet
 
-3. Stop the old and new servers.
+  * **DO NOT** start the new server
+
+3. Stop the old server.
 
 4. Check upgrade compatibility.
 
@@ -152,6 +154,8 @@ On the Coordinator Node
                                 -d $OLD_PG_DATA -D $NEW_PG_DATA
 
 6. Start the new server.
+
+  * **DO NOT** run any query before running the queries given in the next step
 
 7. Restore metadata.
 
