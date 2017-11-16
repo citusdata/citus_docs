@@ -408,7 +408,7 @@ The :code:`pg_dist_*` tables on the coordinator node contain diverse metadata ab
     FROM pg_dist_partition
    WHERE logicalrelid='products'::regclass;
 
-Output:
+Example output:
 
 ::
 
@@ -471,6 +471,19 @@ This query will provide you with the size of every shard of a given distributed 
     SELECT pg_table_size('%s');
   $cmd$);
 
+Example output:
+
+::
+
+  ┌────────────────┐
+  │ pg_size_pretty │
+  ├────────────────┤
+  │ 8192 bytes     │
+  │ 125 MB         │
+  │ 8192 bytes     │
+  │ 8192 bytes     │
+  └────────────────┘
+
 For more info about distributed table size, see :ref:`table_size`.
 
 Identifying unused indices
@@ -502,6 +515,19 @@ This query will run across all worker nodes and identify any unused indexes for 
     ) sub
   $cmd$);
 
+Example output:
+
+::
+
+  ┌─────────┬─────────┬───────────────────────────────────────────────────────────────────────┐
+  │ shardid │ success │                            result                                     │
+  ├─────────┼─────────┼───────────────────────────────────────────────────────────────────────┤
+  │  102008 │ t       │                                                                       │
+  │  102009 │ t       │ {"public.my_distributed_table_102009##stupid_index_102009##28 MB##0"} │
+  │  102010 │ t       │                                                                       │
+  │  102011 │ t       │                                                                       │
+  └─────────┴─────────┴───────────────────────────────────────────────────────────────────────┘
+
 Monitoring client connection count
 ----------------------------------
 
@@ -512,6 +538,17 @@ This query will give you the connection count by each type that are open on the 
   SELECT state, count(*)
   FROM pg_stat_activity
   GROUP BY state;
+
+Exxample output:
+
+::
+
+  ┌────────┬───────┐
+  │ state  │ count │
+  ├────────┼───────┤
+  │ active │     3 │
+  │ ∅      │     1 │
+  └────────┴───────┘
 
 Index hit rate
 --------------
@@ -528,3 +565,14 @@ This query will provide you with your index hit rate across all nodes. Index hit
       END AS ratio
     FROM pg_statio_user_indexes
   $cmd$);
+
+Example output:
+
+::
+
+  ┌───────────────────────────────────────────────────┬────────────────┐
+  │                     nodename                      │ index_hit_rate │
+  ├───────────────────────────────────────────────────┼────────────────┤
+  │ ec2-13-59-96-221.us-east-2.compute.amazonaws.com  │ 0.88           │
+  │ ec2-52-14-226-167.us-east-2.compute.amazonaws.com │ 0.89           │
+  └───────────────────────────────────────────────────┴────────────────┘
