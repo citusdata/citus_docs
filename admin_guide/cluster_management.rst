@@ -459,6 +459,18 @@ This query will run across all worker nodes and identify locks, how long they've
     ) a
   $cmd$);
 
+Example output:
+
+::
+
+  ┌───────────────────────────────────────────────────────────────────────────────────┐
+  │                               run_command_on_workers                              │
+  ├───────────────────────────────────────────────────────────────────────────────────┤
+  │ (localhost,5433,t,"")                                                             │
+  │ (localhost,5434,t,"{""update ads_102277 set name = 'new name' where id = 1; $ sel…│
+  │…ect * from ads_102277 where id = 1 for update; $ 1 $ 00:00:03.729519""}")         │
+  └───────────────────────────────────────────────────────────────────────────────────┘
+
 Querying the size of your shards
 --------------------------------
 
