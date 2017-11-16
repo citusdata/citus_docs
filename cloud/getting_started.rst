@@ -59,13 +59,15 @@ Applications connect to Citus the same way they would PostgreSQL, using a `conne
 
   postgresql://[user[:password]@][host][:port][/dbname][?param1=value1&...]
 
-The connection string for each Cloud Formation is provided on the Overview tab in Citus Console. When connecting from an application framework such as Rails, Django, or Spring you may need to explicitly specify the sslmode as well when connecting to Citus because we require it when connecting to your database.
+The connection string for each Cloud Formation is provided on the Overview tab in Citus Console.
 
 .. image:: ../images/cloud-overview-1.png
 
 By default the URL displays only the hostname of the connection, but the full URL is available by clicking the "Show Full URL" link.
 
 .. image:: ../images/cloud-overview-2.png
+
+Notice how the end of the connection string contains ``?sslmode=require``. Citus Cloud accepts only SSL connections for security, so this url paramter is required. When connecting from an application framework such as Rails, Django, or Spring you may need to explicitly specify the sslmode as well.
 
 Support and Billing
 ===================

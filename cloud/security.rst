@@ -121,36 +121,19 @@ Encryption at Rest
 
 All data within Citus Cloud is encrypted at rest, including data on the instance as well as all backups for disaster recovery. As mentioned in the connection section, we also require that you connect to your database with TLS.
 
+Network Perimeter Controls
+==========================
+
+All Citus Cloud clusters run in their own isolated Amazon Virtual Private Cloud (VPC). In addition to the options discussed earlier, Citus Cloud provides the ability to further secure your cluster by limiting network access in two ways:
+
+VPC Peering
+  VPC peering forms a network connection between two VPCs which routes traffic securely between them using private IPv4 addresses or IPv6 addresses. Instances in either VPC can communicate with each other as if they are within the same network. To set up a VPC peering connecting between an existing Citus Cloud formation and an Amazon VPC, open a support ticket and we will initiate the peering request.
+
+IP Whitelisting
+  IP whitelisting restricts access to servers within a Citus Cloud cluster so that only designated IP addresses are able to connect to them. IP whitelisting is available for a single IP or a set of IP ranges. To enable IP whitelisting on your Citus Cloud formation, open a support ticket with the desired IP ranges and we'll set it up for you.
+
 .. raw:: html
 
   <script type="text/javascript">
   analytics.track('Doc', {page: 'Security', section: 'cloud'});
   </script>
-
-Network perimeter controls
-==========================
-
-All Citus clusters run in their own isolated Amazon Virtual Private Cloud (VPC). In addition to all security guarantees which are on by default you can also secure your citus cluster by limiting network access. There are two methods for limiting network access:
-
-1. VPC peering
-2. IP whitelisting
-
-VPC Peering
------------
-
-A VPC peering connection is a networking connection between two VPCs that
-enables you to route traffic between them using private IPv4 addresses or IPv6
-addresses. Instances in either VPC can communicate with each other as if they
-are within the same network. In order to setup a VPC peering connecting between
-your existing Citus cloud formation and your existing Amazon VPC open a support
-ticket and then we will initiate the peering request.
-
-IP Whitelisting
----------------
-
-IP whitelisting allows you to restrict your Citus cloud cluster so that only the
-listed IPs are able to connect to your cluster. IP whitelisting is available for
-a single IP or a set of IP ranges. In order to enable IP whitelisting on your
-Citus cloud formation open a support ticket with the desired IP ranges and we'll
-get it setup for you.
-
