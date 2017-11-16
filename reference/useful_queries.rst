@@ -3,12 +3,12 @@
 Useful Citus Queries 
 ####################
 
-There are a number of queries that can be useful in monitoring your Postgres cluster. Within Citus many of those useful queries which provide things like cache hit rate or locks are still valid but may need to be adapted to run across all your nodes. This section contains a set of useful utility queries for running against your Citus cluster.
+There are a number of queries that can be useful in monitoring your PostgreSQL cluster. Many of them, which provide things like cache hit rate or locks, are still valid in Citus, but may need to be adapted to run across all your nodes. This section contains a set of useful utility queries ready to run in a Citus cluster.
 
 Detecting locks
 ---------------
 
-This query will run across all worker nodes and identify locks, how long they've been open, and the offending query:
+This query will run across all worker nodes and identify locks, how long they've been open, and the offending queries:
 
 .. code-block:: sql
 
@@ -46,21 +46,21 @@ This query will run across all worker nodes and identify locks, how long they've
     ) a
   $cmd$);
 
-Querying size of your shards
-----------------------------
+Querying the size of your shards
+--------------------------------
 
 This query will provide you with the size of every shard of a given distributed table, designated here with the placeholder :code:`my_distributed_table`:
 
 .. code-block:: sql
 
-  SELECT pg_size_pretty(result::bigint) 
+  SELECT pg_size_pretty(result::bigint)
   FROM run_command_on_shards('my_distributed_table', $cmd$
     SELECT pg_table_size('%s');
   $cmd$);
 
 For more info about distributed table size, see :ref:`table_size`.
 
-Identifying unused indexes
+Identifying unused indices
 --------------------------
 
 This query will run across all worker nodes and identify any unused indexes for a given distributed table, designated here with the placeholder :code:`my_distributed_table`:
@@ -89,8 +89,8 @@ This query will run across all worker nodes and identify any unused indexes for 
     ) sub
   $cmd$);
 
-Monitoring your connection count
---------------------------------
+Monitoring client connection count
+----------------------------------
 
 This query will give you the connection count by each type that are open on the coordinator:
 
@@ -103,7 +103,7 @@ This query will give you the connection count by each type that are open on the 
 Index hit rate
 --------------
 
-This query will provide you with your index hit rate across all nodes. Index hit rate is useful in determing how often when querying your indexes are used:
+This query will provide you with your index hit rate across all nodes. Index hit rate is useful in determining how often indices are used when querying:
 
 .. code-block:: sql
 
