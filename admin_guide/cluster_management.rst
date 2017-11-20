@@ -343,8 +343,8 @@ Since Docker users won't have the chance to edit this PostgreSQL variable before
 
   docker run -e DISABLE_STATS_COLLECTION=true citusdata/citus:latest
 
-Diagnostics
-###########
+Useful Diagnostic Queries
+#########################
 
 .. _row_placements:
 
