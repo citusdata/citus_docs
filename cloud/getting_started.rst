@@ -67,6 +67,8 @@ By default the URL displays only the hostname of the connection, but the full UR
 
 .. image:: ../images/cloud-overview-2.png
 
+Notice how the end of the connection string contains ``?sslmode=require``. Citus Cloud accepts only SSL connections for security, so this url paramter is required. When connecting from an application framework such as Rails, Django, or Spring you may need to explicitly specify the sslmode as well.
+
 Support and Billing
 ===================
 
