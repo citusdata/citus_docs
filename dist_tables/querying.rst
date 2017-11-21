@@ -119,6 +119,73 @@ In such cases the table(s) to be partitioned are determined by the query optimiz
 
 In general, co-located joins are more efficient than repartition joins as repartition joins require shuffling of data. So, you should try to distribute your tables by the common join keys whenever possible.
 
+Views on Distributed Tables
+###########################
+
+Any view which filters a distributed table by equality on the distribution column has full support in Citus. For instance, consider a shortcut to list the orders for a certain tenant in a multi-tenant application:
+
+.. code-block:: sql
+
+  CREATE VIEW tenant_25_orders AS
+  SELECT *
+    FROM orders
+   WHERE tenant_id = 25;
+
+A view such as this, filtering ``tenant_id = 25``, can used with any other query involving tenant twenty-five. We can aggregate the view:
+
+.. code-block:: sql
+
+  SELECT count(*) FROM tenant_25_orders;
+
+or join it with a table:
+
+.. code-block:: sql
+
+  SELECT e.*
+    FROM tenant_25_orders t25o
+    JOIN events e ON (
+      t25o.tenant_id = e.tenant_id AND
+      t25o.order_id = e.order_id
+    );
+
+Joining with other views is fine too, as long as we join by the distribution column. In this example even :code:`high_priority_events` is eligible for joining despite not itself filtering by the distribution column.
+
+.. code-block:: sql
+
+  CREATE VIEW high_priority_events AS
+  SELECT *
+    FROM events
+   WHERE priority = 'HIGH';
+
+  SELECT hpe.*
+    FROM tenant_25_orders t25o
+    JOIN high_priority_events hpe ON (
+      t25o.tenant_id = hpe.tenant_id
+    );
+
+The :code:`tenant_25_orders` view was pretty rudimentary, but Citus supports views with more inside like aggregates and joins. This works as long as the view filters by the distribution column, and includes that column in join conditions.
+
+.. code-block:: sql
+
+  CREATE VIEW t25_daily_web_order_count AS
+  SELECT
+    orders.tenant_id,
+    order_date,
+    count(*)
+  FROM
+    orders
+    JOIN events ON (orders.tenant_id = events.tenant_id)
+  WHERE
+    orders.tenant_id = 25
+    AND orders.order_type = 'WEB'
+  GROUP BY
+    orders.tenant_id,
+    order_date
+  ORDER BY count(*) DESC
+  LIMIT 10;
+
+For more details about how to make queries work well in the multi-tenant use case (including queries for use in views), see :ref:`mt_query_migration`.
+
 .. _query_performance:
 
 Query Performance
