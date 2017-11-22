@@ -30,6 +30,8 @@ To add a new node to the cluster, you first need to add the DNS name or IP addre
 
 The new node is available for shards of new distributed tables. Existing shards will stay where they are unless redistributed, so adding a new worker may not help performance without further steps.
 
+.. _shard_rebalancing:
+
 Rebalancing Shards without Downtime
 -----------------------------------
 
