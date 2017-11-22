@@ -43,20 +43,31 @@ Scaling Out (adding new nodes)
 
 Node addition completes in five to ten minutes, which is faster than node resizing because the new nodes are created without data. To take advantage of the new nodes you still must adjust manually rebalance the shards, meaning move some shards from existing nodes to the new ones.
 
-Citus does not automatically rebalance on node creation because shard rebalancing takes locks on rows whose shards are being moved, degrading write performance for other database clients. The slowdown isn't terribly severe because Citus moves data a shard (or a group of colocated shards) at a time while inserts to other shards can continue normally. However, for maximum control, the choice of when to run the shard rebalancer is left to the database administrator.
+You can go to the "Rebalancer" tab in the Cloud console to see the shard balance across nodes. Ordinarily this page will show, "No rebalance required."
 
-To start the shard rebalance, connect to the cluster coordinator node with psql and run:
+.. image:: ../images/cloud-rebalance-unnecessary.png
+
+However if the shards could be placed more evenly, such as after a new node has been added to the cluster, the page will show a "Rebalance recommended."
+
+.. image:: ../images/cloud-rebalance-recommended.png
+
+For maximum control, the choice of when to run the shard rebalancer is left to the database administrator. Citus does not automatically rebalance on node creation. To start the shard rebalancer, connect to the cluster coordinator node with psql and run:
 
 .. code-block:: postgres
 
   SELECT rebalance_table_shards('distributed_table_name');
 
-Citus will output the progress as it moves each shard.
-
 .. note::
 
   The :code:`rebalance_table_shards` function rebalances all tables in the :ref:`colocation group <colocation_groups>` of the table named in its argument. Thus you do not have to call it for every single table, just call it on a representative table from each colocation group.
 
+  Learn more about this function in :ref:`shard_rebalancing`.
+
+Citus will output progress in both psql (saying which shards are moving) and graphically in the Cloud console:
+
+.. image:: ../images/cloud-rebalancer-gui.gif
+
+.. _mx:
 Scaling Connections (pgBouncer)
 ===============================
 
