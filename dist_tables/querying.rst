@@ -86,6 +86,8 @@ LIMIT approximations are disabled by default and can be enabled by setting the c
 
     SET citus.limit_clause_row_fetch_count to 10000;
 
+If, however, a SELECT query with LIMIT clause groups by a table's distribution column then Citus will push the query down and run it directly on each worker. The pushed-down query will include its limit as well, and Citus will disregard the aforementioned GUC.
+
 .. _joins:
 
 Joins
