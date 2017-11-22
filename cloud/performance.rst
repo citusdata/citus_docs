@@ -62,6 +62,27 @@ Citus will output the progress as it moves each shard.
 
 .. _mx:
 
+Connections
+===========
+
+Each client connection to PostgreSQL consumes a noticeable amount of resources. To protect resource usage Citus Cloud enforces a hard limit of 300 concurrent connections to the coordinator node.
+
+For further scaling we provide PgBouncer out of the box on Cloud. If your application requires more than 300 connections, change the port in the Cloud connection URL from 5432 to 6432. This will connect to PgBouncer rather than directly to the coordinator, allowing up to roughly two thousand simultaneous connections. The coordinator can still only process three hundred at a time, but more can connect and PgBouncer will queue them.
+
+When connecting to PgBouncer you have:
+
+- 1800 idle connections available
+- 300 active connections to Citus available
+
+To measure the number of active connections at a given time, run:
+
+.. code-block:: postgresql
+
+  SELECT COUNT(*)
+    FROM pg_stat_activity
+   WHERE state <> 'idle';
+
+
 Masterless Mode (beta)
 ======================
 
