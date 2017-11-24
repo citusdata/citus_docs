@@ -71,12 +71,11 @@ To create the related SQL commands, create a file named insert.sql and paste the
   \set nbranches :scale
   \set ntellers 10 * :scale
   \set naccounts 100000 * :scale
-  \setrandom aid 1 :naccounts
-  \setrandom bid 1 :nbranches
-  \setrandom tid 1 :ntellers
-  \setrandom delta -5000 5000
+  \set aid random(1, :naccounts)
+  \set bid random(1, :nbranches)
+  \set tid random(1, :ntellers)
+  \set delta random(-5000, 5000)
   INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);
-
 
 Benchmark INSERT commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~
