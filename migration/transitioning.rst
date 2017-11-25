@@ -568,6 +568,18 @@ Finally, we'll establish a composite foreign key. :code:`./manage.py makemigrati
 
 Apply the migrations by running :code:`./manage.py migrate`.
 
+**3. Disable server-side cursors**
+
+Edit your database configuration in your `settings.py` file to include the following parameter:
+
+.. code-block:: python
+
+  DATABASES = {
+    'default': {
+        'DISABLE_SERVER_SIDE_CURSORS': True
+    },
+  }
+
 At this point the Django application models are ready to work with a Citus backend. You can continue by importing data to the new system and modifying controllers as necessary to deal with the model changes.
 
 Updating the Django Application
