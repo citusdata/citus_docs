@@ -1,0 +1,31 @@
+/* Front page grid */
+
+.front-menu a.box {
+  color: #444;
+  padding: 1em;
+  margin: 1em 0.5em;
+  box-shadow: 2px 2px 4px 4px #CCC;
+  display: block;
+}
+
+.front-menu a.box img {
+  float: left;
+  margin-right: 0.5em;
+}
+
+.front-menu .box:hover {
+  box-shadow: 2px 2px 4px 4px #AAA;
+  background: white;
+}
+
+/* Side menu customization */
+
+.wy-menu-vertical header, .wy-menu-vertical p.caption {
+  color: #eee;
+}
+
+/* Remove ads */
+
+div.wy-menu.rst-pro {
+  display: none !important;
+}

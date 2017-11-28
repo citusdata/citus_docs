@@ -6,7 +6,7 @@ Welcome to the documentation for Citus 7.2! Citus horizontally scales PostgreSQL
 .. raw:: html
 
   <div class="front-menu row">
-    <div class="col-xs-4">
+    <div class="col-md-4">
       <a class="box" href="portals/getting_started.html">
         <h3>Getting Started</h3>
         <img src="_images/number-one.png" />
@@ -14,7 +14,7 @@ Welcome to the documentation for Citus 7.2! Citus horizontally scales PostgreSQL
         and follow some ten-minute tutorials.
       </a>
     </div>
-    <div class="col-xs-4">
+    <div class="col-md-4">
       <a class="box" href="portals/use_cases.html">
         <h3>Use Cases</h3>
         <img src="_images/use-cases.png" />
@@ -22,7 +22,7 @@ Welcome to the documentation for Citus 7.2! Citus horizontally scales PostgreSQL
         to scale with minimal database changes.
       </a>
     </div>
-    <div class="col-xs-4">
+    <div class="col-md-4">
       <a class="box" href="portals/migrating.html">
         <h3>Migrating to Citus</h3>
         <img src="_images/migrating.png" />
@@ -32,7 +32,7 @@ Welcome to the documentation for Citus 7.2! Citus horizontally scales PostgreSQL
     </div>
   </div>
   <div class="front-menu row">
-    <div class="col-xs-4">
+    <div class="col-md-4">
       <a class="box" href="portals/citus_cloud.html">
         <h3>Citus Cloud</h3>
         <img src="_images/cloud.png" />
@@ -40,7 +40,7 @@ Welcome to the documentation for Citus 7.2! Citus horizontally scales PostgreSQL
         database-as-a-service.
       </a>
     </div>
-    <div class="col-xs-4">
+    <div class="col-md-4">
       <a class="box" href="portals/reference.html">
         <h3>API / Reference</h3>
         <img src="_images/reference.png" />
@@ -48,7 +48,7 @@ Welcome to the documentation for Citus 7.2! Citus horizontally scales PostgreSQL
         functions and configuration.
       </a>
     </div>
-    <div class="col-xs-4">
+    <div class="col-md-4">
       <a class="box" href="portals/support.html">
         <h3>Help and Support</h3>
         <img src="_images/help.png" />
