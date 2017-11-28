@@ -24,6 +24,15 @@
   color: #eee;
 }
 
+.wy-side-nav-search {
+  background-color: white;
+}
+
+.wy-side-nav-search > div.version,
+.wy-side-nav-search > a.icon-home {
+  color: #999 !important;
+}
+
 /* Remove ads */
 
 div.wy-menu.rst-pro {
