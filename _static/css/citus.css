@@ -1,3 +1,13 @@
+/* General */
+
+h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
+  font-family: "Lato", "proxima-nova", "Helvetica Neue", Arial, sans-serif !important;
+}
+
+.rst-content span.highlighted {
+  background: #FFC;
+}
+
 /* Front page grid */
 
 .front-menu a.box {
