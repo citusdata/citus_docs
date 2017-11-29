@@ -13,9 +13,14 @@ h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
 .front-menu a.box {
   color: #444;
   padding: 1em;
-  margin: 1em 0.5em;
   box-shadow: 2px 2px 4px 4px #CCC;
   display: block;
+  height: 100%;
+}
+
+.front-menu > div {
+  width: 100%;
+  margin: 1em 0;
 }
 
 .front-menu a.box img {
