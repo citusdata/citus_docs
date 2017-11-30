@@ -57,8 +57,8 @@ Citus will output the progress as it moves each shard.
 
   The :code:`rebalance_table_shards` function rebalances all tables in the :ref:`colocation group <colocation_groups>` of the table named in its argument. Thus you do not have to call it for every single table, just call it on a representative table from each colocation group.
 
-PgBouncer
-=========
+Scaling Connections (pgBouncer)
+===============================
 
 Each client connection to PostgreSQL consumes a noticeable amount of resources. To protect resource usage Citus Cloud enforces a hard limit of 300 concurrent connections to the coordinator node.
 
