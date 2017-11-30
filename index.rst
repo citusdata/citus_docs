@@ -123,6 +123,7 @@ Welcome to the documentation for Citus 7.1! Citus horizontally scales PostgreSQL
    cloud/availability.rst
    cloud/additional.rst
    cloud/monitoring.rst
+   cloud/logging.rst
    cloud/support.rst
 
 .. toctree::
