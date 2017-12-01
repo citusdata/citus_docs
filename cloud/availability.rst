@@ -3,8 +3,19 @@
 Availability and Recovery
 #########################
 
-High-Availability
-=================
+In the real world, insurance is used to manage risk when a natural
+disaster such as a hurricane or flood strikes. In the database world,
+there are two critical methods of insurance. High Availability (HA)
+replicates the latest database version virtually instantly. Disaster
+Recovery (DR) offers continuous protection by saving every database
+change, allowing database restoration to any point in time.
+
+High availability and disaster recovery are both forms of data backups
+that are mutually exclusive and inter-related. The difference between
+them is that HA has a secondary reader database replica (often referred
+to as stand-by or follower) ready to take over at any moment, but DR
+just writes to cold storage (in the case of Amazon that’s S3) and has
+latency in the time for the main database to recover data.
 
 Citus Cloud continuously protects the cluster data against hardware
 failure. To do this we perform backups every twenty-four hours, then
@@ -14,39 +25,14 @@ won't lose any data. In the event of a complete infrastructure failure
 we'll restore your back-up and replay the WAL to the exact moment before
 your system crashed.
 
+High-Availability (HA)
+======================
+
 In addition to continuous protection which is explained above, high
 availability is available if your application requires less exposure
 to downtime. We provision stand-bys if you select high availability
 at provisioning time. This can be for your primary node, or for your
 distributed nodes.
-
-Let's examine these concepts in greater detail.
-
-Introduction to High Availability and Disaster Recovery
--------------------------------------------------------
-
-In the real world, insurance is used to manage risk when a natural
-disaster such as a hurricane or flood strikes. In the database world,
-there are two critical methods of insurance. High Availability (HA)
-replicates the latest database version virtually instantly. Disaster
-Recovery (DR) offers continuous protection by saving every database
-change, allowing database restoration to any point in time.
-
-In what follows, we’ll dig deeper as to what disaster recovery and high
-availability are, as well as how we’ve implemented them for Citus Cloud.
-
-What is High Availability and Disaster Recovery?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-High availability and disaster recovery are both forms of data backups
-that are mutually exclusive and inter-related. The difference between
-them, is that HA has a secondary reader database replica (often referred
-to as stand-by or follower) ready to take over at any moment, but DR
-just writes to cold storage (in the case of Amazon that’s S3) and has
-latency in the time for the main database to recover data.
-
-Overview of High Availability
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: ../images/ha-availability.gif
    :align: right
@@ -63,8 +49,8 @@ six consecutive attempts, a failover is initiated. This means the
 primary node will be replaced by the standby node and a new standby will
 be created.
 
-Overview of Disaster Recovery
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Disaster Recovery (DR)
+======================
 
 .. image:: ../images/ha-disaster.gif
    :align: right
@@ -89,8 +75,8 @@ If the EC2 instance fails to restart, a new instance is created. This
 happens at a rate of at least 30MB/second, so 512GB of data would take
 around 5 hours.
 
-How High Availability and Disaster Recovery fit together
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Comparison of HA and DR
+=======================
 
 While some may be familiar many are not acutely aware of the
 relationship between HA and DR.
