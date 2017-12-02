@@ -67,7 +67,6 @@ Citus will output progress in both psql (saying which shards are moving) and gra
 
 .. image:: ../images/cloud-rebalancer-gui.gif
 
-.. _mx:
 Scaling Connections (pgBouncer)
 ===============================
 
