@@ -12,13 +12,14 @@ Currently Citus imposes primary key constraint only if the distribution column i
 How do I add nodes to an existing Citus cluster?
 ------------------------------------------------
 
-You can add nodes to a Citus cluster by calling the master_add_node UDF with the hostname (or IP address) and port number of the new node. After adding a node to an existing cluster, it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, the Citus Enterprise edition provides a shard rebalancer utility. You can find more information about shard rebalancing in the :ref:`cluster_management` section.
+On Citus Cloud it's as easy as dragging a slider in the user interface. The :ref:`scaling_out` section has instructions. In Citus Community edition you can add nodes manually by calling the :ref:`master_add_node` UDF with the hostname (or IP address) and port number of the new node.
+
+Either way, after adding a node to an existing cluster it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, Citus Cloud and Enterprise edition provide a shard rebalancer utility. You can find more information in the :ref:`shard_rebalancing` section.
 
 How does Citus handle failure of a worker node?
 -----------------------------------------------
 
-If a worker node fails during e.g. a SELECT query, jobs involving shards from that server will automatically fail over to replica shards located on healthy hosts. This means intermittent failures will not require restarting potentially long-running analytical queries, so long as the shards involved can be reached on other healthy hosts.
-You can find more information about Citus' failure handling logic in :ref:`dealing_with_node_failures`.
+If a worker node fails during e.g. a SELECT query, Citus seamlessly fails over to a streaming replication standby node. (If streaming replication is disabled then Citus keeps replica shards for use in re-routing queries if a host becomes unhealthy.) This means intermittent failures will not require restarting potentially long-running analytical queries. You can find more information about Citus' failure handling logic in :ref:`dealing_with_node_failures`.
 
 How does Citus handle failover of the coordinator node?
 -------------------------------------------------------
