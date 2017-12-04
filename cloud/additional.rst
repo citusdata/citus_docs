@@ -113,6 +113,19 @@ Base backups and WAL archives are all that is needed to restore the database to 
 
 A Citus formation is a group of PostgreSQL instances that work together. To restore the formation we simply need to restore all nodes in the cluster to the same point in time. We perform that operation on each node and, once done, we update metadata in the coordinator node to tell it that this new cluster has branched off from your original.
 
+.. _cloud_followers:
+
+Followers
+=========
+
+Citus Cloud allows you to create a read-only replica of a formation, called a "follower." Any changes that happen to the original formation get promptly reflected in its follower, and queries against the follower cause no extra load on the original. The replica is a safe place for business analysts to run big report queries. In general followers are a useful tool to improve performance for read-only workloads.
+
+To create a follower, head to the "Fork / PITR / Follower" tab in the Cloud console. Select the "Create follower formation" radio button, and fill in a name.
+
+.. image:: ../images/cloud-follower.png
+
+Click "Create Follower Formation" and wait. On completion the process will redirect you to a console for the new formation. The follower formation is distinct from the original and has its own database connection string.
+
 .. _mx:
 
 Masterless Mode (beta)
