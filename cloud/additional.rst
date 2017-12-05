@@ -120,6 +120,8 @@ Followers
 
 Citus Cloud allows you to create a read-only replica of a formation, called a "follower." Any changes that happen to the original formation get promptly reflected in its follower, and queries against the follower cause no extra load on the original. The replica is a safe place for business analysts to run big report queries. In general followers are a useful tool to improve performance for read-only workloads.
 
+Contrast followers with :ref:`cloud_forking`. In a fork the copied formation does not receive post-copy changes from the original, and can diverge with its own updates. A follower, on the other hand, remains faithful to changes in the original.
+
 To create a follower, head to the "Fork / PITR / Follower" tab in the Cloud console. Select the "Create follower formation" radio button, and fill in a name.
 
 .. image:: ../images/cloud-follower.png
