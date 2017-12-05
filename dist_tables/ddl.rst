@@ -51,7 +51,11 @@ You are now ready to insert data into the distributed table and run queries on i
 Reference Tables
 ~~~~~~~~~~~~~~~~
 
-The above method distributes tables into multiple horizontal shards, but it's also possible to distribute tables into a single shard and replicate it to every worker node. Tables distributed this way are called *reference tables.*  They are typically small non-partitioned tables which we want to locally join with other tables on any worker. One US-centric example is information about states.
+The above method distributes tables into multiple horizontal shards, but another possibility is distributing tables into a single shard and replicating the shard to every worker node.
+
+Tables distributed this way are called *reference tables.* They are used to store data that needs to be frequently accessed by multiple nodes in a cluster. In multi-tenant apps this means data shared between tenants or data that is not naturally associated with a single tenant.
+
+For instance suppose a multi-tenant eCommerce site needs to calculate sales tax for transactions in any of its stores. Tax information isn't specific to any tenant so it makes sense to consolidate it in a shared table. A US-centric reference table might look like this:
 
 .. code-block:: postgresql
 
@@ -67,7 +71,7 @@ The above method distributes tables into multiple horizontal shards, but it's al
 
   SELECT create_reference_table('states');
 
-Other queries, such as one calculating tax for a shopping cart, can join on the :code:`states` table with no network overhead.
+Now queries such as one calculating tax for a shopping cart can join on the :code:`states` table with no network overhead.
 
 In addition to distributing a table as a single replicated shard, the :code:`create_reference_table` UDF marks it as a reference table in the Citus metadata tables. Citus automatically performs two-phase commits (`2PC <https://en.wikipedia.org/wiki/Two-phase_commit_protocol>`_) for modifications to tables marked this way, which provides strong consistency guarantees.
 
