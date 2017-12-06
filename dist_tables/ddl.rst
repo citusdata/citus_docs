@@ -55,7 +55,7 @@ The above method distributes tables into multiple horizontal shards, but another
 
 Tables distributed this way are called *reference tables.* They are used to store data that needs to be frequently accessed by multiple nodes in a cluster. In multi-tenant apps this means data shared between tenants or data that is not naturally associated with a single tenant.
 
-For instance suppose a multi-tenant eCommerce site needs to calculate sales tax for transactions in any of its stores. Tax information isn't specific to any tenant so it makes sense to consolidate it in a shared table. A US-centric reference table might look like this:
+For instance suppose a multi-tenant eCommerce site needs to calculate sales tax for transactions in any of its stores. Tax information isn't specific to any tenant. It makes sense to consolidate it in a shared table. A US-centric reference table might look like this:
 
 .. code-block:: postgresql
 
