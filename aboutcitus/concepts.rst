@@ -53,7 +53,9 @@ When interacting with a reference table we automatically perform two-phase commi
 Type 3: Local Tables
 ~~~~~~~~~~~~~~~~~~~~
 
-We have already mentioned the final type of tables: local metadata tables, which exist only on the coordinator node.
+When you use Citus, the coordinator node you connect to and interact with is a regular PostgreSQL database with the Citus extension installed. Thus you can create ordinary tables and choose not to shard them. This is useful for small administrative tables that don't participate in join queries. An example would be users table for application login and authentication.
+
+Creating standard PostgreSQL tables is easy because it's the default. It’s what you get when you run CREATE TABLE. In almost every Citus deployment we see standard PostgreSQL tables co-existing with distributed and reference tables. Indeed, Citus itself uses local tables to hold cluster metadata, as mentioned earlier.
 
 Shards
 ------
