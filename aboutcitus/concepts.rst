@@ -18,9 +18,7 @@ Every cluster has one special node called the *coordinator* (the others are know
 
 For each query, the coordinator either *routes* it to a single worker node, or *parallelizes* it across several depending on whether the required data lives on a single node or multiple.  The coordinator knows how to do this by consulting its metadata tables. These Citus-specific tables track the DNS names and health of worker nodes, and the distribution of data across nodes. For more information, see our :ref:`metadata_tables`.
 
-[picture of routed vs parallelized]
-
-Citus also supports an :ref:`mx` mode to allow queries directly against workers. An MX cluster still has a coordinator node, but clients use the coordinator only for :ref:`ddl`.
+Citus also supports an :ref:`mx` mode to allow queries directly against workers. This allows both reads and writes to be scaled even more across all nodes.
 
 Table Types
 -----------
