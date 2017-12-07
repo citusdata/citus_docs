@@ -82,6 +82,8 @@ Shard Placements
 
 Suppose that shard 102027 is associated with the row in question. This means the row should be read or written to a table called ``github_events_102027`` in one of the workers. Which worker? That is determined entirely by the metadata tables, and the mapping of shard to worker is known as the shard *placement*.
 
+Joining some :ref:`metadata tables <metadata_tables>` gives us the answer. These are the types of lookups that the coordinator does to route queries. It rewrites queries into fragments that refer to the specific tables like ``github_events_102027``, and runs those fragments on the appropriate workers.
+
 .. code-block:: sql
 
   SELECT
@@ -94,13 +96,13 @@ Suppose that shard 102027 is associated with the row in question. This means the
    AND node.noderole = 'primary'::noderole
   WHERE shardid = 102027;
 
+::
+
   ┌─────────┬───────────┬──────────┐
   │ shardid │ nodename  │ nodeport │
   ├─────────┼───────────┼──────────┤
   │  102027 │ localhost │     5433 │
   └─────────┴───────────┴──────────┘
-
-Joining some :ref:`metadata tables <metadata_tables>` gives us the answer. These are the types of lookups that the coordinator does to route queries. It rewrites queries into fragments that refer to the specific tables like ``github_events_102027``, and runs those fragments on the appropriate workers.
 
 In our example of ``github_events`` there were four shards. The number of shards is configurable per table at the time of its distribution across the cluster. The best choice of shard count depends on your use case, see :ref:`prod_shard_count`.
 
