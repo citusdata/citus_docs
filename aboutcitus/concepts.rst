@@ -44,9 +44,11 @@ Citus uses algorithmic sharding to assign rows to shards. This means the assignm
 Type 2: Reference Tables
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The next type of table in Citus is the *reference* table, which is a species of distributed table. Its entire contents are concentrated into a single shard which is replicated on every worker. Thus any query on any worker can access the reference information locally, without the network overhead of requesting rows from another node. Reference tables have no distribution column because there is no need to distinguish separate shards per row.
+A reference table is a type of distributed table whose entire contents are concentrated into a single shard which is replicated on every worker. Thus queries on any worker can access the reference information locally, without the network overhead of requesting rows from another node. Reference tables have no distribution column because there is no need to distinguish separate shards per row.
 
-Citus runs not only SQL but DDL statements throughout a cluster, so changing the schema of a distributed table cascades to update all the table's shards across workers. See :ref:`ddl`.
+Reference tables are typically small, and are used to store data that is relevant to queries running on any worker node. For example, enumerated values like order statuses, or product categories.
+
+When interacting with a reference table we automatically perform two-phase commits (`2PC <https://en.wikipedia.org/wiki/Two-phase_commit_protocol>`_) on transactions. This means that Citus makes sure your data is always in a consistent state, regardless of whether you are writing, modifying, or deleting it.
 
 Type 3: Local Tables
 ~~~~~~~~~~~~~~~~~~~~
