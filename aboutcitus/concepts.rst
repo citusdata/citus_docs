@@ -9,7 +9,7 @@ This section is a brief introduction to common terms in our documentation, with 
 Distributed Architecture
 ------------------------
 
-Citus is a PostgreSQL `extension <https://www.postgresql.org/docs/9.6/static/external-extensions.html>`_ that allows commodity database servers (called *nodes*) to coordinate with one another in a "shared nothing" architecture. The nodes form a *cluster* that allows PostgreSQL to hold more data and use more CPU cores than would be possible on a single computer. This architecture also allows the database to scale by simply adding more nodes to the cluster.
+Citus is a PostgreSQL `extension <https://www.postgresql.org/docs/current/static/external-extensions.html>`_ that allows commodity database servers (called *nodes*) to coordinate with one another in a "shared nothing" architecture. The nodes form a *cluster* that allows PostgreSQL to hold more data and use more CPU cores than would be possible on a single computer. This architecture also allows the database to scale by simply adding more nodes to the cluster.
 
 Nodes: Coordinator and Workers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,7 +34,9 @@ The first type, and most common, is *distributed* tables. These appear to be nor
 
 Here the rows of ``table`` are stored in tables ``table_1001``, ``table_1002`` etc on the workers. The component worker tables are called *shards*.
 
-Citus runs not only SQL but DDL statements throughout a cluster, so changing the schema of a distributed table cascades to update all the table's shards across workers. See :ref:`ddl`.
+Citus runs not only SQL but DDL statements throughout a cluster, so changing the schema of a distributed table cascades to update all the table's shards across workers. 
+
+To learn how to create a distributed table, see :ref:`ddl`.
 
 Distribution Column
 !!!!!!!!!!!!!!!!!!!
@@ -49,6 +51,8 @@ A reference table is a type of distributed table whose entire contents are conce
 Reference tables are typically small, and are used to store data that is relevant to queries running on any worker node. For example, enumerated values like order statuses, or product categories.
 
 When interacting with a reference table we automatically perform two-phase commits (`2PC <https://en.wikipedia.org/wiki/Two-phase_commit_protocol>`_) on transactions. This means that Citus makes sure your data is always in a consistent state, regardless of whether you are writing, modifying, or deleting it.
+
+The :ref:`reference_tables` section talks more about these tables and how to create them.
 
 Type 3: Local Tables
 ~~~~~~~~~~~~~~~~~~~~
@@ -123,3 +127,5 @@ Parallelism
 Spreading queries across multiple machines allows more queries to run at once, and allows processing speed to scale by adding new machines to the cluster. Additionally splitting a single query into fragments as described in the previous section boosts the processing power devoted to it. The latter situation achieves the greatest *parallelism,* meaning utilization of CPU cores.
 
 Queries reading or affecting shards spread evenly across many nodes are able to run at "real-time" speed. Note that the results of the query still need to pass back through the coordinator node, so the speedup is most apparent when the final results are compact, such as aggregate functions like counting and descriptive statistics.
+
+:ref:`citus_query_processing` explains more about how queries are broken into fragments and how their execution is managed.
