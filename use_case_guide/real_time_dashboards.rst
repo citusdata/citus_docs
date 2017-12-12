@@ -214,26 +214,15 @@ Expiring Old Data
 -----------------
 
 The rollups make queries faster, but we still need to expire old data to avoid unbounded
-storage costs. Once you decide how long you'd like to keep data for each granularity, you
-could easily write a function to expire old data. In the following example, we decided to
-keep raw data for one day, and per-minute aggregations for one month.
+storage costs. Simply decide how long you'd like to keep data for each granularity, and use standard queries to delete expired data. In the following example, we decided to
+keep raw data for one day, and per-minute aggregations for one month:
 
 .. code-block:: plpgsql
 
-  CREATE OR REPLACE FUNCTION expire_old_request_data() RETURNS void
-  AS $$
-    DELETE FROM http_request WHERE ingest_time < now() - interval '1 day';
-    DELETE FROM http_request_1min WHERE ingest_time < now() - interval '1 month';
-  $$ LANGUAGE sql;
+  DELETE FROM http_request WHERE ingest_time < now() - interval '1 day';
+  DELETE FROM http_request_1min WHERE ingest_time < now() - interval '1 month';
 
-.. note::
-
-  The above function should be called every minute. You could do this by
-  adding a crontab entry on the coordinator node:
-
-  .. code-block:: bash
-
-    * * * * * psql -c "SELECT expire_old_request_data();"
+In production you could wrap these queries in a function and call it every minute in a cron job.
 
 Those are the basics! We provided an architecture that ingests HTTP events and
 then rolls up these events into their pre-aggregated form. This way, you can both store
