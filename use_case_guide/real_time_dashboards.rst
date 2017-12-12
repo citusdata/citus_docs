@@ -73,8 +73,17 @@ With this, the system is ready to accept data and serve queries! Keep the follow
         site_id, ingest_time, url, request_country,
         ip_address, status_code, response_time_msec
       ) VALUES (
-        1, clock_timestamp(), 'http://example.com/path', 'USA',
-        inet '88.250.10.123', 200, 10
+        trunc(random()*100), clock_timestamp(),
+        concat('http://example.com/', md5(random()::text)),
+        'USA',
+        concat(
+          trunc(random()*250 + 2), '.',
+          trunc(random()*250 + 2), '.',
+          trunc(random()*250 + 2), '.',
+          trunc(random()*250 + 2)
+        )::inet,
+        ('{200,404}'::int[])[ceil(random()*2)],
+        5+trunc(random()*150)
       );
       PERFORM pg_sleep(random() * 2);
     END LOOP;
