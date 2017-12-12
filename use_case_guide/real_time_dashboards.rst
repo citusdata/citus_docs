@@ -94,15 +94,16 @@ Once you're ingesting data, you can run dashboard queries such as:
 .. code-block:: sql
 
   SELECT
+    site_id,
     date_trunc('minute', ingest_time) as minute,
     COUNT(1) AS request_count,
     SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
     SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
     SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
   FROM http_request
-  WHERE site_id = 1
-    AND date_trunc('minute', ingest_time) > now() - interval '5 minutes'
-  GROUP BY minute;
+  WHERE date_trunc('minute', ingest_time) > now() - interval '5 minutes'
+  GROUP BY site_id, minute
+  ORDER BY minute ASC;
 
 The setup described above works, but has two drawbacks:
 
@@ -204,12 +205,10 @@ The dashboard query from earlier is now a lot nicer:
 
 .. code-block:: sql
 
-  SELECT date_trunc('minute', ingest_time) as minute, request_count,
+  SELECT site_id, ingest_time as minute, request_count,
          success_count, error_count, average_response_time_msec
-   FROM http_request_1min
-  WHERE site_id = 1
-    AND date_trunc('minute', ingest_time)
-        > date_trunc('minute', now()) - interval '5 minutes';
+    FROM http_request_1min
+   WHERE ingest_time > date_trunc('minute', now()) - interval '5 minutes';
 
 Expiring Old Data
 -----------------
@@ -320,13 +319,11 @@ number of IP addresses by calling the ``hll_cardinality`` function:
 
 .. code-block:: sql
 
-  SELECT date_trunc('minute', ingest_time) as minute, request_count,
+  SELECT site_id, ingest_time as minute, request_count,
          success_count, error_count, average_response_time_msec,
          hll_cardinality(distinct_ip_addresses) AS distinct_ip_address_count
-  FROM http_request_1min
-  WHERE site_id = 1
-    AND date_trunc('minute', ingest_time)
-        > date_trunc('minute', now()) - interval '5 minutes';
+    FROM http_request_1min
+   WHERE ingest_time > date_trunc('minute', now()) - interval '5 minutes';
 
 HLLs aren't just faster, they let you do things you couldn't previously. Say we did our
 rollups, but instead of using HLLs we saved the exact unique counts. This works fine, but
@@ -405,7 +402,7 @@ your can modify the dashboard query to look like this:
     request_count, success_count, error_count, average_response_time_msec,
     country_counters->'USA' AS american_visitors
   FROM http_request_1min
-  WHERE site_id = 1 AND ingest_time = date_trunc('minute', now());
+  WHERE ingest_time = date_trunc('minute', now());
 
 .. raw:: html
 
