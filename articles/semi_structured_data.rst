@@ -53,7 +53,7 @@ using a
 column for url\_params is much more convenient than creating columns for
 each parameter. With JSONB we can get both the flexibility of schema,
 and combined with `GIN
-indexing <https://www.postgresql.org/docs/9.5/static/gin.html>`__ we can
+indexing <https://www.postgresql.org/docs/10/static/gin.html>`__ we can
 still have performant queries against all keys and values without having
 to index them individually.
 
@@ -101,7 +101,7 @@ Top page views over the last 7 days for a given site:
 
 .. code:: sql
 
-    SELECT page, 
+    SELECT page,
            count(*)
     FROM visits
     WHERE site_id = 'foo'
