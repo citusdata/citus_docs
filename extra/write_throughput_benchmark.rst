@@ -33,17 +33,17 @@ In these tests, we're therefore going to create a separate EC2 instance to run p
 Install pgbench
 ~~~~~~~~~~~~~~~
 
-Once we create a new EC2 instance, we need to install pgbench on this instance. Please note that pgbench 9.5 will run across all Citus versions and that the instructions below assume that you're using pgbench 9.5.
+Once we create a new EC2 instance, we need to install pgbench on this instance. Please note that pgbench 10 will run across all Citus versions and that the instructions below assume that you're using pgbench 10.
 
 If you are running a **Debian** based system, simply type::
 
   sudo apt-get update
-  sudo apt-get install postgresql-contrib-9.5
+  sudo apt-get install postgresql-10
 
 If you are running a **RedHat** based system, simply type::
 
   sudo yum update
-  sudo yum install postgresql95-contrib
+  sudo yum install postgresql10-contrib
 
 
 Benchmark INSERT Throughput
@@ -57,7 +57,7 @@ Before we start, we need to tell pgbench to initialize the benchmarking environm
 To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following two commands::
 
   pgbench -i connection_string_to_coordinator
-  
+
   psql connection_string_to_coordinator -c "SELECT create_distributed_table('pgbench_history', 'aid');"
 
 
@@ -71,12 +71,11 @@ To create the related SQL commands, create a file named insert.sql and paste the
   \set nbranches :scale
   \set ntellers 10 * :scale
   \set naccounts 100000 * :scale
-  \setrandom aid 1 :naccounts
-  \setrandom bid 1 :nbranches
-  \setrandom tid 1 :ntellers
-  \setrandom delta -5000 5000
+  \set aid random(1, :naccounts)
+  \set bid random(1, :nbranches)
+  \set tid random(1, :ntellers)
+  \set delta random(-5000, 5000)
   INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);
-
 
 Benchmark INSERT commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,7 +101,7 @@ Before we start, we need to tell pgbench to initialize the benchmarking environm
 To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following two commands::
 
   pgbench -i connection_string_to_coordinator
-  
+
   # INSERT and UPDATE tests run on different distributed tables
   psql connection_string_to_coordinator -c "SELECT create_distributed_table('pgbench_accounts', 'aid');"
 
@@ -115,8 +114,8 @@ pgbench runs the given SQL commands repeatedly and reports results. For this ben
 To create the related SQL commands, create a file named update.sql and paste the following lines into it::
 
   \set naccounts 100000 * :scale
-  \setrandom aid 1 :naccounts
-  \setrandom delta -5000 5000
+  \set aid random(1 :naccounts)
+  \set delta random(-5000, 5000)
   UPDATE pgbench_accounts SET abalance = abalance + :delta WHERE aid = :aid;
 
 
