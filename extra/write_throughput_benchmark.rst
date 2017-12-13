@@ -71,12 +71,14 @@ To create the related SQL commands, create a file named insert.sql and paste the
   \set nbranches :scale
   \set ntellers 10 * :scale
   \set naccounts 100000 * :scale
-  \setrandom aid 1 :naccounts
-  \setrandom bid 1 :nbranches
-  \setrandom tid 1 :ntellers
-  \setrandom delta -5000 5000
+  \set aid random(1, :naccounts)
+  \set bid random(1, :nbranches)
+  \set tid random(1, :ntellers)
+  \set delta random(-5000, 5000)
   INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);
 
+.. note::
+  In Postgres 9.5, please use "\setrandom VARIABLE x y" instead of "\set VARIABLE random(x, y)"
 
 Benchmark INSERT commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -115,8 +117,8 @@ pgbench runs the given SQL commands repeatedly and reports results. For this ben
 To create the related SQL commands, create a file named update.sql and paste the following lines into it::
 
   \set naccounts 100000 * :scale
-  \setrandom aid 1 :naccounts
-  \setrandom delta -5000 5000
+  \set aid (1, :naccounts)
+  \set delta (-5000, 5000)
   UPDATE pgbench_accounts SET abalance = abalance + :delta WHERE aid = :aid;
 
 
