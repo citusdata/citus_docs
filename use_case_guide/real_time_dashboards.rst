@@ -258,11 +258,10 @@ to enable it:
 
 .. code-block:: sql
 
+  --------------------------------------------------------
   -- Run on all nodes ------------------------------------
 
   CREATE EXTENSION hll;
-
-  -- Run on the coordinator node -------------------------
 
   -- allow SUM to work on hashvals (alias for hll_add_agg)
   CREATE AGGREGATE sum(hll_hashval) (
@@ -324,7 +323,9 @@ aggregate function and its semantics. You do this by running the following:
 
 .. code-block:: sql
 
-  -- this should be run on the workers and coordinator
+  --------------------------------------------------------
+  -- Run on all nodes ------------------------------------
+
   -- (not necessary on Citus Cloud)
 
   CREATE AGGREGATE sum (hll)
