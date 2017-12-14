@@ -140,8 +140,6 @@ for each of the last 30 days.
 
   SELECT create_distributed_table('http_request_1min', 'site_id');
 
-  -- indexes aren't automatically created by Citus
-  -- this will create the index on all shards
   CREATE INDEX http_request_1min_idx ON http_request_1min (site_id, ingest_time);
 
 This looks a lot like the previous code block. Most importantly: It also shards on
