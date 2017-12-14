@@ -159,12 +159,7 @@ The following function wraps the rollup query up for convenience.
 .. code-block:: plpgsql
 
   CREATE OR REPLACE FUNCTION rollup_http_request() RETURNS void AS $$
-  DECLARE max_rollup_time TIMESTAMPTZ;
   BEGIN
-    SELECT COALESCE(max(ingest_time), timestamp '10-10-1901')
-    FROM http_request_1min
-    INTO max_rollup_time;
-
     INSERT INTO http_request_1min (
       site_id, ingest_time, request_count,
       success_count, error_count, average_response_time_msec
@@ -180,7 +175,11 @@ The following function wraps the rollup query up for convenience.
         date_trunc('minute', ingest_time) AS minute
       FROM http_request
     ) AS h
-    WHERE minute > max_rollup_time
+    WHERE minute > (
+      SELECT COALESCE(max(ingest_time), timestamp '10-10-1901')
+      FROM http_request_1min
+      WHERE http_request_1min.site_id = h.site_id
+    )
       AND minute < date_trunc('minute', now())
     GROUP BY site_id, minute
     ORDER BY minute ASC;
