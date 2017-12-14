@@ -73,7 +73,7 @@ With this, the system is ready to accept data and serve queries! Keep the follow
         site_id, ingest_time, url, request_country,
         ip_address, status_code, response_time_msec
       ) VALUES (
-        trunc(random()*100), clock_timestamp(),
+        trunc(random()*32), clock_timestamp(),
         concat('http://example.com/', md5(random()::text)),
         'USA',
         concat(
