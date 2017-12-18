@@ -75,7 +75,7 @@ With this, the system is ready to accept data and serve queries! Keep the follow
       ) VALUES (
         trunc(random()*32), clock_timestamp(),
         concat('http://example.com/', md5(random()::text)),
-        'USA',
+        ('{China,India,USA,Indonesia}'::text[])[ceil(random()*4)],
         concat(
           trunc(random()*250 + 2), '.',
           trunc(random()*250 + 2), '.',
@@ -85,7 +85,7 @@ With this, the system is ready to accept data and serve queries! Keep the follow
         ('{200,404}'::int[])[ceil(random()*2)],
         5+trunc(random()*150)
       );
-      PERFORM pg_sleep(random() * 2);
+      PERFORM pg_sleep(random() * 0.25);
     END LOOP;
   END $$;
 
