@@ -90,7 +90,7 @@ Across all shards of the event table (Q2):
 
   SELECT page_id, count(*) AS count
   FROM event
-  WHERE page_id = ANY(ARRAY[...page IDs from first query...])
+  WHERE page_id IN (…page IDs from first query…)
     AND tenant_id = 6
     AND (payload->>'time')::date >= now() - interval '1 week'
   GROUP BY page_id ORDER BY count DESC LIMIT 10;
