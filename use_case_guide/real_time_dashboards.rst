@@ -363,22 +363,30 @@ First, add the new column to our rollup table:
 
   ALTER TABLE http_request_1min ADD COLUMN country_counters JSONB;
 
-Next, include it in the rollups by adding a clause like this to the rollup function:
+Next, include it in the rollups by modifying the rollup function:
 
-.. code-block:: sql
+.. code-block:: diff
 
-  SELECT
-    site_id, minute,
-    jsonb_object_agg(request_country, country_count)
-  FROM (
-    SELECT
-      site_id, date_trunc('minute', ingest_time) AS minute,
-      request_country,
-      count(1) AS country_count
-    FROM http_request
-    GROUP BY site_id, minute, request_country
-  ) AS h
-  GROUP BY site_id, minute;
+  @@ -1,14 +1,19 @@
+   INSERT INTO http_request_1min (
+     site_id, ingest_time, request_count,
+     success_count, error_count, average_response_time_msec,
+  +  country_counters
+   ) SELECT
+     site_id,
+     minute,
+     COUNT(1) as request_count,
+     SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_c
+     SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_cou
+     SUM(response_time_msec) / COUNT(1) AS average_response_time_msec,
+  +  jsonb_object_agg(request_country, country_count) AS country_counters
+   FROM (
+     SELECT *,
+       date_trunc('minute', ingest_time) AS minute,
+  +    count(1) OVER (
+  +      PARTITION BY site_id, date_trunc('minute', ingest_time), request_country
+  +    ) AS country_count
+     FROM http_request
 
 Now, if you want to get the number of requests which came from America in your dashboard,
 your can modify the dashboard query to look like this:
@@ -387,9 +395,9 @@ your can modify the dashboard query to look like this:
 
   SELECT
     request_count, success_count, error_count, average_response_time_msec,
-    country_counters->'USA' AS american_visitors
+    COALESCE(country_counters->>'USA', '0')::int AS american_visitors
   FROM http_request_1min
-  WHERE ingest_time = date_trunc('minute', now());
+  WHERE ingest_time >= date_trunc('minute', now()) - '1 minute'::interval;
 
 .. raw:: html
 
