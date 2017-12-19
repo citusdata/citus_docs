@@ -28,16 +28,16 @@ Consider the following tables which might be part of a multi-tenant web analytic
 .. code-block:: postgresql
 
   CREATE TABLE event (
-    event_id bigint,
     tenant_id int,
+    event_id bigint,
     page_id int,
     payload jsonb,
     primary key (tenant_id, event_id)
   );
 
   CREATE TABLE page (
-    page_id int,
     tenant_id int,
+    page_id int,
     path text,
     primary key (tenant_id, page_id)
   );
@@ -73,6 +73,7 @@ As the number of tenants and the data stored for each tenant grows, query times 
 .. code-block:: postgresql
 
   -- naively use event_id and page_id as distribution columns
+
   SELECT create_distributed_table('event', 'event_id');
   SELECT create_distributed_table('page', 'page_id');
 
