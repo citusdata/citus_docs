@@ -163,7 +163,7 @@ Joining with other views is fine too, as long as we join by the distribution col
       t25o.tenant_id = hpe.tenant_id
     );
 
-The :code:`tenant_25_orders` view was pretty rudimentary, but Citus supports views with more inside like aggregates and joins. This works as long as the view filters by the distribution column, and includes that column in join conditions.
+The :code:`tenant_25_orders` view is pretty rudimentary, but Citus supports views with more inside like aggregates and joins. This works as long as the view filters by the distribution column and includes that column in join conditions.
 
 .. code-block:: sql
 
@@ -185,6 +185,11 @@ The :code:`tenant_25_orders` view was pretty rudimentary, but Citus supports vie
   LIMIT 10;
 
 For more details about how to make queries work well in the multi-tenant use case (including queries for use in views), see :ref:`mt_query_migration`.
+
+Materialized Views
+------------------
+
+Citus supports materialized views that filter by tenant id, and stores them as local tables on the coordinator node. This means they cannot be used in distributed queries after materialization. To learn more about local vs distributed tables see :ref:`table_types`.
 
 .. _query_performance:
 
