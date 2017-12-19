@@ -19,7 +19,13 @@ Either way, after adding a node to an existing cluster it will not contain any d
 How does Citus handle failure of a worker node?
 -----------------------------------------------
 
-If a worker node fails during e.g. a SELECT query, Citus seamlessly fails over to a streaming replication standby node. (If streaming replication is disabled then Citus keeps replica shards for use in re-routing queries if a host becomes unhealthy.) This means intermittent failures will not require restarting potentially long-running analytical queries. You can find more information about Citus' failure handling logic in :ref:`dealing_with_node_failures`.
+Using one of two methods depending on configuration:
+
+**Streaming replication** maintains a standby node for every worker, allowing a seamless failover to the standby on failure. Citus Community edition is compatible with streaming replication but does not automatically configure it on a local cluster, whereas Citus Cloud has streaming replication built in.
+
+**Shard replication** keeps replicas of each shard on a configurable number of other workers for use in re-routing queries if a host becomes unhealthy. Citus Community edition supports shard replication through easy configuration.
+
+Using either technique means intermittent failures will not require restarting potentially long-running analytical queries. You can find more information about Citus' failure handling logic in :ref:`dealing_with_node_failures`.
 
 How does Citus handle failover of the coordinator node?
 -------------------------------------------------------
