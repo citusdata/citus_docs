@@ -41,6 +41,11 @@ Failovers happen to address hardware failure, as mentioned, and also for other r
 *  Situation
 *  Follower
 
+Systemic Cloud Status
+=====================
+
+Any events affecting the Citus Cloud platform as a whole are recorded on `status.citusdata.com <https://status.citusdata.com/>`_.
+
 .. raw:: html
 
   <script type="text/javascript">
