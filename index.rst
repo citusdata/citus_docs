@@ -104,6 +104,7 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    :hidden:
 
    migration/transitioning.rst
+   migration/data.rst
 
 .. toctree::
    :caption: Performance
