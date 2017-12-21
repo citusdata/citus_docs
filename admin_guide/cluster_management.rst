@@ -478,23 +478,26 @@ This query will provide you with the size of every shard of a given distributed 
 
 .. code-block:: postgresql
 
-  SELECT pg_size_pretty(result::bigint)
+  SELECT *
   FROM run_command_on_shards('my_distributed_table', $cmd$
-    SELECT pg_table_size('%s');
+    SELECT json_build_object(
+      'shard_name', '%1$s',
+      'size',       pg_size_pretty(pg_table_size('%1$s'))
+    );
   $cmd$);
 
 Example output:
 
 ::
 
-  ┌────────────────┐
-  │ pg_size_pretty │
-  ├────────────────┤
-  │ 8192 bytes     │
-  │ 125 MB         │
-  │ 8192 bytes     │
-  │ 8192 bytes     │
-  └────────────────┘
+  ┌─────────┬─────────┬───────────────────────────────────────────────────────────────────────┐
+  │ shardid │ success │                                result                                 │
+  ├─────────┼─────────┼───────────────────────────────────────────────────────────────────────┤
+  │  102008 │ t       │ {"shard_name" : "my_distributed_table_102008", "size" : "2416 kB"}    │
+  │  102009 │ t       │ {"shard_name" : "my_distributed_table_102009", "size" : "3960 kB"}    │
+  │  102010 │ t       │ {"shard_name" : "my_distributed_table_102010", "size" : "1624 kB"}    │
+  │  102011 │ t       │ {"shard_name" : "my_distributed_table_102011", "size" : "4792 kB"}    │
+  └─────────┴─────────┴───────────────────────────────────────────────────────────────────────┘
 
 For more info about distributed table size, see :ref:`table_size`.
 
