@@ -101,7 +101,7 @@ Once you're ingesting data, you can run dashboard queries such as:
     SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
     SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
   FROM http_request
-  WHERE date_trunc('minute', ingest_time) > now() - interval '5 minutes'
+  WHERE date_trunc('minute', ingest_time) > now() - '5 minutes'::interval
   GROUP BY site_id, minute
   ORDER BY minute ASC;
 
@@ -205,7 +205,7 @@ The dashboard query from earlier is now a lot nicer:
   SELECT site_id, ingest_time as minute, request_count,
          success_count, error_count, average_response_time_msec
     FROM http_request_1min
-   WHERE ingest_time > date_trunc('minute', now()) - interval '5 minutes';
+   WHERE ingest_time > date_trunc('minute', now()) - '5 minutes'::interval;
 
 Expiring Old Data
 -----------------
@@ -340,7 +340,7 @@ You can then compute distinct IP counts over a time period with the following qu
 
   SELECT hll_cardinality(SUM(distinct_ip_addresses))
   FROM http_request_1min
-  WHERE ingest_time > now() - '5 minutes'::interval;
+  WHERE ingest_time > date_trunc('minute', now()) - '5 minutes'::interval;
 
 You can find more information on HLLs `in the project's GitHub repository
 <https://github.com/aggregateknowledge/postgresql-hll>`_.
@@ -397,7 +397,7 @@ your can modify the dashboard query to look like this:
     request_count, success_count, error_count, average_response_time_msec,
     COALESCE(country_counters->>'USA', '0')::int AS american_visitors
   FROM http_request_1min
-  WHERE ingest_time >= date_trunc('minute', now()) - '1 minute'::interval;
+  WHERE ingest_time > date_trunc('minute', now()) - '5 minutes'::interval;
 
 .. raw:: html
 
