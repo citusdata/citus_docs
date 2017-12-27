@@ -180,7 +180,7 @@ The following function wraps the rollup query up for convenience.
       FROM http_request_1min
       WHERE http_request_1min.site_id = h.site_id
     )
-      AND minute < date_trunc('minute', now())
+      AND minute <= date_trunc('minute', now())
     GROUP BY site_id, minute
     ORDER BY minute ASC;
   END;
