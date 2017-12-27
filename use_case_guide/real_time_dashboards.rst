@@ -250,7 +250,7 @@ it to deduplicate. That's both a lot of network traffic and a lot of computation
 HLLs you can greatly improve query speed.
 
 First you must install the HLL extension; `the github repo
-<https://github.com/aggregateknowledge/postgresql-hll>`_ has instructions. Next, you have
+<https://github.com/citusdata/postgresql-hll>`_ has instructions. Next, you have
 to enable it:
 
 .. code-block:: sql
