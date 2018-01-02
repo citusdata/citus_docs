@@ -23,11 +23,6 @@
     <link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}"/>
   {% endif %}
 
-  {# ARTICLE CANONICAL URL #}
-  {% if pagename in canonical_urls %}
-    <link rel="canonical" href="{{ canonical_urls[pagename] }}" />
-  {% endif %}
-
   {# CSS #}
 
   {# OPENSEARCH #}
@@ -86,6 +81,15 @@
     analytics.load("TKfha8eC8r4TBLXXQhGyc6rmGud8nVa0");
     }}();
   </script>
+
+  {# ARTICLE CANONICAL URL
+
+     Put last in head to ensure it overrides whatever Read The Docs
+     wants to inject in this page.
+  #}
+  {% if pagename in canonical_urls %}
+    <link rel="canonical" href="{{ canonical_urls[pagename] }}" />
+  {% endif %}
 </head>
 
 <body class="wy-body-for-nav" role="document">
