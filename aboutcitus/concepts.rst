@@ -38,6 +38,8 @@ Citus runs not only SQL but DDL statements throughout a cluster, so changing the
 
 To learn how to create a distributed table, see :ref:`ddl`.
 
+.. _dist_column:
+
 Distribution Column
 !!!!!!!!!!!!!!!!!!!
 
