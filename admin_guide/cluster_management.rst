@@ -499,7 +499,61 @@ Example output:
   │  102011 │ t       │ {"shard_name" : "my_distributed_table_102011", "size" : "4792 kB"}    │
   └─────────┴─────────┴───────────────────────────────────────────────────────────────────────┘
 
-For more info about distributed table size, see :ref:`table_size`.
+Querying the size of all distributed tables
+-------------------------------------------
+
+This query gets a list of the sizes for each distributed table plus the size of their indices.
+
+.. code-block:: postgresql
+
+  SELECT
+    tablename,
+    pg_size_pretty(
+      citus_total_relation_size(tablename::text)
+    ) AS total_size
+  FROM pg_tables pt
+  JOIN pg_dist_partition pp
+    ON pt.tablename = pp.logicalrelid::text
+  WHERE schemaname = 'public';
+
+Example output:
+
+::
+
+  ┌───────────────┬────────────┐
+  │   tablename   │ total_size │
+  ├───────────────┼────────────┤
+  │ github_users  │ 39 MB      │
+  │ github_events │ 98 MB      │
+  └───────────────┴────────────┘
+
+Note that this query works only when :code:`citus.shard_replication_factor` = 1. Also there are other Citus functions for querying distributed table size, see :ref:`table_size`.
+
+Detetermining Replication Factor per Table
+------------------------------------------
+
+When using Citus replication rather than PostgreSQL streaming replication, each table can have a customized "replication factor." This controls the number of redundant copies Citus keeps of each of the table's shards. (See :ref:`worker_node_failures`.)
+
+To see an overview of this setting for all tables, run:
+
+.. code-block:: postgresql
+
+  SELECT logicalrelid AS tablename,
+         count(*)/count(DISTINCT ps.shardid) AS replication_factor
+  FROM pg_dist_shard_placement ps
+  JOIN pg_dist_shard p ON ps.shardid=p.shardid
+  GROUP BY logicalrelid;
+
+Example output:
+
+::
+
+  ┌───────────────┬────────────────────┐
+  │   tablename   │ replication_factor │
+  ├───────────────┼────────────────────┤
+  │ github_events │                  1 │
+  │ github_users  │                  1 │
+  └───────────────┴────────────────────┘
 
 Identifying unused indices
 --------------------------
