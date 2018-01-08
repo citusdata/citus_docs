@@ -50,7 +50,7 @@ Furthermore, when the real time executor detects simple INSERT, UPDATE or DELETE
 Router Executor
 ---------------
 
-When all data required for a query is stored on a single node, Citus can route the entire query to the node and run it there. The result-set is then relayed through the coordinator node back to the client. The router executor takes care of this type of execution, so named because a query is *routed* to a single node.
+When all data required for a query is stored on a single node, Citus can route the entire query to the node and run it there. The result set is then relayed through the coordinator node back to the client. The router executor takes care of this type of execution.
 
 Although Citus supports a large percentage of SQL functionality even for cross-node queries, the advantage of router execution is 100% SQL coverage. Queries executing inside a node are run in a full-featured PostgreSQL worker instance. The disadvantage of router execution is the reduced parallelism of executing a query using only one computer.
 
@@ -60,6 +60,28 @@ Task Tracker Executor
 The task tracker executor is well suited for long running, complex data warehousing queries. This executor opens only one connection per worker, and assigns all fragment queries to a task tracker daemon on the worker. The task tracker daemon then regularly schedules new tasks and sees through their completion. The executor on the coordinator regularly checks with these task trackers to see if their tasks completed.
 
 Each task tracker daemon on the workers also makes sure to execute at most citus.max_running_tasks_per_node concurrently. This concurrency limit helps in avoiding disk I/O contention when queries are not served from memory. The task tracker executor is designed to efficiently handle complex queries which require repartitioning and shuffling intermediate data among workers.
+
+Subquery/CTE Push-Pull Execution
+--------------------------------
+
+If necessary Citus can push results from subqueries and CTEs into short-lived :ref:`reference_tables` for use by an outer query. This allows Citus to support a greater variety of SQL constructs, and even mix executor types between a query and its subqueries.
+
+For example, having subqueries in a WHERE clause sometimes cannot execute inline at the same time as the main query, but must be done separately. Suppose a web analytics application maintains a ``visits`` table partitioned by ``page_id``. To query the number of visitor sessions on the top twenty most visited pages, we can use a subquery to find the list of pages, then an outer query to count the sessions.
+
+.. code-block:: sql
+
+  SELECT page_id, count(distinct session_id)
+  FROM visits
+  WHERE page_id IN (
+    SELECT page_id
+    FROM visits
+    GROUP BY page_id
+    ORDER BY count(*) DESC
+    LIMIT 20
+  )
+  GROUP BY page_id;
+
+The real-time executor would like to run a fragment of this query against each shard by page_id, counting distinct session_ids, and combining the results on the coordinator. However the LIMIT in the subquery means the subquery cannot be executed as part of the fragment. However by recursively planning the query Citus can run the subquery separately, push the results to all workers as a temporary reference table, run the main fragment query, and pull the results back to the coordinator. The "push-pull" design supports a subqueries like the one above.
 
 .. _postgresql_planner_executor:
 
