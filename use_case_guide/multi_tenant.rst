@@ -261,7 +261,7 @@ Django:
 
 Basically when the resulting SQL executed in the database contains a :code:`WHERE company_id = :value` clause on every table (including tables in JOIN queries), then Citus will recognize that the query should be routed to a single node and execute it there as it is. This makes sure that all SQL functionality is available. The node is an ordinary PostgreSQL server after all.
 
-Also, to make it even simpler, you can use our `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ library for Rails (one for Django is in progress as well) which will automatically add these filters to all your queries, even the complicated ones. Check out our :ref:`rails_migration` section for details.
+Also, to make it even simpler, you can use our `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ library for Rails, or `django-multitenant <https://github.com/citusdata/django-multitenant`_ for Django which will automatically add these filters to all your queries, even the complicated ones. Check out our :ref:`app_migration` section for details.
 
 This guide is framework-agnostic, so we'll point out some Citus features using SQL. Use your imagination for how these statements would be expressed in your language of choice.
 
@@ -517,4 +517,4 @@ Where to Go From Here
 
 With this, you now know how to use Citus to power your multi-tenant application for scalability. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`.
 
-To adjust a front-end application, specifically Ruby on Rails, read :ref:`rails_migration`. Finally, try :ref:`Citus Cloud <cloud_overview>`, the easiest way to manage a Citus cluster, available with discounted developer plan pricing.
+To adjust a front-end application, specifically Ruby on Rails or Django, read :ref:`app_migration`. Finally, try :ref:`Citus Cloud <cloud_overview>`, the easiest way to manage a Citus cluster, available with discounted developer plan pricing.
