@@ -9,17 +9,21 @@ There are broadly two kinds of applications that work very well on Citus. The fi
 
 **Multi-Tenant Application**
 
-  B2B applications that serve other companies, accounts, or organizations.
+  SaaS applications that serve other companies, accounts, or organizations.
+
+  Most SaaS applications are inherently relational. By sharding on customer_id, Citus gives you the ability to scale out your database with full SQL coverage, so you don’t have to give up the relational semantics you need, like joins, foreign key constraints, transactions, ACID, consistency. By scaling out, your app gets to use a much bigger memory, compute, and disk footprint.
 
   * **Examples**: Websites which host store-fronts for other businesses, such as a digital marketing solution, or a sales automation tool.
   * **Characteristics**: Queries relating to a single tenant rather than joining information across tenants. This includes OLTP workloads for serving web clients, and OLAP workloads that serve per-tenant analytical queries. Having dozens or hundreds of tables in your database schema is also an indicator for the multi-tenant data model.
 
+  Scaling a multi-tenant app with Citus also requires minimal changes to application code. We have support for popular frameworks like Ruby on Rails and Django. See :ref:`app_migration`.
+
 **Real-Time Analytics**
 
-  Applications needing massive parallelism, coordinating hundreds of cores for fast results to numerical, statistical, or counting queries.
+  Applications needing massive parallelism, coordinating hundreds of cores for fast results to numerical, statistical, or counting queries. By sharding and parallelizing SQL queries across multiple nodes, Citus makes it possible to perform real-time queries across billions of records in under a second.
 
   * **Examples**: Dashboards for internet-of-things data or web traffic.
-  * **Characteristics**: Few tables, often centering around a big table of device-, site- or user-events. High volume reads and writes, with relatively simple but computationally intensive lookups.
+  * **Characteristics**: Few tables, often centering around a big table of device-, site- or user-events and requiring high ingest volume of mostly immutable data. Relatively simple (but computationally intensive) analytics queries involving several aggregations and GROUP BYs.
 
 Distributing Data
 =================
