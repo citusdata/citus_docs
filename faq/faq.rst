@@ -105,6 +105,23 @@ Why does pg_relation_size report zero bytes for a distributed table?
 
 The data in distributed tables lives on the worker nodes (in shards), not on the coordinator. A true measure of distributed table size is obtained as a sum of shard sizes. Citus provides helper functions to query this information. See :ref:`table_size` to learn more.
 
+Why am I seeing an error about max_intermediate_result_size?
+------------------------------------------------------------
+
+Citus has to use more than one step to run some queries having subqueries or CTEs. It copies subquery results into temporary :ref:`reference_tables` for use by the main query. If these results are too large, this might cause unacceptable network overhead. Citus has a configurable setting, ``citus.max_intermediate_result_size`` to specify a subquery result size threshold at which the query will be canceled. If you run into the error, it looks like:
+
+::
+
+  ERROR:  the intermediate result size exceeds citus.max_intermediate_result_size (currently 1 GB)
+  DETAIL:  Citus restricts the size of intermediate results of complex subqueries and CTEs to avoid accidentally pulling large result sets into once place.
+  HINT:  To run the current query, set citus.max_intermediate_result_size to a higher value or -1 to disable.
+
+As the error message suggests, you can increase this limit by altering the variable:
+
+.. code-block:: sql
+
+  SET citus.max_intermediate_result_size = '3GB';
+
 Can I run Citus on Heroku or Amazon RDS?
 ----------------------------------------
 
