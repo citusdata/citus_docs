@@ -13,6 +13,8 @@ subset of SQL statements. We are continuously working to increase SQL coverage
 to better support other use-cases such as data warehousing queries. Also many of
 the unsupported features have workarounds; below are a number of the most useful.
 
+.. _join_local_dist:
+
 JOIN a local and a distributed table
 ------------------------------------
 
