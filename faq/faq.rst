@@ -43,14 +43,15 @@ If you want to do joins between small dimension tables (regular Postgres tables)
 Are there any PostgreSQL features not supported by Citus?
 ---------------------------------------------------------
 
-Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. It provides full SQL support for queries which access a single node in the database cluster. These queries are common, for instance, in multi-tenant applications where different nodes store different tenants (see :ref:`when_to_use_citus`).
+Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. The vast majority of queries are supported, even when they combine data across the network from multiple database nodes. Currently all SQL is supported except:
 
-Other queries which, by contrast, combine data from multiple nodes, do not support the entire spectrum of PostgreSQL features. However they still enjoy broad SQL coverage, including semi-structured data types (like jsonb, hstore), full text search, operators, functions, and foreign data wrappers. Note that the following constructs aren't supported natively for cross-node queries:
+* Correlated subqueries
+* Recursive/modifying CTEs
+* Table sample
+* SELECT … FOR UPDATE
+* Grouping sets
 
-* Window Functions
-* CTEs
-* Set operations
-* Transactional semantics for queries that span across multiple shards
+What's more, Citus has 100% SQL support for queries which access a single node in the database cluster. These queries are common, for instance, in multi-tenant applications where different nodes store different tenants (see :ref:`when_to_use_citus`).
 
 .. _faq_choose_shard_count:
 
