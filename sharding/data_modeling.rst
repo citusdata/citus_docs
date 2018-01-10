@@ -166,9 +166,7 @@ While the multi-tenant architecture introduces a hierarchical structure and uses
 
 Real-time queries typically ask for numeric aggregates grouped by date or category. Citus sends these queries to each shard for partial results and assembles the final answer on the coordinator node. Queries run fastest when as many nodes contribute as possible, and when no individual node bottlenecks.
 
-The more evenly a choice of entity id distributes data to shards the better. At the least the column should have a high cardinality. For comparison, a "status" field on an order table is a poor choice of distribution column because it assumes at most a few values. These values will not be able to take advantage of a cluster with many shards. The row placement will skew into a small handful of shards:
-
-.. image:: ../images/sharding-poorly-distributed.png
+The more evenly a choice of entity id distributes data to shards the better. At the least the column should have a high cardinality. For comparison, a "status" field on an order table with values "new," "paid," and "shipped" is a poor choice of distribution column because it assumes only those few values. These values will not be able to take advantage of a cluster with many shards.
 
 Of columns having high cardinality, it is good additionally to choose those that are frequently used in group-by clauses or as join keys. Distributing by join keys co-locates the joined tables and greatly improves join speed. Real-time schemas usually have few tables, and are generally centered around a big table of quantitative events.
 
