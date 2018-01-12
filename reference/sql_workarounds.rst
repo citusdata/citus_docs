@@ -7,11 +7,7 @@ Before attempting workarounds consider whether Citus is appropriate for your
 situation. Citus' current version works well for :ref:`real-time analytics and
 multi-tenant use cases. <when_to_use_citus>`
 
-Citus supports all SQL statements in the multi-tenant use-case. For real-time
-analytics use-cases, with queries which span across nodes, Citus supports a
-subset of SQL statements. We are continuously working to increase SQL coverage
-to better support other use-cases such as data warehousing queries. Also many of
-the unsupported features have workarounds; below are a number of the most useful.
+Citus supports all SQL statements in the multi-tenant use-case. Even in the real-time analytics use-cases, with queries that span across nodes, Citus supports the majority of statements. The few types of unsupported queries are listed in :ref:`unsupported` Many of the unsupported features have workarounds; below are a number of the most useful.
 
 .. _join_local_dist:
 
@@ -31,7 +27,7 @@ Attempting to execute a JOIN between a local table "local" and a distributed tab
   LOCATION:  DistributedTableCacheEntry, metadata_cache.c:711
   */
 
-Although you can't join such tables directly, by wrapping the local table in a subquery or CTE you can make Citus' recursive query planner copy the local table to a temporary table on worker nodes. By colocating the data this allows the query to proceed.
+Although you can't join such tables directly, by wrapping the local table in a subquery or CTE you can make Citus' recursive query planner copy the local table data to worker nodes. By colocating the data this allows the query to proceed.
 
 .. code-block:: sql
 
@@ -46,6 +42,8 @@ Although you can't join such tables directly, by wrapping the local table in a s
   WITH x AS (SELECT * FROM local)
   SELECT * FROM x
   JOIN dist USING (id);
+
+Remember that the coordinator will send the results in the subquery or CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
 
 .. _window_func_workaround:
 

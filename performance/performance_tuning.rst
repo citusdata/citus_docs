@@ -190,7 +190,7 @@ Other than the above, there are two configuration parameters which can be useful
 Subquery/CTE Network Overhead
 =============================
 
-In the best case Citus can execute queries containing subqueries and CTEs in a single step. This is usually because both the main query and subquery filter by tables' distribution column in the same way, and can be pushed down to worker nodes together. However Citus is sometimes forced to execute subqueries *before* executing the main query, and then copy the intermediate subquery results to other worker nodes for use by the main query.
+In the best case Citus can execute queries containing subqueries and CTEs in a single step. This is usually because both the main query and subquery filter by tables' distribution column in the same way, and can be pushed down to worker nodes together. However Citus is sometimes forced to execute subqueries *before* executing the main query, copying the intermediate subquery results to other worker nodes for use by the main query. This technique is called :ref:`push_pull_execution`.
 
 It's important to be aware when subqueries are executed in a separate step, and avoid sending too much data between worker nodes. The network overhead will hurt performance.
 
