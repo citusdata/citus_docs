@@ -40,6 +40,8 @@ Can I join distributed and non-distributed tables together in the same query?
 
 If you want to do joins between small dimension tables (regular Postgres tables) and large tables (distributed), then wrap the local table in a subquery. Citus' subquery execution logic will allow the join to work. See :ref:`join_local_dist`.
 
+.. _unsupported:
+
 Are there any PostgreSQL features not supported by Citus?
 ---------------------------------------------------------
 
@@ -51,7 +53,11 @@ Since Citus provides distributed functionality by extending PostgreSQL, it uses 
 * SELECT … FOR UPDATE
 * Grouping sets
 
+
 What's more, Citus has 100% SQL support for queries which access a single node in the database cluster. These queries are common, for instance, in multi-tenant applications where different nodes store different tenants (see :ref:`when_to_use_citus`).
+
+Remember that -- even with this extensive SQL coverage -- data modeling can have a significant impact on query performance. See the section on :ref:`citus_query_processing` for details on how Citus executes queries.
+
 
 .. _faq_choose_shard_count:
 
@@ -109,7 +115,9 @@ The data in distributed tables lives on the worker nodes (in shards), not on the
 Why am I seeing an error about max_intermediate_result_size?
 ------------------------------------------------------------
 
-Citus has to use more than one step to run some queries having subqueries or CTEs. It copies subquery results into temporary :ref:`reference_tables` for use by the main query. If these results are too large, this might cause unacceptable network overhead. Citus has a configurable setting, ``citus.max_intermediate_result_size`` to specify a subquery result size threshold at which the query will be canceled. If you run into the error, it looks like:
+Citus has to use more than one step to run some queries having subqueries or CTEs. Using :ref:`push_pull_execution`, it pushes subquery results to all worker nodes for use by the main query. If these results are too large, this might cause unacceptable network overhead, or even insufficient storage space on the coordinator node which accumulates and distributes the results.
+
+Citus has a configurable setting, ``citus.max_intermediate_result_size`` to specify a subquery result size threshold at which the query will be canceled. If you run into the error, it looks like:
 
 ::
 
@@ -117,7 +125,7 @@ Citus has to use more than one step to run some queries having subqueries or CTE
   DETAIL:  Citus restricts the size of intermediate results of complex subqueries and CTEs to avoid accidentally pulling large result sets into once place.
   HINT:  To run the current query, set citus.max_intermediate_result_size to a higher value or -1 to disable.
 
-As the error message suggests, you can increase this limit by altering the variable:
+As the error message suggests, you can (cautiously) increase this limit by altering the variable:
 
 .. code-block:: sql
 

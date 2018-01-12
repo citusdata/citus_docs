@@ -34,9 +34,11 @@ Distributed Query Executor
 
 Citus’s distributed executors run distributed query plans and handle failures that occur during query execution. The executors connect to the workers, send the assigned tasks to them and oversee their execution. If the executor cannot assign a task to the designated worker or if a task execution fails, then the executor dynamically re-assigns the task to replicas on other workers. The executor processes only the failed query sub-tree, and not the entire query while handling failures.
 
-Citus has three basic executor types: real time, router, and task tracker. It can use more than one at once on a single query, assigning different executors to different subqueries/CTEs as needed to support the SQL functionality. This process is recursive: if Citus cannot determine how to run a subquery then it examines sub-subqueries.
+Citus has three basic executor types: real time, router, and task tracker. It chooses which to use dynamically, depending on the structure of each query, and can use more than one at once for a single query, assigning different executors to different subqueries/CTEs as needed to support the SQL functionality. This process is recursive: if Citus cannot determine how to run a subquery then it examines sub-subqueries.
 
 At a high level, the real-time executor is useful for handling simple key-value lookups and INSERT, UPDATE, and DELETE queries. The task tracker is better suited for larger SELECT queries, and the router executor for access data that is co-located in a single worker node.
+
+The choice of executor for each query can be displayed by running PostgreSQL's `EXPLAIN <https://www.postgresql.org/docs/current/static/sql-explain.html>`_ command. This can be useful for debugging performance issues.
 
 Real-time Executor
 -------------------
@@ -61,10 +63,12 @@ The task tracker executor is well suited for long running, complex data warehous
 
 Each task tracker daemon on the workers also makes sure to execute at most citus.max_running_tasks_per_node concurrently. This concurrency limit helps in avoiding disk I/O contention when queries are not served from memory. The task tracker executor is designed to efficiently handle complex queries which require repartitioning and shuffling intermediate data among workers.
 
+.. _push_pull_execution:
+
 Subquery/CTE Push-Pull Execution
 --------------------------------
 
-If necessary Citus can push results from subqueries and CTEs into short-lived :ref:`reference_tables` for use by an outer query. This allows Citus to support a greater variety of SQL constructs, and even mix executor types between a query and its subqueries.
+If necessary Citus can gather results from subqueries and CTEs into the coordinator node and then push them back across workers for use by an outer query. This allows Citus to support a greater variety of SQL constructs, and even mix executor types between a query and its subqueries.
 
 For example, having subqueries in a WHERE clause sometimes cannot execute inline at the same time as the main query, but must be done separately. Suppose a web analytics application maintains a ``visits`` table partitioned by ``page_id``. To query the number of visitor sessions on the top twenty most visited pages, we can use a subquery to find the list of pages, then an outer query to count the sessions.
 
@@ -81,7 +85,46 @@ For example, having subqueries in a WHERE clause sometimes cannot execute inline
   )
   GROUP BY page_id;
 
-The real-time executor would like to run a fragment of this query against each shard by page_id, counting distinct session_ids, and combining the results on the coordinator. However the LIMIT in the subquery means the subquery cannot be executed as part of the fragment. However by recursively planning the query Citus can run the subquery separately, push the results to all workers as a temporary reference table, run the main fragment query, and pull the results back to the coordinator. The "push-pull" design supports a subqueries like the one above.
+The real-time executor would like to run a fragment of this query against each shard by page_id, counting distinct session_ids, and combining the results on the coordinator. However the LIMIT in the subquery means the subquery cannot be executed as part of the fragment. By recursively planning the query Citus can run the subquery separately, push the results to all workers, run the main fragment query, and pull the results back to the coordinator. The "push-pull" design supports a subqueries like the one above.
+
+For example, the EXPLAIN output for the previous query looks like this:
+
+::
+
+  GroupAggregate  (cost=0.00..0.00 rows=0 width=0)
+    Group Key: remote_scan.page_id
+    ->  Sort  (cost=0.00..0.00 rows=0 width=0)
+      Sort Key: remote_scan.page_id
+      ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+        ->  Distributed Subplan 7_1
+          ->  Limit  (cost=0.00..0.00 rows=0 width=0)
+            ->  Sort  (cost=0.00..0.00 rows=0 width=0)
+              Sort Key: COALESCE((pg_catalog.sum((COALESCE((pg_catalog.sum(remote_scan.worker_column_2))::bigint, '0'::bigint))))::bigint, '0'::bigint) DESC
+              ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)
+                Group Key: remote_scan.page_id
+                ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+                  Task Count: 32
+                  Tasks Shown: One of 32
+                  ->  Task
+                    Node: host=localhost port=5433 dbname=postgres
+                    ->  HashAggregate  (cost=674.25..1004.42 rows=33017 width=12)
+                      Group Key: page_id
+                      ->  Seq Scan on visits_102200 visits  (cost=0.00..509.17 rows=33017 width=4)
+        Task Count: 32
+        Tasks Shown: One of 32
+        ->  Task
+           Node: host=localhost port=5433 dbname=postgres
+           ->  HashAggregate  (cost=734.53..899.61 rows=16508 width=8)
+             Group Key: visits.page_id, visits.session_id
+             ->  Hash Join  (cost=17.00..651.99 rows=16508 width=8)
+               Hash Cond: (visits.page_id = intermediate_result.page_id)
+               ->  Seq Scan on visits_102200 visits  (cost=0.00..509.17 rows=33017 width=8)
+               ->  Hash  (cost=14.50..14.50 rows=200 width=4)
+                 ->  HashAggregate  (cost=12.50..14.50 rows=200 width=4)
+                   Group Key: intermediate_result.page_id
+                   ->  Function Scan on read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=4)
+
+We can see that Citus uses the real-time executor to first execute the subquery as "Distributed Subplan 7_1," then runs another query to do the ``count(distinct session_id)`` with a HashAggregate.
 
 .. _postgresql_planner_executor:
 
