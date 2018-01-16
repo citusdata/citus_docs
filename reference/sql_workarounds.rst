@@ -78,25 +78,21 @@ You can make it work by moving the window function into a subquery like this:
 
 Remember that it specifies :code:`PARTITION BY user_id`, the distribution column.
 
-.. _data_warehousing_queries:
+Temp Tables: the Last Resort
+----------------------------
 
-Data Warehousing Queries
-------------------------
-
-When queries have restrictive filters (i.e. when very few results need to be transferred to the coordinator) there is a general technique to run unsupported queries in two steps. First store the results of the inner queries in regular PostgreSQL tables on the coordinator. Then the next step can be executed on the coordinator like a regular PostgreSQL query.
-
-For example, consider the :ref:`window_func_workaround` case above. If we're partitioning over a non-distribution column of a distributed table then the workaround mentioned in that section will not suffice.
+There are still a few queries that are :ref:`unsupported <unsupported>` even with the use of push-pull execution via subqueries. One of them is running window functions that partition by a non-distribution column. For example, if we update the example from the previous example to partition on ``repo_id`` the workaround mentioned in the previous section will no longer work:
 
 .. code-block:: sql
 
   -- this won't work, not even with the subquery workaround
 
   SELECT repo_id, org->'id' as org_id, count(*)
-  OVER (PARTITION BY repo_id) -- repo_id is not distribution column
-  FROM github_events
-  WHERE repo_id IN (8514, 15435, 19438, 21692);
+    OVER (PARTITION BY repo_id) -- repo_id is not distribution column
+    FROM github_events
+   WHERE repo_id IN (8514, 15435, 19438, 21692);
 
-We can use a more general trick though. We can pull the relevant information to the coordinator as a temporary table:
+There is another trick though. We can pull the relevant information to the coordinator as a temporary table:
 
 .. code-block:: sql
 
@@ -104,18 +100,14 @@ We can use a more general trick though. We can pull the relevant information to 
 
   CREATE TEMP TABLE results AS (
     SELECT repo_id, org->'id' as org_id
-    FROM github_events
-    WHERE repo_id IN (8514, 15435, 19438, 21692)
+      FROM github_events
+     WHERE repo_id IN (8514, 15435, 19438, 21692)
   );
 
   -- now run the aggregate locally
 
   SELECT repo_id, org_id, count(*)
-  OVER (PARTITION BY repo_id)
-  FROM results;
+    OVER (PARTITION BY repo_id)
+    FROM results;
 
-Similar workarounds can be found for other data warehousing queries involving unsupported constructs.
-
-.. Note::
-
-  The above query is a simple example intended at showing how meaningful workarounds exist around the lack of support for a few query types. Over time, we intend to support these commands out of the box within Citus.
+Creating a temporary table on the coordinator is a last resort. It is limited by the disk size and CPU of the node.
