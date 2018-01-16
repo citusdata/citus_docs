@@ -173,7 +173,7 @@ You can use the standard PostgreSQL DROP TABLE command to remove your distribute
 Modifying Tables
 ----------------
 
-Citus automatically propagates many kinds of DDL statements, which means that modifying a distributed table on the coordinator node will update shards on the workers too. Other DDL statements require manual propagation, and certain others are prohibited such as those which would modify a distribution column. Attempting to run DDL that is ineligible for automatic propagation will raise an error and leave tables on the coordinator node unchanged. Additionally, some constraints like primary keys and uniqueness can only be applied prior to distributing a table.
+Citus automatically propagates many kinds of DDL statements, which means that modifying a distributed table on the coordinator node will update shards on the workers too. Other DDL statements require manual propagation, and certain others are prohibited such as those which would modify a distribution column. Attempting to run DDL that is ineligible for automatic propagation will raise an error and leave tables on the coordinator node unchanged.
 
 By default Citus performs DDL with a one-phase commit protocol. For greater safety you can enable two-phase commits by setting
 
