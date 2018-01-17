@@ -122,6 +122,7 @@ The root of the tree is what the coordinator node does with the results from the
           Node: host=localhost port=5433 dbname=postgres
           ->  HashAggregate  (cost=5353.62..5518.70 rows=16508 width=8)
             Group Key: visits.page_id, visits.session_id
+  .
 
 Worker nodes run the above for each of the thirty-two shards (Citus is choosing one representative for display). Workers locally do the same thing as the coordinator will eventually do: group the results. However workers are able to use a HashAggregate to do it.
 
@@ -131,6 +132,7 @@ Worker nodes run the above for each of the thirty-two shards (Citus is choosing 
               Hash Cond: (visits.page_id = "ANY_subquery".page_id)
               ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=8)
               ->  Hash  (cost=3895.22..3895.22 rows=33017 width=4)
+  .
 
 The ``IN ()`` construct is equivalent to ``= ANY()``, and we see that the subquery gets joined with the main query.
 
@@ -142,6 +144,7 @@ The ``IN ()`` construct is equivalent to ``= ANY()``, and we see that the subque
                     ->  HashAggregate  (cost=674.25..1004.42 rows=33017 width=12)
                       Group Key: visits_1.page_id
                       ->  Seq Scan on visits_102264 visits_1  (cost=0.00..509.17 rows=33017 width=4)
+  .
 
 The subquery's execution plan is straightforward.
 
@@ -174,6 +177,7 @@ So far no change. The coordinator processes the final resultset in the same way.
 
       ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
         ->  Distributed Subplan 6_1
+  .
 
 But here is something new. The custom scan has two large sub-trees, starting with this "distributed subplan."
 
@@ -195,6 +199,7 @@ But here is something new. The custom scan has two large sub-trees, starting wit
                         ->  HashAggregate  (cost=674.25..1004.42 rows=33017 width=12)
                           Group Key: page_id
                           ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=4)
+  .
 
 This big chunk governs running the subquery and making its results available.
 
@@ -207,12 +212,14 @@ This big chunk governs running the subquery and making its results available.
           ->  HashAggregate  (cost=734.53..899.61 rows=16508 width=8)
             Group Key: visits.page_id, visits.session_id
             ->  Hash Join  (cost=17.00..651.99 rows=16508 width=8)
+  .
 
 Like in the simpler query, the database will do a join within each worker, but this time not with the result of an ANY expression...
 
 ::
 
               Hash Cond: (visits.page_id = intermediate_result.page_id)
+  .
 
 ... This time it joins against "intermediate results."
 
@@ -223,6 +230,7 @@ Like in the simpler query, the database will do a join within each worker, but t
                 ->  HashAggregate  (cost=12.50..14.50 rows=200 width=4)
                   Group Key: intermediate_result.page_id
                   ->  Function Scan on read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=4)
+  .
 
 The intermediate results are internally retrieved from a function which loads data from a file that was passed between the worker nodes.
 
