@@ -142,7 +142,7 @@ Sets the policy to use when assigning tasks to workers. The coordinator assigns 
 
 This parameter can be set at run-time and is effective on the coordinator.
 
-Intermediate Data Transfer Format
+Intermediate Data Transfer
 -------------------------------------------------------------------
 
 citus.binary_worker_copy_format (boolean)
@@ -155,6 +155,11 @@ citus.binary_master_copy_format (boolean)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Use the binary copy format to transfer data between coordinator and the workers. When running distributed queries, the workers transfer their intermediate results to the coordinator for final aggregation. By default, this data is transferred in text format. Enabling this parameter instructs the database to use PostgreSQL’s binary serialization format to transfer this data. This parameter can be set at runtime and is effective on the coordinator.
+
+citus.max_intermediate_result_size (integer)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The maximum size in KB of intermediate results for CTEs and complex subqueries. The default is 1GB, and a value of -1 means no limit. Queries exceeding the limit will be canceled and produce an error message.
 
 DDL
 -------------------------------------------------------------------

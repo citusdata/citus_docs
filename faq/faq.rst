@@ -38,19 +38,26 @@ ingest workflows.
 Can I join distributed and non-distributed tables together in the same query?
 -----------------------------------------------------------------------------
 
-If you want to do joins between small dimension tables (regular Postgres tables) and large tables (distributed), then you can distribute the small tables as "reference tables." This creates a single shard replicated across all worker nodes. Citus will then be able to push the join down to the worker nodes. If the local tables you are referring to are large, we generally recommend to distribute the larger tables to reap the benefits of sharding and parallelization which Citus offers. For a deeper discussion, see :ref:`reference_tables` and our :ref:`joins` documentation.
+If you want to do joins between small dimension tables (regular Postgres tables) and large tables (distributed), then wrap the local table in a subquery. Citus' subquery execution logic will allow the join to work. See :ref:`join_local_dist`.
+
+.. _unsupported:
 
 Are there any PostgreSQL features not supported by Citus?
 ---------------------------------------------------------
 
-Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. It provides full SQL support for queries which access a single node in the database cluster. These queries are common, for instance, in multi-tenant applications where different nodes store different tenants (see :ref:`when_to_use_citus`).
+Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. The vast majority of queries are supported, even when they combine data across the network from multiple database nodes. Currently all SQL is supported except:
 
-Other queries which, by contrast, combine data from multiple nodes, do not support the entire spectrum of PostgreSQL features. However they still enjoy broad SQL coverage, including semi-structured data types (like jsonb, hstore), full text search, operators, functions, and foreign data wrappers. Note that the following constructs aren't supported natively for cross-node queries:
+* Correlated subqueries
+* Recursive/modifying CTEs
+* Table sample
+* SELECT … FOR UPDATE
+* Grouping sets
 
-* Window Functions
-* CTEs
-* Set operations
-* Transactional semantics for queries that span across multiple shards
+
+What's more, Citus has 100% SQL support for queries which access a single node in the database cluster. These queries are common, for instance, in multi-tenant applications where different nodes store different tenants (see :ref:`when_to_use_citus`).
+
+Remember that -- even with this extensive SQL coverage -- data modeling can have a significant impact on query performance. See the section on :ref:`citus_query_processing` for details on how Citus executes queries.
+
 
 .. _faq_choose_shard_count:
 
@@ -104,6 +111,25 @@ Why does pg_relation_size report zero bytes for a distributed table?
 --------------------------------------------------------------------
 
 The data in distributed tables lives on the worker nodes (in shards), not on the coordinator. A true measure of distributed table size is obtained as a sum of shard sizes. Citus provides helper functions to query this information. See :ref:`table_size` to learn more.
+
+Why am I seeing an error about max_intermediate_result_size?
+------------------------------------------------------------
+
+Citus has to use more than one step to run some queries having subqueries or CTEs. Using :ref:`push_pull_execution`, it pushes subquery results to all worker nodes for use by the main query. If these results are too large, this might cause unacceptable network overhead, or even insufficient storage space on the coordinator node which accumulates and distributes the results.
+
+Citus has a configurable setting, ``citus.max_intermediate_result_size`` to specify a subquery result size threshold at which the query will be canceled. If you run into the error, it looks like:
+
+::
+
+  ERROR:  the intermediate result size exceeds citus.max_intermediate_result_size (currently 1 GB)
+  DETAIL:  Citus restricts the size of intermediate results of complex subqueries and CTEs to avoid accidentally pulling large result sets into once place.
+  HINT:  To run the current query, set citus.max_intermediate_result_size to a higher value or -1 to disable.
+
+As the error message suggests, you can (cautiously) increase this limit by altering the variable:
+
+.. code-block:: sql
+
+  SET citus.max_intermediate_result_size = '3GB';
 
 Can I run Citus on Heroku or Amazon RDS?
 ----------------------------------------

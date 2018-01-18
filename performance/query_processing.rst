@@ -34,7 +34,11 @@ Distributed Query Executor
 
 Citus’s distributed executors run distributed query plans and handle failures that occur during query execution. The executors connect to the workers, send the assigned tasks to them and oversee their execution. If the executor cannot assign a task to the designated worker or if a task execution fails, then the executor dynamically re-assigns the task to replicas on other workers. The executor processes only the failed query sub-tree, and not the entire query while handling failures.
 
-Citus has two executor types - real time and task tracker. The former is useful for handling simple key-value lookups and INSERT, UPDATE, and DELETE queries, while the task tracker is better suited for larger SELECT queries.
+Citus has three basic executor types: real time, router, and task tracker. It chooses which to use dynamically, depending on the structure of each query, and can use more than one at once for a single query, assigning different executors to different subqueries/CTEs as needed to support the SQL functionality. This process is recursive: if Citus cannot determine how to run a subquery then it examines sub-subqueries.
+
+At a high level, the real-time executor is useful for handling simple key-value lookups and INSERT, UPDATE, and DELETE queries. The task tracker is better suited for larger SELECT queries, and the router executor for access data that is co-located in a single worker node.
+
+The choice of executor for each query can be displayed by running PostgreSQL's `EXPLAIN <https://www.postgresql.org/docs/current/static/sql-explain.html>`_ command. This can be useful for debugging performance issues.
 
 Real-time Executor
 -------------------
@@ -45,6 +49,12 @@ Since the real time executor maintains an open connection for each shard to whic
 
 Furthermore, when the real time executor detects simple INSERT, UPDATE or DELETE queries it assigns the incoming query to the worker which has the target shard. The query is then handled by the worker PostgreSQL server and the results are returned back to the user. In case a modification fails on a shard replica, the executor marks the corresponding shard replica as invalid in order to maintain data consistency.
 
+Router Executor
+---------------
+
+When all data required for a query is stored on a single node, Citus can route the entire query to the node and run it there. The result set is then relayed through the coordinator node back to the client. The router executor takes care of this type of execution.
+
+Although Citus supports a large percentage of SQL functionality even for cross-node queries, the advantage of router execution is 100% SQL coverage. Queries executing inside a node are run in a full-featured PostgreSQL worker instance. The disadvantage of router execution is the reduced parallelism of executing a query using only one computer.
 
 Task Tracker Executor
 ----------------------
@@ -52,6 +62,138 @@ Task Tracker Executor
 The task tracker executor is well suited for long running, complex data warehousing queries. This executor opens only one connection per worker, and assigns all fragment queries to a task tracker daemon on the worker. The task tracker daemon then regularly schedules new tasks and sees through their completion. The executor on the coordinator regularly checks with these task trackers to see if their tasks completed.
 
 Each task tracker daemon on the workers also makes sure to execute at most citus.max_running_tasks_per_node concurrently. This concurrency limit helps in avoiding disk I/O contention when queries are not served from memory. The task tracker executor is designed to efficiently handle complex queries which require repartitioning and shuffling intermediate data among workers.
+
+.. _push_pull_execution:
+
+Subquery/CTE Push-Pull Execution
+--------------------------------
+
+If necessary Citus can gather results from subqueries and CTEs into the coordinator node and then push them back across workers for use by an outer query. This allows Citus to support a greater variety of SQL constructs, and even mix executor types between a query and its subqueries.
+
+For example, having subqueries in a WHERE clause sometimes cannot execute inline at the same time as the main query, but must be done separately. Suppose a web analytics application maintains a ``visits`` table partitioned by ``page_id``. To query the number of visitor sessions on the top twenty most visited pages, we can use a subquery to find the list of pages, then an outer query to count the sessions.
+
+.. code-block:: sql
+
+  SELECT page_id, count(distinct session_id)
+  FROM visits
+  WHERE page_id IN (
+    SELECT page_id
+    FROM visits
+    GROUP BY page_id
+    ORDER BY count(*) DESC
+    LIMIT 20
+  )
+  GROUP BY page_id;
+
+The real-time executor would like to run a fragment of this query against each shard by page_id, counting distinct session_ids, and combining the results on the coordinator. However the LIMIT in the subquery means the subquery cannot be executed as part of the fragment. By recursively planning the query Citus can run the subquery separately, push the results to all workers, run the main fragment query, and pull the results back to the coordinator. The "push-pull" design supports a subqueries like the one above.
+
+Let's see this in action by reviewing the `EXPLAIN <https://www.postgresql.org/docs/current/static/sql-explain.html>`_ output for this query. It's fairly involved:
+
+::
+
+  GroupAggregate  (cost=0.00..0.00 rows=0 width=0)
+    Group Key: remote_scan.page_id
+    ->  Sort  (cost=0.00..0.00 rows=0 width=0)
+      Sort Key: remote_scan.page_id
+      ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+        ->  Distributed Subplan 6_1
+          ->  Limit  (cost=0.00..0.00 rows=0 width=0)
+            ->  Sort  (cost=0.00..0.00 rows=0 width=0)
+              Sort Key: COALESCE((pg_catalog.sum((COALESCE((pg_catalog.sum(remote_scan.worker_column_2))::bigint, '0'::bigint))))::bigint, '0'::bigint) DESC
+              ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)
+                Group Key: remote_scan.page_id
+                ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+                  Task Count: 32
+                  Tasks Shown: One of 32
+                  ->  Task
+                    Node: host=localhost port=5433 dbname=postgres
+                    ->  Limit  (cost=1883.00..1883.05 rows=20 width=12)
+                      ->  Sort  (cost=1883.00..1965.54 rows=33017 width=12)
+                        Sort Key: (count(*)) DESC
+                        ->  HashAggregate  (cost=674.25..1004.42 rows=33017 width=12)
+                          Group Key: page_id
+                          ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=4)
+        Task Count: 32
+        Tasks Shown: One of 32
+        ->  Task
+          Node: host=localhost port=5433 dbname=postgres
+          ->  HashAggregate  (cost=734.53..899.61 rows=16508 width=8)
+            Group Key: visits.page_id, visits.session_id
+            ->  Hash Join  (cost=17.00..651.99 rows=16508 width=8)
+              Hash Cond: (visits.page_id = intermediate_result.page_id)
+              ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=8)
+              ->  Hash  (cost=14.50..14.50 rows=200 width=4)
+                ->  HashAggregate  (cost=12.50..14.50 rows=200 width=4)
+                  Group Key: intermediate_result.page_id
+                  ->  Function Scan on read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=4)
+
+Let's break it apart and examine each piece.
+
+::
+
+  GroupAggregate  (cost=0.00..0.00 rows=0 width=0)
+    Group Key: remote_scan.page_id
+    ->  Sort  (cost=0.00..0.00 rows=0 width=0)
+      Sort Key: remote_scan.page_id
+
+The root of the tree is what the coordinator node does with the results from the workers. In this case it is grouping them, and GroupAggregate requires they be sorted first.
+
+::
+
+      ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+        ->  Distributed Subplan 6_1
+  .
+
+The custom scan has two large sub-trees, starting with a "distributed subplan."
+
+::
+
+          ->  Limit  (cost=0.00..0.00 rows=0 width=0)
+            ->  Sort  (cost=0.00..0.00 rows=0 width=0)
+              Sort Key: COALESCE((pg_catalog.sum((COALESCE((pg_catalog.sum(remote_scan.worker_column_2))::bigint, '0'::bigint))))::bigint, '0'::bigint) DESC
+              ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)
+                Group Key: remote_scan.page_id
+                ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+                  Task Count: 32
+                  Tasks Shown: One of 32
+                  ->  Task
+                    Node: host=localhost port=5433 dbname=postgres
+                    ->  Limit  (cost=1883.00..1883.05 rows=20 width=12)
+                      ->  Sort  (cost=1883.00..1965.54 rows=33017 width=12)
+                        Sort Key: (count(*)) DESC
+                        ->  HashAggregate  (cost=674.25..1004.42 rows=33017 width=12)
+                          Group Key: page_id
+                          ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=4)
+  .
+
+Worker nodes run the above for each of the thirty-two shards (Citus is choosing one representative for display). We can recognize all the pieces of the ``IN (…)`` subquery: the sorting, grouping and limiting. When all workers have completed this query, they send their output back to the coordinator which puts it together as "intermediate results."
+
+::
+
+        Task Count: 32
+        Tasks Shown: One of 32
+        ->  Task
+          Node: host=localhost port=5433 dbname=postgres
+          ->  HashAggregate  (cost=734.53..899.61 rows=16508 width=8)
+            Group Key: visits.page_id, visits.session_id
+            ->  Hash Join  (cost=17.00..651.99 rows=16508 width=8)
+              Hash Cond: (visits.page_id = intermediate_result.page_id)
+  .
+
+Citus starts another real-time job in this second subtree. It's going to count distinct sessions in visits. It uses a JOIN to connect with the intermediate results. The intermediate results will help it restrict to the top twenty pages.
+
+::
+
+              ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=8)
+              ->  Hash  (cost=14.50..14.50 rows=200 width=4)
+                ->  HashAggregate  (cost=12.50..14.50 rows=200 width=4)
+                  Group Key: intermediate_result.page_id
+                  ->  Function Scan on read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=4)
+  .
+
+The worker internally retrieves intermediate results using a ``read_intermediate_result`` function which loads data from a file that was copied in from the coordinator node.
+
+This example showed how Citus executed the query in multiple steps with a distributed subplan, and how you can use EXPLAIN to learn about distributed query execution.
 
 .. _postgresql_planner_executor:
 
