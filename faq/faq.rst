@@ -19,13 +19,11 @@ Either way, after adding a node to an existing cluster it will not contain any d
 How does Citus handle failure of a worker node?
 -----------------------------------------------
 
-Using one of two methods depending on configuration:
+Citus supports two modes of replication, allowing it to tolerate worker-node failures. In the first model, we use PostgreSQL's streaming replication to replicate the entire worker-node as-is. In the second model, Citus can replicate data modification statements, thus replicating shards across different worker nodes. They have different advantages depending on the workload and use-case as discussed below:
 
-**Streaming replication** maintains a standby node for every worker, allowing a seamless failover to the standby on failure. Citus Community edition is compatible with streaming replication but does not automatically configure it on a local cluster, whereas Citus Cloud has streaming replication built in.
+1. **PostgreSQL streaming replication.** This option is best for heavy OLTP workloads. It replicates entire worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_ or use :ref:`Citus Cloud <cloud_overview>` which is pre-configured for replication and high-availability.
 
-**Shard replication** keeps replicas of each shard on a configurable number of other workers for use in re-routing queries if a host becomes unhealthy. Citus Community edition supports shard replication through easy configuration.
-
-Using either technique means intermittent failures will not require restarting potentially long-running analytical queries. You can find more information about Citus' failure handling logic in :ref:`dealing_with_node_failures`.
+2. **Citus shard replication.** This option is best suited for an append-only workload. Citus replicates shards across different nodes by automatically replicating DML statements and managing consistency. If a node goes down, the co-ordinator node will continue to serve queries by routing the work to the replicas seamlessly. To enable shard replication simply set :code:`SET citus.shard_replication_factor = 2;` (or higher) before distributing data to the cluster.
 
 How does Citus handle failover of the coordinator node?
 -------------------------------------------------------
