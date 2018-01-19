@@ -50,7 +50,7 @@ If you want to do joins between small dimension tables (regular Postgres tables)
 Are there any PostgreSQL features not supported by Citus?
 ---------------------------------------------------------
 
-Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. The vast majority of queries are supported, even when they combine data across the network from multiple database nodes. Currently all SQL is supported except:
+Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. The vast majority of queries are supported, even when they combine data across the network from multiple database nodes. This includes transactional semantics across nodes. Currently all SQL is supported except:
 
 * Correlated subqueries
 * Recursive/modifying CTEs
