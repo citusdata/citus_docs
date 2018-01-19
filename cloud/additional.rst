@@ -19,7 +19,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | citext             | 1.3     | public     | data type for case-insensitive character strings                   |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| citus              | 7.1-4   | pg_catalog | Citus distributed database                                         |
+| citus              | 7.2-3   | pg_catalog | Citus distributed database                                         |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | cube               | 1.2     | public     | data type for multidimensional cubes                               |
 +--------------------+---------+------------+--------------------------------------------------------------------+
@@ -57,7 +57,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | session_analytics  | 1.0     | public     |                                                                    |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| shard_rebalancer   | 7.1     | public     |                                                                    |
+| shard_rebalancer   | 7.2     | public     |                                                                    |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | sslinfo            | 1.2     | public     | information about SSL certificates                                 |
 +--------------------+---------+------------+--------------------------------------------------------------------+
@@ -237,7 +237,7 @@ An important aspect to consider is that horizontally scaling out your processing
 Limitations Compared to Citus
 -----------------------------
 
-All Citus 7.1 features are supported in Citus MX with the following exceptions:
+All Citus 7.2 features are supported in Citus MX with the following exceptions:
 
 Append-distributed tables currently cannot be made available from workers. They can still be used in the traditional way, with queries going through the coordinator. However, append-distributed tables already allowed you to :ref:`bulk_copy`.
 
