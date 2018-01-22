@@ -120,11 +120,12 @@ html_theme_options = {
 }
 html_theme_path = ['_themes',]
 
+# Add our custom CSS
+def setup(app):
+  app.add_stylesheet('css/citus.css')
+  app.add_stylesheet('css/flexboxgrid.min.css')
+
 html_context = {
-  'css_files': [
-    '_static/css/citus.css',
-    '_static/css/flexboxgrid.min.css',
-  ],
   'canonical_urls': {
     'articles/heroku_addon': 'https://www.citusdata.com/blog/2017/07/13/citus-addon-for-heroku/',
     'articles/efficient_rollup': 'https://www.citusdata.com/blog/2017/06/30/efficient-rollup-with-hyperloglog-on-postgres/',
