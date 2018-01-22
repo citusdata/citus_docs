@@ -72,7 +72,7 @@ Notice how the end of the connection string contains ``?sslmode=require``. Citus
 Connecting Directly to a Worker
 -------------------------------
 
-The previous section shows how to get a connection string for the coordinator node. To connect a database client to an individual worker node instead, we'll need to create new a connection string by replacing the hostname in the coordinator connection string.
+The previous section shows how to get a connection string for the coordinator node. To connect a database client such as `psql <https://www.postgresql.org/docs/current/static/app-psql.html>`_ to an individual worker node instead, we'll need to create new a connection string by replacing the hostname in the coordinator connection string.
 
 Under the "Nodes" tab in Cloud console each node lists its amazonaws.com hostname, like:
 
