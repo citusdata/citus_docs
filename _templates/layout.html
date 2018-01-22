@@ -1,6 +1,0 @@
-{% extends "!layout.html" %}
-{% block extrahead %}
-  {% if pagename in canonical_urls %}
-    <link rel="canonical" href="{{ canonical_urls[pagename] }}" />
-  {% endif %}
-{% endblock %}
