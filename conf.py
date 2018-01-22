@@ -110,11 +110,19 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'citus'
+import sphinx_rtd_theme
+html_theme = 'sphinx_rtd_theme'
+html_theme_options = {
+  'analytics_id': 'UA-32858865-4'
+
+  # if we want the menu to stay put during page scroll
+  # 'sticky_navigation': True
+}
 html_theme_path = ['_themes',]
+
 html_context = {
   'css_files': [
-    '_static/css/theme.css',
+    '_static/css/citus.css',
     '_static/css/flexboxgrid.min.css',
   ],
   'canonical_urls': {
@@ -150,7 +158,7 @@ html_context = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = 'logo.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
