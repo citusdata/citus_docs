@@ -124,6 +124,7 @@ html_theme_path = ['_themes',]
 def setup(app):
   app.add_stylesheet('css/citus.css')
   app.add_stylesheet('css/flexboxgrid.min.css')
+  app.add_stylesheet('css/pygments.css')
 
 html_context = {
   'canonical_urls': {
