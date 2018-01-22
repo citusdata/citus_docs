@@ -69,6 +69,17 @@ By default the URL displays only the hostname of the connection, but the full UR
 
 Notice how the end of the connection string contains ``?sslmode=require``. Citus Cloud accepts only SSL connections for security, so this url paramter is required. When connecting from an application framework such as Rails, Django, or Spring you may need to explicitly specify the sslmode as well.
 
+Connecting Directly to a Worker
+-------------------------------
+
+The previous section shows how to get a connection string for the coordinator node. To connect a database client such as `psql <https://www.postgresql.org/docs/current/static/app-psql.html>`_ to an individual worker node instead, we'll need to create new a connection string by replacing the hostname in the coordinator connection string.
+
+Under the "Nodes" tab in Cloud console each node lists its amazonaws.com hostname, like:
+
+.. image:: ../images/cloud-node-host.png
+
+Replace the host in the coordinator connection string with this value, consulting the previous section for the connection string format. (As shown in the previous section, the hostname to be replaced will be immediately following an ``@`` sign.) Leave all other parameters unchanged. This will be the new connection string for the worker.
+
 .. raw:: html
 
   <script type="text/javascript">
