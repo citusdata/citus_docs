@@ -122,74 +122,62 @@ In general, co-located joins are more efficient than repartition joins as repart
 Views on Distributed Tables
 ###########################
 
-Any view which filters a distributed table by equality on the distribution column has full support in Citus. For instance, consider a shortcut to list the orders for a certain tenant in a multi-tenant application:
+At execution time PostgreSQL internally rewrites queries on views, inlining the view definition as a subquery. To see this in action, assume we have a game database with a distributed table called ``scores`` containing each player's name and the points they earned in runs through the game. For convenience we can make a view to get the average score by player:
 
 .. code-block:: sql
 
-  CREATE VIEW tenant_25_orders AS
-  SELECT *
-    FROM orders
-   WHERE tenant_id = 25;
+  CREATE VIEW avg_scores AS
+  SELECT player, avg(points) AS player_avg
+  FROM scores
+  GROUP BY player;
 
-A view such as this, filtering ``tenant_id = 25``, can used with any other query involving tenant twenty-five. We can aggregate the view:
-
-.. code-block:: sql
-
-  SELECT count(*) FROM tenant_25_orders;
-
-or join it with a table:
+If we want an even coarser approximation of the averages, we could round them to the nearest power of two. Watch the query plan generated for scanning through the view to calculate the approximate scores.
 
 .. code-block:: sql
 
-  SELECT e.*
-    FROM tenant_25_orders t25o
-    JOIN events e ON (
-      t25o.tenant_id = e.tenant_id AND
-      t25o.order_id = e.order_id
-    );
+  EXPLAIN
+  SELECT pow(2,ceil(log(2,player_avg)))::int AS approx
+  FROM avg_scores
+  ORDER BY approx DESC;
 
-Joining with other views is fine too, as long as we join by the distribution column. In this example even :code:`high_priority_events` is eligible for joining despite not itself filtering by the distribution column.
+The explain output shows
+
+::
+
+ Sort  (cost=0.00..0.00 rows=0 width=0)
+   Sort Key: remote_scan.approx DESC
+   ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+     Task Count: 32
+     Tasks Shown: One of 32
+     ->  Task
+       Node: host=citus_worker_1 port=5432 dbname=postgres
+       ->  Subquery Scan on avg_scores  (cost=24.43..31.43 rows=311 width=4)
+         ->  Sort  (cost=24.43..25.21 rows=311 width=65)
+           Sort Key: (avg(scores.points)) DESC
+           ->  HashAggregate  (cost=7.66..11.55 rows=311 width=65)
+             Group Key: scores.player
+             ->  Seq Scan on scores_102040 scores  (cost=0.00..6.11 rows=311 width=41)
+
+It doesn't mention a view at all, only a subquery. That's because the database dynamically rewrites the query as:
 
 .. code-block:: sql
 
-  CREATE VIEW high_priority_events AS
-  SELECT *
-    FROM events
-   WHERE priority = 'HIGH';
+  SELECT pow(2,ceil(log(2,player_avg)))::int AS approx
+  FROM (
+    SELECT player, avg(points) AS player_avg
+    FROM scores
+    GROUP BY player;
+  ) AS avg_scores
+  ORDER BY approx DESC;
 
-  SELECT hpe.*
-    FROM tenant_25_orders t25o
-    JOIN high_priority_events hpe ON (
-      t25o.tenant_id = hpe.tenant_id
-    );
+The EXPLAIN output above also shows that the query executes pretty efficiently. Because the subquery groups by ``player``, which is also the distribution column of the underlying table, each group can be calculated entirely within a single worker node. The bulk of the processing, including taking approximations, happens in workers under the management of the real-time :ref:`distributed_query_executor`, with the final ordering happening back on the coordinator.
 
-The :code:`tenant_25_orders` view is pretty rudimentary, but Citus supports views with more inside like aggregates and joins. This works as long as the view filters by the distribution column and includes that column in join conditions.
-
-.. code-block:: sql
-
-  CREATE VIEW t25_daily_web_order_count AS
-  SELECT
-    orders.tenant_id,
-    order_date,
-    count(*)
-  FROM
-    orders
-    JOIN events ON (orders.tenant_id = events.tenant_id)
-  WHERE
-    orders.tenant_id = 25
-    AND orders.order_type = 'WEB'
-  GROUP BY
-    orders.tenant_id,
-    order_date
-  ORDER BY count(*) DESC
-  LIMIT 10;
-
-For more details about how to make queries work well in the multi-tenant use case (including queries for use in views), see :ref:`mt_query_migration`.
+While Citus supports almost any view on distributed tables, some views force a less efficient query plan. For more about detecting and improving poor view performance, see :ref:`subquery_perf`.
 
 Materialized Views
 ------------------
 
-Citus supports materialized views that filter by tenant id, and stores them as local tables on the coordinator node. This means they cannot be used in distributed queries after materialization. To learn more about local vs distributed tables see :ref:`table_types`.
+Citus supports materialized views and stores them as local tables on the coordinator node. Using them in distributed queries after materialization requires wrapping them in a subquery, a technique described in :ref:`join_local_dist`.
 
 .. _query_performance:
 
