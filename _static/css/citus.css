@@ -48,6 +48,12 @@ h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
   color: #999 !important;
 }
 
+/* Mobile dropdown */
+
+.wy-side-nav-search>a, .wy-side-nav-search .wy-dropdown > a.homepage {
+  display: block; /* prevent inlining of logo */
+}
+
 /* Remove ads */
 
 div.wy-menu.rst-pro {

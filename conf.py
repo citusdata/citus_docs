@@ -47,9 +47,10 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+from datetime import date
 # General information about the project.
-project = u'Citus'
-copyright = u'2017, Citus Data'
+project = u'Citus Docs'
+copyright = u'%s, Citus Data' % date.today().year
 author = u'Citus Data'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -160,7 +161,9 @@ html_context = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'logo.png'
+# html_logo = 'logo.png'
+# NOTE: Adding this manually in our theme customization so that
+#       it appears above the text link, and so it links to main site
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
