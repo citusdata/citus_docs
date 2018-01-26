@@ -76,17 +76,47 @@ You can then call sum(hll_column) to roll up those columns within the database. 
 Limit Pushdown
 #####################
 
-Citus also pushes down the limit clauses to the shards on the workers wherever possible to minimize the amount of data transferred across network.
+Citus pushes limit clauses down to the shards on workers wherever possible to minimize the amount of data transferred across the network. For example, if a select query with limit clause groups by a table's distribution column, then Citus will push the query down and run it directly on each worker. For instance, in a distributed table of deliveries partitioned geographically, we can take a sample of the number of drivers delivering in a few areas:
 
-However, in some cases, SELECT queries with LIMIT clauses may need to fetch all rows from each shard to generate exact results. For example, if the query requires ordering by the aggregate column, it would need results of that column from all shards to determine the final aggregate value. This reduces performance of the LIMIT clause due to high volume of network data transfer. In such cases, and where an approximation would produce meaningful results, Citus provides an option for network efficient approximate LIMIT clauses.
+.. code-block:: sql
 
-LIMIT approximations are disabled by default and can be enabled by setting the configuration parameter citus.limit_clause_row_fetch_count. On the basis of this configuration value, Citus will limit the number of rows returned by each task for aggregation on the coordinator. Due to this limit, the final results may be approximate. Increasing this limit will increase the accuracy of the final results, while still providing an upper bound on the number of rows pulled from the workers.
+  EXPLAIN
+  SELECT location_id, count(driver_id)
+  FROM deliveries
+  GROUP BY location_id
+  LIMIT 5;
+
+::
+
+  ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │                                                           QUERY PLAN                                                             │
+  ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Limit  (cost=0.00..0.00 rows=0 width=0)                                                                                          │
+  │   ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)                                                                            │
+  │     Group Key: remote_scan.worker_column_2                                                                                       │
+  │     ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)                                                          │
+  │       Task Count: 32                                                                                                             │
+  │       Tasks Shown: One of 32                                                                                                     │
+  │       ->  Task                                                                                                                   │
+  │         Node: host=localhost port=5433 dbname=postgres                                                                           │
+  │         ->  Limit  (cost=0.15..0.64 rows=5 width=16)                                                                             │
+  │           ->  GroupAggregate  (cost=0.15..69.15 rows=700 width=16)                                                               │
+  │             Group Key: location_id                                                                                               │
+  │             ->  Index Only Scan using deliveries_pkey_102360 on deliveries_102360 companies  (cost=0.15..58.65 rows=700 width=8) │
+  └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  (12 rows)
+
+Notice how the limit occurs twice in the plan: once at the final step in the coordinator, and also down in the query run on the workers. This limits how much data each worker returns to the coordinator.
+
+However, in some cases SELECT queries with LIMIT clauses may need to fetch all rows from each shard to generate exact results. For example, if we had added an ORDER BY the driver count then the coordinator would need results from all shards to determine the final aggregate value. No individual worker knows which rows are safe to omit, and would send back all rows. This reduces performance of the LIMIT clause due to high volume of network data transfer.
+
+In such cases, and where an approximation would produce meaningful results, Citus provides an option for network-efficient approximate LIMIT clauses.
 
 ::
 
     SET citus.limit_clause_row_fetch_count to 10000;
 
-If, however, a SELECT query with LIMIT clause groups by a table's distribution column then Citus will push the query down and run it directly on each worker. The pushed-down query will include its limit as well, and Citus will disregard the aforementioned GUC.
+LIMIT approximations are disabled by default and can be enabled by setting the configuration parameter citus.limit_clause_row_fetch_count. On the basis of this configuration value, Citus will limit the number of rows returned by each task for aggregation on the coordinator. Due to this limit, the final results may be approximate. Increasing this limit will increase the accuracy of the final results, while still providing an upper bound on the number of rows pulled from the workers.
 
 .. _joins:
 
