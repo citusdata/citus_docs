@@ -114,7 +114,7 @@ todo_include_todos = False
 import sphinx_rtd_theme
 html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
-  'analytics_id': 'UA-32858865-4'
+  'analytics_id': 'UA-32858865-1'
 
   # if we want the menu to stay put during page scroll
   # 'sticky_navigation': True
