@@ -37,14 +37,13 @@ Once we create a new EC2 instance, we need to install pgbench on this instance. 
 
 If you are running a **Debian** based system, simply type::
 
+  sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+  sudo apt-get install wget ca-certificates
+  wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
   sudo apt-get update
   sudo apt-get install postgresql-10
 
-If you are running a **RedHat** based system, simply type::
-
-  sudo yum update
-  sudo yum install postgresql10-contrib
-
+If you are running a **RedHat** based system, follow the `yum installation guide <https://wiki.postgresql.org/wiki/YUM_Installation>`_.
 
 Benchmark INSERT Throughput
 ---------------------------
