@@ -8,6 +8,9 @@
 {% block extrahead %}
   {{ super() }}
 
+  {# Verify the site for Google Webmaster Tools #}
+  <meta name="google-site-verification" content="v8MtCUC2nV2dO-4CSGb5flD1MyPKJvw7wBDOYRwBadw" />
+
   {# Last in <head> to override any canonical link that sphinx adds #}
   {% if pagename in canonical_urls %}
     <link rel="canonical" href="{{ canonical_urls[pagename] }}" />
