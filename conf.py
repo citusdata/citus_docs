@@ -120,7 +120,9 @@ html_theme_options = {
   ## The google tracking is happening instead because of a setting
   ## accessible via the Read The Docs admin GUI. I am leaving this
   ## line here for now to avoid rocking the boat.
-  'analytics_id': 'UA-32858865-1'
+  'analytics_id': 'UA-32858865-1',
+  'sticky_navigation': True,
+  'collapse_navigation': False,
 
   # if we want the menu to stay put during page scroll
   # 'sticky_navigation': True
