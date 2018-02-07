@@ -9,9 +9,9 @@ There are broadly two kinds of applications that work very well on Citus. The fi
 
 **Multi-Tenant Application**
 
-  These are typically SaaS applications that serve other companies, accounts, or organizations.
+  These are typically SaaS applications that serve other companies, accounts, or organizations. Most SaaS applications are inherently relational. They have a natural dimension on which to distribute data across nodes: just shard by tenant_id.
 
-  Most SaaS applications are inherently relational. By sharding on customer_id, Citus gives you the ability to scale out your database with full SQL coverage, so you don’t have to give up the relational semantics you need, like joins, foreign key constraints, transactions, ACID, consistency. By scaling out, your app gets to use a much bigger memory, compute, and disk footprint.
+  Citus enables you to scale out your database to millions of tenants without having to re-architect your application. You can keep the relational semantics you need, like joins, foreign key constraints, transactions, ACID, and consistency.
 
   * **Examples**: Websites which host store-fronts for other businesses, such as a digital marketing solution, or a sales automation tool.
   * **Characteristics**: Queries relating to a single tenant rather than joining information across tenants. This includes OLTP workloads for serving web clients, and OLAP workloads that serve per-tenant analytical queries. Having dozens or hundreds of tables in your database schema is also an indicator for the multi-tenant data model.
@@ -22,7 +22,7 @@ There are broadly two kinds of applications that work very well on Citus. The fi
 
   Applications needing massive parallelism, coordinating hundreds of cores for fast results to numerical, statistical, or counting queries. By sharding and parallelizing SQL queries across multiple nodes, Citus makes it possible to perform real-time queries across billions of records in under a second.
 
-  * **Examples**: Dashboards for internet-of-things data or web traffic.
+  * **Examples**: Customer-facing analytics dashboards requiring sub-second response times.
   * **Characteristics**: Few tables, often centering around a big table of device-, site- or user-events and requiring high ingest volume of mostly immutable data. Relatively simple (but computationally intensive) analytics queries involving several aggregations and GROUP BYs.
 
 Distributing Data
@@ -48,8 +48,12 @@ To apply this design in your own schema the first step is identifying what const
 Best Practices
 ^^^^^^^^^^^^^^
 
-* **Partition all (non-reference) distributed tables by a common tenant_id column.**
+* **Partition distributed tables by a common tenant_id column.**
   For instance, in a SaaS application where tenants are companies, the tenant_id will likely be company_id.
+
+* **Convert small cross-tenant tables to reference tables.**
+  When multiple tenants share a small table of information, distribute it as a :ref:`reference table <reference_tables>`.
+
 * **Restrict filter all application queries by tenant_id.**
   Each query should request information for one tenant at a time.
 
@@ -79,6 +83,6 @@ Best Practices
   Your fact table can have only one distribution key. Tables that join on another key will not be co-located with the fact table. Choose one dimension to co-locate based on how frequently it is joined and the size of the joining rows. 
 
 * **Change some dimension tables into reference tables.**
-  If a dimension table cannot be co-located with the fact table, you can improve query performance by distributing copies of the dimension table to all of the nodes in the form of a reference table.
+  If a dimension table cannot be co-located with the fact table, you can improve query performance by distributing copies of the dimension table to all of the nodes in the form of a :ref:`reference table <reference_tables>`.
 
 Read the :ref:`rt_use_case` guide for a detailed example of building this kind of application.
