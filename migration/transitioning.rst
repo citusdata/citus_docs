@@ -161,10 +161,12 @@ During a production launch, one can configure the same setting to warn, instead 
 
 The :ref:`configuration parameter section <multi_task_logging>` has more info on supported values for this setting.
 
-.. _rails_migration:
+.. _app_migration:
 
 App Migration
 -------------
+
+.. _rails_migration:
 
 Ruby on Rails
 ~~~~~~~~~~~~~
