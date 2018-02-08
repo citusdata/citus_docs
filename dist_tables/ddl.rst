@@ -55,6 +55,11 @@ The above method distributes tables into multiple horizontal shards, but another
 
 Tables distributed this way are called *reference tables.* They are used to store data that needs to be frequently accessed by multiple nodes in a cluster. In multi-tenant apps this means data shared between tenants or data that is not naturally associated with a single tenant.
 
+
+* Smaller tables which need to join with larger distributed tables.
+* Tables which do not have the tenant column or aren't associated with the tenant. (In some cases, users might do it even for tables which are associated with tenant if they don't have tenant id to reduce migration effort.)
+* Tables which need unique constraints across multiple columns and are small enough.
+
 For instance suppose a multi-tenant eCommerce site needs to calculate sales tax for transactions in any of its stores. Tax information isn't specific to any tenant. It makes sense to consolidate it in a shared table. A US-centric reference table might look like this:
 
 .. code-block:: postgresql
@@ -80,6 +85,8 @@ If you have an existing distributed table which has a shard count of one, you ca
 .. code-block:: postgresql
 
   SELECT upgrade_to_reference_table('table_name');
+
+For another example of using reference tables in a multi-tenant application, see :ref:`mt_ref_tables`.
 
 Distributing Coordinator Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
