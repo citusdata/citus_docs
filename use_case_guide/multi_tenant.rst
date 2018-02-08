@@ -322,6 +322,8 @@ As a final demo of SQL support, we have a query which includes aggregates and wi
 
 In short when queries are scoped to a tenant then inserts, updates, deletes, complex SQL, and transactions all work as expected.
 
+.. _mt_ref_tables:
+
 Sharing Data Between Tenants
 ----------------------------
 
