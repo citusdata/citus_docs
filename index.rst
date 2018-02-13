@@ -152,6 +152,7 @@ Welcome to the documentation for Citus 7.2! Citus horizontally scales PostgreSQL
    reference/user_defined_functions.rst
    reference/metadata_tables.rst
    reference/configuration.rst
+   reference/common_errors.rst
    reference/append.rst
 
 .. toctree::

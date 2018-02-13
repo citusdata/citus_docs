@@ -49,6 +49,8 @@ Since the real time executor maintains an open connection for each shard to whic
 
 Furthermore, when the real time executor detects simple INSERT, UPDATE or DELETE queries it assigns the incoming query to the worker which has the target shard. The query is then handled by the worker PostgreSQL server and the results are returned back to the user. In case a modification fails on a shard replica, the executor marks the corresponding shard replica as invalid in order to maintain data consistency.
 
+.. _router_executor:
+
 Router Executor
 ---------------
 
