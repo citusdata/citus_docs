@@ -41,9 +41,9 @@ If you are running a **Debian** based system, simply type::
   sudo apt-get install wget ca-certificates
   wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
   sudo apt-get update
-  sudo apt-get install postgresql-10
+  sudo apt-get install postgresql-client-10
 
-If you are running a **RedHat** based system, follow the `yum installation guide <https://wiki.postgresql.org/wiki/YUM_Installation>`_.
+If you are running a **RedHat** based system, follow the `yum installation guide <https://www.postgresql.org/download/linux/redhat/>`_ to install the PostgreSQL client programs, including pgbench.
 
 Benchmark INSERT Throughput
 ---------------------------
