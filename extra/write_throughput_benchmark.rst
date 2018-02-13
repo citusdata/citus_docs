@@ -43,7 +43,7 @@ If you are running a **Debian** based system, simply type::
   sudo apt-get update
   sudo apt-get install postgresql-10
 
-If you are running a **RedHat** based system, follow the `yum installation guide <https://wiki.postgresql.org/wiki/YUM_Installation>`_.
+If you are running a **RedHat** based system, follow the `yum installation guide <https://www.postgresql.org/download/linux/redhat/>`_.
 
 Benchmark INSERT Throughput
 ---------------------------
