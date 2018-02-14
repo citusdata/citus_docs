@@ -7,18 +7,27 @@ Resources Usage
 Citus Cloud metrics enable you to get information about your cluster's health and performance. The "Metrics" tab of the Cloud Console provides graphs for a number of measurements, all viewable per node:
 
 * CPU Utilization (Percent)
+   .. image:: ../images/metric-cpu.png
 * Network - Bytes In / Second
+   .. image:: ../images/metric-network-in.png
 * Network - Bytes Out / Second
-* Write Ops / Second
-* Read Ops / Second
-* Bytes Written / Second
+   .. image:: ../images/metric-network-out.png
+* Read IOPS
+   .. image:: ../images/metric-iops-read.png
+* Write IOPS
+   .. image:: ../images/metric-iops-write.png
 * Bytes Read / Second
+   .. image:: ../images/metric-bytes-read.png
+* Bytes Written / Second
+   .. image:: ../images/metric-bytes-write.png
 * Average Read Latency (Seconds)
+   .. image:: ../images/metric-latency-read.png
 * Average Write Latency (Seconds)
+   .. image:: ../images/metric-latency-write.png
 * Average Queue Length (Count)
+   .. image:: ../images/metric-queue.png
 * WAL Bytes Written / Second
-
-TODO: define "ops" / second. Also the queue length.
+   .. image:: ../images/metric-wal.png
 
 Formation Events Feed
 =====================
