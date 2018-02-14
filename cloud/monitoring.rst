@@ -1,6 +1,25 @@
 Monitoring
 ##########
 
+Resources Usage
+===============
+
+Citus Cloud metrics enable you to get information about your cluster's health and performance. The "Metrics" tab of the Cloud Console provides graphs for a number of measurements, all viewable per node:
+
+* CPU Utilization (Percent)
+* Network - Bytes In / Second
+* Network - Bytes Out / Second
+* Write Ops / Second
+* Read Ops / Second
+* Bytes Written / Second
+* Bytes Read / Second
+* Average Read Latency (Seconds)
+* Average Write Latency (Seconds)
+* Average Queue Length (Count)
+* WAL Bytes Written / Second
+
+TODO: define "ops" / second. Also the queue length.
+
 Formation Events Feed
 =====================
 
