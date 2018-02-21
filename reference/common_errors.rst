@@ -47,12 +47,20 @@ To find out what's really going on, we have to examine the database logs inside 
 
 That's because ``total_views`` is zero in a row in shard ``pageviews_102480``.
 
-Common real-life causes for worker failures include PgBouncer failure, invalid concatenation of jsonb objects, and typecasting errors.
+Resolution
+~~~~~~~~~~
+
+Check the database logs on worker nodes to identify which query is failing. Common real-life causes for query failure on workers include invalid concatenation of jsonb objects, and typecasting errors. If PgBouncer is between the coordinator and workers, check that it is working properly as well.
 
 Relation *foo* is not distributed
 ---------------------------------
 
-This is caused by attempting to mix local and distributed tables in the same query. For an example, with workarounds, see :ref:`join_local_dist`.
+This is caused by attempting to join local and distributed tables in the same query.
+
+Resolution
+~~~~~~~~~~
+
+For an example, with workarounds, see :ref:`join_local_dist`.
 
 Could not receive query results
 -------------------------------
@@ -69,7 +77,10 @@ Caused when the :ref:`router_executor` on the coordinator node is unable to conn
   DETAIL:  no connection to the server
   ERROR:  could not receive query results
 
-To fix, check that the worker is running, and that DNS is correctly resolving.
+Resolution
+~~~~~~~~~~
+
+To fix, check that the worker is accepting connections, and that DNS is correctly resolving.
 
 Canceling the transaction since it was involved in a distributed deadlock
 -------------------------------------------------------------------------
@@ -99,6 +110,11 @@ We can see this in action by distributing rows across worker nodes, and then run
   ERROR:  40P01: canceling the transaction since it was involved in a distributed deadlock
   LOCATION:  ProcessInterrupts, postgres.c:2988
 
+Resolution
+~~~~~~~~~~
+
+Detecting deadlocks and stopping them is part of normal distributed transaction handling. It allows an application to retry queries or take another course of action.
+
 Cannot establish a new connection for placement *n*, since DML has been executed on a connection that is in use
 ---------------------------------------------------------------------------------------------------------------
 
@@ -116,6 +132,11 @@ Cannot establish a new connection for placement *n*, since DML has been executed
 
 This is a current limitation. In a single transaction Citus does not support running insert/update statements with the :ref:`router_executor` that reference multiple shards, followed by a read query that consults both of the shards.
 
+Resolution
+~~~~~~~~~~
+
+Consider moving the read query into a separate transaction.
+
 Could not connect to server: Cannot assign requested address
 ------------------------------------------------------------
 
@@ -124,20 +145,37 @@ Could not connect to server: Cannot assign requested address
   WARNING:  connection error: localhost:9703
   DETAIL:  could not connect to server: Cannot assign requested address
 
-This occurs when there are no more sockets available by which the coordinator can respond to worker requests. It can be mitigated by re-using TCP sockets at the OS level. Execute this on the shell in the coordinator node:
+This occurs when there are no more sockets available by which the coordinator can respond to worker requests.
+
+Resolution
+~~~~~~~~~~
+
+Configure the operating system to re-use TCP sockets. Execute this on the shell in the coordinator node:
 
 .. code-block:: bash
 
   sysctl -w net.ipv4.tcp_tw_reuse=1
 
+This allows reusing sockets in TIME_WAIT state for new connections when it is safe from a protocol viewpoint. Default value is 0 (disabled).
+
 Remaining connection slots are reserved for non-replication superuser connections
 ---------------------------------------------------------------------------------
 
-(Citus Cloud error.)
+This occurs when PostgreSQL runs out of available connections to serve concurrent client requests.
 
-This occurs when Citus Cloud runs out of available connections. See :ref:`cloud_pgbouncer` to learn how to connect through Cloud's built-in PgBouncer instance to queue incoming connections.
+Resolution
+~~~~~~~~~~
+
+The `max_connections <https://www.postgresql.org/docs/current/static/runtime-config-connection.html#GUC-MAX-CONNECTIONS>`_ GUC adjusts the limit, with a typical default of 100 connections. Note that each connection consumes resources, so adjust sensibly. When increasing ``max_connections`` it's usually a good idea to increase `memory limits <https://www.postgresql.org/docs/current/static/runtime-config-resource.html#RUNTIME-CONFIG-RESOURCE-MEMORY>`_ too.
+
+Using `PgBouncer <https://pgbouncer.github.io/>`_ can also help by queueing connection requests which exceed the connection limit. Citus Cloud has a built-in PgBouncer instance, see :ref:`cloud_pgbouncer` to learn how to connect through it.
 
 PgBouncer cannot connect to server
 ----------------------------------
 
-In a self-hosted Citus cluster, this error indicates that the coordinator node is not responding to PgBouncer. Check the health of the server.
+In a self-hosted Citus cluster, this error indicates that the coordinator node is not responding to PgBouncer.
+
+Resolution
+~~~~~~~~~~
+
+Try connecting directly to the server with psql to ensure it is running and accepting connections.
