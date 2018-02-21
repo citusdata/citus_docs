@@ -179,3 +179,53 @@ Resolution
 ~~~~~~~~~~
 
 Try connecting directly to the server with psql to ensure it is running and accepting connections.
+
+Unsupported clause type
+-----------------------
+
+This error no longer occurs in the current version of citus. It used to happen when executing a join with an inequality condition:
+
+.. code-block:: postgresql
+
+  SELECT *
+   FROM identified_event ie
+   JOIN field_calculator_watermark w ON ie.org_id = w.org_id
+  WHERE w.org_id = 42
+    AND ie.version > w.version
+  LIMIT 10;
+
+::
+
+  ERROR:  unsupported clause type
+
+Resolution
+~~~~~~~~~~
+
+:ref:`Upgrade <upgrading>` to Citus 7.2 or higher.
+
+Cannot open new connections after the first modification command within a transaction
+-------------------------------------------------------------------------------------
+
+This error no longer occurs in the current version of citus except in certain unusual shard repair scenarios. It used to happen when updating rows in a transaction, and then running another command which would open new coordinator-to-worker connections.
+
+.. code-block:: postgresql
+
+  BEGIN;
+  -- run modification command that uses one connection via
+  -- the router executor
+  DELETE FROM http_request
+   WHERE site_id = 8
+     AND ingest_time < now() - '1 week'::interval;
+
+  -- now run a query that opens connections to more workers
+  SELECT count(*) FROM http_request;
+
+::
+
+  ERROR:  cannot open new connections after the first modification command within a transaction
+
+
+Resolution
+~~~~~~~~~~
+
+:ref:`Upgrade <upgrading>` to Citus 7.2 or higher.
