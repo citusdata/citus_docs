@@ -122,62 +122,11 @@ In general, co-located joins are more efficient than repartition joins as repart
 Views on Distributed Tables
 ###########################
 
-At execution time PostgreSQL internally rewrites queries on views, inlining the view definition as a subquery. To see this in action, assume we have a game database with a distributed table called ``scores`` containing each player's name and the points they earned in runs through the game. For convenience we can make a view to get the average score by player:
+Citus supports all views on distributed tables. For an overview of views' syntax and features, see the PostgreSQL documentation for `CREATE VIEW <https://www.postgresql.org/docs/current/static/sql-createview.html>`_.
 
-.. code-block:: sql
+Note that some views cause a less efficient query plan than others. For more about detecting and improving poor view performance, see :ref:`subquery_perf`. (Views are treated internally as subqueries.)
 
-  CREATE VIEW avg_scores AS
-  SELECT player, avg(points) AS player_avg
-  FROM scores
-  GROUP BY player;
-
-If we want an even coarser approximation of the averages, we could round them to the nearest power of two. Watch the query plan generated for scanning through the view to calculate the approximate scores.
-
-.. code-block:: sql
-
-  EXPLAIN
-  SELECT pow(2,ceil(log(2,player_avg)))::int AS approx
-  FROM avg_scores
-  ORDER BY approx DESC;
-
-The explain output shows
-
-::
-
- Sort  (cost=0.00..0.00 rows=0 width=0)
-   Sort Key: remote_scan.approx DESC
-   ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
-     Task Count: 32
-     Tasks Shown: One of 32
-     ->  Task
-       Node: host=citus_worker_1 port=5432 dbname=postgres
-       ->  Subquery Scan on avg_scores  (cost=24.43..31.43 rows=311 width=4)
-         ->  Sort  (cost=24.43..25.21 rows=311 width=65)
-           Sort Key: (avg(scores.points)) DESC
-           ->  HashAggregate  (cost=7.66..11.55 rows=311 width=65)
-             Group Key: scores.player
-             ->  Seq Scan on scores_102040 scores  (cost=0.00..6.11 rows=311 width=41)
-
-It doesn't mention a view at all, only a subquery. That's because the database dynamically rewrites the query as:
-
-.. code-block:: sql
-
-  SELECT pow(2,ceil(log(2,player_avg)))::int AS approx
-  FROM (
-    SELECT player, avg(points) AS player_avg
-    FROM scores
-    GROUP BY player;
-  ) AS avg_scores
-  ORDER BY approx DESC;
-
-The EXPLAIN output above also shows that the query executes pretty efficiently. Because the subquery groups by ``player``, which is also the distribution column of the underlying table, each group can be calculated entirely within a single worker node. The bulk of the processing, including taking approximations, happens in workers under the management of the real-time :ref:`distributed_query_executor`, with the final ordering happening back on the coordinator.
-
-While Citus supports almost any view on distributed tables, some views force a less efficient query plan. For more about detecting and improving poor view performance, see :ref:`subquery_perf`.
-
-Materialized Views
-------------------
-
-Citus supports materialized views and stores them as local tables on the coordinator node. Using them in distributed queries after materialization requires wrapping them in a subquery, a technique described in :ref:`join_local_dist`.
+Citus supports materialized views as well, and stores them as local tables on the coordinator node. Using them in distributed queries after materialization requires wrapping them in a subquery, a technique described in :ref:`join_local_dist`.
 
 .. _query_performance:
 
