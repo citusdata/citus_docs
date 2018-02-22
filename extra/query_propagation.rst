@@ -33,7 +33,7 @@ Running on all Shards
 
 The next level of granularity is running a command across all shards of a particular distributed table. It can be useful, for instance, in reading the properties of a table directly on workers. Queries run locally on a worker node have full access to metadata such as table statistics.
 
-The :code:`run_command_on_shards` function applies a SQL command to each shard, where the shard name is provided for interpolation in the command. Here is an example of estimating the row count for a distributed table by using the pg_class table on each worker to estimate the number of rows for each shard. Notice the :code:`%I` which will be replaced with each shard's name.
+The :code:`run_command_on_shards` function applies a SQL command to each shard, where the shard name is provided for interpolation in the command. Here is an example of estimating the row count for a distributed table by using the pg_class table on each worker to estimate the number of rows for each shard. Notice the :code:`%s` which will be replaced with each shard's name.
 
 .. code-block:: postgresql
 
@@ -106,7 +106,7 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
     'big_vals',
     $cmd$
       CREATE TRIGGER after_insert AFTER INSERT ON %s
-        FOR EACH ROW EXECUTE PROCEDURE embiggen(%I)
+        FOR EACH ROW EXECUTE PROCEDURE embiggen(%s)
     $cmd$
   );
 
