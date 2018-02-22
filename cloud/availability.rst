@@ -1,7 +1,7 @@
 .. _ha:
 
-Availability and Recovery
-#########################
+Availability, Recovery, and Replication
+#######################################
 
 In the real world, insurance is used to manage risk when a natural
 disaster such as a hurricane or flood strikes. In the database world,
