@@ -1,7 +1,7 @@
 .. _metadata_tables:
 
-Metadata Tables Reference
-==========================
+Metadata Tables
+===============
 
 Citus divides each distributed table into multiple logical shards based on the distribution column. The coordinator then maintains metadata tables to track statistics and information about the health and location of these shards. In this section, we describe each of these metadata tables and their schema. You can view and query these tables using SQL after logging into the coordinator node.
 

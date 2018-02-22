@@ -1,7 +1,7 @@
 .. _user_defined_functions:
 
-Citus Utility Function Reference
-================================
+Citus Utility Functions
+=======================
 
 This section contains reference information for the User Defined Functions provided by Citus. These functions help in providing additional distributed functionality to Citus other than the standard SQL commands.
 
