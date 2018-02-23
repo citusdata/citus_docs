@@ -62,8 +62,8 @@ Citus’s logical sharding based architecture allows you to scale out your clust
 
 .. _adding_worker_node:
 
-Adding a worker
-----------------------
+Add a worker
+------------
 
 Citus stores all the data for distributed tables on the worker nodes. Hence, if you want to scale out your cluster by adding more computing power, you can do so by adding a worker.
 
@@ -77,8 +77,8 @@ The new node is available for shards of new distributed tables. Existing shards 
 
 .. _shard_rebalancing:
 
-Rebalancing Shards without Downtime
------------------------------------
+Rebalance Shards without Downtime
+---------------------------------
 
 If you want to move existing shards to a newly added worker, Citus Enterprise and Citus Cloud provide a :ref:`rebalance_table_shards` function to make it easier. This function will move the shards of a given table to distribute them evenly among the workers.
 
