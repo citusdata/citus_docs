@@ -114,11 +114,6 @@ Sets the maximum size to which a shard will grow before it gets split and defaul
 Planner Configuration
 ------------------------------------------------
 
-citus.large_table_shard_count (integer)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-Sets the shard count threshold over which a table is considered large and defaults to 4. This criteria is then used in picking a table join order during distributed query planning. This value can be set at run-time and is effective on the coordinator.
-
 citus.limit_clause_row_fetch_count (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
