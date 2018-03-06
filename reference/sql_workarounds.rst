@@ -45,47 +45,16 @@ Although you can't join such tables directly, by wrapping the local table in a s
 
 Remember that the coordinator will send the results in the subquery or CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
 
-.. _window_func_workaround:
-
-Window Functions
-----------------
-
-Currently Citus does not have out-of-the-box support for window functions on cross-shard queries, but there is a straightforward workaround. Window functions will work across shards on a distributed table if
-
-1. The window function is in a subquery and
-2. It includes a :code:`PARTITION BY` clause containing the table's distribution column
-
-Suppose you have table called :code:`github_events`, distributed by the column :code:`user_id`. This query will **not** work directly:
-
-.. code-block:: sql
-
-  -- won't work, see workaround
-
-  SELECT repo_id, org->'id' as org_id, count(*)
-    OVER (PARTITION BY user_id)
-    FROM github_events;
-
-You can make it work by moving the window function into a subquery like this:
-
-.. code-block:: sql
-
-  SELECT *
-  FROM (
-    SELECT repo_id, org->'id' as org_id, count(*)
-      OVER (PARTITION BY user_id)
-      FROM github_events
-  ) windowed;
-
-Remember that it specifies :code:`PARTITION BY user_id`, the distribution column.
-
 Temp Tables: the Last Resort
 ----------------------------
 
-There are still a few queries that are :ref:`unsupported <unsupported>` even with the use of push-pull execution via subqueries. One of them is running window functions that partition by a non-distribution column. For example, if we update the example from the previous example to partition on ``repo_id`` the workaround mentioned in the previous section will no longer work:
+There are still a few queries that are :ref:`unsupported <unsupported>` even with the use of push-pull execution via subqueries. One of them is running window functions that partition by a non-distribution column.
+
+Suppose we have a table called :code:`github_events`, distributed by the column :code:`user_id`. Then the following window function will not work:
 
 .. code-block:: sql
 
-  -- this won't work, not even with the subquery workaround
+  -- this won't work
 
   SELECT repo_id, org->'id' as org_id, count(*)
     OVER (PARTITION BY repo_id) -- repo_id is not distribution column
