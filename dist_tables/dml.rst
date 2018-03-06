@@ -161,7 +161,7 @@ You can update or delete rows from your distributed tables using the standard Po
 
     UPDATE github_events
     SET event_public = TRUE
-    WHERE org = 'happy_devs';
+    WHERE (org->>'id')::int = 5430905;
 
 When updates/deletes affect multiple shards as in the above example, Citus defaults to using a one-phase commit protocol. For greater safety you can enable two-phase commits by setting
 
@@ -173,11 +173,11 @@ If an update or delete affects only a single shard then it runs within a single 
 
 .. code-block:: postgresql
 
-  -- supposing github_events is distributed by user_id,
+  -- since github_events is distributed by repo_id,
   -- this will execute in a single worker node
 
   DELETE FROM github_events
-  WHERE user_id = 120316;
+  WHERE repo_id = 206084;
 
 Maximizing Write Performance
 ----------------------------
