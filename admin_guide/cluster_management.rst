@@ -124,34 +124,29 @@ In other words, if your distributed table has a primary key defined then it's re
     shard_transfer_mode to 'force_logical' or 'block_writes'.
   */
 
-There are four solutions to this error.
+Here's how to fix this error.
 
-**Solution 1, add primary key**
+**First, does the table have a unique index?**
 
-Add a primary key to the table. If the desired key happens to be the distribution column, then it's quite easy, just add the constraint. Otherwise, a primary key with a non-distribution column must be composite and contain the distribution column too.
-
-**Solution 2, add replica identity from index**
-
-Create a unique index on a column, and use that for a replica identity. As in option one, the index must cover the distribution column. From our previous example:
+If the table to be replicated already has a unique index which includes the distribution column, then choose that index as a replica identity:
 
 .. code-block:: sql
 
-  -- we're indexing value, but the index must cover the
-  -- distribution column too
-  CREATE UNIQUE INDEX test_value_unique
-    ON test_table (value, key);
+  -- supposing my_table has unique index my_table_idx
+  -- which includes distribution column
 
-  -- now set the replica identity to use the index
-  ALTER TABLE test_table REPLICA IDENTITY
-    USING INDEX test_value_unique;
-
-This example would definitely fix the error with ``rebalance_table_shards`` but it's unrealistic insofar as the index includes every column in the table. In a wider table you want to restrict this index to as few columns as you can, which helps replication performance.
+  ALTER TABLE my_table REPLICA IDENTITY
+    USING INDEX my_table_idx;
 
 .. note::
 
   While ``REPLICA IDENTITY USING INDEX`` is fine, we recommend **against** adding ``REPLICA IDENTITY FULL`` to a table. This setting would result in each update/delete doing a full-table-scan on the subscriber side to find the tuple with those rows. In our testing we’ve found this to result in worse performance than even solution four below.
 
-**Solution 3, force logical replication (on insert-only tables)**
+**Otherwise, can you add a primary key?**
+
+Add a primary key to the table. If the desired key happens to be the distribution column, then it's quite easy, just add the constraint. Otherwise, a primary key with a non-distribution column must be composite and contain the distribution column too.
+
+**Unwilling to add primary key or unique index?**
 
 If the distributed table doesn't have a primary key or replica identity, and adding one is unclear or undesirable, you can still force the use of logical replication on PostgreSQL 10 or above. It's OK to do this on a table which receives only reads and inserts (no deletes or updates). Include the optional ``shard_transfer_mode`` argument of ``rebalance_table_shards``:
 
@@ -162,11 +157,11 @@ If the distributed table doesn't have a primary key or replica identity, and add
     shard_transfer_mode => 'force_logical'
   );
 
-In this situation if an application does attempt an update or delete, the request will merely return an error. If the application can tolerate these errors then solution three is fine.
+In this situation if an application does attempt an update or delete during replication, then the request will merely return an error. Deletes and writes will become possible again after replication is complete.
 
-**Solution 4, use COPY with write-blocking, rather than replication**
+**What about PostgreSQL 9.x?**
 
-On PostgreSQL 9.x and lower, logical replication is not supported. In this case we must fall back to a less efficient solution: locking a shard for writes as we copy it to its new location. Unlike the previous two solutions, this one introduces downtime for write statements (read queries continue unaffected).
+On PostgreSQL 9.x and lower, logical replication is not supported. In this case we must fall back to a less efficient solution: locking a shard for writes as we copy it to its new location. Unlike logical replication, this approach introduces downtime for write statements (although read queries continue unaffected).
 
 To choose this replication mode, use the ``shard_transfer_mode`` parameter again. Here is how to block writes and use the COPY command for replication:
 
