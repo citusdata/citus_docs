@@ -67,6 +67,65 @@ Although you can't join such tables directly, by wrapping the local table in a s
 
 Remember that the coordinator will send the results in the subquery or CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
 
+.. _upsert_into_select:
+
+INSERT…SELECT upserts
+---------------------
+
+Currently "on conflict" upserts are not supported on the coordinator for "insert into … select" statements. Attempting to upsert into distributed tables this way produces an error:
+
+::
+
+  ERROR: ON CONFLICT is not supported in INSERT ... SELECT via coordinator
+
+The workaround is to materialize the select query in a temporary distributed table, and upsert from there.
+
+.. code-block:: postgresql
+
+  -- workaround for
+  -- INSERT INTO dest_table <query> ON CONFLICT <upsert clause>
+
+  BEGIN;
+  CREATE UNLOGGED TABLE temp_table (LIKE dest_table);
+  SELECT create_distributed_table('temp_table', 'tenant_id');
+  INSERT INTO temp_table <query>;
+  INSERT INTO dest_table SELECT * FROM temp_table <upsert clause>;
+  DROP TABLE temp_table;
+  END;
+
+.. _window_func_workaround:
+
+Window Functions
+----------------
+
+Currently Citus does not have out-of-the-box support for window functions on cross-shard queries, but there is a straightforward workaround. Window functions will work across shards on a distributed table if
+
+1. The window function is in a subquery and
+2. It includes a :code:`PARTITION BY` clause containing the table's distribution column
+
+Suppose you have table called :code:`github_events`, distributed by the column :code:`user_id`. This query will **not** work directly:
+
+.. code-block:: sql
+
+  -- won't work, see workaround
+
+  SELECT repo_id, org->'id' as org_id, count(*)
+    OVER (PARTITION BY user_id)
+    FROM github_events;
+
+You can make it work by moving the window function into a subquery like this:
+
+.. code-block:: sql
+
+  SELECT *
+  FROM (
+    SELECT repo_id, org->'id' as org_id, count(*)
+      OVER (PARTITION BY user_id)
+      FROM github_events
+  ) windowed;
+
+Remember that it specifies :code:`PARTITION BY user_id`, the distribution column.
+
 Temp Tables: the Last Resort
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
