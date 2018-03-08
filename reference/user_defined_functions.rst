@@ -355,6 +355,33 @@ Example
           7 |       7 | new-node |    12345 | default  | f           | t        |       0 | primary  | default
     (1 row)
 
+
+master_update_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The master_update_node() function changes the hostname and port for a node registered in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`.
+
+Arguments
+************************
+
+**node_id:** id from the pg_dist_node table.
+
+**node_name:** updated DNS name or IP address for the node.
+
+**node_port:** the port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+N/A
+
+Example
+***********************
+
+::
+
+    select * from master_update_node(123, 'new-address', 5432);
+
 .. _master_add_inactive_node:
 
 master_add_inactive_node
