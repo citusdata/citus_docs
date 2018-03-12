@@ -95,6 +95,8 @@ We join orders and line_items to output the data we need including the backfille
 
 To learn how to ingest datasets such as the one generated above into a Citus cluster, see :ref:`dml`.
 
+.. _mt_query_migration:
+
 Query Migration
 ---------------
 
