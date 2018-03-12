@@ -20,6 +20,8 @@ For each query, the coordinator either *routes* it to a single worker node, or *
 
 Citus also supports an :ref:`mx` mode to allow queries directly against workers. This allows both reads and writes to be scaled even more across all nodes.
 
+.. _table_types:
+
 Table Types
 -----------
 
