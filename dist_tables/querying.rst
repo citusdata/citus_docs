@@ -96,7 +96,18 @@ Citus supports equi-JOINs between any number of tables irrespective of their siz
 Co-located joins
 ----------------
 
-To join two large tables efficiently, it is advised that you distribute them on the same columns you used to join the tables. In this case, the Citus coordinator knows which shards of the tables might match with shards of the other table by looking at the distribution column metadata. This allows Citus to prune away shard pairs which cannot produce matching join keys. The joins between remaining shard pairs are executed in parallel on the workers and then the results are returned to the coordinator.
+When two tables are :ref:`co-located <colocation>` then they can be joined efficiently on their common distribution columns. A co-located join is the most efficient way to join two large distributed tables.
+
+Internally, the Citus coordinator knows which shards of the co-located tables might match with shards of the other table by looking at the distribution column metadata. This allows Citus to prune away shard pairs which cannot produce matching join keys. The joins between remaining shard pairs are executed in parallel on the workers and then the results are returned to the coordinator.
+
+.. note::
+
+  Be sure that the tables are distributed into the same number of shards and that the distribution columns of each table have exactly matching types. Attempting to join on columns of slightly different types such as int and bigint can cause problems.
+
+Reference table joins
+---------------------
+
+:ref:`reference_tables` can be used as "dimension" tables to join efficiently with large "fact" tables. Because reference tables are replicated in full across all worker nodes, a reference join can be decomposed into local joins on each worker and performed in parallel. A reference join is like a more flexible version of a co-located join because reference tables aren't distributed on any particular column and are free to join on any of their columns.
 
 .. _repartition_joins:
 
@@ -108,11 +119,6 @@ In some cases, you may need to join two tables on columns other than the distrib
 In such cases the table(s) to be partitioned are determined by the query optimizer on the basis of the distribution columns, join keys and sizes of the tables. With repartitioned tables, it can be ensured that only relevant shard pairs are joined with each other reducing the amount of data transferred across network drastically.
 
 In general, co-located joins are more efficient than repartition joins as repartition joins require shuffling of data. So, you should try to distribute your tables by the common join keys whenever possible.
-
-Reference joins
----------------
-
-:ref:`reference_tables` can be used as "dimension" tables to join efficiently with large "fact" tables. Because reference tables are replicated in full across all worker nodes, a reference join can be decomposed into local joins on each worker and performed in parallel. A reference join is like a more flexible version of a co-located join because reference tables aren't distributed on any particular column and are free to join on any of their columns.
 
 Views on Distributed Tables
 ###########################
