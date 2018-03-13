@@ -12,6 +12,7 @@ Citus supports all SQL queries on distributed tables, with only these exceptions
 * `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_
 * `SELECT … FOR UPDATE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FOR-UPDATE-SHARE>`_
 * `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`_
+* `Window functions <https://www.postgresql.org/docs/current/static/tutorial-window.html>`_ that do not include the distribution column in PARTITION BY
 
 Furthermore, in :ref:`mt_use_case` when queries are filtered by table :ref:`dist_column` to a single tenant then all SQL features work, including the ones above.
 
