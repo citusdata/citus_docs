@@ -57,7 +57,7 @@ Since Citus provides distributed functionality by extending PostgreSQL, it uses 
 * Table sample
 * SELECT … FOR UPDATE
 * Grouping sets
-
+* Window functions that do not include the distribution column in PARTITION BY
 
 What's more, Citus has 100% SQL support for queries which access a single node in the database cluster. These queries are common, for instance, in multi-tenant applications where different nodes store different tenants (see :ref:`when_to_use_citus`).
 
