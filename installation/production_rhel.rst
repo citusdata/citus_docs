@@ -26,7 +26,7 @@ Steps to be executed on all nodes
 ::
 
   # install PostgreSQL with Citus extension
-  sudo yum install -y citus72_10
+  sudo yum install -y citus73_10
   # initialize system database (using RHEL 6 vs 7 method as necessary)
   sudo service postgresql-10 initdb || sudo /usr/pgsql-10/bin/postgresql-10-setup initdb
   # preload citus extension
