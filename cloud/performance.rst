@@ -108,10 +108,4 @@ Selecting an option opens an input box that accepts the appropriate values, whet
 
 .. image:: ../images/cloud-pg-conf-option.png
 
-Numerical parameters do not yet allow specifying units in this interface, and are interpreted as their default unit. A reference of the default units is available in the database from the ``pg_settings`` table:
-
-.. code-block:: sql
-
-  SELECT name, unit FROM pg_settings WHERE unit IS NOT NULL;
-
-So for instance, to specify ``work_mem`` of ``1GB``, use the value 1048576 because the default unit for ``work_mem`` is kilobytes.
+Numerical parameters do not yet allow specifying units in this interface, and are interpreted as their default unit. The default unit appears in the description under the selected parameter. For instance in the picture above it says, "in kilobytes." In this example one could specify a ``work_mem`` of ``1GB`` using the value 1048576 (= 1024*1024).
