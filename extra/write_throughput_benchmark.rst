@@ -35,15 +35,19 @@ Install pgbench
 
 Once we create a new EC2 instance, we need to install pgbench on this instance. Please note that pgbench 10 will run across all Citus versions and that the instructions below assume that you're using pgbench 10.
 
-If you are running a **Debian** based system, simply type::
+* For **Debian** based system:
 
-  sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-  sudo apt-get install wget ca-certificates
-  wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-  sudo apt-get update
-  sudo apt-get install postgresql-10
+  .. code-block:: bash
 
-If you are running a **RedHat** based system, follow the `yum installation guide <https://www.postgresql.org/download/linux/redhat/>`_.
+    sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+    sudo apt-get install wget ca-certificates
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+    sudo apt-get update
+    sudo apt-get install postgresql-10
+
+* For **RedHat** based system:
+
+  Follow the `yum installation guide <https://www.postgresql.org/download/linux/redhat/>`_.
 
 Benchmark INSERT Throughput
 ---------------------------
