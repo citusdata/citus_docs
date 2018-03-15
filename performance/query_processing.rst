@@ -40,6 +40,8 @@ At a high level, the real-time executor is useful for handling simple key-value 
 
 The choice of executor for each query can be displayed by running PostgreSQL's `EXPLAIN <https://www.postgresql.org/docs/current/static/sql-explain.html>`_ command. This can be useful for debugging performance issues.
 
+.. _realtime_executor:
+
 Real-time Executor
 -------------------
 
