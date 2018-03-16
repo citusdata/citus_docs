@@ -128,9 +128,9 @@ Please make sure that you specify the correct file path if you downloaded the fi
 
 .. code-block:: psql
 
-    \copy companies from 'companies.csv' with csv;
-    \copy campaigns from 'campaigns.csv' with csv;
-    \copy ads from 'ads.csv' with csv;
+    \copy companies from 'companies.csv' with csv
+    \copy campaigns from 'campaigns.csv' with csv
+    \copy ads from 'ads.csv' with csv
 
 
 Running queries

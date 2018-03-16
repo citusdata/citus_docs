@@ -26,7 +26,7 @@ Steps to be executed on all nodes
 ::
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-10-citus-7.2
+  sudo apt-get -y install postgresql-10-citus-7.3
 
   # preload citus extension
   sudo pg_conftool 10 main set shared_preload_libraries citus

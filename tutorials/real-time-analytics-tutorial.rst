@@ -109,8 +109,8 @@ Please make sure that you specify the correct file path if you downloaded the fi
 
 .. code-block:: psql
 
-    \copy github_users from 'users.csv' with csv;
-    \copy github_events from 'events.csv' with csv;
+    \copy github_users from 'users.csv' with csv
+    \copy github_events from 'events.csv' with csv
 
 
 Running queries

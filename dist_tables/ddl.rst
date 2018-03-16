@@ -216,7 +216,7 @@ Adding/Removing Constraints
 
 Using Citus allows you to continue to enjoy the safety of a relational database, including database constraints (see the PostgreSQL `docs <https://www.postgresql.org/docs/current/static/ddl-constraints.html>`_). Due to the nature of distributed systems, Citus will not cross-reference uniqueness constraints or referential integrity between worker nodes. Foreign keys must always be declared between :ref:`colocated tables <colocation>`. To do this, use compound foreign keys that include the distribution column.
 
-This example, excerpted from a :ref:`typical_mt_schema`, shows how to create primary and foreign keys on distributed tables.
+This example shows how to create primary and foreign keys on distributed tables.
 
 .. code-block:: postgresql
 
