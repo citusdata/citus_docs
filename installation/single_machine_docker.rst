@@ -47,12 +47,12 @@ The first time you start the cluster it builds its containers. Subsequent startu
     Error starting userland proxy:
     Bind for 0.0.0.0:5432: unexpected error address already in use
 
-  This is because the "master" (coordinator) service attempts to bind to the standard PostgreSQL port 5432. Simply adjust :code:`docker-compose.yml`. Under the :code:`master` section change the host port from 5432 to 5433 or another non-conflicting number.
+  This is because the "master" (coordinator) service attempts to bind to the standard PostgreSQL port 5432. Simply choose a different port for coordinator service with the ``MASTER_EXTERNAL_PORT`` environment variable. For example:
 
-  .. code-block:: diff
+  .. code::
 
-    - ports: ['5432:5432']
-    + ports: ['5433:5432']
+    MASTER_EXTERNAL_PORT=5433 COMPOSE_PROJECT_NAME=citus docker-compose up -d
+
 
 **3. Verify that installation has succeeded**
 
