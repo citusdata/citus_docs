@@ -355,6 +355,7 @@ Example
           7 |       7 | new-node |    12345 | default  | f           | t        |       0 | primary  | default
     (1 row)
 
+.. _master_update_node:
 
 master_update_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

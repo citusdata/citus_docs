@@ -102,6 +102,23 @@ Citus is able to enforce a primary key or uniqueness constraint only when the co
 
 This restriction allows Citus to localize a uniqueness check to a single shard and let PostgreSQL on the worker node do the check efficiently.
 
+What if a worker node's address changes?
+----------------------------------------
+
+If the hostname or IP address of a worker changes, you need to let the coordinator know using :ref:`master_update_node`:
+
+.. code-block:: sql
+
+  -- update worker node metadata on the coordinator
+  -- (remember to replace 'old-address' and 'new-address'
+  --  with the actual values for your situation)
+
+  select master_update_node(nodeid, 'new-address', nodeport)
+    from pg_dist_node
+   where nodename = 'old-address';
+
+Until you execute this update, the coordinator will not be able to communicate with that worker for queries.
+
 Which shard contains data for a particular tenant?
 --------------------------------------------------
 
