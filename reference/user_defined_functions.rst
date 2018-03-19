@@ -831,7 +831,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
   The master_move_shard_placement function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
-This function moves a given shard (and shards co-located with it) from one node to another.
+This function moves a given shard (and shards co-located with it) from one node to another. It is typically used indirectly during shard rebalancing rather than being called directly by a database administrator.
 
 There are two ways to move the data: blocking or nonblocking. The blocking approach means that during the move all modifications to the shard are paused. The second way, which avoids blocking shard writes, relies on Postgres 10 logical replication.
 
