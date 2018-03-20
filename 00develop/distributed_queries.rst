@@ -326,7 +326,7 @@ Inserting Data
 --------------
 
 Single Row Inserts
-$$$$$$$$$$$$$$$$$$
+~~~~~~~~~~~~~~~~~~
 
 To insert data into distributed tables, you can use the standard PostgreSQL `INSERT <http://www.postgresql.org/docs/current/static/sql-insert.html>`_ commands. As an example, we pick two rows randomly from the Github Archive dataset.
 
@@ -339,7 +339,7 @@ To insert data into distributed tables, you can use the standard PostgreSQL `INS
 When inserting rows into distributed tables, the distribution column of the row being inserted must be specified. Based on the distribution column, Citus determines the right shard to which the insert should be routed to. Then, the query is forwarded to the right shard, and the remote insert command is executed on all the replicas of that shard.
 
 Multi-Row Inserts
-$$$$$$$$$$$$$$$$$
+~~~~~~~~~~~~~~~~~
 
 Sometimes it's convenient to put multiple insert statements together into a single insert of multiple rows. It can also be more efficient than making repeated database queries. For instance, the example from the previous section can be loaded all at once like this:
 
@@ -352,7 +352,7 @@ Sometimes it's convenient to put multiple insert statements together into a sing
       );
 
 Bulk Loading
-$$$$$$$$$$$$
+~~~~~~~~~~~~
 
 Sometimes, you may want to bulk load many rows together into your distributed tables. To bulk load data from a file, you can directly use `PostgreSQL's \\COPY command <http://www.postgresql.org/docs/current/static/app-psql.html#APP-PSQL-META-COMMANDS-COPY>`_.
 
@@ -379,7 +379,7 @@ Then, you can copy the data using psql:
 .. _dist_agg:
 
 Distributed Aggregations
-$$$$$$$$$$$$$$$$$$$$$$$$
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Applications like event data pipelines and real-time dashboards require sub-second queries on large volumes of data. One way to make these queries fast is by calculating and saving aggregates ahead of time. This is called "rolling up" the data and it avoids the cost of processing raw data at run-time. As an extra benefit, rolling up timeseries data into hourly or daily statistics can also save space. Old data may be deleted when its full details are no longer needed and aggregates suffice.
 
@@ -608,7 +608,7 @@ Internally, the Citus coordinator knows which shards of the co-located tables mi
   Be sure that the tables are distributed into the same number of shards and that the distribution columns of each table have exactly matching types. Attempting to join on columns of slightly different types such as int and bigint can cause problems.
 
 Reference table joins
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 :ref:`reference_tables` can be used as "dimension" tables to join efficiently with large "fact" tables. Because reference tables are replicated in full across all worker nodes, a reference join can be decomposed into local joins on each worker and performed in parallel. A reference join is like a more flexible version of a co-located join because reference tables aren't distributed on any particular column and are free to join on any of their columns.
 
@@ -830,3 +830,122 @@ PostgreSQL planner and executor
 --------------------------------
 
 Once the distributed executor sends the query fragments to the workers, they are processed like regular PostgreSQL queries. The PostgreSQL planner on that worker chooses the most optimal plan for executing that query locally on the corresponding shard table. The PostgreSQL executor then runs that query and returns the query results back to the distributed executor. You can learn more about the PostgreSQL `planner <http://www.postgresql.org/docs/current/static/planner-optimizer.html>`_ and `executor <http://www.postgresql.org/docs/current/static/executor.html>`_ from the PostgreSQL manual. Finally, the distributed executor passes the results to the coordinator for final aggregation.
+
+Manual Query Propagation
+========================
+
+When the user issues a query, the Citus coordinator partitions it into smaller query fragments where each query fragment can be run independently on a worker shard. This allows Citus to distribute each query across the cluster.
+
+However the way queries are partitioned into fragments (and which queries are propagated at all) varies by the type of query. In some advanced situations it is useful to manually control this behavior. Citus provides utility functions to propagate SQL to workers, shards, or placements.
+
+Manual query propagation bypasses coordinator logic, locking, and any other consistency checks. These functions are available as a last resort to allow statements which Citus otherwise does not run natively. Use them carefully to avoid data inconsistency and deadlocks.
+
+.. _worker_propagation:
+
+Running on all Workers
+----------------------
+
+The least granular level of execution is broadcasting a statement for execution on all workers. This is useful for viewing properties of entire worker databases or creating UDFs uniformly throughout the cluster. For example:
+
+.. code-block:: postgresql
+
+  -- Make a UDF available on all workers
+  SELECT run_command_on_workers($cmd$ CREATE FUNCTION ... $cmd$);
+
+  -- List the work_mem setting of each worker database
+  SELECT run_command_on_workers($cmd$ SHOW work_mem; $cmd$);
+
+.. note::
+
+  The :code:`run_command_on_workers` function and other manual propagation commands in this section can run only queries which return a single column and single row.
+
+Running on all Shards
+---------------------
+
+The next level of granularity is running a command across all shards of a particular distributed table. It can be useful, for instance, in reading the properties of a table directly on workers. Queries run locally on a worker node have full access to metadata such as table statistics.
+
+The :code:`run_command_on_shards` function applies a SQL command to each shard, where the shard name is provided for interpolation in the command. Here is an example of estimating the row count for a distributed table by using the pg_class table on each worker to estimate the number of rows for each shard. Notice the :code:`%s` which will be replaced with each shard's name.
+
+.. code-block:: postgresql
+
+  -- Get the estimated row count for a distributed table by summing the
+  -- estimated counts of rows for each shard.
+  SELECT sum(result::bigint) AS estimated_count
+  FROM run_command_on_shards(
+    'my_distributed_table',
+    $cmd$
+      SELECT reltuples
+        FROM pg_class c
+        JOIN pg_catalog.pg_namespace n on n.oid=c.relnamespace
+       WHERE n.nspname||'.'||relname = '%s';
+    $cmd$
+  );
+
+Running on all Placements
+-------------------------
+
+The most granular level of execution is running a command across all shards and their replicas (aka :ref:`placements <placements>`). It can be useful for running data modification commands, which must apply to every replica to ensure consistency.
+
+For example, suppose a distributed table has an :code:`updated_at` field, and we want to "touch" all rows so that they are marked as updated at a certain time. An ordinary UPDATE statement on the coordinator requires a filter by the distribution column, but we can manually propagate the update across all shards and replicas:
+
+.. code-block:: postgresql
+
+  -- note we're using a hard-coded date rather than
+  -- a function such as "now()" because the query will
+  -- run at slightly different times on each replica
+
+  SELECT run_command_on_placements(
+    'my_distributed_table',
+    $cmd$
+      UPDATE %s SET updated_at = '2017-01-01';
+    $cmd$
+  );
+
+A useful companion to :code:`run_command_on_placements` is :code:`run_command_on_colocated_placements`. It interpolates the names of *two* placements of :ref:`co-located <colocation>` distributed tables into a query. The placement pairs are always chosen to be local to the same worker where full SQL coverage is available. Thus we can use advanced SQL features like triggers to relate the tables:
+
+.. code-block:: postgresql
+
+  -- Suppose we have two distributed tables
+  CREATE TABLE little_vals (key int, val int);
+  CREATE TABLE big_vals    (key int, val int);
+  SELECT create_distributed_table('little_vals', 'key');
+  SELECT create_distributed_table('big_vals',    'key');
+
+  -- We want to synchronise them so that every time little_vals
+  -- are created, big_vals appear with double the value
+  --
+  -- First we make a trigger function on each worker, which will
+  -- take the destination table placement as an argument
+  SELECT run_command_on_workers($cmd$
+    CREATE OR REPLACE FUNCTION embiggen() RETURNS TRIGGER AS $$
+      BEGIN
+        IF (TG_OP = 'INSERT') THEN
+          EXECUTE format(
+            'INSERT INTO %s (key, val) SELECT ($1).key, ($1).val*2;',
+            TG_ARGV[0]
+          ) USING NEW;
+        END IF;
+        RETURN NULL;
+      END;
+    $$ LANGUAGE plpgsql;
+  $cmd$);
+
+  -- Next we relate the co-located tables by the trigger function
+  -- on each co-located placement
+  SELECT run_command_on_colocated_placements(
+    'little_vals',
+    'big_vals',
+    $cmd$
+      CREATE TRIGGER after_insert AFTER INSERT ON %s
+        FOR EACH ROW EXECUTE PROCEDURE embiggen(%s)
+    $cmd$
+  );
+
+Limitations
+-----------
+
+* There are no safe-guards against deadlock for multi-statement transactions.
+* There are no safe-guards against mid-query failures and resulting inconsistencies.
+* Query results are cached in memory; these functions can't deal with very big result sets.
+* The functions error out early if they cannot connect to a node.
+* You can do very bad things!
