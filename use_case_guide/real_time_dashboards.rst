@@ -221,12 +221,16 @@ keep raw data for one day, and per-minute aggregations for one month:
 
 In production you could wrap these queries in a function and call it every minute in a cron job.
 
+Data expiration can go even faster by using table range partitioning on top of Citus hash distribution. See the :ref:`timeseries` section for a detailed example.
+
 Those are the basics! We provided an architecture that ingests HTTP events and
 then rolls up these events into their pre-aggregated form. This way, you can both store
 raw events and also power your analytical dashboards with subsecond queries.
 
+
 The next sections extend upon the basic architecture and show you how to resolve questions
 which often appear.
+
 
 Approximate Distinct Counts
 ---------------------------
