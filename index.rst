@@ -87,6 +87,7 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
 
    sharding/data_modeling.rst
    sharding/colocation.rst
+   sharding/timeseries.rst
 
 .. toctree::
    :maxdepth: 1
