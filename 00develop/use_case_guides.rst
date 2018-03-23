@@ -1,9 +1,5 @@
 .. highlight:: postgresql
 
-Use-Case Guides
-###############
-
-
 .. _mt_use_case:
 
 Multi-tenant Applications
