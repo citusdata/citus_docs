@@ -92,7 +92,34 @@ First clone, build, and install the pg_partman extension. Then tell partman we w
   SELECT partman.create_parent('github.events', 'created_at', 'native', 'hourly');
   UPDATE partman.part_config SET infinite_time_partitions = true;
 
-  -- running "\d+ github.events" will now show more partitions
+Running ``\d+ github.events`` will now show more partitions:
+
+::
+
+  \d+ github.events
+                                                  Table "github.events"
+      Column    |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
+  --------------+-----------------------------+-----------+----------+---------+----------+--------------+-------------
+   event_id     | bigint                      |           |          |         | plain    |              |
+   event_type   | text                        |           |          |         | extended |              |
+   event_public | boolean                     |           |          |         | plain    |              |
+   repo_id      | bigint                      |           |          |         | plain    |              |
+   payload      | jsonb                       |           |          |         | extended |              |
+   repo         | jsonb                       |           |          |         | extended |              |
+   actor        | jsonb                       |           |          |         | extended |              |
+   org          | jsonb                       |           |          |         | extended |              |
+   created_at   | timestamp without time zone |           |          |         | plain    |              |
+  Partition key: RANGE (created_at)
+  Partitions: github.events_p2018_01_15 FOR VALUES FROM ('2018-01-15 00:00:00') TO ('2018-01-16 00:00:00'),
+              github.events_p2018_01_16 FOR VALUES FROM ('2018-01-16 00:00:00') TO ('2018-01-17 00:00:00'),
+              github.events_p2018_01_17 FOR VALUES FROM ('2018-01-17 00:00:00') TO ('2018-01-18 00:00:00'),
+              github.events_p2018_01_18 FOR VALUES FROM ('2018-01-18 00:00:00') TO ('2018-01-19 00:00:00'),
+              github.events_p2018_01_19 FOR VALUES FROM ('2018-01-19 00:00:00') TO ('2018-01-20 00:00:00'),
+              github.events_p2018_01_20 FOR VALUES FROM ('2018-01-20 00:00:00') TO ('2018-01-21 00:00:00'),
+              github.events_p2018_01_21 FOR VALUES FROM ('2018-01-21 00:00:00') TO ('2018-01-22 00:00:00'),
+              github.events_p2018_01_22 FOR VALUES FROM ('2018-01-22 00:00:00') TO ('2018-01-23 00:00:00'),
+              github.events_p2018_01_23 FOR VALUES FROM ('2018-01-23 00:00:00') TO ('2018-01-24 00:00:00')
+
 
 By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
 
