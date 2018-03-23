@@ -57,7 +57,7 @@ Whether to log distributed deadlock detection related processing in the server l
 citus.distributed_deadlock_detection_factor (floating point)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Sets the time to wait before checking for distributed deadlocks. In particular the time to wait will be this value multiplied with PostgreSQL's deadlock_timeout setting. If the detection factor is set to its maximum value of 1000, then distributed deadlock detection is disabled. The default value is 2.
+Sets the time to wait before checking for distributed deadlocks. In particular the time to wait will be this value multiplied by PostgreSQL's `deadlock_timeout <https://www.postgresql.org/docs/current/static/runtime-config-locks.html>`_ setting. The default value is ``2``. A value of ``-1`` disables distributed deadlock detection.
 
 citus.max_task_string_size (integer)
 ------------------------------------
