@@ -67,63 +67,34 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    00get_started/tutorials.rst
 
 .. toctree::
-   :caption: Apps & Queries
+   :caption: Install
    :hidden:
 
-   sharding/data_modeling.rst
+   admin_guide/installation.rst
+
+.. toctree::
+   :caption: Use-Case Guides
+   :hidden:
+
    00develop/use_case_guides.rst
-   00develop/app_migration.rst
    sharding/timeseries.rst
+
+.. toctree::
+   :caption: Develop
+   :hidden:
+
+   00develop/app_type.rst
+   sharding/data_modeling.rst
+   00develop/app_migration.rst
    00develop/distributed_queries.rst
    00develop/reference.rst
 
 .. toctree::
-<<<<<<< HEAD
-   :maxdepth: 1
-   :caption: SQL Reference
-   :hidden:
-
-   dist_tables/ddl.rst
-   dist_tables/dml.rst
-   dist_tables/querying.rst
-   dist_tables/extensions.rst
-
-.. toctree::
-   :caption: Transitioning to Citus
-   :hidden:
-
-   migration/transitioning.rst
-   migration/data.rst
-
-.. toctree::
-   :caption: Performance
-||||||| merged common ancestors
-   :maxdepth: 1
-   :caption: SQL Reference
-   :hidden:
-
-   dist_tables/ddl.rst
-   dist_tables/dml.rst
-   dist_tables/querying.rst
-   dist_tables/extensions.rst
-
-.. toctree::
-   :caption: Transitioning to Citus
-   :hidden:
-
-   migration/transitioning.rst
-   migration/data.rst
-
-.. toctree::
-   :caption: Performance
-=======
-   :caption: Administration
->>>>>>> Big squashed changes
+   :caption: Administer
    :hidden:
 
    admin_guide/cluster_management.rst
    admin_guide/table_management.rst
-   admin_guide/installation.rst
    admin_guide/upgrading_citus.rst
 
 .. toctree::

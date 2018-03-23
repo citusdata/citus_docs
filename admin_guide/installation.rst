@@ -1,6 +1,3 @@
-Installation
-############
-
 .. _development:
 
 Single-Machine Dev Cluster
