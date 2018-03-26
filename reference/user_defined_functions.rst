@@ -355,6 +355,34 @@ Example
           7 |       7 | new-node |    12345 | default  | f           | t        |       0 | primary  | default
     (1 row)
 
+.. _master_update_node:
+
+master_update_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The master_update_node() function changes the hostname and port for a node registered in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`.
+
+Arguments
+************************
+
+**node_id:** id from the pg_dist_node table.
+
+**node_name:** updated DNS name or IP address for the node.
+
+**node_port:** the port on which PostgreSQL is listening on the worker node.
+
+Return Value
+******************************
+
+N/A
+
+Example
+***********************
+
+::
+
+    select * from master_update_node(123, 'new-address', 5432);
+
 .. _master_add_inactive_node:
 
 master_add_inactive_node
@@ -795,6 +823,50 @@ The example below will repair an inactive shard placement of shard 12345 which i
 ::
 
     SELECT master_copy_shard_placement(12345, 'good_host', 5432, 'bad_host', 5432);
+
+master_move_shard_placement
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+  The master_move_shard_placement function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+This function moves a given shard (and shards co-located with it) from one node to another. It is typically used indirectly during shard rebalancing rather than being called directly by a database administrator.
+
+There are two ways to move the data: blocking or nonblocking. The blocking approach means that during the move all modifications to the shard are paused. The second way, which avoids blocking shard writes, relies on Postgres 10 logical replication.
+
+After a successful move operation, shards in the source node get deleted. If the move fails at any point, this function throws an error and leaves the source and target nodes unchanged.
+
+Arguments
+**********
+
+**shard_id:** Id of the shard to be moved.
+
+**source_node_name:** DNS name of the node on which the healthy shard placement is present ("source" node).
+
+**source_node_port:** The port on the source worker node on which the database server is listening.
+
+**target_node_name:** DNS name of the node on which the invalid shard placement is present ("target" node).
+
+**target_node_port:** The port on the target worker node on which the database server is listening.
+
+**shard_transfer_mode:** (Optional) Specify the method of replication, whether to use PostgreSQL logical replication or a cross-worker COPY command. The possible values are:
+
+  * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
+  * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
+  * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
+
+Return Value
+************
+
+N/A
+
+Example
+********
+
+::
+
+    SELECT master_move_shard_placement(12345, 'from_host', 5432, 'to_host', 5432);
 
 .. _rebalance_table_shards:
 
