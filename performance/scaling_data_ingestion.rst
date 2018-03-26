@@ -119,7 +119,7 @@ From a throughput standpoint, you can expect data ingest ratios of 250K - 2M row
 
   * We recommend a large batch size (~ 50000-100000). You can benchmark with multiple files (1, 10, 1000, 10000 etc), each of that batch size.
   * Use parallel ingestion. Increase the number of threads/ingestors to 2, 4, 8, 16 and run benchmarks.
-  * Use a compute-optimized coordinator, 8-16 vcpus. For the workers choose memory-optimized boxes with a decent number of vcpus (4-8).
+  * Use a compute-optimized coordinator. For the workers choose memory-optimized boxes with a decent number of vcpus.
   * Go with a relatively small shard count, 32 should suffice but you could benchmark with 64, too.
   * Ingest data for a suitable amount of time (say 2, 4, 8, 24 hrs). Longer tests are more representative of a production setup.
 
