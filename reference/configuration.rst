@@ -220,7 +220,7 @@ The supported values for this enum are:
 
 * **debug:** Logs statement at DEBUG severity level.
 
-* **log:** Logs statement at LOG severity level. Log severity level will contain both the error, followed by :code:`STATEMENT` which contains the SQL query that was run.
+* **log:** Logs statement at LOG severity level. The log line will include the SQL query that was run.
 
 * **notice:** Logs statement at NOTICE severity level.
 

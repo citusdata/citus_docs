@@ -155,11 +155,11 @@ During testing, one can configure the following:
 
 Citus will then error out if it encounters queries which are going to hit more than one shard. Erroring out during testing allows the application developer to find and migrate such queries.
 
-During a production launch, one can configure the same setting to warn, instead of error out:
+During a production launch, one can configure the same setting to log, instead of error out:
 
 .. code-block:: sql
 
-  SET citus.multi_task_query_log_level = 'warning';
+  SET citus.multi_task_query_log_level = 'log';
 
 The :ref:`configuration parameter section <multi_task_logging>` has more info on supported values for this setting.
 
