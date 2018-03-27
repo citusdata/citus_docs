@@ -51,13 +51,12 @@ You are now ready to insert data into the distributed table and run queries on i
 Reference Tables
 ~~~~~~~~~~~~~~~~
 
-The above method distributes tables into multiple horizontal shards, but another possibility is distributing tables into a single shard and replicating the shard to every worker node.
+The above method distributes tables into multiple horizontal shards, but another possibility is distributing tables into a single shard and replicating the shard to every worker node. Tables distributed this way are called *reference tables.* They are used to store data that needs to be frequently accessed by multiple nodes in a cluster.
 
-Tables distributed this way are called *reference tables.* They are used to store data that needs to be frequently accessed by multiple nodes in a cluster. In multi-tenant apps this means data shared between tenants or data that is not naturally associated with a single tenant.
-
+Common candidates for reference tables include:
 
 * Smaller tables which need to join with larger distributed tables.
-* Tables which do not have the tenant column or aren't associated with the tenant. (In some cases, users might do it even for tables which are associated with tenant if they don't have tenant id to reduce migration effort.)
+* Tables in multi-tenant apps which lack a tenant id column or which aren't associated with a tenant. (In some cases, to reduce migration effort, users might even choose to make reference tables out of tables associated with a tenant but which currently lack a tenant id.)
 * Tables which need unique constraints across multiple columns and are small enough.
 
 For instance suppose a multi-tenant eCommerce site needs to calculate sales tax for transactions in any of its stores. Tax information isn't specific to any tenant. It makes sense to consolidate it in a shared table. A US-centric reference table might look like this:
