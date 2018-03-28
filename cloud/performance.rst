@@ -89,23 +89,3 @@ To measure the number of active connections at a given time, run:
     FROM pg_stat_activity
    WHERE state <> 'idle';
 
-PostgreSQL/PgBouncer Configuration
-==================================
-
-In addition to adding nodes and scaling their hardware, the Cloud Console allows changing database server configuration parameters. Adjusting the parameters can help tune the server for particular workloads. Cloud currently exposes just those parameters which do not require a server restart to take effect.
-
-To access these settings, go to the Configuration tab in your Cloud formation and click "Change a Parameter." It will present a dropdown list of config parameters:
-
-.. image:: ../images/cloud-pg-conf.png
-
-The options are grouped by which server and system they control:
-
-* Coordinator PostgreSQL
-* Coordinator Inbound PgBouncer
-* Worker PostgreSQL
-
-Selecting an option opens an input box that accepts the appropriate values, whether numerical, textual, or a pre-set list. The selected option also shows a link to learn more about the configuration parameter.
-
-.. image:: ../images/cloud-pg-conf-option.png
-
-Numerical parameters do not yet allow specifying units in this interface, and are interpreted as their default unit. The default unit appears in the description under the selected parameter. For instance in the picture above it says, "in kilobytes." In this example one could specify a ``work_mem`` of ``1GB`` using the value 1048576 (= 1024*1024).
