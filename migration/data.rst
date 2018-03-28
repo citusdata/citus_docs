@@ -5,9 +5,9 @@ Data Migration
 
 Migrating from one database to another has traditionally been difficult. There are two traditional approaches: using a dump and restore that takes downtime, or updating application logic to write to two databases and then switch to the new one.
 
-Now there's an easier way. PostgreSQL 10 added logical replication to stream data to a new database even while the existing database continues to sustain application load. It's as if the application automatically writes to two databases rather than one, except with perfect transactional logic.
+Now there's an easier way. Citus Warp allows you to stream changes from a PostgreSQL source database into a  :ref:`Citus Cloud <cloud_overview> cluster as they happen. It's as if the application automatically writes to two databases rather than one, except with perfect transactional logic. Citus Warp works with Postgres versions 9.4 and above which have the `logical_decoding` plugin enabled (this is supported on Amazon RDS as long as you're at version 9.4 or higher).
 
-We have streamlined logical replication on :ref:`Citus Cloud <cloud_overview>` with a process called Citus Warp. To do a warp, we connect the coordinator node of a Citus cluster to an existing database through VPC peering or IP white-listing, and begin replication.
+To do a warp, we connect the coordinator node of a Citus cluster to an existing database through VPC peering or IP white-listing, and begin replication.
 
 Using Citus Warp
 ----------------
