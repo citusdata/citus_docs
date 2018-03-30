@@ -7,6 +7,13 @@ There are various configuration parameters that affect the behaviour of Citus. T
 
 The rest of this reference aims at discussing Citus specific configuration parameters. These parameters can be set similar to PostgreSQL parameters by modifying postgresql.conf or `by using the SET command <http://www.postgresql.org/docs/current/static/config-setting.html>`_.
 
+As an example you can update a setting with:
+
+::
+
+    ALTER DATABASE citus SET citus.multi_task_query_log_level = 'log';
+
+
 General configuration
 ---------------------------------------
 
@@ -213,7 +220,7 @@ The supported values for this enum are:
 
 * **debug:** Logs statement at DEBUG severity level.
 
-* **log:** Logs statement at LOG severity level.
+* **log:** Logs statement at LOG severity level. The log line will include the SQL query that was run.
 
 * **notice:** Logs statement at NOTICE severity level.
 
@@ -221,8 +228,13 @@ The supported values for this enum are:
 
 * **error:** Logs statement at ERROR severity level.
 
-Note that it may be useful to use :code:`error` or :code:`warning` during testing, and a
-lower log-level like :code:`notice` or :code:`log` during actual production deployment.
+Note that it may be useful to use :code:`error` during development testing, and a lower log-level like :code:`log` during actual production deployment. Choosing ``log`` will cause multi-task queries to appear in the database logs with the query itself shown after "STATEMENT."
+
+.. code-block:: text
+
+  LOG:  multi-task query about to be executed
+  HINT:  Queries are split to multiple tasks if they have to be split into several queries on the workers.
+  STATEMENT:  select * from foo;
 
 Real-time executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
