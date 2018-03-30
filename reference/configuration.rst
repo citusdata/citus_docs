@@ -228,7 +228,13 @@ The supported values for this enum are:
 
 * **error:** Logs statement at ERROR severity level.
 
-Note that it may be useful to use :code:`error` during development testing, and a lower log-level like :code:`log` during actual production deployment.
+Note that it may be useful to use :code:`error` during development testing, and a lower log-level like :code:`log` during actual production deployment. Choosing ``log`` will cause multi-task queries to appear in the database logs with the query itself shown after "STATEMENT."
+
+.. code-block:: text
+
+  LOG:  multi-task query about to be executed
+  HINT:  Queries are split to multiple tasks if they have to be split into several queries on the workers.
+  STATEMENT:  select * from foo;
 
 Real-time executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
