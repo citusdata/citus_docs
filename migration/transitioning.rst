@@ -151,7 +151,9 @@ During testing, one can configure the following:
 
 .. code-block:: sql
 
-  SET citus.multi_task_query_log_level = 'error';
+  -- adjust for your own database's name of course
+
+  ALTER DATABASE citus SET citus.multi_task_query_log_level = 'error';
 
 Citus will then error out if it encounters queries which are going to hit more than one shard. Erroring out during testing allows the application developer to find and migrate such queries.
 
@@ -159,7 +161,7 @@ During a production launch, one can configure the same setting to log, instead o
 
 .. code-block:: sql
 
-  SET citus.multi_task_query_log_level = 'log';
+  ALTER DATABASE citus SET citus.multi_task_query_log_level = 'log';
 
 The :ref:`configuration parameter section <multi_task_logging>` has more info on supported values for this setting.
 
