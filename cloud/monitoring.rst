@@ -1,6 +1,45 @@
 Monitoring
 ##########
 
+Resources Usage
+===============
+
+Citus Cloud metrics enable you to get information about your cluster's health and performance. The "Metrics" tab of the Cloud Console provides graphs for a number of measurements, all viewable per node.
+
+Amazon EBS Volume Metrics
+-------------------------
+
+* Read IOPS. The average number of read operations per second.
+   .. image:: ../images/metric-iops-read.png
+* Write IOPS. The average number of write operations per second.
+   .. image:: ../images/metric-iops-write.png
+* Average Queue Length (Count). The number of read and write operation requests waiting to be completed.
+   .. image:: ../images/metric-queue.png
+* Average Read Latency (Seconds)
+   .. image:: ../images/metric-latency-read.png
+* Average Write Latency (Seconds)
+   .. image:: ../images/metric-latency-write.png
+* Bytes Read / Second
+   .. image:: ../images/metric-bytes-read.png
+* Bytes Written / Second
+   .. image:: ../images/metric-bytes-write.png
+
+CPU and Network
+---------------
+
+* CPU Utilization (Percent)
+   .. image:: ../images/metric-cpu.png
+* Network - Bytes In / Second
+   .. image:: ../images/metric-network-in.png
+* Network - Bytes Out / Second
+   .. image:: ../images/metric-network-out.png
+
+PostgreSQL Write-Ahead Log
+--------------------------
+
+* WAL Bytes Written / Second
+   .. image:: ../images/metric-wal.png
+
 Formation Events Feed
 =====================
 
@@ -40,6 +79,11 @@ Failovers happen to address hardware failure, as mentioned, and also for other r
 *  Leader
 *  Situation
 *  Follower
+
+Systemic Cloud Status
+=====================
+
+Any events affecting the Citus Cloud platform as a whole are recorded on `status.citusdata.com <https://status.citusdata.com/>`_.
 
 .. raw:: html
 
