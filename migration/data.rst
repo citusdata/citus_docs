@@ -26,12 +26,12 @@ The first step in migrating data to Citus is making sure that the schemas match 
 
 All tables that you wish to migrate must have primary keys. The corresponding destination tables must have primary keys as well, the only difference being that those keys are allowed to be composite to contain the distribution column as well, as described in :ref:`mt_schema_migration`.
 
-Also be sure to :ref:`distribute tables <ddl>` across the cluster prior to starting a warp so that the data doesn't have to fit on the coordinator node alone.
+Also be sure to :ref:`distribute tables <ddl>` across the cluster prior to starting replication so that the data doesn't have to fit on the coordinator node alone.
 
 2. Enable logical replication
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some hosted databases such as Amazon RDS require enabling replication by changing a server configuration parameter. On RDS you will need to create a new parameter group, set ``rds.logical_replication = 1`` in it, then change set the parameter group as the active one. Applying the change requires a database server reboot, which can be scheduled for the next maintenance window.
+Some hosted databases such as Amazon RDS require enabling replication by changing a server configuration parameter. On RDS you will need to create a new parameter group, set ``rds.logical_replication = 1`` in it, then make the parameter group the active one. Applying the change requires a database server reboot, which can be scheduled for the next maintenance window.
 
 If you're administering your own PostgreSQL installation, add these settings to postgresql.conf:
 
@@ -70,10 +70,12 @@ Contact us by opening a support ticket in the Citus Cloud console. A Cloud engin
 
 During the first stage, creating a basebackup, the Postgres write-ahead log (WAL) may grow substantially if the database is under write load. Make sure you have sufficient disk space on the source database before starting this process. We recommend 100GB free or 20% of total disk space, whichever is greater. Once the backup is complete and replication begins then the database will be able to archive unused WAL files again.
 
+Some database schema changes are incompatible with an ongoing replication. Changing the structure of tables under replication can cause the process to stop. Cloud engineers would then need to manually restart the replication from the beginning. That costs time, so we recommend freezing the schema during replication.
+
 5. Switch Production System to Citus Cloud
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When the replication has caught up with the current state of the source database, there is one more thing to do. Due to the nature of the replication process, sequence values don't get updated correctly on the destination databases. In order to have the correct sequence value for e.g. an id column, you need to manually adjust the sequence values before turning on writes on the destination database.
+When the replication has caught up with the current state of the source database, there is one more thing to do. Due to the nature of the replication process, sequence values don't get updated correctly on the destination databases. In order to have the correct sequence value for e.g. an id column, you need to manually adjust the sequence values before turning on writes to the destination database.
 
 Once this is all complete, the application is ready to connect to the new database. We do not recommend writing to both the source and destination database at the same time.
 
