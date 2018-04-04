@@ -102,6 +102,30 @@ Citus is able to enforce a primary key or uniqueness constraint only when the co
 
 This restriction allows Citus to localize a uniqueness check to a single shard and let PostgreSQL on the worker node do the check efficiently.
 
+How do I create database roles, functions, extensions etc in a Citus cluster?
+-----------------------------------------------------------------------------
+
+Certain commands, when run on the coordinator node, do not get propagated to the workers:
+
+* ``CREATE ROLE/USER``
+* ``CREATE FUNCTION``
+* ``CREATE TYPE``
+* ``CREATE EXTENSION``
+* ``CREATE DATABASE``
+* ``ALTER … SET SCHEMA``
+* ``ALTER TABLE ALL IN TABLESPACE``
+
+It is still possible to use these commands by explicitly running them on all nodes. Citus provides a function to execute queries across all workers:
+
+.. code-block:: postgresql
+
+  SELECT run_command_on_workers($cmd$
+    /* the command to run */
+    CREATE FUNCTION ...
+  $cmd$);
+
+Learn more in :ref:`manual_prop`.
+
 What if a worker node's address changes?
 ----------------------------------------
 

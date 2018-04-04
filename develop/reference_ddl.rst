@@ -303,11 +303,4 @@ Adding an index takes a write lock, which can be undesirable in a multi-tenant "
 Manual Modification
 ~~~~~~~~~~~~~~~~~~~
 
-Currently other DDL commands are not auto-propagated, however you can propagate the changes manually using this general four-step outline:
-
-1. Begin a transaction and take an ACCESS EXCLUSIVE lock on coordinator node against the table in question.
-2. In a separate connection, connect to each worker node and apply the operation to all shards.
-3. Disable DDL propagation on the coordinator and run the DDL command there.
-4. Commit the transaction (which will release the lock).
-
-Contact us for guidance about the process, we have internal tools which can make it easier.
+Currently other DDL commands are not auto-propagated, however you can propagate the changes manually. See :ref:`manual_prop`.

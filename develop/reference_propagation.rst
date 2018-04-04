@@ -1,3 +1,5 @@
+.. _manual_prop:
+
 Manual Query Propagation
 ========================
 
