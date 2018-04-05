@@ -115,7 +115,13 @@ From a throughput standpoint, you can expect data ingest ratios of 250K - 2M row
 
 .. note::
 
-    To avoid opening too many connections to worker nodes, we recommend running only two COPY commands on a distributed table at a time. In practice, running more than four at a time rarely results in performance benefits. An exception is when all the data in the ingested file has a specific partition key value, which goes into a single shard. COPY will only open connections to shards when necessary.
+  Make sure your benchmarking setup is well configured so you can observe optimal COPY performance. Follow these tips:
+
+  * We recommend a large batch size (~ 50000-100000). You can benchmark with multiple files (1, 10, 1000, 10000 etc), each of that batch size.
+  * Use parallel ingestion. Increase the number of threads/ingestors to 2, 4, 8, 16 and run benchmarks.
+  * Use a compute-optimized coordinator. For the workers choose memory-optimized boxes with a decent number of vcpus.
+  * Go with a relatively small shard count, 32 should suffice but you could benchmark with 64, too.
+  * Ingest data for a suitable amount of time (say 2, 4, 8, 24 hrs). Longer tests are more representative of a production setup.
 
 Masterless Citus (50k/s-500k/s)
 -------------------------------
