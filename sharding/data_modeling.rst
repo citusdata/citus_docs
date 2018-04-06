@@ -1,7 +1,7 @@
 .. _distributed_data_modeling:
 
-Distributing Data
-=================
+Choosing Distribution Column
+============================
 
 .. _distributing_by_tenant_id:
 
