@@ -278,24 +278,6 @@ At this step, you have completed the installation process and are ready to use y
 Multi-Machine Production Cluster
 ================================
 
-.. _multi_machine_cloud:
-
-Citus Cloud
------------
-
-Citus Cloud is a fully managed "Citus-as-a-Service" built on top of Amazon Web Services. It's an easy way to provision and monitor a high-availability cluster.
-
-.. raw:: html
-
-  <p class="wy-text-center">
-    <a href="https://www.citusdata.com/cloud" class="btn btn-neutral"
-       onclick="trackOutboundLink('https://www.citusdata.com/cloud'); return false;">
-      Try Citus Cloud
-      <span class="fa fa-cloud"></span>
-    </a>
-  </p>
-
-
 .. _production_deb:
 
 Ubuntu or Debian
@@ -640,3 +622,22 @@ Similarly to restart the database, you can use the command:
 
 .. note::
   You typically want to avoid making changes to resources created by CloudFormation, such as terminating EC2 instances. To shut the cluster down, you can simply delete the stack in the CloudFormation console.
+
+.. _multi_machine_cloud:
+
+Deploy on Citus Cloud
+=====================
+
+Citus Cloud is a fully managed "Citus-as-a-Service" built on top of Amazon Web Services. It's an easy way to provision and monitor a high-availability cluster.
+
+.. raw:: html
+
+  <p class="wy-text-center">
+    <a href="https://www.citusdata.com/cloud" class="btn btn-neutral"
+       onclick="trackOutboundLink('https://www.citusdata.com/cloud'); return false;">
+      Try Citus Cloud
+      <span class="fa fa-cloud"></span>
+    </a>
+  </p>
+
+
