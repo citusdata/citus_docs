@@ -76,8 +76,9 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    :caption: Use-Case Guides
    :hidden:
 
-   00develop/use_case_guides.rst
-   sharding/timeseries.rst
+   00use_cases/mt.rst
+   00use_cases/rt.rst
+   00use_cases/timeseries.rst
 
 .. toctree::
    :caption: Develop
