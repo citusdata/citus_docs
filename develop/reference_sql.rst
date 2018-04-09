@@ -38,19 +38,19 @@ For increased performance you can choose to make an approximate count instead. F
 
    Please visit the PostgreSQL hll `github repository <https://github.com/citusdata/postgresql-hll>`_ for specifics on obtaining the extension.
 
-1. Create the hll extension on all the PostgreSQL instances
+2. Create the hll extension on all the PostgreSQL instances
 
-   ::
+  .. code-block:: postgresql
 
-       CREATE EXTENSION hll;
+    CREATE EXTENSION hll;
 
 3. Enable count distinct approximations by setting the Citus.count_distinct_error_rate configuration value. Lower values for this configuration setting are expected to give more accurate results but take more time for computation. We recommend setting this to 0.005.
 
-   ::
+  .. code-block:: postgresql
 
-       SET citus.count_distinct_error_rate to 0.005;
+    SET citus.count_distinct_error_rate to 0.005;
 
-   After this step, count(distinct) aggregates automatically switch to using HLL, with no changes necessary to your queries. You should be able to run approximate count distinct queries on any column of the table.
+  After this step, count(distinct) aggregates automatically switch to using HLL, with no changes necessary to your queries. You should be able to run approximate count distinct queries on any column of the table.
 
 HyperLogLog Column
 $$$$$$$$$$$$$$$$$$
@@ -59,15 +59,14 @@ Certain users already store their data as HLL columns. In such cases, they can d
 
 As an example, if you want to run the hll_union aggregate function on your data stored as hll, you can define an aggregate function like below :
 
-::
+.. code-block:: postgresql
 
-    CREATE AGGREGATE sum (hll)
-    (
+  CREATE AGGREGATE sum (hll)
+  (
     sfunc = hll_union_trans,
     stype = internal,
     finalfunc = hll_pack
-    );
-
+  );
 
 You can then call sum(hll_column) to roll up those columns within the database. Please note that these custom aggregates need to be created both on the coordinator and the workers.
 
@@ -82,7 +81,7 @@ However, in some cases, SELECT queries with LIMIT clauses may need to fetch all 
 
 LIMIT approximations are disabled by default and can be enabled by setting the configuration parameter citus.limit_clause_row_fetch_count. On the basis of this configuration value, Citus will limit the number of rows returned by each task for aggregation on the coordinator. Due to this limit, the final results may be approximate. Increasing this limit will increase the accuracy of the final results, while still providing an upper bound on the number of rows pulled from the workers.
 
-::
+.. code-block:: postgresql
 
     SET citus.limit_clause_row_fetch_count to 10000;
 

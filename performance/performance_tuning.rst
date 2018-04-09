@@ -345,7 +345,7 @@ Insert and Update: Latency
 
 The benefit of running INSERT or UPDATE commands, compared to issuing bulk COPY commands, is that changes are immediately visible to other queries. When you issue an INSERT or UPDATE command, the Citus coordinator node directly routes this command to related worker node(s). The coordinator node also keeps connections to the workers open within the same session, which means subsequent commands will see lower response times.
 
-::
+.. code-block:: psql
 
     -- Set up a distributed table that keeps account history information
     CREATE TABLE pgbench_history (tid int, bid int, aid int, delta int, mtime timestamp);
@@ -367,13 +367,13 @@ Distributed tables support `COPY <http://www.postgresql.org/docs/current/static/
 
 COPY can be used to load data directly from an application using COPY .. FROM STDIN, from a file on the server, or program executed on the server.
 
-::
+.. code-block:: postgresql
 
     COPY pgbench_history FROM STDIN WITH (FORMAT CSV);
 
 In psql, the \\COPY command can be used to load data from the local machine. The \\COPY command actually sends a COPY .. FROM STDIN command to the server before sending the local data, as would an application that loads data directly.
 
-::
+.. code-block:: bash
 
     psql -c "\COPY pgbench_history FROM 'pgbench_history-2016-03-04.csv' (FORMAT CSV)"
 

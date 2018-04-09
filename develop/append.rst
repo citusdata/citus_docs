@@ -49,25 +49,27 @@ Creating and Distributing Tables
 ---------------------------------
 
 .. note::
-    The instructions below assume that the PostgreSQL installation is in your path. If not, you will need to add it to your PATH environment variable. For example:
 
-    ::
+  The instructions below assume that the PostgreSQL installation is in your path. If not, you will need to add it to your PATH environment variable. For example:
 
-        export PATH=/usr/lib/postgresql/9.6/:$PATH
+  .. code-block:: bash
+
+      export PATH=/usr/lib/postgresql/9.6/:$PATH
 
 
 We use the github events dataset to illustrate the commands below. You can download that dataset by running:
 
-::
+.. code-block:: bash
 
     wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
     gzip -d github_events-2015-01-01-*.gz
 
 To create an append distributed table, you need to first define the table schema. To do so, you can define a table using the `CREATE TABLE <http://www.postgresql.org/docs/current/static/sql-createtable.html>`_ statement in the same way as you would do with a regular PostgreSQL table.
 
-::
+.. code-block:: postgresql
 
-    psql -h localhost -d postgres
+    -- psql -h localhost -d postgres
+
     CREATE TABLE github_events
     (
     	event_id bigint,
@@ -83,7 +85,7 @@ To create an append distributed table, you need to first define the table schema
 
 Next, you can use the create_distributed_table() function to mark the table as an append distributed table and specify its distribution column.
 
-::
+.. code-block:: postgresql
 
     SELECT create_distributed_table('github_events', 'created_at', 'append');
 
@@ -98,7 +100,7 @@ The function uses shard metadata to decide whether or not a shard needs to be de
 
 The example below deletes those shards from the github_events table which have all rows with created_at >= '2015-01-01 00:00:00'. Note that the table is distributed on the created_at column.
 
-::
+.. code-block:: postgresql
 
     SELECT * from master_apply_delete_command('DELETE FROM github_events WHERE created_at >= ''2015-01-01 00:00:00''');
      master_apply_delete_command
@@ -113,7 +115,7 @@ Deleting Data
 
 The most flexible way to modify or delete rows throughout a Citus cluster with regular SQL statements:
 
-::
+.. code-block:: postgresql
 
   DELETE FROM github_events
   WHERE created_at >= '2015-01-01 00:03:00';
@@ -128,7 +130,7 @@ command to remove your append distributed tables. As with regular tables, DROP T
 indexes, rules, triggers, and constraints that exist for the target table. In addition, it also
 drops the shards on the worker nodes and cleans up their metadata.
 
-::
+.. code-block:: postgresql
 
     DROP TABLE github_events;
 
@@ -147,7 +149,7 @@ In the examples, we use the \\copy command from psql, which sends a COPY .. FROM
 
 You can use \\copy both on the coordinator and from any of the workers. When using it from the worker, you need to add the master_host option. Behind the scenes, \\copy first opens a connection to the coordinator using the provided master_host option and uses master_create_empty_shard to create a new shard. Then, the command connects to the workers and copies data into the replicas until the size reaches shard_max_size, at which point another new shard is created. Finally, the command fetches statistics for the shards and updates the metadata.
 
-::
+.. code-block:: psql
 
     SET citus.shard_max_size TO '64MB';
     \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV, master_host 'coordinator-host')
@@ -181,7 +183,7 @@ master_append_table_to_shard() can be used to append the contents of a PostgreSQ
 
 To use the above functionality, you can first insert incoming data into a regular PostgreSQL table. You can then create an empty shard using master_create_empty_shard(). Then, using master_append_table_to_shard(), you can append the contents of the staging table to the specified shard, and then subsequently delete the data from the staging table. Once the shard fill ratio returned by the append function becomes close to 1, you can create a new shard and start appending to the new one.
 
-::
+.. code-block:: postgresql
 
     SELECT * from master_create_empty_shard('github_events');
     master_create_empty_shard
@@ -212,7 +214,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 To ingest data into an append distributed table, you can use the `COPY <http://www.postgresql.org/docs/current/static/sql-copy.html>`_ command, which will create a new shard out of the data you ingest. COPY can break up files larger than the configured citus.shard_max_size into multiple shards. COPY for append distributed tables only opens connections for the new shards, which means it behaves a bit differently than COPY for hash distributed tables, which may open connections for all shards. A COPY for append distributed tables command does not ingest rows in parallel over many connections, but it is safe to run many commands in parallel.
 
-::
+.. code-block:: psql
 
     -- Set up the events table
     CREATE TABLE events (time timestamp, data jsonb);
@@ -223,7 +225,7 @@ To ingest data into an append distributed table, you can use the `COPY <http://w
 
 COPY creates new shards every time it is used, which allows many files to be ingested simultaneously, but may cause issues if queries end up involving thousands of shards. An alternative way to ingest data is to append it to existing shards using the master_append_table_to_shard function. To use master_append_table_to_shard, the data needs to be loaded into a staging table and some custom logic to select an appropriate shard is required.
 
-::
+.. code-block:: psql
 
     -- Prepare a staging table
     CREATE TABLE stage_1 (LIKE events);
@@ -234,7 +236,7 @@ COPY creates new shards every time it is used, which allows many files to be ing
 
 An example of a shard selection function is given below. It appends to a shard until its size is greater than 1GB and then creates a new one, which has the drawback of only allowing one append at a time, but the advantage of bounding shard sizes.
 
-::
+.. code-block:: postgresql
 
     CREATE OR REPLACE FUNCTION select_events_shard() RETURNS bigint AS $$
     DECLARE
@@ -255,7 +257,7 @@ An example of a shard selection function is given below. It appends to a shard u
 
 It may also be useful to create a sequence to generate a unique name for the staging table. This way each ingestion can be handled independently.
 
-::
+.. code-block:: postgresql
 
     -- Create stage table name sequence
     CREATE SEQUENCE stage_id_sequence;
@@ -272,14 +274,14 @@ For very high data ingestion rates, data can be staged via the workers. This met
 
 Append distributed tables support COPY via the worker, by specifying the address of the coordinator in a master_host option, and optionally a master_port option (defaults to 5432). COPY via the workers has the same general properties as COPY via the coordinator, except the initial parsing is not bottlenecked on the coordinator.
 
-::
+.. code-block:: psql
 
     psql -h worker-host-n -c "\COPY events FROM 'data.csv' WITH (FORMAT CSV, MASTER_HOST 'coordinator-host')"
 
 
 An alternative to using COPY is to create a staging table and use standard SQL clients to append it to the distributed table, which is similar to staging data via the coordinator. An example of staging a file via a worker using psql is as follows:
 
-::
+.. code-block:: bash
 
     stage_table=$(psql -tA -h worker-host-n -c "SELECT 'stage_'||nextval('stage_id_sequence')")
     psql -h worker-host-n -c "CREATE TABLE $stage_table (time timestamp, data jsonb)"
@@ -291,7 +293,7 @@ The example above uses a choose_underutilized_shard function to select the shard
 
 An example choose_underutilized_shard function belows randomly picks one of the 20 smallest shards or creates a new one if there are less than 20 under 1GB. This allows 20 concurrent appends, which allows data ingestion of up to 1 million rows/s (depending on indexes, size, capacity).
 
-::
+.. code-block:: postgresql
 
     /* Choose a shard to which to append */
     CREATE OR REPLACE FUNCTION choose_underutilized_shard()
@@ -325,7 +327,7 @@ The format in which raw data is delivered often differs from the schema used in 
 
 For example, assume we have the following table schema and want to load the compressed JSON logs from `githubarchive.org <http://www.githubarchive.org>`_:
 
-::
+.. code-block:: postgresql
 
     CREATE TABLE github_events
     (
@@ -344,7 +346,7 @@ For example, assume we have the following table schema and want to load the comp
 
 To load the data, we can download the data, decompress it, filter out unsupported rows, and extract the fields in which we are interested into a staging table using 3 commands:
 
-::
+.. code-block:: postgresql
 
     CREATE TEMPORARY TABLE prepare_1 (data jsonb);
 

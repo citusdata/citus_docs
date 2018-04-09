@@ -8,7 +8,7 @@ Creating And Distributing Tables
 
 To create a distributed table, you need to first define the table schema. To do so, you can define a table using the `CREATE TABLE <http://www.postgresql.org/docs/current/static/sql-createtable.html>`_ statement in the same way as you would do with a regular PostgreSQL table.
 
-::
+.. code-block:: sql
 
     CREATE TABLE github_events
     (
@@ -26,7 +26,7 @@ To create a distributed table, you need to first define the table schema. To do 
 Next, you can use the create_distributed_table() function to specify the table
 distribution column and create the worker shards.
 
-::
+.. code-block:: sql
 
     SELECT create_distributed_table('github_events', 'repo_id');
 
@@ -174,7 +174,7 @@ Dropping Tables
 
 You can use the standard PostgreSQL DROP TABLE command to remove your distributed tables. As with regular tables, DROP TABLE removes any indexes, rules, triggers, and constraints that exist for the target table. In addition, it also drops the shards on the worker nodes and cleans up their metadata.
 
-::
+.. code-block:: sql
 
     DROP TABLE github_events;
 

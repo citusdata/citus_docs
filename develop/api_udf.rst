@@ -45,7 +45,7 @@ Example
 *************************
 This example informs the database that the github_events table should be distributed by hash on the repo_id column.
 
-::
+.. code-block:: postgresql
 
   SELECT create_distributed_table('github_events', 'repo_id');
 
@@ -80,7 +80,7 @@ Example
 This example informs the database that the nation table should be defined as a
 reference table
 
-::
+.. code-block:: postgresql
 
 	SELECT create_reference_table('nation');
 
@@ -106,7 +106,7 @@ Example
 This example informs the database that the nation table should be defined as a
 reference table
 
-::
+.. code-block:: postgresql
 
 	SELECT upgrade_to_reference_table('nation');
 
@@ -141,7 +141,7 @@ Example
 *************************
 This example informs the database that the github_events table should be distributed by hash on the repo_id column.
 
-::
+.. code-block:: postgresql
 
 	SELECT master_create_distributed_table('github_events', 'repo_id', 'hash');
 
@@ -173,7 +173,7 @@ Example
 
 This example usage would create a total of 16 shards for the github_events table where each shard owns a portion of a hash token space and gets replicated on 2 workers.
 
-::
+.. code-block:: postgresql
 
 	SELECT master_create_worker_shards('github_events', 16, 2);
 
@@ -198,7 +198,7 @@ Example
 
 This example creates an empty shard for the github_events table. The shard id of the created shard is 102089.
 
-::
+.. code-block:: postgresql
 
     SELECT * from master_create_empty_shard('github_events');
      master_create_empty_shard
@@ -239,7 +239,7 @@ Example
 
 This example appends the contents of the github_events_local table to the shard having shard id 102089. The table github_events_local is present on the database running on the node master-101 on port number 5432. The function returns the ratio of the the current shard size to the maximum shard size, which is 0.1 indicating that 10% of the shard has been filled.
 
-::
+.. code-block:: postgresql
 
     SELECT * from master_append_table_to_shard(102089,'github_events_local','master-101', 5432);
      master_append_table_to_shard
@@ -270,7 +270,7 @@ Example
 
 The first example deletes all the shards for the github_events table since no delete criteria is specified. In the second example, only the shards matching the criteria (3 in this case) are deleted.
 
-::
+.. code-block:: postgresql
 
     SELECT * from master_apply_delete_command('DELETE FROM github_events');
      master_apply_delete_command
@@ -307,7 +307,7 @@ N/A
 Example
 ********
 
-::
+.. code-block:: postgresql
 
   SELECT master_modify_multiple_shards(
     'DELETE FROM customer_delete_protocol WHERE c_custkey > 500 AND c_custkey < 500');
@@ -347,7 +347,7 @@ A tuple which represents a row from :ref:`pg_dist_node
 Example
 ***********************
 
-::
+.. code-block:: postgresql
 
     select * from master_add_node('new-node', 12345);
      nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive | groupid | noderole | nodecluster
@@ -379,7 +379,7 @@ N/A
 Example
 ***********************
 
-::
+.. code-block:: postgresql
 
     select * from master_update_node(123, 'new-address', 5432);
 
@@ -415,7 +415,7 @@ A tuple which represents a row from :ref:`pg_dist_node <pg_dist_node>` table.
 Example
 ***********************
 
-::
+.. code-block:: postgresql
 
     select * from master_add_inactive_node('new-node', 12345);
      nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive | groupid | noderole | nodecluster
@@ -446,7 +446,7 @@ A tuple which represents a row from :ref:`pg_dist_node
 Example
 ***********************
 
-::
+.. code-block:: postgresql
 
     select * from master_activate_node('new-node', 12345);
      nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive| noderole | nodecluster
@@ -479,7 +479,7 @@ N/A
 Example
 ***********************
 
-::
+.. code-block:: postgresql
 
     select * from master_disable_node('new-node', 12345);
 
@@ -513,7 +513,7 @@ A tuple which represents a row from :ref:`pg_dist_node <pg_dist_node>` table.
 Example
 ***********************
 
-::
+.. code-block:: postgresql
 
     select * from master_add_secondary_node('new-node', 12345, 'primary-node', 12345);
      nodeid | groupid | nodename | nodeport | noderack | hasmetadata | isactive | noderole  | nodecluster
@@ -545,7 +545,7 @@ N/A
 Example
 ***********************
 
-::
+.. code-block:: postgresql
 
     select master_remove_node('new-node', 12345);
      master_remove_node 
@@ -577,7 +577,7 @@ List of tuples where each tuple contains the following information:
 Example
 ***********************
 
-::
+.. code-block:: postgresql
 
     SELECT * from master_get_active_worker_nodes();
      node_name | node_port 
@@ -622,7 +622,7 @@ Example
 
 The example below fetches and displays the table metadata for the github_events table.
 
-::
+.. code-block:: postgresql
 
     SELECT * from master_get_table_metadata('github_events’);
      logical_relid | part_storage_type | part_method | part_key | part_replica_count | part_max_size | part_placement_policy 
@@ -652,7 +652,7 @@ The shard id Citus associates with the distribution column value for the given t
 Example
 ***********************
 
-::
+.. code-block:: postgresql
 
   SELECT get_shard_id_for_distribution_column('my_table', 4);
 
@@ -820,7 +820,7 @@ Example
 
 The example below will repair an inactive shard placement of shard 12345 which is present on the database server running on 'bad_host' on port 5432. To repair it, it will use data from a healthy shard placement present on the server running on 'good_host' on port 5432.
 
-::
+.. code-block:: postgresql
 
     SELECT master_copy_shard_placement(12345, 'good_host', 5432, 'bad_host', 5432);
 
@@ -864,7 +864,7 @@ N/A
 Example
 ********
 
-::
+.. code-block:: postgresql
 
     SELECT master_move_shard_placement(12345, 'from_host', 5432, 'to_host', 5432);
 
@@ -905,13 +905,13 @@ Example
 
 The example below will attempt to rebalance the shards of the github_events table within the default threshold.
 
-::
+.. code-block:: postgresql
 
 	SELECT rebalance_table_shards('github_events');
 
 This example usage will attempt to rebalance the github_events table without moving shards with id 1 and 2.
 
-::
+.. code-block:: postgresql
 
 	SELECT rebalance_table_shards('github_events', excluded_shard_list:='{1,2}');
 
@@ -945,13 +945,13 @@ Examples
 
 The example below will attempt to replicate the shards of the github_events table to shard_replication_factor.
 
-::
+.. code-block:: postgresql
 
 	SELECT replicate_table_shards('github_events');
 
 This example will attempt to bring the shards of the github_events table to the desired replication factor with a maximum of 10 shard copies. This means that the rebalancer will copy only a maximum of 10 shards in its attempt to reach the desired replication factor.
 
-::
+.. code-block:: postgresql
 
 	SELECT replicate_table_shards('github_events', max_shard_copies:=10);
 

@@ -9,7 +9,7 @@ The rest of this reference aims at discussing Citus specific configuration param
 
 As an example you can update a setting with:
 
-::
+.. code-block:: postgresql
 
     ALTER DATABASE citus SET citus.multi_task_query_log_level = 'log';
 

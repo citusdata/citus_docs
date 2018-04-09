@@ -17,7 +17,7 @@ Steps to be executed on all nodes
 
 **1. Add repository**
 
-::
+.. code-block:: bash
 
   # Add Citus repository for package manager
   curl https://install.citusdata.com/community/deb.sh | sudo bash
@@ -26,7 +26,7 @@ Steps to be executed on all nodes
 
 **2. Install PostgreSQL + Citus and initialize a database**
 
-::
+.. code-block:: bash
 
   # install the server and initialize db
   sudo apt-get -y install postgresql-10-citus-7.3
@@ -40,15 +40,15 @@ This installs centralized configuration in `/etc/postgresql/10/main`, and create
 
 Before starting the database let's change its access permissions. By default the database server listens only to clients on localhost. As a part of this step, we instruct it to listen on all IP interfaces, and then configure the client authentication file to allow all incoming connections from the local network.
 
-::
+.. code-block:: bash
 
   sudo pg_conftool 10 main set listen_addresses '*'
 
-::
+.. code-block:: bash
 
   sudo vi /etc/postgresql/10/main/pg_hba.conf
 
-::
+.. code-block:: ini
 
   # Allow unrestricted access to nodes in the local network. The following ranges
   # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
@@ -59,11 +59,12 @@ Before starting the database let's change its access permissions. By default the
   host    all             all             ::1/128                 trust
 
 .. note::
+
   Your DNS settings may differ. Also these settings are too permissive for some environments, see our notes about :ref:`worker_security`. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
 
 **4. Start database servers, create Citus extension**
 
-::
+.. code-block:: bash
 
   # start the db server
   sudo service postgresql restart
@@ -72,7 +73,7 @@ Before starting the database let's change its access permissions. By default the
 
 You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
 
-::
+.. code-block:: bash
 
   # add the citus extension
   sudo -i -u postgres psql -c "CREATE EXTENSION citus;"
@@ -92,7 +93,7 @@ catalog table. For our example, we assume that there are two workers
 (named worker-101, worker-102). Add the workers' DNS names (or IP
 addresses) and server ports to the table.
 
-::
+.. code-block:: bash
 
   sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-101', 5432);"
   sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-102', 5432);"
@@ -103,7 +104,7 @@ To verify that the installation has succeeded, we check that the coordinator nod
 picked up the desired worker configuration. This command when run in the psql
 shell should output the worker nodes we added to the pg_dist_node table above.
 
-::
+.. code-block:: bash
 
   sudo -i -u postgres psql -c "SELECT * FROM master_get_active_worker_nodes();"
 
@@ -111,7 +112,7 @@ shell should output the worker nodes we added to the pg_dist_node table above.
 
 At this step, you have completed the installation process and are ready to use your Citus cluster. The new Citus database is accessible in psql through the postgres user:
 
-::
+.. code-block:: bash
 
   sudo -i -u postgres psql
 
@@ -133,7 +134,7 @@ Steps to be executed on all nodes
 
 **1. Add repository**
 
-::
+.. code-block:: bash
 
   # Add Citus repository for package manager
   curl https://install.citusdata.com/community/rpm.sh | sudo bash
@@ -142,7 +143,7 @@ Steps to be executed on all nodes
 
 **2. Install PostgreSQL + Citus and initialize a database**
 
-::
+.. code-block:: bash
 
   # install PostgreSQL with Citus extension
   sudo yum install -y citus73_10
@@ -157,20 +158,20 @@ PostgreSQL adds version-specific binaries in `/usr/pgsql-10/bin`, but you'll usu
 
 Before starting the database let's change its access permissions. By default the database server listens only to clients on localhost. As a part of this step, we instruct it to listen on all IP interfaces, and then configure the client authentication file to allow all incoming connections from the local network.
 
-::
+.. code-block:: bash
 
   sudo vi /var/lib/pgsql/10/data/postgresql.conf
 
-::
+.. code-block:: bash
 
   # Uncomment listen_addresses for the changes to take effect
   listen_addresses = '*'
 
-::
+.. code-block:: bash
 
   sudo vi /var/lib/pgsql/10/data/pg_hba.conf
 
-::
+.. code-block:: ini
 
   # Allow unrestricted access to nodes in the local network. The following ranges
   # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
@@ -181,11 +182,12 @@ Before starting the database let's change its access permissions. By default the
   host    all             all             ::1/128                 trust
 
 .. note::
+
   Your DNS settings may differ. Also these settings are too permissive for some environments, see our notes about :ref:`worker_security`. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
 
 **4. Start database servers, create Citus extension**
 
-::
+.. code-block:: bash
 
   # start the db server
   sudo service postgresql-10 restart
@@ -194,7 +196,7 @@ Before starting the database let's change its access permissions. By default the
 
 You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
 
-::
+.. code-block:: bash
 
   sudo -i -u postgres psql -c "CREATE EXTENSION citus;"
 
@@ -214,7 +216,7 @@ nodes. For our example, we assume that there are two workers (named
 worker-101, worker-102). Add the workers' DNS names (or IP addresses)
 and server ports to the table.
 
-::
+.. code-block:: bash
 
   sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-101', 5432);"
   sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-102', 5432);"
@@ -225,7 +227,7 @@ To verify that the installation has succeeded, we check that the coordinator nod
 picked up the desired worker configuration. This command when run in the psql
 shell should output the worker nodes we added to the pg_dist_node table above.
 
-::
+.. code-block:: bash
 
   sudo -i -u postgres psql -c "SELECT * FROM master_get_active_worker_nodes();"
 
@@ -233,7 +235,7 @@ shell should output the worker nodes we added to the pg_dist_node table above.
 
 At this step, you have completed the installation process and are ready to use your Citus cluster. The new Citus database is accessible in psql through the postgres user:
 
-::
+.. code-block:: bash
 
   sudo -i -u postgres psql
 
@@ -258,8 +260,8 @@ Below, we explain in detail the steps required to setup a multi-node Citus clust
 
 **1. Start a Citus cluster**
 
-.. raw:: html 
-  
+.. raw:: html
+
  <p>To begin, you can start a Citus cluster using CloudFormation by clicking <a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus7%2Fcloudformation%2Fcitus-7.3.0.json" onclick="trackOutboundLink('https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus7%2Fcloudformation%2Fcitus-7.3.0.json'); return false;">here</a>. This will take you directly to the AWS CloudFormation console.</p>
 
 
@@ -298,13 +300,13 @@ Finally, you need to acknowledge IAM capabilities, which give the coordinator no
 
 **5. Cluster launching**
 
-After the above steps, you will be redirected to the CloudFormation console. You can click the refresh button on the top-right to view your stack. In about 10 minutes, stack creation will complete and the hostname of the coordinator node will appear in the Outputs tab. 
+After the above steps, you will be redirected to the CloudFormation console. You can click the refresh button on the top-right to view your stack. In about 10 minutes, stack creation will complete and the hostname of the coordinator node will appear in the Outputs tab.
 
 .. image:: ../images/aws_cluster_launch.png
 
 .. note::
   Sometimes, you might not see the outputs tab on your screen by default. In that case, you should click on “restore” from the menu on the bottom right of your screen.
- 
+
 .. image:: ../images/aws_restore_icon.png
 	:align: center
 
@@ -318,20 +320,19 @@ If something goes wrong during set-up, the stack will be rolled back but not del
 
 Once the cluster creation completes, you can immediately connect to the coordinator node using SSH with username ec2-user and the keypair you filled in. For example:
 
-::
+.. code-block:: bash
 
-	ssh -i your-keypair.pem ec2-user@ec2-54-82-70-31.compute-1.amazonaws.com
+  ssh -i your-keypair.pem ec2-user@ec2-54-82-70-31.compute-1.amazonaws.com
 
 
 **7. Ready to use the cluster**
 
 At this step, you have completed the installation process and are ready to use the Citus cluster. You can now login to the coordinator node and start executing commands. The command below, when run in the psql shell, should output the worker nodes mentioned in the pg_dist_node.
 
-::
+.. code-block:: bash
 
-	/usr/pgsql-9.6/bin/psql -h localhost -d postgres
-	select * from master_get_active_worker_nodes();
-
+  /usr/pgsql-9.6/bin/psql -h localhost -d postgres
+  select * from master_get_active_worker_nodes();
 
 **8. Cluster notes**
 
@@ -341,9 +342,9 @@ The database and its configuration files are stored in /data/base. So, to change
 
 Similarly to restart the database, you can use the command:
 
-::
+.. code-block:: bash
 
-	/usr/pgsql-9.6/bin/pg_ctl -D /data/base -l logfile restart
+  /usr/pgsql-9.6/bin/pg_ctl -D /data/base -l logfile restart
 
 .. note::
   You typically want to avoid making changes to resources created by CloudFormation, such as terminating EC2 instances. To shut the cluster down, you can simply delete the stack in the CloudFormation console.

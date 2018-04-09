@@ -40,11 +40,11 @@ Since Citus is an PostgreSQL extension, you can use all the latest PostgreSQL 10
 
 To create a distributed events table with a JSONB column and a BRIN index, we can run the following commands:
 
-.. code::
+.. code-block:: bash
 
   $ psql postgres://citus:pw@coordinator-host:5432/citus?sslmode=require
 
-.. code:: sql
+.. code-block:: postgresql
 
   CREATE TABLE events (
     device_id bigint not null,
@@ -59,11 +59,11 @@ To create a distributed events table with a JSONB column and a BRIN index, we ca
 
 Once the distributed table is created, we can immediately start using it via the data URL and writes done on one node will immediately be visible from all the other nodes in a consistent way.
 
-.. code::
+.. code-block:: bash
 
   $ psql postgres://citus:pw@data-url:5432/citus?sslmode=require
 
-.. code:: sql
+.. code-block:: psql
 
   citus=> INSERT INTO events (device_id, payload)
   VALUES (12, '{"temp":"12.8","unit":"C"}');
@@ -72,11 +72,11 @@ Once the distributed table is created, we can immediately start using it via the
 
 SELECT queries that filter by a specific device_id are particularly fast, because Citus can route them directly to a single worker and execute them on a single shard.
 
-.. code::
+.. code-block:: bash
 
   $ psql postgres://citus:pw@data-url:5432/citus?sslmode=require
 
-.. code:: sql
+.. code-block:: psql
 
   citus=> SELECT event_id, event_time, payload FROM events WHERE device_id = 12 ORDER BY event_time DESC LIMIT 10;
 
@@ -84,7 +84,7 @@ SELECT queries that filter by a specific device_id are particularly fast, becaus
 
 As with regular Citus, you can also run analytical queries which are parallelized across the cluster:
 
-.. code:: sql
+.. code-block:: psql
 
   citus=>
   SELECT minute,
