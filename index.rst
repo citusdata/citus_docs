@@ -62,9 +62,9 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    :caption: Get Started
    :hidden:
 
-   00get_started/what_is_citus.rst
-   00get_started/concepts.rst
-   00get_started/tutorials.rst
+   get_started/what_is_citus.rst
+   get_started/concepts.rst
+   get_started/tutorials.rst
 
 .. toctree::
    :caption: Install
@@ -78,20 +78,20 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    :caption: Use-Case Guides
    :hidden:
 
-   00use_cases/mt.rst
-   00use_cases/rt.rst
-   00use_cases/timeseries.rst
+   use_cases/mt.rst
+   use_cases/rt.rst
+   use_cases/timeseries.rst
 
 .. toctree::
    :caption: Develop
    :hidden:
 
-   00develop/app_type.rst
+   develop/app_type.rst
    sharding/data_modeling.rst
-   00develop/migration.rst
+   develop/migration.rst
    migration/data.rst
-   00develop/reference.rst
-   00develop/api.rst
+   develop/reference.rst
+   develop/api.rst
 
 .. toctree::
    :caption: Administer
@@ -106,7 +106,7 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    :hidden:
 
    cloud/getting_started.rst
-   cloud/00manage.rst
+   cloud/manage.rst
    cloud/additional.rst
    cloud/support.rst
 
@@ -115,6 +115,7 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    :hidden:
 
    performance/performance_tuning.rst
+   extra/write_throughput_benchmark.rst
    admin_guide/diagnostic_queries.rst
    reference/common_errors.rst
 
