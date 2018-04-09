@@ -102,7 +102,7 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    admin_guide/upgrading_citus.rst
 
 .. toctree::
-   :caption: Cloud
+   :caption: Citus Cloud
    :hidden:
 
    cloud/getting_started.rst
