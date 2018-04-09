@@ -57,7 +57,9 @@ Initialize and Distribute Tables
 
 Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run INSERT benchmarks on.
 
-To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following two commands::
+To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following two commands
+
+.. code-block:: bash
 
   pgbench -i connection_string_to_coordinator
 
@@ -69,7 +71,9 @@ Create SQL File for pgbench
 
 pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use the INSERT command that comes with pgbench.
 
-To create the related SQL commands, create a file named insert.sql and paste the following lines into it::
+To create the related SQL commands, create a file named insert.sql and paste the following lines into it
+
+.. code-block:: psql
 
   \set nbranches :scale
   \set ntellers 10 * :scale
@@ -85,7 +89,9 @@ Benchmark INSERT commands
 
 By default, pgbench opens a single connection to the database and sends INSERT commands through this connection. To benchmark write throughput, we're going to open parallel connections to the database and issue concurrent commands. In particular, we're going to use pgbench's -j parameter to specify the number of concurrent threads and -c parameter to specify the number of concurrent connections. We will also set the duration for our tests to 30 seconds using the -T parameter.
 
-To run pgbench with these parameters, simply type::
+To run pgbench with these parameters, simply type
+
+.. code-block:: bash
 
   pgbench connection_string_to_coordinator -j 64 -c 256 -f insert.sql -T 30
 
@@ -101,7 +107,9 @@ Initialize and Distribute Tables
 
 Before we start, we need to tell pgbench to initialize the benchmarking environment by creating test tables. Then, we need to connect to the Citus coordinator node and distribute the table that we're going to run UPDATE benchmarks on.
 
-To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following two commands::
+To initialize the test environment and distribute the related table, you need to get a connection string to the cluster. You can get this connection string from your Citus Cloud dashboard. Then, you need to run the following two commands
+
+.. code-block:: bash
 
   pgbench -i connection_string_to_coordinator
 
@@ -114,7 +122,9 @@ Create SQL File for pgbench
 
 pgbench runs the given SQL commands repeatedly and reports results. For this benchmark run, we will use one of the UPDATE commands that comes with pgbench.
 
-To create the related SQL commands, create a file named update.sql and paste the following lines into it::
+To create the related SQL commands, create a file named update.sql and paste the following lines into it
+
+.. code-block:: psql
 
   \set naccounts 100000 * :scale
   \set aid random(1 :naccounts)
@@ -127,7 +137,9 @@ Benchmark UPDATE commands
 
 By default, pgbench opens a single connection to the database and sends UPDATE commands through this connection. To benchmark write throughput, we're going to open parallel connections to the database and issue concurrent commands. In particular, we're going to use pgbench's -j parameter to specify the number of concurrent threads and -c parameter to specify the number of concurrent connections. We will also set the duration for our tests to 30 seconds using the -T parameter.
 
-To run pgbench with these parameters, simply type::
+To run pgbench with these parameters, simply type
+
+.. code-block:: bash
 
   pgbench connection_string_to_coordinator -j 64 -c 256 -f update.sql -T 30
 

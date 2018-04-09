@@ -232,7 +232,7 @@ The next step is loading sample data into the cluster from the command line.
 
 Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location. Back inside psql run this:
 
-.. code-block:: text
+.. code-block:: psql
 
   \copy companies from 'companies.csv' with csv
   \copy campaigns from 'campaigns.csv' with csv
@@ -267,7 +267,7 @@ This guide is framework-agnostic, so we'll point out some Citus features using S
 
 Here is a simple query and update operating on a single tenant.
 
-::
+.. code-block:: sql
 
   -- campaigns with highest budget
 
@@ -285,7 +285,7 @@ Here is a simple query and update operating on a single tenant.
 
 A common pain point for users scaling applications with NoSQL databases is the lack of transactions and joins. However, transactions work as you'd expect them to in Citus:
 
-::
+.. code-block:: sql
 
   -- transactionally reallocate campaign budget money
 
@@ -305,7 +305,7 @@ A common pain point for users scaling applications with NoSQL databases is the l
 
 As a final demo of SQL support, we have a query which includes aggregates and window functions and it works the same in Citus as it does in PostgreSQL. The query ranks the ads in each campaign by the count of their impressions.
 
-::
+.. code-block:: sql
 
   SELECT a.campaign_id,
          RANK() OVER (
@@ -329,7 +329,7 @@ Sharing Data Between Tenants
 
 Up until now all tables have been distributed by :code:`company_id`, but sometimes there is data that can be shared by all tenants, and doesn't "belong" to any tenant in particular. For instance, all companies using this example ad platform might want to get geographical information for their audience based on IP addresses. In a single machine database this could be accomplished by a lookup table for geo-ip, like the following. (A real table would probably use PostGIS but bear with the simplified example.)
 
-::
+.. code-block:: sql
 
   CREATE TABLE geo_ips (
     addrs cidr NOT NULL PRIMARY KEY,
@@ -341,7 +341,7 @@ Up until now all tables have been distributed by :code:`company_id`, but sometim
 
 To use this table efficiently in a distributed setup, we need to find a way to co-locate the :code:`geo_ips` table with clicks for not just one -- but every -- company. That way, no network traffic need be incurred at query time. We do this in Citus by designating :code:`geo_ips` as a :ref:`reference table <reference_tables>`.
 
-::
+.. code-block:: sql
 
   -- Make synchronized copies of geo_ips on all workers
 
@@ -357,7 +357,7 @@ Now that :code:`geo_ips` is established as a reference table, load it with examp
 
 Now joining clicks with this table can execute efficiently. We can ask, for example, the locations of everyone who clicked on ad 290.
 
-::
+.. code-block:: sql
 
   SELECT c.id, clicked_at, latlon
     FROM geo_ips, clicks c
@@ -372,7 +372,7 @@ Another challenge with multi-tenant systems is keeping the schemas for all the t
 
 For example, the advertisements in this application could use a text caption. We can add a column to the table by issuing the standard SQL on the coordinator:
 
-::
+.. code-block:: sql
 
   ALTER TABLE ads
     ADD COLUMN caption text;
@@ -474,8 +474,7 @@ In our case, let's imagine that our old friend company id=5 is very large. We ca
 
 First sequester the tenant's data into a bundle (called a shard) suitable to move. The CASCADE option also applies this change to the rest of our tables distributed by :code:`company_id`.
 
-::
-
+.. code-block:: sql
 
   SELECT isolate_tenant_to_new_shard(
     'companies', 5, 'CASCADE'
@@ -493,7 +492,7 @@ The output is the shard id dedicated to hold :code:`company_id=5`:
 
 Next we move the data across the network to a new dedicated node. Create a new node as described in the previous section. Take note of its hostname as shown in the Nodes tab of the Cloud Console.
 
-::
+.. code-block:: sql
 
   -- find the node currently holding the new shard
 

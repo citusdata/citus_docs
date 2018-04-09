@@ -69,7 +69,7 @@ Citus stores all the data for distributed tables on the worker nodes. Hence, if 
 
 To add a new node to the cluster, you first need to add the DNS name or IP address of that node and port (on which PostgreSQL is running) in the pg_dist_node catalog table. You can do so using the :ref:`master_add_node` UDF. Example:
 
-::
+.. code-block:: postgresql
 
    SELECT * from master_add_node('node-name', 5432);
 
@@ -82,7 +82,7 @@ Rebalancing Shards without Downtime
 
 If you want to move existing shards to a newly added worker, Citus Enterprise and Citus Cloud provide a :ref:`rebalance_table_shards` function to make it easier. This function will move the shards of a given table to distribute them evenly among the workers.
 
-::
+.. code-block:: postgresql
 
   SELECT rebalance_table_shards('github_events');
 
