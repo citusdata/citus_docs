@@ -261,7 +261,7 @@ Django:
 
 Basically when the resulting SQL executed in the database contains a :code:`WHERE company_id = :value` clause on every table (including tables in JOIN queries), then Citus will recognize that the query should be routed to a single node and execute it there as it is. This makes sure that all SQL functionality is available. The node is an ordinary PostgreSQL server after all.
 
-Also, to make it even simpler, you can use our `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ library for Rails, or `django-multitenant <https://github.com/citusdata/django-multitenant>`_ for Django which will automatically add these filters to all your queries, even the complicated ones. Check out our :ref:`app_migration` section for details.
+Also, to make it even simpler, you can use our `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ library for Rails, or `django-multitenant <https://github.com/citusdata/django-multitenant>`_ for Django which will automatically add these filters to all your queries, even the complicated ones. Check out our migration guides for :ref:`rails_migration` and :ref:`django_migration`.
 
 This guide is framework-agnostic, so we'll point out some Citus features using SQL. Use your imagination for how these statements would be expressed in your language of choice.
 

@@ -1,3 +1,5 @@
+.. _django_migration:
+
 Django
 ------
 
