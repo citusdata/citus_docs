@@ -114,7 +114,6 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    :hidden:
 
    performance/performance_tuning.rst
-   extra/write_throughput_benchmark.rst
    admin_guide/diagnostic_queries.rst
    reference/common_errors.rst
 
