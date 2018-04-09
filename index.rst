@@ -88,7 +88,7 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
 
    00develop/app_type.rst
    sharding/data_modeling.rst
-   00develop/app_migration.rst
+   00develop/migration.rst
    migration/data.rst
    00develop/reference.rst
    00develop/api.rst
