@@ -2,7 +2,7 @@
 
 .. _rt_use_case:
 
-Real Time Dashboards
+Real-Time Dashboards
 ====================
 
 Citus provides real-time queries over large datasets. One workload we commonly see at
