@@ -245,8 +245,8 @@ At this step, you have completed the installation process and are ready to use y
 
 .. _multi_machine_manual:
 
-CloudFormation
---------------
+AWS CloudFormation
+------------------
 
 Alternately you can manage a Citus cluster manually on `EC2 <http://aws.amazon.com/ec2/>`_ instances using CloudFormation. The CloudFormation template for Citus enables users to start a Citus cluster on AWS in just a few clicks, with also cstore_fdw extension for columnar storage is pre-installed. The template automates the installation and configuration process so that the users don’t need to do any extra configuration steps while installing Citus.
 
