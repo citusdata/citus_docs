@@ -70,9 +70,9 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    :caption: Install
    :hidden:
 
-   admin_guide/installation_single_node.rst
-   admin_guide/installation_multi_node.rst
-   admin_guide/installation_cloud.rst
+   installation/single_machine.rst
+   installation/multi_machine.rst
+   installation/citus_cloud.rst
 
 .. toctree::
    :caption: Use-Case Guides
