@@ -59,106 +59,71 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
   </div>
 
 .. toctree::
-   :glob:
-   :caption: About Citus
+   :caption: Get Started
    :hidden:
 
-   aboutcitus/what_is_citus.rst
-   aboutcitus/concepts.rst
+   get_started/what_is_citus.rst
+   get_started/concepts.rst
+   get_started/tutorials.rst
 
 .. toctree::
-   :caption: Installation
+   :caption: Install
    :hidden:
 
-   installation/requirements.rst
-   installation/development.rst
-   installation/production.rst
-
-.. toctree::
-   :caption: Tutorials
-   :hidden:
-
-   tutorials/multi-tenant-tutorial.rst
-   tutorials/real-time-analytics-tutorial.rst
-
-.. toctree::
-   :caption: Distributed Data Modeling
-   :hidden:
-
-   sharding/data_modeling.rst
-   sharding/colocation.rst
-   sharding/timeseries.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: SQL Reference
-   :hidden:
-
-   dist_tables/ddl.rst
-   dist_tables/dml.rst
-   dist_tables/querying.rst
-   dist_tables/extensions.rst
-
-.. toctree::
-   :caption: Transitioning to Citus
-   :hidden:
-
-   migration/transitioning.rst
-   migration/data.rst
-
-.. toctree::
-   :caption: Performance
-   :hidden:
-
-   performance/query_processing.rst
-   performance/scaling_data_ingestion.rst
-   performance/performance_tuning.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Cloud
-   :hidden:
-
-   cloud/getting_started.rst
-   cloud/performance.rst
-   cloud/security.rst
-   cloud/availability.rst
-   cloud/additional.rst
-   cloud/monitoring.rst
-   cloud/logging.rst
-   cloud/support.rst
+   installation/single_machine.rst
+   installation/multi_machine.rst
+   installation/citus_cloud.rst
 
 .. toctree::
    :caption: Use-Case Guides
    :hidden:
 
-   use_case_guide/multi_tenant.rst
-   use_case_guide/real_time_dashboards.rst
+   use_cases/multi_tenant.rst
+   use_cases/realtime_analytics.rst
+   use_cases/timeseries.rst
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Administration
+   :caption: Develop
+   :hidden:
+
+   develop/app_type.rst
+   sharding/data_modeling.rst
+   develop/migration.rst
+   develop/reference.rst
+   develop/api.rst
+
+.. toctree::
+   :caption: Administer
    :hidden:
 
    admin_guide/cluster_management.rst
    admin_guide/table_management.rst
-   admin_guide/production_sizing.rst
    admin_guide/upgrading_citus.rst
 
 .. toctree::
-   :caption: Reference
+   :caption: Citus Cloud
    :hidden:
 
-   reference/citus_sql_reference.rst
-   reference/sql_workarounds.rst
-   reference/user_defined_functions.rst
-   reference/metadata_tables.rst
-   reference/configuration.rst
-   reference/common_errors.rst
-   reference/append.rst
+   cloud/getting_started.rst
+   cloud/manage.rst
+   cloud/additional.rst
+   cloud/support.rst
 
 .. toctree::
-   :maxdepth: 1
+   :caption: Troubleshoot
+   :hidden:
+
+   performance/performance_tuning.rst
+   admin_guide/diagnostic_queries.rst
+   reference/common_errors.rst
+
+.. toctree::
+   :caption: FAQ
+   :hidden:
+
+   faq/faq.rst
+
+.. toctree::
    :caption: Articles
    :hidden:
 
@@ -174,12 +139,6 @@ Welcome to the documentation for Citus 7.3! Citus horizontally scales PostgreSQL
    articles/sharding_mt_app.rst
    articles/semi_structured_data.rst
    articles/faceted_search.rst
-
-.. toctree::
-   :caption: FAQ
-   :hidden:
-
-   faq/faq.rst
 
 .. Declare these images as dependencies so that
 .. sphinx copies them. It can't detect them in

@@ -1,5 +1,5 @@
-Commonly Encountered Error Messages
-===================================
+Common Error Messages
+=====================
 
 .. _error_failed_execute:
 
