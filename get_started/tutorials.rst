@@ -1,7 +1,7 @@
-Tutorials
-#########
+Quick Tutorials
+###############
 
 .. toctree::
 
-   tutorial_mt.rst
-   tutorial_rt.rst
+   tutorial_multi_tenant.rst
+   tutorial_realtime_analytics.rst
