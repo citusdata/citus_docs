@@ -23,7 +23,7 @@ using PostgreSQL and Citus, with the goal of showcasing several powerful
 features.
 
 We start by setting up a :ref:`multi-node Citus cluster on
-EC2 <multi_machine_manual>` using 4 m3.2xlarge instances as
+EC2 <production>` using 4 m3.2xlarge instances as
 workers. An even easier way to get started is to use `Citus Cloud
 <https://www.citusdata.com/cloud>`__, which gives you a managed Citus
 cluster with full auto-failover. The main table in our `database schema
