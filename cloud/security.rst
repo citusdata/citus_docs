@@ -111,6 +111,8 @@ Encryption at Rest
 
 All data within Citus Cloud is encrypted at rest, including data on the instance as well as all backups for disaster recovery. As mentioned in the connection section, we also require that you connect to your database with TLS.
 
+.. _perimeter_controls:
+
 Network Perimeter Controls
 ==========================
 
