@@ -1,7 +1,7 @@
 .. _ha:
 
-Availability and Recovery
-#########################
+Backup, Availability, and Replication
+#####################################
 
 In the real world, insurance is used to manage risk when a natural
 disaster such as a hurricane or flood strikes. In the database world,
@@ -25,8 +25,8 @@ won't lose any data. In the event of a complete infrastructure failure
 we'll restore your back-up and replay the WAL to the exact moment before
 your system crashed.
 
-High-Availability (HA)
-======================
+High-Availability (HA) Replication
+==================================
 
 In addition to continuous protection which is explained above, high
 availability is available if your application requires less exposure
@@ -120,8 +120,8 @@ created while reducing the impact on the primary database. It also has
 the capability of being able to recover a database from a previous
 version.
 
-Trade-offs between latency and reliability
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Trade-offs between latency and reliability for backups
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There is a long history of trade-offs between latency and reliability,
 dating back to when the gold standard for backups were on spools of

@@ -43,6 +43,9 @@ Scaling Out (adding new nodes)
 
 Node addition completes in five to ten minutes, which is faster than node resizing because the new nodes are created without data. To take advantage of the new nodes you still must adjust manually rebalance the shards, meaning move some shards from existing nodes to the new ones.
 
+Rebalancing
+-----------
+
 You can go to the "Rebalancer" tab in the Cloud console to see the shard balance across nodes. Ordinarily this page will show, "No rebalance required."
 
 .. image:: ../images/cloud-rebalance-unnecessary.png
