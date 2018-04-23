@@ -83,7 +83,7 @@ Failovers happen to address hardware failure, as mentioned, and also for other r
 StatsD external reporting
 =========================
 
-Citus Cloud can send events to an external `StatsD <https://github.com/etsy/statsd>`_ server for detailed monitoring. Cloud sends the following statsd metrics:
+Citus Cloud can send events to an external `StatsD <https://github.com/etsy/statsd>`_ server for detailed monitoring. Citus Cloud sends the following statsd metrics:
 
 +---------------------------------------------+------------------------------------+
 | Metric                                      | Notes                              |
@@ -142,9 +142,10 @@ Citus Cloud can send events to an external `StatsD <https://github.com/etsy/stat
 
 **Notes:**
 
-* The ``citus.mem.*`` metrics are reported in kilobytes, and are also recorded in megabytes as ``system.mem.*``.
+* The ``citus.mem.*`` metrics are reported in kilobytes, and are also recorded in megabytes as ``system.mem.*``. Memory metrics come from ``/proc/meminfo``, and the `proc(5) <http://man7.org/linux/man-pages/man5/proc.5.html>`_ man page contains a description of each.
 * The ``citus.load.*`` metrics are duplicated as ``system.load.*``.
-* ``citus.locks.granted.*`` and ``citus.locks.not_granted.*`` use ``mode`` and ``locktype`` as present in the Postgres `pg_locks <https://www.postgresql.org/docs/current/static/view-pg-locks.html>`_ table.
+* ``citus.locks.granted.*`` and ``citus.locks.not_granted.*`` use ``mode`` and ``locktype`` as present in Postgres' `pg_locks <https://www.postgresql.org/docs/current/static/view-pg-locks.html>`_ table.
+* See the `pgBouncer docs <https://pgbouncer.github.io/usage.html#show-pools>`_ for more details about the pgbouncer_outbound metrics.
 
 To send these metrics to a statsd server, use the "Create New Metrics Destination" button in the "Metrics" tab of Cloud Console.
 
