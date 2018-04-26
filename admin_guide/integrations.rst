@@ -1,8 +1,8 @@
 External Integrations
 #####################
 
-Ingesting Data from Apache Kafka
-================================
+Ingesting Data from Kafka
+=========================
 
 Citus can leverage existing Postgres data ingestion tools. For instance, we can use a tool called `kafka-sink-pg-json <https://github.com/justonedb/kafka-sink-pg-json>`_ to copy JSON messages from a Kafka topic into a database table. As a demonstration, we'll create a ``kafka_test`` table and ingest data from the ``test`` topic with a custom mapping of JSON keys to table columns.
 
@@ -137,6 +137,185 @@ Caveats
 * At the time of this writing, kafka-sink-pg-json requires Kafka version 0.9 or earlier.
 * The kafka-sink-pg-json connector config file does not provide a way to connect with SSL support, so this tool will not work with Citus Cloud which requires secure connections.
 * A malformed JSON string in the Kafka topic will cause the tool to become stuck. Manual intervention in the topic is required to process more events.
+
+Ingesting Data from Spark
+=========================
+
+People sometimes use Spark to transform Kafka data, such as by adding computed values. In this section we'll see how to ingest Spark dataframes into a distributed Citus table.
+
+First let's start a local Spark cluster. It has several moving parts, so the easiest way is to run the pieces with docker-compose.
+
+.. code-block:: bash
+
+  wget https://raw.githubusercontent.com/gettyimages/docker-spark/master/docker-compose.yml
+  docker-compose up
+
+To do the ingestion into PostgreSQL, we'll be writing custom Scala code. We'll use the Scala Build Tool (SBT) to load dependencies and run our code, so `download SBT <https://www.scala-sbt.org/download.html>`_ and install it on your machine.
+
+Next create a new directory for our project.
+
+.. code-block:: bash
+
+  mkdir sparkcitus
+
+Create a file called ``sparkcitus/build.sbt`` to tell SBT our project configuration, and add this:
+
+.. code-block:: scala
+
+  // add this to build.sbt
+
+  name := "sparkcitus"
+  version := "1.0"
+
+  scalaVersion := "2.10.4"
+
+  resolvers ++= Seq(
+    "Maven Central" at "http://central.maven.org/maven2/"
+  )
+
+  libraryDependencies ++= Seq(
+    "org.apache.spark" %% "spark-core" % "2.2.1",
+    "org.apache.spark" %% "spark-sql"  % "2.2.1",
+    "org.postgresql"   %  "postgresql" % "42.2.2"
+  )
+
+Next create a helper Scala class for doing ingestion through JDBC. Add the following to ``sparkcitus/copy.scala``:
+
+.. code-block:: scala
+
+  import java.io.InputStream
+  import java.sql.DriverManager
+  import java.util.Properties
+
+  import org.apache.spark.sql.{DataFrame, Row}
+  import org.postgresql.copy.CopyManager
+  import org.postgresql.core.BaseConnection
+
+  object CopyHelper {
+
+    def rowsToInputStream(rows: Iterator[Row]): InputStream = {
+      val bytes: Iterator[Byte] = rows.map { row =>
+        (row.toSeq
+          .map { v =>
+            if (v == null) {
+              """\N"""
+            } else {
+              "\"" + v.toString.replaceAll("\"", "\"\"") + "\""
+            }
+          }
+          .mkString("\t") + "\n").getBytes
+      }.flatten
+
+      new InputStream {
+        override def read(): Int =
+          if (bytes.hasNext) {
+            bytes.next & 0xff // make the signed byte an unsigned int
+          } else {
+            -1
+          }
+      }
+    }
+
+    def copyIn(url: String, df: DataFrame, table: String):Unit = {
+      var cols = df.columns.mkString(",")
+
+      df.foreachPartition { rows =>
+        val conn = DriverManager.getConnection(url)
+        try {
+          val cm = new CopyManager(conn.asInstanceOf[BaseConnection])
+          cm.copyIn(
+            s"COPY $table ($cols) " + """FROM STDIN WITH (NULL '\N', FORMAT CSV, DELIMITER E'\t')""",
+            rowsToInputStream(rows))
+          ()
+        } finally {
+          conn.close()
+        }
+      }
+    }
+  }
+
+Continuing the setup, save some sample data into ``people.json``. Note the intentional lack of surrounding square brackets. Later we'll create a Spark dataframe from the data.
+
+.. code-block:: js
+
+  {"name":"Tanya Rosenau"   , "age": 24},
+  {"name":"Rocky Slay"      , "age": 85},
+  {"name":"Tama Erdmann"    , "age": 48},
+  {"name":"Jared Olivero"   , "age": 42},
+  {"name":"Gudrun Shannon"  , "age": 53},
+  {"name":"Quentin Yoon"    , "age": 32},
+  {"name":"Yanira Huckstep" , "age": 53},
+  {"name":"Brendon Wesley"  , "age": 19},
+  {"name":"Minda Nordeen"   , "age": 79},
+  {"name":"Katina Woodell"  , "age": 83},
+  {"name":"Nevada Mckinnon" , "age": 65},
+  {"name":"Georgine Mcbee"  , "age": 56},
+  {"name":"Mittie Vanetten" , "age": 17},
+  {"name":"Lecia Boyett"    , "age": 37},
+  {"name":"Tobias Mickel"   , "age": 69},
+  {"name":"Jina Mccook"     , "age": 82},
+  {"name":"Cassidy Turrell" , "age": 37},
+  {"name":"Cherly Skalski"  , "age": 29},
+  {"name":"Reita Bey"       , "age": 69},
+  {"name":"Keely Symes"     , "age": 34}
+
+Finally, create and distribute a table in Citus:
+
+.. code-block:: sql
+
+  create table spark_test ( name text, age integer );
+  select create_distributed_table('spark_test', 'name');
+
+Now we're ready to hook everything together. Start up ``sbt``:
+
+.. code-block:: bash
+
+  # run this in the sparkcitus directory
+
+  sbt
+
+Once inside sbt, compile the project and then go into the "console" which is a Scala repl that loads our code and dependencies:
+
+.. code-block:: text
+
+  sbt:sparkcitus> compile
+  [success] Total time: 3 s
+
+  sbt:sparkcitus> console
+  [info] Starting scala interpreter...
+
+  scala> 
+
+Type these Scala commands into the console:
+
+.. code-block:: scala
+
+  // inside the sbt scala interpreter
+
+  import org.apache.spark.sql.SparkSession
+
+  // open a session to the Spark cluster
+  val spark = SparkSession.builder().appName("sparkcitus").config("spark.master", "local").getOrCreate()
+
+  // load our sample data into Spark
+  val df = spark.read.json("people.json")
+
+  // this is a simple connection url (it assumes Citus
+  // is running on localhost:5432), but more complicated
+  // JDBC urls differ subtly from Postgres urls, see:
+  // https://jdbc.postgresql.org/documentation/head/connect.html
+  val url = "jdbc:postgresql://localhost/postgres"
+
+  // ingest the data frame using our CopyHelper class
+  CopyHelper.copyIn(url, df, "spark_test")
+
+This uses the CopyHelper to ingest the ionformation. At this point the data will appear in the distributed table.
+
+.. note::
+
+  Our method of ingesting the dataframe is straightforward but doesn't protect against Spark errors. Spark guarantees "at least once" semantics, i.e. a read error can cause a subsequent read to encounter previously seen data.
+
+  A more complicated, but robust, approach is to use the custom Spark partitioner `spark-citus <https://github.com/koeninger/spark-citus>`_ so that partitions match up exactly with Citus shards. This allows running transactions directly on worker nodes which can rollback on read failure. See the presentation linked in that repository for more information.
 
 Business Intelligence with Tableau
 ==================================
