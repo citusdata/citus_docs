@@ -21,6 +21,8 @@ Two-Factor Authentication
 
 We support two factor authentication for all Citus accounts. You can enable it from within your Citus Cloud account. We support Google Authenticator and Authy as two primary apps for setting up your two factor authentication.
 
+.. _cloud_roles:
+
 Users and Permissions
 =====================
 
