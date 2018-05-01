@@ -195,6 +195,73 @@ Example: Datadog with statsd
 
 Clicking the hostname link goes into a full dashboard of all the metrics, with the ability to write queries and set alerts.
 
+VividCortex External Monitoring
+===============================
+
+Like the systems above, VividCortex provides a metrics dashboard. While the other systems mostly focus on computer resources, VividCortex focuses on the performance of queries. It tracks their throughput, error rate, 99th percentile latency, and concurrency.
+
+To integrate VividCortex with Citus Cloud we'll be using the `Off-Host Configuration <https://docs.vividcortex.com/getting-started/off-host-installation/>`_. In this mode we create a database role that with permissions to read the PostgreSQL statistics tables, and give the role's login information to the VividCortex agent. VividCortex then connects and periodically collects information.
+
+Here's a step-by-step guide to get started.
+
+1. Create a special VividCortex schema and relations on the Citus coordinator node.
+
+   .. code-block:: bash
+
+      # Use their SQL script to create schema and
+      # helper functions to monitor the cluster
+
+      curl -L https://docs.vividcortex.com/create-stat-functions-v96.sql | \
+        psql [connection_uri]
+
+2. Create a VividCortex account.
+
+2. On the **inventory** page, click "Setup your first host." This will open a wizard.
+
+   .. image:: ../images/vc-setup-first-host.png
+
+3. Choose the off-host installation method.
+
+   .. image:: ../images/vc-method-type.png
+
+4. Select the PostgreSQL database.
+
+   .. image:: ../images/vc-db.png
+
+5. In Citus Cloud, :ref:`create a new role <cloud_roles>` called ``vividcortex``. Then grant it access to the VividCortex schema like so:
+
+   .. code-block:: bash
+
+      # Grant our new role access to vividcortex schema
+
+      psql [connection_uri] -c \
+        "GRANT USAGE ON SCHEMA vividcortex TO vividcortex;"
+
+  Finally note the generated password for the new account. Click "Show full URL" to see it.
+
+   .. image:: ../images/vc-new-role.png
+
+6. Input the connection information into the credentials screen in the VividCortex wizard. Make sure SSL Enabled is on, and that you're using SSL Mode "Verify Full." Specify ``/etc/ssl/certs/citus.crt`` for the SSL Authority.
+
+   .. image:: ../images/vc-connection.png
+
+7. Provision a server to act as the VividCortex agent. For instance a small EC2 instance will do. On this new host install the Citus Cloud SSL certificate.
+
+   .. code-block:: bash
+
+     sudo curl -L https://console.citusdata.com/citus.crt \
+       -o /etc/ssl/certs/citus.crt
+
+8. Advance to the next screen in the wizard. It will contain commands to run on the agent server, customized with a token for your account.
+
+   .. image:: ../images/vc-commands.png
+
+  After running the commands on your server, the server will appear under "Select host." Click it and then continue.
+
+After these steps, VividCortex should show all systems as activated. You can then proceed to the dashboard to monitor queries on your Citus cluster.
+
+.. image:: ../images/vc-final.png
+
 Systemic Cloud Status
 =====================
 
