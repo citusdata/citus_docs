@@ -160,31 +160,39 @@ The following function wraps the rollup query up for convenience.
 
 .. code-block:: plpgsql
 
+  -- single-row table to store when we rolled up last
+  CREATE TABLE latest_rollup (
+    minute timestamptz PRIMARY KEY,
+
+    EXCLUDE USING gist (minute WITH <>),
+    CHECK (minute = date_trunc('minute', minute))
+  );
+
+  -- initialize to a time long ago
+  INSERT INTO latest_rollup VALUES ('10-10-1901');
+
+  -- function to do the rollup
   CREATE OR REPLACE FUNCTION rollup_http_request() RETURNS void AS $$
+  DECLARE
+    this_minute timestamptz := date_trunc('minute', now());
+    since       timestamptz := minute from latest_rollup;
   BEGIN
     INSERT INTO http_request_1min (
       site_id, ingest_time, request_count,
       success_count, error_count, average_response_time_msec
     ) SELECT
       site_id,
-      minute,
+      date_trunc('minute', ingest_time),
       COUNT(1) as request_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
       SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
-    FROM (
-      SELECT *,
-        date_trunc('minute', ingest_time) AS minute
-      FROM http_request
-    ) AS h
-    WHERE minute > (
-      SELECT COALESCE(max(ingest_time), timestamp '10-10-1901')
-      FROM http_request_1min
-      WHERE http_request_1min.site_id = h.site_id
-    )
-      AND minute <= date_trunc('minute', now())
-    GROUP BY site_id, minute
-    ORDER BY minute ASC;
+     FROM http_request
+    WHERE date_trunc('minute', ingest_time) <@
+            tstzrange(since, this_minute, '(]')
+    GROUP BY site_id, date_trunc('minute', ingest_time);
+
+    UPDATE latest_rollup SET minute = this_minute;
   END;
   $$ LANGUAGE plpgsql;
 
