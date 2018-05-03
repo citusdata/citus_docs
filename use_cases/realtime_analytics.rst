@@ -175,7 +175,7 @@ The following function wraps the rollup query up for convenience.
   CREATE OR REPLACE FUNCTION rollup_http_request() RETURNS void AS $$
   DECLARE
     this_minute timestamptz := date_trunc('minute', now());
-    since       timestamptz := minute from latest_rollup;
+    last_time   timestamptz := minute from latest_rollup;
   BEGIN
     INSERT INTO http_request_1min (
       site_id, ingest_time, request_count,
@@ -189,8 +189,8 @@ The following function wraps the rollup query up for convenience.
       SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
     FROM http_request
     WHERE date_trunc('minute', ingest_time) <@
-            tstzrange(since, this_minute, '(]')
-    GROUP BY site_id, date_trunc('minute', ingest_time);
+            tstzrange(last_time, this_minute, '(]')
+    GROUP BY 1, 2;
 
     UPDATE latest_rollup SET minute = this_minute;
   END;
