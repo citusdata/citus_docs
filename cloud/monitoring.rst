@@ -200,7 +200,7 @@ VividCortex External Monitoring
 
 Like the systems above, VividCortex provides a metrics dashboard. While the other systems mostly focus on computer resources, VividCortex focuses on the performance of queries. It tracks their throughput, error rate, 99th percentile latency, and concurrency.
 
-To integrate VividCortex with Citus Cloud we'll be using the `Off-Host Configuration <https://docs.vividcortex.com/getting-started/off-host-installation/>`_. In this mode we create a database role that with permissions to read the PostgreSQL statistics tables, and give the role's login information to the VividCortex agent. VividCortex then connects and periodically collects information.
+To integrate VividCortex with Citus Cloud we'll be using the `Off-Host Configuration <https://docs.vividcortex.com/getting-started/off-host-installation/>`_. In this mode we create a database role with permissions to read the PostgreSQL statistics tables, and give the role's login information to the VividCortex agent. VividCortex then connects and periodically collects information.
 
 Here's a step-by-step guide to get started.
 
