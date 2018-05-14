@@ -69,7 +69,7 @@ Notice ``db.columns`` and ``db.json.parse``. The elements of these lists match u
 
 Our own scenario is simple. Our events will be objects like ``{"a":1, "b":2}``. The parser will pull those values into eponymous columns.
 
-Now that the configuration file is set up, it's time to prepare the database. In psql run:
+Now that the configuration file is set up, it's time to prepare the database. Connect to the coordinator node with psql and run this:
 
 .. code-block:: psql
 
