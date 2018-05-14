@@ -16,8 +16,8 @@ The easiest way to experiment with Kafka is using the Confluent platform, which 
 
   # Now get the jar and conf files for kafka-sink-pg-json
   mkdir sink
-  curl -L https://github.com/justonedb/kafka-sink-pg-json/releases/download/v1.0.2/justone-jafka-sink-pg-json-1.0.zip \
-    | tar zx -C sink
+  curl -L https://github.com/justonedb/kafka-sink-pg-json/releases/download/v1.0.2/justone-jafka-sink-pg-json-1.0.zip -o sink.zip
+  unzip $_ && rm $_
 
 The download of kafka-sink-pg-json contains some configuration files. We want to connect to the coordinator Citus node, so we must edit the configuration file ``sink/justone-kafka-sink-pg-json-connector.properties``:
 
