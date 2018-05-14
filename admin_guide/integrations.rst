@@ -148,6 +148,8 @@ First let's start a local Spark cluster. It has several moving parts, so the eas
 .. code-block:: bash
 
   wget https://raw.githubusercontent.com/gettyimages/docker-spark/master/docker-compose.yml
+
+  # this may require "sudo" depending on the docker daemon configuration
   docker-compose up
 
 To do the ingestion into PostgreSQL, we'll be writing custom Scala code. We'll use the Scala Build Tool (SBT) to load dependencies and run our code, so `download SBT <https://www.scala-sbt.org/download.html>`_ and install it on your machine.
