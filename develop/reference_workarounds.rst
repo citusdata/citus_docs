@@ -93,39 +93,6 @@ The workaround is to materialize the select query in a temporary distributed tab
   DROP TABLE temp_table;
   END;
 
-.. _window_func_workaround:
-
-Window Functions
-----------------
-
-Currently Citus does not have out-of-the-box support for window functions on cross-shard queries, but there is a straightforward workaround. Window functions will work across shards on a distributed table if
-
-1. The window function is in a subquery and
-2. It includes a :code:`PARTITION BY` clause containing the table's distribution column
-
-Suppose you have table called :code:`github_events`, distributed by the column :code:`user_id`. This query will **not** work directly:
-
-.. code-block:: sql
-
-  -- won't work, see workaround
-
-  SELECT repo_id, org->'id' as org_id, count(*)
-    OVER (PARTITION BY user_id)
-    FROM github_events;
-
-You can make it work by moving the window function into a subquery like this:
-
-.. code-block:: sql
-
-  SELECT *
-  FROM (
-    SELECT repo_id, org->'id' as org_id, count(*)
-      OVER (PARTITION BY user_id)
-      FROM github_events
-  ) windowed;
-
-Remember that it specifies :code:`PARTITION BY user_id`, the distribution column.
-
 Temp Tables: the Last Resort
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
