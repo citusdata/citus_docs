@@ -189,7 +189,7 @@ Try it Yourself
   This guide is designed so you can follow along in your own Citus database. Use one of these alternatives to spin up a database:
 
   * Run Citus locally using :ref:`single_machine_docker`, or
-  * Provision a cluster using `Citus Cloud <https://console.citusdata.com/users/sign_up>`_
+  * `Sign up <https://console.citusdata.com/users/sign_up>`_ for Citus Cloud and provision a cluster.
 
   You'll run the SQL commands using psql:
 
