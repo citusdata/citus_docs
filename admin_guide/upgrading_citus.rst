@@ -29,7 +29,7 @@ To upgrade a Citus version to its latest patch, issue a standard upgrade command
 
 .. code-block:: bash
 
-  sudo yum update citus73_10
+  sudo yum update citus74_10
   sudo service postgresql-10.0 restart
 
 .. _major_minor_upgrade:
@@ -57,7 +57,7 @@ Step 1. Update Citus Package
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus62_96 citus73_96
+  sudo yum swap citus62_96 citus74_96
   sudo service postgresql-9.6 restart
 
 Step 2. Apply Update in DB
