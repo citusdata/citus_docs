@@ -107,7 +107,6 @@ Welcome to the documentation for Citus 7.4! Citus horizontally scales PostgreSQL
 
    admin_guide/cluster_management.rst
    admin_guide/table_management.rst
-   admin_guide/integrations.rst
    admin_guide/upgrading_citus.rst
 
 .. toctree::
