@@ -149,8 +149,6 @@ The situation changes when dealing with late arriving data, or running the rollu
     ON CONFLICT (day, url, site_id) DO UPDATE SET
       view_count = daily_page_views.view_count + EXCLUDED.view_count;
 
-(In reality this particular construction needs a slight modification on Citus, see the :ref:`upsert_into_select` workaround.)
-
 Updates and Deletion
 --------------------
 
