@@ -4,41 +4,42 @@ Monitoring
 Resources Usage
 ===============
 
-Citus Cloud metrics enable you to get information about your cluster's health and performance. The "Metrics" tab of the Cloud Console provides graphs for a number of measurements, all viewable per node.
+Citus Cloud metrics enable you to get information about your cluster's health and performance. The "Metrics" tab of the Cloud Console provides graphs for a number of measurements, all viewable per node. Below are the metrics, broken into categories, with details about the less obvious ones.
 
 Amazon EBS Volume Metrics
 -------------------------
 
-* Read IOPS. The average number of read operations per second.
-   .. image:: ../images/metric-iops-read.png
-* Write IOPS. The average number of write operations per second.
-   .. image:: ../images/metric-iops-write.png
-* Average Queue Length (Count). The number of read and write operation requests waiting to be completed.
-   .. image:: ../images/metric-queue.png
+IOPS are a unit of measure representing input/output operations per second. The operations are measured in KiB, and the underlying drive technology determines the maximum amount of data that a volume type counts as a single I/O.
+
+* Read IOPS
+
+* Write IOPS
+
+Volume queue length is the number of pending I/O requests for a device. Latency is the true end-to-end client time of an I/O operation, in other words, the time elapsed between sending an I/O and receiving an acknowledgement that the I/O read or write is complete.
+
+* Average Queue Length (Count)
+
 * Average Read Latency (Seconds)
-   .. image:: ../images/metric-latency-read.png
+
 * Average Write Latency (Seconds)
-   .. image:: ../images/metric-latency-write.png
+
 * Bytes Read / Second
-   .. image:: ../images/metric-bytes-read.png
+
 * Bytes Written / Second
-   .. image:: ../images/metric-bytes-write.png
 
 CPU and Network
 ---------------
 
 * CPU Utilization (Percent)
-   .. image:: ../images/metric-cpu.png
+
 * Network - Bytes In / Second
-   .. image:: ../images/metric-network-in.png
+
 * Network - Bytes Out / Second
-   .. image:: ../images/metric-network-out.png
 
 PostgreSQL Write-Ahead Log
 --------------------------
 
 * WAL Bytes Written / Second
-   .. image:: ../images/metric-wal.png
 
 Formation Events Feed
 =====================
