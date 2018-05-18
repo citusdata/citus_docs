@@ -8,6 +8,10 @@ h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
   background: #FFC;
 }
 
+.btn-fat {
+  padding: 1em !important;
+}
+
 /* Front page grid */
 
 .front-menu a.box {
