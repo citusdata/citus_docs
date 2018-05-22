@@ -40,6 +40,7 @@ Citus Cloud runs on top of Amazon Web Services. During provisioning you're able 
 - South America (São Paulo) [sa-east-1]
 - US West (N. California) [us-west-1]
 - US West (Oregon) [us-west-2]
+- Canada (Central) [ca-central-1]
 
 If there is an AWS region you do not see listed but would like for us to add support for please `contact us <https://www.citusdata.com/about/contact_us/>`_ and we'd be happy to look into it.
 
