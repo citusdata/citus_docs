@@ -121,7 +121,7 @@ html_theme_options = {
   ## accessible via the Read The Docs admin GUI. I am leaving this
   ## line here for now to avoid rocking the boat.
   'analytics_id': 'UA-32858865-1',
-  'sticky_navigation': True,
+  'sticky_navigation': False,
   'collapse_navigation': False,
 
   # if we want the menu to stay put during page scroll
