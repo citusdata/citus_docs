@@ -80,6 +80,31 @@ Failovers happen to address hardware failure, as mentioned, and also for other r
 *  Situation
 *  Follower
 
+**Disk Almost Full**
+
+The "disk-almost-full" event happens if the disk utilization in the Postgres data directory reaches or exceeds 90%.
+
+*  Formation name
+*  Formation url
+*  Server
+*  "used_bytes"
+*  "total_bytes"
+*  "threshold_pct" (always 90)
+
+The alert will appear once every twenty-four hours until the disk usage is resolved.
+
+**High CPU Utilization**
+
+The "cpu-utilization-high" event happens when there is CPU utilization reaches or exceeds 90%.
+
+*  Formation name
+*  Formation url
+*  Server
+*  "util_pct" (0-100% utilization value)
+*  "threshold_pct" (always 90)
+
+The alert will appear once per hour until CPU utilization goes down to a normal level.
+
 StatsD external reporting
 =========================
 
