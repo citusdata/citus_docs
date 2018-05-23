@@ -12,5 +12,6 @@ Migrating an existing relational store to Citus sometimes requires adjusting the
   migration_mt_query.rst
   migration_mt_ror.rst
   migration_mt_django.rst
+  migration_mt_asp.rst
   migration_data.rst
   migration_rt.rst
