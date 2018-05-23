@@ -10,4 +10,3 @@ SQL Reference
    reference_processing.rst
    reference_propagation.rst
    reference_workarounds.rst
-   reference_query_tools.rst
