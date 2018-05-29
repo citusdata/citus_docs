@@ -164,7 +164,7 @@ The following function wraps the rollup query up for convenience.
   CREATE TABLE latest_rollup (
     minute timestamptz PRIMARY KEY,
 
-    EXCLUDE USING gist (minute WITH <>),
+    -- "minute" should be no more precise than a minute
     CHECK (minute = date_trunc('minute', minute))
   );
 
@@ -174,8 +174,8 @@ The following function wraps the rollup query up for convenience.
   -- function to do the rollup
   CREATE OR REPLACE FUNCTION rollup_http_request() RETURNS void AS $$
   DECLARE
-    this_minute timestamptz := date_trunc('minute', now());
-    last_time   timestamptz := minute from latest_rollup;
+    current_time     timestamptz := date_trunc('minute', now());
+    last_rollup_time timestamptz := minute from latest_rollup;
   BEGIN
     INSERT INTO http_request_1min (
       site_id, ingest_time, request_count,
@@ -188,11 +188,14 @@ The following function wraps the rollup query up for convenience.
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
       SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
     FROM http_request
+    -- roll up only data new since last_rollup_time
     WHERE date_trunc('minute', ingest_time) <@
-            tstzrange(last_time, this_minute, '(]')
+            tstzrange(last_rollup_time, current_time, '(]')
     GROUP BY 1, 2;
 
-    UPDATE latest_rollup SET minute = this_minute;
+    -- update the value in latest_rollup so that next time we run the
+    -- rollup it will operate on data newer than current_time
+    UPDATE latest_rollup SET minute = current_time;
   END;
   $$ LANGUAGE plpgsql;
 
