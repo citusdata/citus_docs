@@ -25,6 +25,11 @@ Citus Cloud bills on a per minute basis. We bill for a minimum of one hour of us
 
 You can see pricing of various configurations directly within our `pricing calculator <https://www.citusdata.com/pricing>`_.
 
+Cloud Platform Status
+=====================
+
+Any events affecting the Citus Cloud platform as a whole are recorded on `status.citusdata.com <https://status.citusdata.com/>`_. This page shows a chart of recent uptime, as well as listing any past incidents.
+
 .. raw:: html
 
   <script type="text/javascript">
