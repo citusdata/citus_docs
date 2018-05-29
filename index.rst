@@ -93,14 +93,6 @@ Welcome to the documentation for Citus 7.4! Citus horizontally scales PostgreSQL
    develop/api.rst
 
 .. toctree::
-   :caption: Administer
-   :hidden:
-
-   admin_guide/cluster_management.rst
-   admin_guide/table_management.rst
-   admin_guide/upgrading_citus.rst
-
-.. toctree::
    :caption: Citus Cloud
    :hidden:
 
@@ -108,6 +100,14 @@ Welcome to the documentation for Citus 7.4! Citus horizontally scales PostgreSQL
    cloud/manage.rst
    cloud/additional.rst
    cloud/support.rst
+
+.. toctree::
+   :caption: Administer
+   :hidden:
+
+   admin_guide/cluster_management.rst
+   admin_guide/table_management.rst
+   admin_guide/upgrading_citus.rst
 
 .. toctree::
    :caption: Troubleshoot
