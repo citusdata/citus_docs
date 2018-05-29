@@ -287,11 +287,6 @@ After these steps, VividCortex should show all systems as activated. You can the
 
 .. image:: ../images/vc-final.png
 
-Systemic Cloud Status
-=====================
-
-Any events affecting the Citus Cloud platform as a whole are recorded on `status.citusdata.com <https://status.citusdata.com/>`_.
-
 .. raw:: html
 
   <script type="text/javascript">
