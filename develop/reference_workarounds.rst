@@ -69,18 +69,16 @@ Remember that the coordinator will send the results in the subquery or CTE to al
 
 .. _upsert_into_select:
 
-INSERT…SELECT upserts
----------------------
+INSERT…SELECT upserts lacking distribution column
+-------------------------------------------------
 
-For those INSERT…SELECT statements including a GROUP BY clause which contains the distribution column, Citus can push the whole statement down to workers for execution. Otherwise Citus uses :ref:`push_pull_execution` to pull the results of the SELECT query from workers to the coordinator, and push the rows for insertion back down to the workers. This latter mode does not support the ON CONFLICT clause (Postgres' way to do upserts).
-
-Attempting to execute these kind of queries will generate an error message:
+Citus supports INSERT…SELECT…ON CONFLICT statements between co-located tables when the distribution column is among those columns selected and inserted. Also aggregates in the statement must include the distribution column in the GROUP BY clause. Failing to meet these conditions will raise an error:
 
 ::
 
   ERROR: ON CONFLICT is not supported in INSERT ... SELECT via coordinator
 
-The ideal solution is to model the data with a distribution column that can be part of the GROUP BY clause in the upsert statement. However if this is not feasible then the workaround is to materialize the select query in a temporary distributed table, and upsert from there.
+If the upsert is an important operation in your application, the ideal solution is to model the data so that the source and destination tables are co-located, and so that the distribution column can be part of the GROUP BY clause in the upsert statement (if aggregating). However if this is not feasible then the workaround is to materialize the select query in a temporary distributed table, and upsert from there.
 
 .. code-block:: postgresql
 
