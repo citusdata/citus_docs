@@ -1,6 +1,11 @@
 Monitoring
 ##########
 
+Cloud Platform Status
+=====================
+
+Any events affecting the Citus Cloud platform as a whole are recorded on `status.citusdata.com <https://status.citusdata.com/>`_. This page shows a chart of recent uptime, as well as listing any past incidents.
+
 Resources Usage
 ===============
 
