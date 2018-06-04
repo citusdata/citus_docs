@@ -40,17 +40,24 @@ We accept payments through credit card or directly through bank ACH. To set up p
 
 .. image:: ../images/cloud-bill-menu.png
 
-Then fill out the form for the desired payment option.
+Then choose either "Credit Card" or "Bank Account" and fill out the form for the desired payment option:
 
-Credit Card Option
-~~~~~~~~~~~~~~~~~~
+.. raw:: html
 
-.. image:: ../images/cloud-bill-credit.png
-
-Bank Account ACH
-~~~~~~~~~~~~~~~~
-
-.. image:: ../images/cloud-bill-ach.png
+  <div class="wy-table-responsive">
+  <table border="1" class="docutils">
+  <thead>
+    <tr>
+    <th class="head">Credit Card</th><th class="head">Bank Account</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><img src="../_images/cloud-bill-credit.png" alt="cc details" /></td>
+      <td><img src="../_images/cloud-bill-ach.png" alt="ach details" /></td>
+    <tr>
+  </tbody>
+  </table>
+  </div>
 
 .. raw:: html
 
