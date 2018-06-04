@@ -13,8 +13,11 @@ Web based support is available on all Citus Cloud plans. You can open a `support
 - Normal (general support) - 1 business day response time
 - Low (general question) - 3 business days response time
 
-Billing and pricing 
-===================
+Billing
+=======
+
+Pricing
+-------
 
 Citus Cloud bills on a per minute basis. We bill for a minimum of one hour of usage across all plans. Pricing varies based on the size and configuration of the cluster. A few factors that determine your price are:
 
@@ -25,10 +28,31 @@ Citus Cloud bills on a per minute basis. We bill for a minimum of one hour of us
 
 You can see pricing of various configurations directly within our `pricing calculator <https://www.citusdata.com/pricing>`_.
 
-Cloud Platform Status
-=====================
+Payments
+--------
 
-Any events affecting the Citus Cloud platform as a whole are recorded on `status.citusdata.com <https://status.citusdata.com/>`_. This page shows a chart of recent uptime, as well as listing any past incidents.
+We accept payments through credit card or directly through bank ACH. To set up payment details, go to "Org" -> "Billing" in the main menu of the Cloud Console.
+
+.. image:: ../images/cloud-bill-menu.png
+
+Then choose either "Credit Card" or "Bank Account" and fill out the form for the desired payment option:
+
+.. raw:: html
+
+  <div class="wy-table-responsive">
+  <table border="1" class="docutils">
+  <thead>
+    <tr>
+    <th class="head">Credit Card</th><th class="head">Bank Account</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><img src="../_images/cloud-bill-credit.png" alt="cc details" /></td>
+      <td><img src="../_images/cloud-bill-ach.png" alt="ach details" /></td>
+    <tr>
+  </tbody>
+  </table>
+  </div>
 
 .. raw:: html
 
