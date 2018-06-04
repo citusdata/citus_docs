@@ -184,8 +184,8 @@ Example output:
 
 Note that this query works only when :code:`citus.shard_replication_factor` = 1. Also there are other Citus functions for querying distributed table size, see :ref:`table_size`.
 
-Detetermining Replication Factor per Table
-------------------------------------------
+Determining Replication Factor per Table
+----------------------------------------
 
 When using Citus replication rather than PostgreSQL streaming replication, each table can have a customized "replication factor." This controls the number of redundant copies Citus keeps of each of the table's shards. (See :ref:`worker_node_failures`.)
 
