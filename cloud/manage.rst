@@ -8,4 +8,5 @@ Manage
   monitoring.rst
   security.rst
   availability.rst
+  upgrades.rst
   logging.rst
