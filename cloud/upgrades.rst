@@ -1,7 +1,7 @@
 Upgrades
 ########
 
-On a self-hosted instance of Citus, all upgrades to PostgreSQL and/or the Citus extension must be done :ref:`manually <upgrading>`.  However on Citus Cloud the work is automated. When desired, visit the Settings tab in the cloud console, and scroll down to the upgrade section:
+Regularly upgrading PostgreSQL and the Citus extension keeps you on top of all the latest features and bug fixes, and on Citus Cloud an upgrade is as easy as a few clicks of a button.  Just visit the Settings tab in the cloud console, and scroll down to the upgrade section:
 
 .. image:: ../images/cloud-upgrade-formation.png
 
