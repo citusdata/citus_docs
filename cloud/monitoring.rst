@@ -9,7 +9,7 @@ Citus Cloud metrics enable you to get information about your cluster's health an
 Amazon EBS Volume Metrics
 -------------------------
 
-Below is a list of the metrics reported by Citus Cloud for underlying EBS resources. A full description of the metrics can be found in the AWS documentation about `I/O Characteristics and Monitoring <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html>`_.
+(A full description of the metrics reported by Citus Cloud for underlying EBS resources can be found in the AWS documentation about `I/O Characteristics and Monitoring <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html>`_.)
 
 IOPS are a unit of measure representing input/output operations per second. The operations are measured in KiB, and the underlying drive technology determines the maximum amount of data that a volume type counts as a single I/O.
 
