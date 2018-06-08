@@ -110,6 +110,39 @@ reference table
 
 	SELECT upgrade_to_reference_table('nation');
 
+.. _mark_tables_colocated:
+
+mark_tables_colocated
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The mark_tables_colocated() function takes a distributed table (the source), and a list of others (the targets), and puts the targets into the same co-location group as the source. If the source is not yet in a group, this function creates one, and assigns the source and targets to it.
+
+Arguments
+************************
+
+**source_table_name:** Name of the distributed table whose co-location group the targets will be assigned to match.
+
+**target_table_names:** Array of names of the distributed target tables, must be non-empty. These distributed tables must match the source table in:
+
+  * distribution method
+  * distribution column type
+  * replication type
+  * shard count
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+
+This example puts ``products`` and ``line_items`` in the same co-location group as ``stores``. The example assumes that these tables are all distributed on a column with matching type, most likely a "store id."
+
+.. code-block:: postgresql
+
+  SELECT mark_tables_colocated('stores', ARRAY['products', 'line_items']);
+
 master_create_distributed_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. _master_create_distributed_table:
