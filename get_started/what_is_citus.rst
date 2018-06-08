@@ -51,13 +51,17 @@ A good way to think about tools and SQL features is the following: if your workl
 When Citus is Inappropriate
 ---------------------------
 
-Workloads which require a large flow of information between worker nodes generally do not work as well. For instance:
+Some workloads require a large flow of information between worker nodes and generally do not work well on Citus. For instance:
 
-* Traditional data warehousing with long, free-form SQL
-* Many distributed transactions across multiple shards
+* Long, free-form SQL statements joining on diverse columns
+* Prevalent distributed transactions across multiple shards
 * Queries that return data-heavy ETL results rather than summaries
 
-These constraints come from the fact that Citus operates across many nodes (as compared to a single node database), giving you easy horizontal scaling as well as high availability.
+Other workloads don't need a powerful distributed database, such as:
+
+* When single-node Postgres can support your application and you do not expect to grow
+* Offline analytics, without the need for real-time ingest nor real-time queries
+* Analytics apps that do not need to support a large number of concurrent users
 
 .. raw:: html
 
