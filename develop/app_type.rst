@@ -1,9 +1,28 @@
 Determining Application Type
-----------------------------
+============================
 
 Running efficient queries on a Citus cluster requires that data be properly distributed across machines. This varies by the type of application and its query patterns.
 
-There are broadly two kinds of applications that work very well on Citus. The first step in data modeling is to identify which of them more closely resembles your application:
+There are broadly two kinds of applications that work very well on Citus. The first step in data modeling is to identify which of them more closely resembles your application.
+
+At a Glance
+-----------
+
+.. raw:: html
+
+  <div class="row">
+    <div class="col-sm-6">
+      <img src="../_images/mt-shape.png" />
+      <p>In a <strong>multi-tenant application</strong>, queries reference data for one tenant (e.g. company/store/site) at a time. Citus routes the query to execute entirely on one node that holds the tenant.</p>
+    </div>
+    <div class="col-sm-6">
+      <img src="../_images/rt-shape.png" />
+      <p>In a <strong>real-time application</strong>, queries require data from all nodes. Citus gathers and, if necessary, aggregates data from all of them into the final results.</p>
+    </div>
+  </div>
+
+Examples and Characteristics
+----------------------------
 
 **Multi-Tenant Application**
 
