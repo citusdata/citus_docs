@@ -1,16 +1,27 @@
 .. _what_is_citus:
 
-What is Citus?
-==============
+Why Citus?
+==========
 
-Citus horizontally scales PostgreSQL across multiple machines using sharding and replication. Its query engine parallelizes incoming SQL queries across these servers to enable human real-time (less than a second) responses on large datasets.
+Fast-growing multi-tenant apps want to add new customers, deliver great performance, and not have to worry about database infrastructure. Data analysts want sub-second response times for customer-facing analytics dashboards, even with real-time ingestion, very large data sets, complex queries, and lots of concurrent users.
 
-Citus extends the underlying database rather than forking it, which gives developers and enterprises the power and familiarity of a traditional relational database. As an extension, Citus supports new PostgreSQL releases, allowing users to benefit from new features while maintaining compatibility with existing PostgreSQL tools.
+Citus allows these and other applications to enjoy the power and familiarity of a traditional relational database, but with the capability for massive scale. Applications connect to and use a Citus-enabled PostgreSQL database just like they would a traditional PostgreSQL database. Citus uses the same SQL commands that developers and frameworks already know.
+
+What is it?
+-----------
+
+Citus is basically worry-free Postgres that is built to scale out. It's an extension to Postgres that distributes data and queries in a cluster of multiple machines. As an extension, Citus supports new PostgreSQL releases, allowing users to benefit from new features while maintaining compatibility with existing PostgreSQL tools.
+
+Citus is available in three ways:
+
+1. As open source to add to existing Postgres servers
+2. As enterprise software with additional features
+3. As a fully-managed database as a service, called Citus Cloud
 
 .. _when_to_use_citus:
 
 When to Use Citus
------------------
+=================
 
 Citus serves many use cases. Two common ones are scaling multi-tenant (B2B) databases and real-time analytics.
 
