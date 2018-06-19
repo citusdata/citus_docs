@@ -127,11 +127,25 @@ Once we create this new distributed table, we can then run :code:`INSERT INTO ..
     WHERE site_id = 5 AND
       day >= date '2016-01-01' AND day < date '2017-01-01';
 
-It's worth noting that for :code:`INSERT INTO ... SELECT` to work on distributed tables, Citus requires the source and destination table to be co-located. In summary:
+It's worth noting that for :code:`INSERT INTO ... SELECT` to work on distributed tables, Citus requires the source and destination table to be co-located.
 
-- The tables queried and inserted are distributed by analogous columns
-- The select query includes the distribution column
-- The insert statement includes the distribution column
+In summary:
+
+- The tables queried and inserted must be distributed by analogous columns
+- The select query must include the distribution column
+- The insert statement must include the distribution column
+- The destination table must not contain a serial/bigserial column
+
+.. note::
+
+  INSERT INTO…SELECT queries going from one distributed table to another cannot generate values for serial columns in the destination. Doing so requires a ``nextval()`` that is unique across the whole cluster, which is not available to a query pushed down to a single worker node. Attempting to run such a query will raise an error:
+
+  .. code-block:: text
+
+    ERROR:  0A000: INSERT ... SELECT cannot generate sequence values when selecting from a distributed table
+    LOCATION:  CoordinatorInsertSelectSupported, insert_select_planner.c:1221
+
+  We recommend removing serial columns, and instead using a UUID or manually generated integer column.
 
 The rollup query above aggregates data from the previous day and inserts it into :code:`daily_page_views`. Running the query once each day means that no rollup tables rows need to be updated, because the new day's data does not affect previous rows.
 
