@@ -75,7 +75,7 @@ For instance suppose a multi-tenant eCommerce site needs to calculate sales tax 
 
   SELECT create_reference_table('states');
 
-Now queries such as one calculating tax for a shopping cart can join on the :code:`states` table with no network overhead.
+Now queries such as one calculating tax for a shopping cart can join on the :code:`states` table with no network overhead, and can add a foreign key to the state code for better validation.
 
 In addition to distributing a table as a single replicated shard, the :code:`create_reference_table` UDF marks it as a reference table in the Citus metadata tables. Citus automatically performs two-phase commits (`2PC <https://en.wikipedia.org/wiki/Two-phase_commit_protocol>`_) for modifications to tables marked this way, which provides strong consistency guarantees.
 
@@ -108,7 +108,7 @@ Writes on the table are blocked while the data is migrated, and pending writes a
 
 .. note::
 
-  When distributing a number of tables with foreign keys between them, it's best to drop the foreign keys before running :code:`create_distributed_table` and recreating them after distributing the tables. Foreign keys cannot always be enforced when one table is distributed and the other is not.
+  When distributing a number of tables with foreign keys between them, it's best to drop the foreign keys before running :code:`create_distributed_table` and recreating them after distributing the tables. Foreign keys cannot always be enforced when one table is distributed and the other is not. However foreign keys *are* supported between distributed tables and reference tables.
 
 When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table.
 
