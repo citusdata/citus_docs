@@ -3,59 +3,14 @@
 Django
 ------
 
-At the start of this section we discussed the framework-agnostic database changes required for using Citus in the multi-tenant use case. This section investigates specifically how to migrate multi-tenant Django applications to a Citus storage backend.
+In :ref:`mt_schema_migration` we discussed the framework-agnostic database changes required for using Citus in the multi-tenant use case. Here we investigate specifically how to migrate multi-tenant Django applications to a Citus storage backend.
 
 Preparing to scale-out a multi-tenant application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Initially you’ll often start with all tenants placed on a single database node, and using a framework like Django to load the data for a given tenant when you serve a web request that returns the tenant’s data.
+Initially you’ll start with all tenants placed on a single database node. Django's typical conventions make some assumptions about the data storage which limit scale-out options.
 
-Django's typical conventions make a few assumptions about the data storage that limit scale-out options. In particular, the ORM introduces a pattern where you normalize data and split it into many distinct models each identified by a single ``id`` column (usually added implicitly by the ORM). For instance, consider this simplified model:
-
-.. code-block:: python
-
-  from django.utils import timezone
-  from django.db import models
-
-  class Store(models.Model):
-      name = models.CharField(max_length=255)
-      url = models.URLField()
-
-  class Product(models.Model):
-      name = models.CharField(max_length=255)
-      description = models.TextField()
-      price = models.DecimalField(max_digits=6, decimal_places=2),
-      quantity = models.IntegerField()
-      store = models.ForeignKey(Store)
-
-  class Purchase(models.Model):
-      ordered_at = models.DateTimeField(default=timezone.now)
-      billing_address = models.TextField()
-      shipping_address = models.TextField()
-
-      product = models.ForeignKey(Product)
-
-The tricky thing with this pattern is that in order to find all purchases for a store, you'll have to query for all of a store's products first. This becomes a problem once you start sharding data, and in particular when you run UPDATE or DELETE queries on nested models like purchases in this example.
-
-**1. Introduce a column for the store\_id on every record that belongs to a store**
-
-In order to scale out a multi-tenant model, it's essential that you can locate all records that belong to a store quickly. The easiest way to achieve this is to simply add a :code:`store_id` column on every object that belongs to a store, and backfill your existing data to have this column set correctly.
-
-**2. Use UNIQUE constraints which include the store\_id**
-
-Unique and foreign-key constraints on values other than the tenant\_id
-will present a problem in any distributed system, since it’s difficult
-to make sure that no two nodes accept the same unique value. Enforcing
-the constraint would require expensive scans of the data across all
-nodes.
-
-To solve this problem, for the models which are logically related
-to a store (the tenant for our app), you should add store\_id to
-the constraints, effectively scoping objects unique inside a given
-store. This helps add the concept of tenancy to your models, thereby
-making the multi-tenant system more robust.
-
-Let's begin by adjusting our model definitions and have Django generate a new migration for the two changes discussed.
+In particular, the ORM introduces a pattern where you normalize data and split it into many distinct models each identified by a single ``id`` column (usually added implicitly by the ORM). For instance, consider this simplified model:
 
 .. code-block:: python
 
@@ -71,66 +26,147 @@ Let's begin by adjusting our model definitions and have Django generate a new mi
     description = models.TextField()
     price = models.DecimalField(max_digits=6, decimal_places=2),
     quantity = models.IntegerField()
-    store = models.ForeignKey(Store)
 
-    class Meta(object):                  # added
-      unique_together = ["id", "store"]  #
+    store = models.ForeignKey(Store, on_delete=models.CASCADE)
 
   class Purchase(models.Model):
     ordered_at = models.DateTimeField(default=timezone.now)
     billing_address = models.TextField()
     shipping_address = models.TextField()
 
-    product = models.ForeignKey(
-      Product,
-      db_constraint=False                # added
-    )
-    store = models.ForeignKey(Store)     # added
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
-    class Meta(object):                  # added
-      unique_together = ["id", "store"]  #
+The tricky thing with this pattern is that in order to find all purchases for a store, you'll have to query for all of a store's products first. This becomes a problem once you start sharding data, and in particular when you run UPDATE or DELETE queries on nested models like purchases in this example.
 
-Create a migration to reflect the change: :code:`./manage.py makemigrations`.
+**1. Introduce a column for the store\_id on every record that belongs to a store**
 
-Next we need some custom migrations to adapt the existing key structure in the database for compatibility with Citus. To keep these migrations separate from the ones for the ordinary application, we'll make a new citus application in the same Django project.
-
-.. code-block:: bash
-
-  # Make a new sub-application in the project
-  django-admin startapp citus
-
-Edit :code:`appname/settings.py` and add :code:`'citus'` to the array :code:`INSTALLED_APPS`.
-
-Next we'll add a custom migration to remove simple primary keys which will become composite: :code:`./manage.py makemigrations citus --empty --name remove_simple_pk`. Edit the result to look like this:
+In order to scale out a multi-tenant model, it's essential that you can locate all records that belong to a store quickly. The easiest way to achieve this is to simply add a :code:`store_id` column on every object that belongs to a store. In our case:
 
 .. code-block:: python
 
-  from __future__ import unicode_literals
+  class Purchase(models.Model):
+    ordered_at = models.DateTimeField(default=timezone.now)
+    billing_address = models.TextField()
+    shipping_address = models.TextField()
+
+    store = models.ForeignKey(  ## Add this
+      Store, null=True,         ##
+      on_delete=models.CASCADE  ##
+    )                           ##
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+
+Create a migration to reflect the change: :code:`./manage.py makemigrations`.
+
+**2. Include the store\_id in all primary keys**
+
+Primary-key constraints on values other than the tenant\_id
+will present a problem in any distributed system, since it’s difficult
+to make sure that no two nodes accept the same unique value. Enforcing
+the constraint would require expensive scans of the data across all
+nodes.
+
+To solve this problem, for the models which are logically related
+to a store (the tenant for our app), you should add store\_id to
+the primary keys, effectively scoping objects unique inside a given
+store. This helps add the concept of tenancy to your models, thereby
+making the multi-tenant system more robust.
+
+Django automatically creates a simple "id" primary key on models, so we will need to circumvent that behavior with a custom migration of our own. Run :code:`./manage.py makemigrations appname --empty --name remove_simple_pk`, and edit the result to look like this:
+
+.. code-block:: python
+
   from django.db import migrations
 
   class Migration(migrations.Migration):
+
     dependencies = [
-      ('appname', '<name of latest migration>')
+      # leave this as it was generated
     ]
 
     operations = [
       # Django considers "id" the primary key of these tables, but
-      # the database mustn't, because the primary key will be composite
-      migrations.RunSQL(
-        "ALTER TABLE mtdjango_product DROP CONSTRAINT mtdjango_product_pkey;",
-        "ALTER TABLE mtdjango_product ADD CONSTRAINT mtdjango_product_pkey PRIMARY KEY (store_id, id)"
-      ),
-      migrations.RunSQL(
-        "ALTER TABLE mtdjango_purchase DROP CONSTRAINT mtdjango_purchase_pkey;",
-        "ALTER TABLE mtdjango_purchase ADD CONSTRAINT mtdjango_purchase_pkey PRIMARY KEY (store_id, id)"
-      ),
+      # we want the primary key to be (store_id, id)
+      migrations.RunSQL("""
+        ALTER TABLE appname_product
+        DROP CONSTRAINT appname_product_pkey CASCADE;
+
+        ALTER TABLE appname_product
+        ADD CONSTRAINT appname_product_pkey
+        PRIMARY KEY (store_id, id)
+      """),
+      migrations.RunSQL("""
+        ALTER TABLE appname_purchase
+        DROP CONSTRAINT appname_purchase_pkey CASCADE;
+
+        ALTER TABLE appname_purchase
+        ADD CONSTRAINT appname_purchase_pkey
+        PRIMARY KEY (store_id, id)
+      """),
     ]
 
-Next, we'll make one to tell Citus to mark tables for distribution. :code:`./manage.py makemigrations citus --empty --name distribute_tables`. Edit the result to look like this:
+**3. Switch to TenantModel**
+
+Next, we'll use the `django-multitenant <https://github.com/citusdata/django-multitenant>`_ library to add store_id to foreign keys, and make application queries easier later on.
+
+In requirements.txt for your Django application, add
+
+::
+
+  django_multitenant>=1.1.0
+
+Run ``pip install -r requirements.txt``.
+
+In settings.py, change the database engine to the customized engine provied by django-multitenant:
 
 .. code-block:: python
 
-  from __future__ import unicode_literals
+  'ENGINE': 'django_multitenant.backends.postgresql'
+
+Add a few more imports to your models file:
+
+.. code-block:: python
+
+  from django_multitenant.models import *
+  from django_multitenant.fields import *
+
+Change all the models to inherit from ``TenantModel`` rather than ``Model``, set the tenant\_id on each model, and use ``TenantForeignKey`` rather than ``ForeignKey`` for any foreign key which does not already contain the tenant\_id.
+
+.. code-block:: python
+
+  class Store(TenantModel):
+    name = models.CharField(max_length=255)
+    url = models.URLField()
+    tenant_id = "id"
+
+  class Product(TenantModel):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=6, decimal_places=2),
+    quantity = models.IntegerField()
+
+    store = models.ForeignKey(Store, on_delete=models.CASCADE)
+    tenant_id = "store_id"
+
+  class Purchase(TenantModel):
+    ordered_at = models.DateTimeField(default=timezone.now)
+    billing_address = models.TextField()
+    shipping_address = models.TextField()
+
+    store = models.ForeignKey(Store, null=True, on_delete=models.CASCADE)
+    tenant_id = "store_id"
+
+    product = TenantForeignKey(Product, on_delete=models.CASCADE)
+
+After installing the library, changing the engine, and updating the models, run
+:code:`./manage.py makemigrations`. This will produce a migration to make the foreign keys composite when necessary.
+
+**4. Distribute data in Citus**
+
+We need one final migration to tell Citus to mark tables for distribution. Create a new migration :code:`./manage.py makemigrations appname --empty --name distribute_tables`. Edit the result to look like this:
+
+.. code-block:: python
+
   from django.db import migrations
 
   class Migration(migrations.Migration):
@@ -150,36 +186,9 @@ Next, we'll make one to tell Citus to mark tables for distribution. :code:`./man
       ),
     ]
 
-Finally, we'll establish a composite foreign key. :code:`./manage.py makemigrations citus --empty --name composite_fk`.
+With all the migrations created from the steps so far, apply them to the database with ``./manage.py migrate``.
 
-.. code-block:: python
-
-  from __future__ import unicode_literals
-  from django.db import migrations
-
-  class Migration(migrations.Migration):
-    dependencies = [
-      # leave this as it was generated
-    ]
-
-    operations = [
-      migrations.RunSQL(
-        """
-            ALTER TABLE mtdjango_purchase
-            ADD CONSTRAINT mtdjango_purchase_product_fk
-            FOREIGN KEY (store_id, product_id)
-            REFERENCES mtdjango_product (store_id, id)
-            ON DELETE CASCADE;
-        """,
-        "ALTER TABLE mtdjango_purchase DROP CONSTRAINT mtdjango_purchase_product_fk"
-      ),
-    ]
-
-Apply the migrations by running :code:`./manage.py migrate`.
-
-**3. Disable server-side cursors**
-
-Edit your database configuration in your `settings.py` file to include the following parameter:
+There's one more little detail. Server-side cursors do not work well with Citus. Go back to the database configuration in `settings.py` and include the following parameter:
 
 .. code-block:: python
 
@@ -194,33 +203,9 @@ At this point the Django application models are ready to work with a Citus backe
 Updating the Django Application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To simplify queries in the Django application, Citus has developed a Python library called `django-multitenant <https://github.com/citusdata/django-multitenant>`_ (still in beta as of this writing). Include :code:`django-multitenant` in the :code:`requirements.txt` package file for your project, and then modify your models.
+The django-multitenant library discussed in the previous section is not only useful for migrations, but for simplifying application queries. The library allows application code to easily scope queries to a single tenant. It automatically adds the correct SQL filters to all statements, including fetching objects through relations.
 
-First, include the library in models.py:
-
-.. code-block:: python
-
-  from django_multitenant import *
-
-Next, change the base class for each model from :code:`models.Model` to :code:`TenantModel`, and add a property specifying the name of the tenant id. For instance, to continue the earlier example:
-
-.. code-block:: python
-
-  class Store(TenantModel):
-    tenant_id = 'id'
-    # ...
-
-  class Product(TenantModel):
-    tenant_id = 'store_id'
-    # ...
-
-  class Purchase(TenantModel):
-    tenant_id = 'store_id'
-    # ...
-
-No extra database migration is necessary beyond the steps in the previous section. The library allows application code to easily scope queries to a single tenant. It automatically adds the correct SQL filters to all statements, including fetching objects through relations.
-
-For instance:
+For instance, in a controller simply ``set_current_tenant`` and all the queries or joins afterward will include a filter to scope results to a single tenant.
 
 .. code-block:: python
 
@@ -234,4 +219,4 @@ For instance:
   # Find purchases for risky products in the current store
   Purchase.objects.filter(product__description='Dangerous Toy')
 
-In the context of an application controller, the current tenant object can be stored as a SESSION variable when a user logs in, and controller actions can :code:`set_current_tenant` to this value.
+In the context of an application controller, the current tenant object can be stored as a SESSION variable when a user logs in, and controller actions can :code:`set_current_tenant` to this value. See the README in django-multitenant for more examples.
