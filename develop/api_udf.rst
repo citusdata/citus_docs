@@ -1001,7 +1001,23 @@ Create a new shard to hold the lineitems for tenant 135:
 citus_create_restore_point
 $$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Temporarily blocks writes to the cluster, and creates a named restore point on all nodes. This function is similar to `pg_create_restore_point <https://www.postgresql.org/docs/10/static/functions-admin.html#FUNCTIONS-ADMIN-BACKUP>`_, but applies to all nodes and makes sure the restore point is consistent across them. This function is well suited to doing point-in-time recovery, and cluster forking.
+Temporarily blocks writes to the cluster, and creates a named restore point on
+all nodes. This function is similar to `pg_create_restore_point
+<https://www.postgresql.org/docs/10/static/functions-admin.html#FUNCTIONS-ADMIN-BACKUP>`_
+and every restore point should have a unique name that consists of up to 64
+characters. The difference is that it applies to all nodes and makes sure the
+restore point is consistent across them. 
+While the run-time is typically short, citus_create_restore_point still needs to
+wait for all pending writes to distributed tables to finish. In the mean time,
+writes to distributed tables that come behind it will block. Before running
+citus_create_restore_point, it is a good idea to first do SET lock_timeout TO
+'1s' in case there are long-running write transactions which would cause
+citus_create_restore_point to block all writes for a long time.
+
+.. note::
+  The UDF, support for it, and usage of it for distributed backups is part of
+  Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
 
 Arguments
 *************************
