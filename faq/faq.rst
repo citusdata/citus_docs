@@ -185,9 +185,14 @@ Yes, the `Citus Heroku add-on <https://elements.heroku.com/addons/citus>`_ provi
 Can I run Citus on Amazon RDS?
 ------------------------------
 
-At this time Amazon does not support running Citus directly on top of Amazon RDS. It is up to them if/when they enable the Citus extension.
+At this time Amazon does not support running Citus directly on top of Amazon RDS.
 
-If you are looking for something similar, `Citus Cloud <https://www.citusdata.com/product/cloud>`_ is our database-as-a-service which we fully manage for you. It runs on top of AWS (like both RDS and Heroku PostgreSQL) and should provide a very similar product experience, with the addition of Citus' horizontal scaling. You can even provision Citus Cloud with your existing AWS account using `Citus Cloud on the AWS Marketplace <https://aws.amazon.com/marketplace/pp/B076M3F79H>`_.
+If you are looking for something similar, `Citus Cloud <https://www.citusdata.com/product/cloud>`_ is our database-as-a-service which we fully manage for you. It runs on top of AWS (like both RDS and Heroku PostgreSQL) and should provide a very similar product experience, with the addition of Citus' horizontal scaling.
+
+Can I use Citus with my existing AWS account?
+---------------------------------------------
+
+Yes, `Citus Cloud on the AWS Marketplace <https://aws.amazon.com/marketplace/pp/B076M3F79H>`_ allows you to provision a Citus Cloud cluster directly through Amazon Web Services.
 
 Can I shard by schema on Citus for multi-tenant applications?
 -------------------------------------------------------------
