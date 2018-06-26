@@ -117,6 +117,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The mark_tables_colocated() function takes a distributed table (the source), and a list of others (the targets), and puts the targets into the same co-location group as the source. If the source is not yet in a group, this function creates one, and assigns the source and targets to it.
 
+Usually colocating tables ought to be done at table distribution time via the ``colocate_with`` parameter of :ref:`create_distributed_table`. But ``mark_tables_colocated`` can take care of it if necessary.
+
 Arguments
 ************************
 
@@ -128,6 +130,13 @@ Arguments
   * distribution column type
   * replication type
   * shard count
+
+Failing this, Citus will raise an error. For instance, attempting to colocate tables ``apples`` and ``oranges`` whose distribution column types differ results in:
+
+::
+
+  ERROR:  XX000: cannot colocate tables apples and oranges
+  DETAIL:  Distribution column types don't match for apples and oranges.
 
 Return Value
 ********************************
