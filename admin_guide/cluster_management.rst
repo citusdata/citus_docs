@@ -32,11 +32,7 @@ Real-Time Analytics Use-Case
 
 In the :ref:`rt_blurb` use-case, shard count should be related to the total number of cores on the workers. To ensure maximum parallelism, you should create enough shards on each node such that there is at least one shard per CPU core. We typically recommend creating a high number of initial shards, e.g. **2x or 4x the number of current CPU cores**. This allows for future scaling if you add more workers and CPU cores.
 
-However be careful to keep the shard count small enough that distributed queries won't starve for connections. Put another way, the upper bound on necessary connections must not exceed the max connections possible in the system:
-
-::
-
-  (max concurrent queries * shard count) ≤ (number of workers * max_connections per worker)
+However keep in mind that for each query Citus opens one database connection per shard, and these connections are limited. Be careful to keep the shard count small enough that distributed queries won't often have to wait for a connection. Put another way, the connections needed, ``(max concurrent queries * shard count)``, should generally not exceed the total connections possible in the system, ``(number of workers * max_connections per worker)``.
 
 .. _prod_size:
 
