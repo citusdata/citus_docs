@@ -132,6 +132,10 @@ Cannot establish a new connection for placement *n*, since DML has been executed
 
 This is a current limitation. In a single transaction Citus does not support running insert/update statements with the :ref:`router_executor` that reference multiple shards, followed by a read query that consults both of the shards.
 
+.. note::
+
+  A similar error also occurs (misleadingly) when the :ref:`create_distributed_table` function is executed on a table by a role other than the table's owner. See this `github discussion <https://github.com/citusdata/citus/issues/2094>`_ for details. To resolve this particular problem, run ``SET ROLE table_owner_name;`` and try again.
+
 Resolution
 ~~~~~~~~~~
 
