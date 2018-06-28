@@ -52,6 +52,20 @@ h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
   color: #999 !important;
 }
 
+/* override table width restrictions */
+
+@media screen and (min-width: 767px) {
+  .wy-table-responsive table td {
+    /* !important prevents the common CSS stylesheets from overriding
+    this as on RTD they are loaded after this stylesheet */
+    white-space: normal !important;
+  }
+
+  .wy-table-responsive {
+    overflow: visible !important;
+  }
+}
+
 /* Mobile dropdown */
 
 .wy-side-nav-search>a, .wy-side-nav-search .wy-dropdown > a.homepage {
