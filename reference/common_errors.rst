@@ -134,7 +134,14 @@ This is a current limitation. In a single transaction Citus does not support run
 
 .. note::
 
-  A similar error also occurs (misleadingly) when the :ref:`create_distributed_table` function is executed on a table by a role other than the table's owner. See this `github discussion <https://github.com/citusdata/citus/issues/2094>`_ for details. To resolve this particular problem, run ``SET ROLE table_owner_name;`` and try again.
+  A similar error also occurs (misleadingly) when the :ref:`create_distributed_table` function is executed on a table by a role other than the table's owner. See this `github discussion <https://github.com/citusdata/citus/issues/2094>`_ for details. To resolve this particular problem, identify the table's owner, switch roles, and try again.
+
+  .. code-block:: sql
+
+    -- find the role
+    SELECT tablename, tableowner FROM pg_tables;
+    -- switch into it
+    SET ROLE table_owner_name;
 
 Resolution
 ~~~~~~~~~~
