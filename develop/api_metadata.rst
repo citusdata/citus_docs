@@ -234,6 +234,43 @@ The pg_dist_node table contains information about the worker nodes in the cluste
           3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default
     (3 rows)
 
+.. _pg_dist_authinfo:
+
+Connection Credentials Table
+----------------------------
+
+.. note::
+
+  This table is a part of Citus Enterprise Edition. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+The ``pg_dist_authinfo`` table holds authentication parameters that Citus nodes use to connect to one another.
+
++----------+---------+-------------------------------------------------+
+| Name     | Type    | Description                                     |
++==========+=========+=================================================+
+| nodeid   | integer | Node id from :ref:`pg_dist_node`, or 0, or -1   |
++----------+---------+-------------------------------------------------+
+| rolename | name    | Postgres role                                   |
++----------+---------+-------------------------------------------------+
+| authinfo | text    | Space separated libpq connection parameters     |
++----------+---------+-------------------------------------------------+
+
+Upon beginning a connection, a node consults the table to see whether a row with the destination ``nodeid`` and desired ``rolename`` exists. If so, the node includes the corresponding ``authinfo`` string in its libpq connection. A common example is to store a password, like ``'password=abc123'``, but you can review the `full list <https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS>`_ of possibilities 
+
+The ``nodeid`` column accepts special values:
+
+* 0 = all nodes
+* -1 = loopback interface
+
+::
+
+    SELECT * FROM pg_dist_authinfo;
+
+     nodeid | rolename | authinfo
+    --------+----------+-----------------
+        123 | jdoe     | password=abc123
+    (1 row)
+
 .. _colocation_group_table:
 
 Co-location group table

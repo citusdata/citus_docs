@@ -66,6 +66,39 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Sets the time to wait before checking for distributed deadlocks. In particular the time to wait will be this value multiplied by PostgreSQL's `deadlock_timeout <https://www.postgresql.org/docs/current/static/runtime-config-locks.html>`_ setting. The default value is ``2``. A value of ``-1`` disables distributed deadlock detection.
 
+.. _node_conninfo:
+
+citus.node_conninfo (text)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The ``citus.node_conninfo`` GUC sets non-sensitive `libpq connection parameters <https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS>`_ used for all inter-node connections.
+
+.. code-block:: postgresql
+
+  -- Key=value pairs separated by spaces.
+  -- For example, ssl options:
+
+  ALTER DATABASE foo
+  SET citus.node_conninfo =
+    'sslrootcert=/path/to/citus.crt sslmode=verify-full';
+
+Citus honors only a whitelisted subset of the options, namely:
+
+* application_name
+* connect_timeout
+* gsslib †
+* keepalives
+* keepalives_count
+* keepalives_idle
+* keepalives_interval
+* krbsrvname †
+* sslcompression
+* sslcrl
+* sslmode
+* sslrootcert
+
+*(† = subject to conditional compilation)*
+
 Data Loading
 ---------------------------
 
