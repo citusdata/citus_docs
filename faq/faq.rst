@@ -153,6 +153,11 @@ I forgot the distribution column of a table, how do I find it?
 
 The Citus coordinator node metadata tables contain this information. See :ref:`finding_dist_col`.
 
+Can I distribute a table by multiple keys?
+------------------------------------------
+
+No, you must choose a single column per table as the distribution column. A common scenario where people want to distribute by two columns is for timeseries data. However for this case we recommend using a hash distribution on a non-time column, and combining this with PostgreSQL partitioning on the time column, as described in :ref:`distributing_hash_time`.
+
 Why does pg_relation_size report zero bytes for a distributed table?
 --------------------------------------------------------------------
 
