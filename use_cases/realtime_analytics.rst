@@ -277,13 +277,6 @@ to enable it:
 
   CREATE EXTENSION hll;
 
-  -- allow SUM to work on hashvals (alias for hll_add_agg)
-  CREATE AGGREGATE sum(hll_hashval) (
-    SFUNC = hll_add_trans0,
-    STYPE = internal,
-    FINALFUNC = hll_pack
-  );
-
 .. note::
 
   This is not necessary on Citus Cloud, which has HLL already installed,
@@ -313,7 +306,7 @@ to the query in our rollup function:
       SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
       SUM(response_time_msec) / COUNT(1) AS average_response_time_msec,
-  +   SUM(hll_hash_text(ip_address)) AS distinct_ip_addresses
+  +   hll_add_agg(hll_hash_text(ip_address)) AS distinct_ip_addresses
     FROM http_request
 
 Dashboard queries are a little more complicated, you have to read out the distinct
@@ -332,30 +325,11 @@ rollups, but instead of using HLLs we saved the exact unique counts. This works 
 you can't answer queries such as "how many distinct sessions were there during this
 one-week period in the past we've thrown away the raw data for?".
 
-With HLLs, this is easy. You'll first need to inform Citus about the ``hll_union_agg``
-aggregate function and its semantics. You do this by running the following:
+With HLLs, this is easy. You can compute distinct IP counts over a time period with the following query:
 
 .. code-block:: sql
 
-  --------------------------------------------------------
-  -- Run on all nodes ------------------------------------
-
-  -- (not necessary on Citus Cloud)
-
-  CREATE AGGREGATE sum (hll)
-  (
-    sfunc = hll_union_trans,
-    stype = internal,
-    finalfunc = hll_pack
-  );
-
-
-Now, when you call SUM over a collection of HLLs, PostgreSQL will return the HLL for us.
-You can then compute distinct IP counts over a time period with the following query:
-
-.. code-block:: sql
-
-  SELECT hll_cardinality(SUM(distinct_ip_addresses))
+  SELECT hll_cardinality(hll_union_agg(distinct_ip_addresses))
   FROM http_request_1min
   WHERE ingest_time > date_trunc('minute', now()) - '5 minutes'::interval;
 
