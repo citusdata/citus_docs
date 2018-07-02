@@ -55,20 +55,7 @@ For increased performance you can choose to make an approximate count instead. F
 HyperLogLog Column
 $$$$$$$$$$$$$$$$$$
 
-Certain users already store their data as HLL columns. In such cases, they can dynamically roll up those data by creating custom aggregates within Citus.
-
-As an example, if you want to run the hll_union aggregate function on your data stored as hll, you can define an aggregate function like below :
-
-.. code-block:: postgresql
-
-  CREATE AGGREGATE sum (hll)
-  (
-    sfunc = hll_union_trans,
-    stype = internal,
-    finalfunc = hll_pack
-  );
-
-You can then call sum(hll_column) to roll up those columns within the database. Please note that these custom aggregates need to be created both on the coordinator and the workers.
+Certain users already store their data as HLL columns. In such cases, they can dynamically roll up those data by calling hll_union_agg(hll_column).
 
 .. _limit_pushdown:
 
