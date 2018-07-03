@@ -112,9 +112,9 @@ Now onto realistic applications. The TopN extension shines when materializing ag
   curl -L https://examples.citusdata.com/customer_reviews_2000.csv.gz | \
     gunzip > reviews.csv
 
-Next, ingest it into the database:
+Next, ingest it into a distributed table:
 
-.. code-block:: postgresql
+.. code-block:: psql
 
   CREATE TABLE customer_reviews
   (
@@ -132,7 +132,7 @@ Next, ingest it into the database:
       similar_product_ids CHAR(10)[]
   );
 
-  select create_distributed_table('customer_reviews', 'product_id');
+  SELECT create_distributed_table('customer_reviews', 'product_id');
 
   \COPY customer_reviews FROM 'reviews.csv' WITH CSV
 
@@ -142,7 +142,7 @@ Next we'll add the extension, create a destination table to store the json data 
 
   -- note: Citus Cloud has extension already
   CREATE EXTENSION topn;
-  select run_command_on_workers(' create extension topn; ');
+  SELECT run_command_on_workers(' create extension topn; ');
 
   -- a table to materialize the daily aggregate
   CREATE TABLE reviews_by_day
@@ -151,7 +151,7 @@ Next we'll add the extension, create a destination table to store the json data 
     agg_data jsonb
   );
 
-  select create_reference_table('reviews_by_day');
+  SELECT create_reference_table('reviews_by_day');
 
   -- materialize how many reviews each product got per day per customer
   INSERT INTO reviews_by_day
