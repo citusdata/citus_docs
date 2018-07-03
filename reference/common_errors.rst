@@ -257,6 +257,8 @@ Resolution
 
 Add the table distribution column to both the select and insert statements, as well as the statement GROUP BY if applicable. For more info as well as a workaround, see :ref:`upsert_into_select`.
 
+.. _non_distribution_uniqueness:
+
 Cannot create uniqueness constraint
 -----------------------------------
 
