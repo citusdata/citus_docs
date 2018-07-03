@@ -132,7 +132,7 @@ Next, ingest it into the database:
       similar_product_ids CHAR(10)[]
   );
 
-  select create_distributed_table('customer_reviews', 'customer_id');
+  select create_distributed_table('customer_reviews', 'product_id');
 
   \COPY customer_reviews FROM 'reviews.csv' WITH CSV
 
@@ -147,55 +147,24 @@ Next we'll add the extension, create a destination table to store the json data 
   -- a table to materialize the daily aggregate
   CREATE TABLE reviews_by_day
   (
-    review_date date,
-    customer_id TEXT,
-    agg_data jsonb,
-
-    unique (review_date, customer_id)
+    review_date date unique,
+    agg_data jsonb
   );
 
-  select create_distributed_table('reviews_by_day', 'customer_id');
+  select create_reference_table('reviews_by_day');
 
-  -- materialize how many reviews each product got per day
+  -- materialize how many reviews each product got per day per customer
   INSERT INTO reviews_by_day
-    SELECT review_date, customer_id, topn_add_agg(product_id)
+    SELECT review_date, topn_add_agg(product_id)
     FROM customer_reviews
-    GROUP BY review_date, customer_id;
+    GROUP BY review_date;
 
 Now, rather than writing a complex window function on ``customer_reviews``, we can simply apply TopN to ``reviews_by_day``. For instance, the following query finds the most frequently reviewed product for each of the first five days:
 
 .. code-block:: postgres
 
-  -- restricting to reviews by a certain customer runs very quickly
-
-  SELECT customer_id, review_date, (topn(agg_data, 1)).*
+  SELECT review_date, (topn(agg_data, 1)).*
   FROM reviews_by_day
-  WHERE customer_id = 'A3UN6WX5RRO2AG'
-  ORDER BY review_date
-  LIMIT 5;
-
-::
-
-  ┌────────────────┬─────────────┬────────────┬───────────┐
-  │  customer_id   │ review_date │    item    │ frequency │
-  ├────────────────┼─────────────┼────────────┼───────────┤
-  │ A3UN6WX5RRO2AG │ 2000-07-19  │ 0939173379 │        10 │
-  │ A3UN6WX5RRO2AG │ 2000-07-20  │ 0939173379 │         6 │
-  │ A3UN6WX5RRO2AG │ 2000-07-21  │ 0439139597 │         8 │
-  │ A3UN6WX5RRO2AG │ 2000-07-22  │ 0807282588 │         9 │
-  │ A3UN6WX5RRO2AG │ 2000-07-23  │ 0807282596 │        10 │
-  └────────────────┴─────────────┴────────────┴───────────┘
-
-.. code-block:: postgres
-
-  -- can also find top reviewed product among all customers
-
-  SELECT review_date, (topn(allreviews, 1)).*
-  FROM (
-    SELECT review_date, topn_union_agg(agg_data) AS allreviews
-    FROM reviews_by_day
-    GROUP BY review_date
-  ) t
   ORDER BY review_date
   LIMIT 5;
 
@@ -206,9 +175,9 @@ Now, rather than writing a complex window function on ``customer_reviews``, we c
   ├─────────────┼────────────┼───────────┤
   │ 2000-01-01  │ 0939173344 │        12 │
   │ 2000-01-02  │ B000050XY8 │        11 │
-  │ 2000-01-03  │ 0345417623 │        12 │
-  │ 2000-01-04  │ 0375404368 │        14 │
-  │ 2000-01-05  │ B00000JJCZ │        17 │
+  │ 2000-01-03  │ 0375404368 │        12 │
+  │ 2000-01-04  │ 0375408738 │        14 │
+  │ 2000-01-05  │ B00000J7J4 │        17 │
   └─────────────┴────────────┴───────────┘
 
 
