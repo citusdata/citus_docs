@@ -256,3 +256,26 @@ Resolution
 ~~~~~~~~~~
 
 Add the table distribution column to both the select and insert statements, as well as the statement GROUP BY if applicable. For more info as well as a workaround, see :ref:`upsert_into_select`.
+
+Cannot create uniqueness constraint
+-----------------------------------
+
+As a distributed system, Citus can guarantee uniqueness only if a unique index or primary key constraint includes a table's distribution column. That is because the shards are split so that each shard contains non-overlapping partition column values. The index on each worker node can locally enforce its part of the constraint.
+
+Trying to make a unique index on a non-distribution column will generate an error:
+
+::
+
+  ERROR:  0A000: cannot create constraint on "foo"
+  DETAIL:  Distributed relations cannot have UNIQUE, EXCLUDE, or PRIMARY KEY constraints that do not include the partition column (with an equality operator if EXCLUDE).
+  LOCATION:  ErrorIfUnsupportedConstraint, multi_utility.c:2505
+
+Enforcing uniqueness on a non-distribution column would require Citus to check every shard on every INSERT to validate, which defeats the goal of scalability.
+
+Resolution
+~~~~~~~~~~
+
+There are two ways to enforce uniqueness on a non-distribution column:
+
+1. Create a composite unique index or primary key that includes the desired column (*C*), but also includes the distribution column (*D*). This is not quite as strong a condition as uniqueness on *C* alone, but will ensure that the values of *C* are unique for each value of *D*. For instance if distributing by ``company_id`` in a multi-tenant system, this approach would make *C* unique within each company.
+2. Use a :ref:`reference table <reference_tables>` rather than a hash distributed table. This is only suitable for small tables, since the contents of the reference table will be duplicated on all nodes.
