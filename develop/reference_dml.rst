@@ -179,6 +179,37 @@ If an update or delete affects only a single shard then it runs within a single 
   DELETE FROM github_events
   WHERE repo_id = 206084;
 
+Furthermore, when dealing with a single shard, Citus supports ``SELECT … FOR UPDATE``. This is a technique sometimes used by object-relational mappers (ORMs) to safely:
+
+1. load rows
+2. make a calculation in application code
+3. update the rows based on calculation
+
+Selecting the rows for update puts a write lock on them to prevent other processes from causing a "lost update" anomaly.
+
+.. code-block:: sql
+
+  BEGIN;
+
+    -- select events for a repo, but
+    -- lock them for writing
+    SELECT *
+    FROM github_events
+    WHERE repo_id = 206084
+    FOR UPDATE;
+
+    -- calculate a desired value event_public using
+    -- application logic that uses those rows...
+
+    -- now make the update
+    UPDATE github_events
+    SET event_public = :our_new_value
+    WHERE repo_id = 206084;
+
+  COMMIT;
+
+This feature is supported for hash distributed and reference tables only, and only those that have a :ref:`replication_factor <replication_factor>` of 1.
+
 Maximizing Write Performance
 ----------------------------
 
