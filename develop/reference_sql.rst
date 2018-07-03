@@ -144,21 +144,6 @@ Next we'll add the extension, create a destination table to store the json data 
   CREATE EXTENSION topn;
   select run_command_on_workers(' create extension topn; ');
 
-  -- allow SUM to work on topn (alias for topn_union_agg)
-  CREATE AGGREGATE sum(jsonb) (
-    SFUNC = topn_union_trans,
-    STYPE = internal,
-    FINALFUNC = topn_pack
-  );
-
-  select run_command_on_workers($$
-    CREATE AGGREGATE sum(jsonb) (
-      SFUNC = topn_union_trans,
-      STYPE = internal,
-      FINALFUNC = topn_pack
-    );
-  $$);
-
   -- a table to materialize the daily aggregate
   CREATE TABLE reviews_by_day
   (
@@ -181,14 +166,36 @@ Now, rather than writing a complex window function on ``customer_reviews``, we c
 
 .. code-block:: postgres
 
+  -- restricting to reviews by a certain customer runs very quickly
 
-  SELECT review_date, customer_id,
-         topn_union_agg(agg_data)
+  SELECT customer_id, review_date, (topn(agg_data, 1)).*
   FROM reviews_by_day
-  GROUP BY review_date, customer_id;
+  WHERE customer_id = 'A3UN6WX5RRO2AG'
+  ORDER BY review_date
+  LIMIT 5;
 
-  SELECT review_date, (topn(agg_data, 1)).*
-  FROM reviews_by_day
+::
+
+  ┌────────────────┬─────────────┬────────────┬───────────┐
+  │  customer_id   │ review_date │    item    │ frequency │
+  ├────────────────┼─────────────┼────────────┼───────────┤
+  │ A3UN6WX5RRO2AG │ 2000-07-19  │ 0939173379 │        10 │
+  │ A3UN6WX5RRO2AG │ 2000-07-20  │ 0939173379 │         6 │
+  │ A3UN6WX5RRO2AG │ 2000-07-21  │ 0439139597 │         8 │
+  │ A3UN6WX5RRO2AG │ 2000-07-22  │ 0807282588 │         9 │
+  │ A3UN6WX5RRO2AG │ 2000-07-23  │ 0807282596 │        10 │
+  └────────────────┴─────────────┴────────────┴───────────┘
+
+.. code-block:: postgres
+
+  -- can also find top reviewed product among all customers
+
+  SELECT review_date, (topn(allreviews, 1)).*
+  FROM (
+    SELECT review_date, topn_union_agg(agg_data) AS allreviews
+    FROM reviews_by_day
+    GROUP BY review_date
+  ) t
   ORDER BY review_date
   LIMIT 5;
 
