@@ -75,9 +75,13 @@ You can then call sum(hll_column) to roll up those columns within the database. 
 Estimating Top N Items
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Similar to how HLL efficiently estimates the number of distinct items in a set, the `TopN PostgreSQL extension <https://github.com/citusdata/postgresql-topn>`_ simultaneously counts many items. It, too, stores an approximation in a bounded amount of space. It is also pre-installed on Citus Cloud.
+Calculating the first *n* elements in a set by by applying count, sort, and limit is simple. However as data sizes increase, this method becomes slow and resource intensive. It's more efficient to use an approximation.
 
-Fundamentally the extension tracks a multi-set as a JSON object.
+The open source `TopN extension <https://github.com/citusdata/postgresql-topn>`_ for Postgres enables fast approximate results to "top-n" queries. The extension materializes the top values into a JSON data type. TopN can incrementally update these top values, or merge them on-demand across different time intervals.
+
+**Basic Operations**
+
+Before seeing a realistic example of TopN, let's see how some of its primitive operations work. First ``topn_add`` updates a JSON object with counts of how many times a key has been seen:
 
 .. code-block:: postgres
 
@@ -89,7 +93,7 @@ Fundamentally the extension tracks a multi-set as a JSON object.
   select topn_add(topn_add('{}', 'a'), 'a');
   -- => {"a": 2}
 
-It also provides aggregations to scan multiple values.
+The extension also provides aggregations to scan multiple values:
 
 .. code-block:: postgres
 
@@ -103,9 +107,9 @@ It also provides aggregations to scan multiple values.
 
 If the number of distinct values crosses a threshold, the aggregation drops information for those seen least frequently. This keeps space usage under control. The threshold can be controlled by the ``topn.number_of_counters`` GUC. Its default value is 1000.
 
-Notice the casting in ``floor(abs(i))::text``. TopN works with text values only, so other values such as integers must be converted first.
+**Realistic Example**
 
-Now onto realistic applications. The TopN extension shines when materializing aggregates. For instance, let's ingest Amazon product reviews from the year 2000 and use TopN to query it quickly. First download the dataset:
+Now onto a more realistic example of how TopN works in practice. Let's ingest Amazon product reviews from the year 2000 and use TopN to query it quickly. First download the dataset:
 
 .. code-block:: bash
 
@@ -202,7 +206,7 @@ The json fields created by TopN can be merged with ``topn_union`` and ``topn_uni
   │ 043936213X │       204 │
   └────────────┴───────────┘
 
-For more details and examples see the TopN readme.
+For more details and examples see the `TopN readme <https://github.com/citusdata/postgresql-topn/blob/master/README.md>`_.
 
 .. _limit_pushdown:
 
