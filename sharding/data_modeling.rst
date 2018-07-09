@@ -3,6 +3,12 @@
 Choosing Distribution Column
 ============================
 
+Citus uses the distribution column in distributed tables to assign table rows to shards. Choosing the distribution column for each table is **one of the most important** modeling decisions because it determines how data is spread across nodes.
+
+If the distribution columns are chosen correctly, then related data will group together on the same physical nodes, making queries fast and adding support for all SQL features. If the columns are chosen incorrectly, the system will run needlessly slowly, and won't be able to support all SQL features across nodes.
+
+This section gives distribution column tips for the two most common Citus scenarios. It concludes by going in depth on "co-location," the desirable grouping of data on nodes.
+
 .. _distributing_by_tenant_id:
 
 Multi-Tenant Apps
