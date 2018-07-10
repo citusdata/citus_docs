@@ -70,6 +70,8 @@ Citus will output progress in both psql (saying which shards are moving) and gra
 
 .. image:: ../images/cloud-rebalancer-gui.gif
 
+The rebalance progress is also queryable in SQL with the :ref:`get_rebalance_progress() <get_rebalance_progress>` function.
+
 .. _cloud_pgbouncer:
 
 Scaling Connections (pgBouncer)
