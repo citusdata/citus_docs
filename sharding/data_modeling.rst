@@ -66,6 +66,25 @@ Best Practices
 
 Read the :ref:`rt_use_case` guide for a detailed example of building this kind of application.
 
+.. _distributing_hash_time:
+
+Timeseries Data
+---------------
+
+In a time-series workload, applications query recent information while archiving old information.
+
+The most common mistake in modeling timeseries information in Citus is using the timestamp itself as a distribution column. A hash distribution based on time will distribute times seemingly at random into different shards rather than keeping ranges of time together in shards. However queries involving time generally reference ranges of time (for example the most recent data), so such a hash distribution would lead to network overhead.
+
+Best Practices
+^^^^^^^^^^^^^^
+
+* **Do not choose a timestamp as the distribution column.**
+  Choose a different distribution column. In a multi-tenant app, use the tenant id, or in a real-time app use the entity id.
+* **Use PostgreSQL table partitioning for time instead.**
+  Use table partitioning to break a big table of time-ordered data into multiple inherited tables with each containing different time ranges. Distributing a Postgres-partitioned table in Citus creates shards for the inherited tables.
+
+Read the :ref:`timeseries` guide for a detailed example of building this kind of application.
+
 .. _colocation:
 
 Table Co-Location
