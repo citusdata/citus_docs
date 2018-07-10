@@ -6,6 +6,8 @@ Concepts
 
 This section is a brief introduction to common terms in our documentation, with links to more complete information.
 
+.. _distributed_arch:
+
 Distributed Architecture
 ------------------------
 
