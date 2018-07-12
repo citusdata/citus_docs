@@ -327,13 +327,12 @@ As Citus is an extension which can be installed on any PostgreSQL instance, you 
 .. note::
   Sometimes, there might be a few features of the extension that may not be supported out of the box. For example, a few aggregates in an extension may need to be modified a bit to be parallelized across multiple nodes. Please `contact us <https://www.citusdata.com/about/contact_us>`_ if some feature from your favourite extension does not work as expected with Citus.
 
-In addition to our core Citus extension, we also maintain several other Postgres extensions:
+In addition to our core Citus extension, we also maintain several others:
 
 * `cstore_fdw <https://github.com/citusdata/cstore_fdw>`_ - Columnar store for analytics. The columnar nature delivers performance by reading only relevant data from disk, and it may compress data 6x-10x to reduce space requirements for data archival.
 * `pg_cron <https://github.com/citusdata/pg_cron>`_ - Run periodic jobs directly from the database.
 * `postgresql-topn <https://github.com/citusdata/postgresql-topn>`_ - Returns the top values in a database according to some criteria. Uses an approximation algorithm to provide fast results with modest compute and memory resources.
 * `postgresql-hll <https://github.com/citusdata/postgresql-hll>`_ - HyperLogLog data structure as a native data type. It's a fixed-size, set-like structure used for distinct value counting with tunable precision.
-* `pg_intpair <https://github.com/citusdata/pg_intpair>`_ - High performance datatype to hold a pair of 64-bit integers, useful for a composite column/index.
 
 .. _phone_home:
 
