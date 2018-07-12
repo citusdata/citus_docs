@@ -957,6 +957,54 @@ This example usage will attempt to rebalance the github_events table without mov
 
 	SELECT rebalance_table_shards('github_events', excluded_shard_list:='{1,2}');
 
+.. _get_rebalance_progress:
+
+get_rebalance_progress
+$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+  The get_rebalance_progress() function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+Once a shard rebalance begins, the ``get_rebalance_progress()`` function lists the progress of every shard involved. It monitors the moves planned and executed by ``rebalance_table_shards()``.
+
+Arguments
+**************************
+
+N/A
+
+Return Value
+*********************************
+
+Tuples containing these columns:
+
+* **sessionid**: Postgres PID of the rebalance monitor
+* **table_name**: The table whose shards are moving
+* **shardid**: The shard in question
+* **shard_size**: Size in bytes
+* **sourcename**: Hostname of the source node
+* **sourceport**: Port of the source node
+* **targetname**: Hostname of the destination node
+* **targetport**: Port of the destination node
+* **progress**: 0 = waiting to be moved; 1 = moving; 2 = complete
+
+Example
+**************************
+
+.. code-block:: sql
+
+  SELECT * FROM get_rebalance_progress();
+
+::
+
+  ┌───────────┬────────────┬─────────┬────────────┬───────────────┬────────────┬───────────────┬────────────┬──────────┐
+  │ sessionid │ table_name │ shardid │ shard_size │  sourcename   │ sourceport │  targetname   │ targetport │ progress │
+  ├───────────┼────────────┼─────────┼────────────┼───────────────┼────────────┼───────────────┼────────────┼──────────┤
+  │      7083 │ foo        │  102008 │    1204224 │ n1.foobar.com │       5432 │ n4.foobar.com │       5432 │        0 │
+  │      7083 │ foo        │  102009 │    1802240 │ n1.foobar.com │       5432 │ n4.foobar.com │       5432 │        0 │
+  │      7083 │ foo        │  102018 │     614400 │ n2.foobar.com │       5432 │ n4.foobar.com │       5432 │        1 │
+  │      7083 │ foo        │  102019 │       8192 │ n3.foobar.com │       5432 │ n4.foobar.com │       5432 │        2 │
+  └───────────┴────────────┴─────────┴────────────┴───────────────┴────────────┴───────────────┴────────────┴──────────┘
 
 replicate_table_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
