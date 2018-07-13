@@ -8,5 +8,6 @@ SQL Reference
    reference_dml.rst
    reference_sql.rst
    reference_processing.rst
+   reference_rollups.rst
    reference_propagation.rst
    reference_workarounds.rst

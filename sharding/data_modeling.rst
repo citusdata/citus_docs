@@ -196,7 +196,7 @@ In this case the data distribution creates substantial drawbacks:
 * Q2 becoming very large
 * The need to write queries in multiple steps, combine results, requires changes in the application
 
-A potential upside of the relevant data being dispersed is that the queries can be parallelised, which Citus will do. However, this is only beneficial if the amount of work that the query does is substantially greater than the overhead of querying many shards. It’s generally better to avoid doing such heavy lifting directly from the application, for example by :ref:`pre-aggregating <dist_agg>` the data.
+A potential upside of the relevant data being dispersed is that the queries can be parallelised, which Citus will do. However, this is only beneficial if the amount of work that the query does is substantially greater than the overhead of querying many shards. It’s generally better to avoid doing such heavy lifting directly from the application, for example by :ref:`pre-aggregating <rollups>` the data.
 
 Distributing tables by tenant
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
