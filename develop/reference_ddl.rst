@@ -75,7 +75,7 @@ For instance suppose a multi-tenant eCommerce site needs to calculate sales tax 
 
   SELECT create_reference_table('states');
 
-Now queries such as one calculating tax for a shopping cart can join on the :code:`states` table with no network overhead.
+Now queries such as one calculating tax for a shopping cart can join on the :code:`states` table with no network overhead, and can add a foreign key to the state code for better validation.
 
 In addition to distributing a table as a single replicated shard, the :code:`create_reference_table` UDF marks it as a reference table in the Citus metadata tables. Citus automatically performs two-phase commits (`2PC <https://en.wikipedia.org/wiki/Two-phase_commit_protocol>`_) for modifications to tables marked this way, which provides strong consistency guarantees.
 
@@ -108,7 +108,7 @@ Writes on the table are blocked while the data is migrated, and pending writes a
 
 .. note::
 
-  When distributing a number of tables with foreign keys between them, it's best to drop the foreign keys before running :code:`create_distributed_table` and recreating them after distributing the tables. Foreign keys cannot always be enforced when one table is distributed and the other is not.
+  When distributing a number of tables with foreign keys between them, it's best to drop the foreign keys before running :code:`create_distributed_table` and recreating them after distributing the tables. Foreign keys cannot always be enforced when one table is distributed and the other is not. However foreign keys *are* supported between distributed tables and reference tables.
 
 When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table.
 
@@ -224,9 +224,17 @@ Significant changes to an existing column are fine too, except for those applyin
 Adding/Removing Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Using Citus allows you to continue to enjoy the safety of a relational database, including database constraints (see the PostgreSQL `docs <https://www.postgresql.org/docs/current/static/ddl-constraints.html>`_). Due to the nature of distributed systems, Citus will not cross-reference uniqueness constraints or referential integrity between worker nodes. Foreign keys must always be declared between :ref:`colocated tables <colocation>`. To do this, use compound foreign keys that include the distribution column.
+Using Citus allows you to continue to enjoy the safety of a relational database, including database constraints (see the PostgreSQL `docs <https://www.postgresql.org/docs/current/static/ddl-constraints.html>`_). Due to the nature of distributed systems, Citus will not cross-reference uniqueness constraints or referential integrity between worker nodes.
 
-This example shows how to create primary and foreign keys on distributed tables.
+Foreign keys must always be declared between either
+
+* Two local (non-distributed) tables,
+* Two :ref:`colocated <colocation>` distributed tables, or
+* A distributed table and a :ref:`reference table <reference_tables>`
+
+To set up a foreign key between colocated distributed tables, always include the distribution column in the key. This may involve making the key compound.
+
+This example shows how to create primary and foreign keys on distributed tables:
 
 .. code-block:: postgresql
 
@@ -234,19 +242,18 @@ This example shows how to create primary and foreign keys on distributed tables.
   -- Adding a primary key
   -- --------------------
 
-  -- Ultimately we'll distribute these tables on the account id, so the
-  -- ads and clicks tables use compound keys to include it.
+  -- We'll distribute these tables on the account_id. The ads and clicks
+  -- tables must use compound keys that include account_id.
 
   ALTER TABLE accounts ADD PRIMARY KEY (id);
   ALTER TABLE ads ADD PRIMARY KEY (account_id, id);
   ALTER TABLE clicks ADD PRIMARY KEY (account_id, id);
 
   -- Next distribute the tables
-  -- (primary keys must be created prior to distribution)
 
-  SELECT create_distributed_table('accounts',  'id');
-  SELECT create_distributed_table('ads',       'account_id');
-  SELECT create_distributed_table('clicks',    'account_id');
+  SELECT create_distributed_table('accounts', 'id');
+  SELECT create_distributed_table('ads',      'account_id');
+  SELECT create_distributed_table('clicks',   'account_id');
 
   --
   -- Adding foreign keys
@@ -258,10 +265,10 @@ This example shows how to create primary and foreign keys on distributed tables.
 
   ALTER TABLE ads ADD CONSTRAINT ads_account_fk
     FOREIGN KEY (account_id) REFERENCES accounts (id);
-  ALTER TABLE clicks ADD CONSTRAINT clicks_account_fk
-    FOREIGN KEY (account_id) REFERENCES accounts (id);
+  ALTER TABLE clicks ADD CONSTRAINT clicks_ad_fk
+    FOREIGN KEY (account_id, ad_id) REFERENCES ads (account_id, id);
 
-Uniqueness constraints, like primary keys, must be added prior to table distribution.
+Similarly, include the distribution column in uniqueness constraints:
 
 .. code-block:: postgresql
 
@@ -271,7 +278,7 @@ Uniqueness constraints, like primary keys, must be added prior to table distribu
   ALTER TABLE ads ADD CONSTRAINT ads_unique_image
     UNIQUE (account_id, image_url);
 
-Not-null constraints can always be applied because they require no lookups between workers.
+Not-null constraints can be applied to any column (distribution or not) because they require no lookups between workers.
 
 .. code-block:: postgresql
 

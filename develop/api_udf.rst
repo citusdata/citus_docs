@@ -61,8 +61,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The create_reference_table() function is used to define a small reference or
 dimension table. This function takes in a table name, and creates a distributed
-table with just one shard, replicated to every worker node. The distribution
-column is unimportant since the UDF only creates one shard for the table.
+table with just one shard, replicated to every worker node.
 
 Arguments
 ************************
