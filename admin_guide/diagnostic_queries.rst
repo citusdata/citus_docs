@@ -12,7 +12,7 @@ To find the worker node holding the data for store id=4, ask for the placement o
 
 .. code-block:: postgresql
 
-  SELECT *
+  SELECT shardid, shardstate, shardlength, nodename, nodeport, placementid
     FROM pg_dist_placement AS placement,
          pg_dist_node AS node
    WHERE placement.groupid = node.groupid
