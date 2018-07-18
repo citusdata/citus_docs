@@ -298,3 +298,71 @@ The pg_dist_colocation table contains information about which tables' shards sho
      --------------+------------+-------------------+------------------------
                  2 |         32 |                 2 |                     20
       (1 row)
+
+.. _citus_stat_statements:
+
+Query statistics table
+----------------------
+
+.. note::
+
+  The citus_stat_statements table is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+Citus provides ``citus_stat_statements`` for stats about how queries are being executed, and for whom. It's analogous to (and can be joined with) the `pg_stat_statements <https://www.postgresql.org/docs/current/static/pgstatstatements.html>`_ table in PostgreSQL which tracks statistics about query speed.
+
+This table can trace queries to originating tenants in a multi-tenant application, which helps for deciding when to do :ref:`tenant_isolation`.
+
++----------------+--------+---------------------------------------------------------+
+| Name           | Type   | Description                                             |
++================+========+=========================================================+
+| queryid        | bigint | identifier (good for pg_stat_statements joins)          |
++----------------+--------+---------------------------------------------------------+
+| userid         | oid    | user who ran the query                                  |
++----------------+--------+---------------------------------------------------------+
+| dbid           | oid    | database instance of coordinator                        |
++----------------+--------+---------------------------------------------------------+
+| query          | text   | anonymized query string                                 |
++----------------+--------+---------------------------------------------------------+
+| executor       | text   | Citus :ref:`executor <distributed_query_executor>` used:|
+|                |        | real-time, task-tracker, router, or insert-select       |
++----------------+--------+---------------------------------------------------------+
+| partition_key  | text   | value of distribution column in router-executed queries,|
+|                |        | else NULL                                               |
++----------------+--------+---------------------------------------------------------+
+| calls          | bigint | how many times called                                   |
++----------------+--------+---------------------------------------------------------+
+
+.. code-block:: sql
+
+  -- create and populate distributed table
+  create table foo ( id int );
+  select create_distributed_table('foo', 'id');
+  insert into foo select generate_series(1,100);
+
+  -- enable stats
+  -- pg_stat_statements must be in shared_preload libraries
+  create extension pg_stat_statements;
+
+  select count(*) from foo;
+  select * from foo where id = 42;
+
+  select * from citus_stat_statements;
+
+Results:
+
+::
+
+  ┌────────────┬────────┬───────┬───────────────────────────────────────────────┬───────────────┬───────────────┬───────┐
+  │  queryid   │ userid │ dbid  │                     query                     │   executor    │ partition_key │ calls │
+  ├────────────┼────────┼───────┼───────────────────────────────────────────────┼───────────────┼───────────────┼───────┤
+  │ 1496051219 │  16384 │ 16385 │ select count(*) from foo;                     │ real-time     │ NULL          │     1 │
+  │ 2530480378 │  16384 │ 16385 │ select * from foo where id = $1               │ router        │ 42            │     1 │
+  │ 3233520930 │  16384 │ 16385 │ insert into foo select generate_series($1,$2) │ insert-select │ NULL          │     1 │
+  └────────────┴────────┴───────┴───────────────────────────────────────────────┴───────────────┴───────────────┴───────┘
+
+Caveats:
+
+* The stats data is not replicated, and won't survive database crashes or failover
+* It's a coordinator node feature, with no :ref:`Citus MX <mx>` support
+* Tracks a limited number of queries, set by the ``pg_stat_statements.max`` GUC (default 5000)
+* To truncate the table, use the ``citus_stat_statements_reset()`` function
