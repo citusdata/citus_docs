@@ -12,7 +12,7 @@ Append Distribution
 While Citus' most common use cases involve hash data distribution,
 it can also distribute timeseries data across a variable number of
 shards by their order in time. This section provides a short reference
-to loading, deleting, and maninpulating timeseries data.
+to loading, deleting, and manipulating timeseries data.
 
 As the name suggests, append based distribution is more suited to
 append-only use cases. This typically includes event based data
@@ -24,7 +24,7 @@ log file, machine activity logs or aggregated website events. Append
 based distribution supports more efficient range queries. This is
 because given a range query on the distribution key, the Citus query
 planner can easily determine which shards overlap that range and
-send the query to only to relevant shards.
+send the query only to relevant shards.
 
 Hash based distribution is more suited to cases where you want to
 do real-time inserts along with analytics on your data or want to

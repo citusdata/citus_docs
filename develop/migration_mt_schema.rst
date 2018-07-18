@@ -69,7 +69,7 @@ Another kind of table are those which join with per-tenant tables but which aren
 Backfilling Tenant ID
 ---------------------
 
-Once the schema is updated and the per-tenant and reference tables are distributed across the cluster it's time to copy data from the original database into Citus. Most per-tenant tables can be copied directly from source tables. However line_items was denormalized with the addition of the store_id column. We have to "backfill" the correct values into this column.
+Once the schema is updated and the per-tenant and reference tables are distributed across the cluster, it's time to copy data from the original database into Citus. Most per-tenant tables can be copied directly from source tables. However line_items was denormalized with the addition of the store_id column. We have to "backfill" the correct values into this column.
 
 We join orders and line_items to output the data we need including the backfilled store_id column. The results can go into a file for later import into Citus.
 

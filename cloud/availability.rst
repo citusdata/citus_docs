@@ -66,7 +66,7 @@ burden.
 
 This means we can restore your database by fetching the base backup and
 replaying all of the WAL files on a fresh install in the event of
-hardware failure, data corruption or other failure modes
+hardware failure, data corruption or other failure modes.
 
 On Citus Cloud prior to kicking off the DR recovery process, the AWS EC2
 instance is automatically restarted. This process usually takes 7±2
@@ -112,8 +112,8 @@ From reliability perspective, S3 has proven to be up to a thousand times
 more reliable than EBS and EC2, though a more reasonable range is ten to
 a hundred times. S3 archives also have the advantage of immediate
 restoration, even while teams try to figure out what’s going on.
-Conversely, sometimes EBS volume availability can be down for hours with
-uncertainty it will completely restore.
+Conversely, sometimes EBS volume availability can be down for hours, leaving
+uncertainty on whether it will completely restore.
 
 From a control perspective, using DR means a standby database can be
 created while reducing the impact on the primary database. It also has

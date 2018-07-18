@@ -62,7 +62,7 @@ Certain users already store their data as HLL columns. In such cases, they can d
 Estimating Top N Items
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Calculating the first *n* elements in a set by by applying count, sort, and limit is simple. However as data sizes increase, this method becomes slow and resource intensive. It's more efficient to use an approximation.
+Calculating the first *n* elements in a set by applying count, sort, and limit is simple. However as data sizes increase, this method becomes slow and resource intensive. It's more efficient to use an approximation.
 
 The open source `TopN extension <https://github.com/citusdata/postgresql-topn>`_ for Postgres enables fast approximate results to "top-n" queries. The extension materializes the top values into a JSON data type. TopN can incrementally update these top values, or merge them on-demand across different time intervals.
 
@@ -172,7 +172,7 @@ Now, rather than writing a complex window function on ``customer_reviews``, we c
   └─────────────┴────────────┴───────────┘
 
 
-The json fields created by TopN can be merged with ``topn_union`` and ``topn_union_agg``. We can use the latter to merge the data for the entire first month and list the five products most reviewed during that period.
+The json fields created by TopN can be merged with ``topn_union`` and ``topn_union_agg``. We can use the latter to merge the data for the entire first month and list the five most reviewed products during that period.
 
 .. code-block:: postgres
 
