@@ -110,15 +110,15 @@ Running ``\d+ github.events`` will now show more partitions:
    org          | jsonb                       |           |          |         | extended |              |
    created_at   | timestamp without time zone |           |          |         | plain    |              |
   Partition key: RANGE (created_at)
-  Partitions: github.events_p2018_01_15 FOR VALUES FROM ('2018-01-15 00:00:00') TO ('2018-01-16 00:00:00'),
-              github.events_p2018_01_16 FOR VALUES FROM ('2018-01-16 00:00:00') TO ('2018-01-17 00:00:00'),
-              github.events_p2018_01_17 FOR VALUES FROM ('2018-01-17 00:00:00') TO ('2018-01-18 00:00:00'),
-              github.events_p2018_01_18 FOR VALUES FROM ('2018-01-18 00:00:00') TO ('2018-01-19 00:00:00'),
-              github.events_p2018_01_19 FOR VALUES FROM ('2018-01-19 00:00:00') TO ('2018-01-20 00:00:00'),
-              github.events_p2018_01_20 FOR VALUES FROM ('2018-01-20 00:00:00') TO ('2018-01-21 00:00:00'),
-              github.events_p2018_01_21 FOR VALUES FROM ('2018-01-21 00:00:00') TO ('2018-01-22 00:00:00'),
-              github.events_p2018_01_22 FOR VALUES FROM ('2018-01-22 00:00:00') TO ('2018-01-23 00:00:00'),
-              github.events_p2018_01_23 FOR VALUES FROM ('2018-01-23 00:00:00') TO ('2018-01-24 00:00:00')
+  Partitions: github.events_p2018_01_15_0700 FOR VALUES FROM ('2018-01-15 07:00:00') TO ('2018-01-15 08:00:00'),
+              github.events_p2018_01_15_0800 FOR VALUES FROM ('2018-01-15 08:00:00') TO ('2018-01-15 09:00:00'),
+              github.events_p2018_01_15_0900 FOR VALUES FROM ('2018-01-15 09:00:00') TO ('2018-01-15 10:00:00'),
+              github.events_p2018_01_15_1000 FOR VALUES FROM ('2018-01-15 10:00:00') TO ('2018-01-15 11:00:00'),
+              github.events_p2018_01_15_1100 FOR VALUES FROM ('2018-01-15 11:00:00') TO ('2018-01-15 12:00:00'),
+              github.events_p2018_01_15_1200 FOR VALUES FROM ('2018-01-15 12:00:00') TO ('2018-01-15 13:00:00'),
+              github.events_p2018_01_15_1300 FOR VALUES FROM ('2018-01-15 13:00:00') TO ('2018-01-15 14:00:00'),
+              github.events_p2018_01_15_1400 FOR VALUES FROM ('2018-01-15 14:00:00') TO ('2018-01-15 15:00:00'),
+              github.events_p2018_01_15_1500 FOR VALUES FROM ('2018-01-15 15:00:00') TO ('2018-01-15 16:00:00')
 
 
 By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
@@ -129,7 +129,7 @@ As time progresses, pg_partman will need to do some maintenance to create new pa
 
   -- disabling analyze is recommended for native partitioning
   -- due to aggressive locks
-  SELECT run_maintenance(p_analyze := false);
+  SELECT partman.run_maintenance(p_analyze := false);
 
 It's best to set up a periodic job to run the maintenance function. Pg_partman can be built with support for a background worker (BGW) process to do this. Or we can use another extension like `pg_cron <https://github.com/citusdata/pg_cron>`_:
 
