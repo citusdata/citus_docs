@@ -338,6 +338,14 @@ To require that all connections supply a hashed password, update the PostgreSQL 
   host    all             all             127.0.0.1/32            md5
   host    all             all             ::1/128                 md5
 
+The coordinator node needs to know roles' passwords in order to communicate with the workers. In Citus Enterprise the ``pg_dist_authinfo`` table can provide that information, as discussed earlier. However in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
+
+.. code-block:: ini
+
+  hostname:port:database:username:password
+
+Sometimes workers need to connect to one another, such as during :ref:`repartition joins <repartition_joins>`. Thus each worker node requires a copy of the .pgpass file as well.
+
 .. _sql_extensions:
 
 PostgreSQL extensions
