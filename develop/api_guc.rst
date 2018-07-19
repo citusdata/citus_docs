@@ -75,7 +75,7 @@ The ``citus.node_conninfo`` GUC sets non-sensitive `libpq connection parameters 
 
 .. code-block:: postgresql
 
-  -- Key=value pairs separated by spaces.
+  -- key=value pairs separated by spaces.
   -- For example, ssl options:
 
   ALTER DATABASE foo
@@ -97,7 +97,7 @@ Citus honors only a whitelisted subset of the options, namely:
 * sslmode
 * sslrootcert
 
-*(† = subject to conditional compilation)*
+*(† = subject to the runtime presence of optional PostgreSQL features)*
 
 Data Loading
 ---------------------------

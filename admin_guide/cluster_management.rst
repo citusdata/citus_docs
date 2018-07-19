@@ -293,29 +293,31 @@ Connection Management
 
 When Citus nodes communicate with one another they consult a GUC for connection parameters and, in the Enterprise Edition of Citus, a table with connection credentials. This gives the database administrator flexibility to adjust parameters for security and efficiency.
 
-To set non-sensitive libpq connection parameters used for all node connections, use the ``citus.node_conninfo`` GUC:
+To set non-sensitive libpq connection parameters to be used for all node connections, update the ``citus.node_conninfo`` GUC:
 
 .. code-block:: postgresql
 
-  -- Key=value pairs separated by spaces.
+  -- key=value pairs separated by spaces.
   -- For example, ssl options:
 
   ALTER DATABASE foo
   SET citus.node_conninfo =
     'sslrootcert=/path/to/citus.crt sslmode=verify-full';
 
-There is a whitelist of parameters that the GUC accepts, see the :ref:`node_conninfo <node_conninfo>` reference for details.
+There is a whitelist of parameters that the GUC accepts. See the :ref:`node_conninfo <node_conninfo>` reference for details.
 
-Citus Enterprise Edition includes an extra table you can use to set sensitive connection credentials. This is fully configurable per host/user. It's easier than managing ``.pgpass`` files through the cluster, and allows cert-based authentication as well.
+Citus Enterprise Edition includes an extra table used to set sensitive connection credentials. This is fully configurable per host/user. It's easier than managing ``.pgpass`` files through the cluster and additionally supports certificate authentication.
 
 .. code-block:: postgresql
+
+  -- only superusers can access this table
 
   INSERT INTO pg_dist_authinfo
     (nodeid, rolename, authinfo)
   VALUES
     (123, 'jdoe', 'password=abc123');
 
-With that row inserted, any node which wants to connect to node 123 with role jdoe will use the connection parameter specified. The documentation for :ref:`pg_dist_authinfo <pg_dist_authinfo>` has more info.
+After this INSERT, any query needing to connect to node 123 as the user jdoe will use the supplied password. The documentation for :ref:`pg_dist_authinfo <pg_dist_authinfo>` has more info.
 
 .. _worker_security:
 

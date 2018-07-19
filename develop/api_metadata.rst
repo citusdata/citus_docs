@@ -243,7 +243,7 @@ Connection Credentials Table
 
   This table is a part of Citus Enterprise Edition. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
-The ``pg_dist_authinfo`` table holds authentication parameters that Citus nodes use to connect to one another.
+The ``pg_dist_authinfo`` table holds authentication parameters used by Citus nodes to connect to one another.
 
 +----------+---------+-------------------------------------------------+
 | Name     | Type    | Description                                     |
@@ -252,15 +252,12 @@ The ``pg_dist_authinfo`` table holds authentication parameters that Citus nodes 
 +----------+---------+-------------------------------------------------+
 | rolename | name    | Postgres role                                   |
 +----------+---------+-------------------------------------------------+
-| authinfo | text    | Space separated libpq connection parameters     |
+| authinfo | text    | Space-separated libpq connection parameters     |
 +----------+---------+-------------------------------------------------+
 
 Upon beginning a connection, a node consults the table to see whether a row with the destination ``nodeid`` and desired ``rolename`` exists. If so, the node includes the corresponding ``authinfo`` string in its libpq connection. A common example is to store a password, like ``'password=abc123'``, but you can review the `full list <https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS>`_ of possibilities 
 
-The ``nodeid`` column accepts special values:
-
-* 0 = all nodes
-* -1 = loopback interface
+The ``nodeid`` column can also take the special values 0 and -1, which mean *all nodes* or *loopback connections*, respectively. If, for a given node, both specific and all-node rules exist, the specific rule has precedence.
 
 ::
 
