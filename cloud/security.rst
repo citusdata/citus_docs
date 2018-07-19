@@ -87,6 +87,8 @@ You can confirm the privileges by consulting the information schema:
 
 The PostgreSQL documentation has more detailed information about types of privileges you can `GRANT on database objects <https://www.postgresql.org/docs/current/static/sql-grant.html#SQL-GRANT-DESCRIPTION-OBJECTS>`_.
 
+Citus Cloud also supports :ref:`rls` for greater control in a multi-tenant environment.
+
 Granting Privileges in Bulk
 ---------------------------
 
