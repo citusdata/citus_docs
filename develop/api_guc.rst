@@ -86,12 +86,12 @@ Citus honors only a whitelisted subset of the options, namely:
 
 * application_name
 * connect_timeout
-* gsslib †
+* gsslib†
 * keepalives
 * keepalives_count
 * keepalives_idle
 * keepalives_interval
-* krbsrvname †
+* krbsrvname†
 * sslcompression
 * sslcrl
 * sslmode
