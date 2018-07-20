@@ -143,6 +143,8 @@ This is a current limitation. In a single transaction Citus does not support run
     -- switch into it
     SET ROLE table_owner_name;
 
+  Also note that ``table_owner_name`` must have LOGIN permissions on the worker nodes.
+
 Resolution
 ~~~~~~~~~~
 
