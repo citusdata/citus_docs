@@ -230,10 +230,10 @@ The :ref:`citus_stat_statements <citus_stat_statements>` view can help pinpoint 
 
 .. code-block:: sql
 
-  select css.partition_key as key, sum(css.calls) as total_queries, sum(pss.total_time) as total_time
-  from citus_stat_statements css, pg_stat_statements pss
+  select partition_key, sum(calls) as total_queries
+  from citus_stat_statements
   where partition_key is not null
-    and pss.queryid = css.queryid
+    and partition_key <> ''
   group by partition_key
   order by total_queries desc;
 
