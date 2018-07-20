@@ -329,7 +329,7 @@ This view can trace queries to originating tenants in a multi-tenant application
 | partition_key  | text   | value of distribution column in router-executed queries,|
 |                |        | else NULL                                               |
 +----------------+--------+---------------------------------------------------------+
-| calls          | bigint | how many times called                                   |
+| calls          | bigint | number of times the query was run                       |
 +----------------+--------+---------------------------------------------------------+
 
 .. code-block:: sql
