@@ -1,9 +1,27 @@
 Determining Application Type
-----------------------------
+============================
 
 Running efficient queries on a Citus cluster requires that data be properly distributed across machines. This varies by the type of application and its query patterns.
 
-There are broadly two kinds of applications that work very well on Citus. The first step in data modeling is to identify which of them more closely resembles your application:
+There are broadly two kinds of applications that work very well on Citus. The first step in data modeling is to identify which of them more closely resembles your application.
+
+At a Glance
+-----------
+
++----------------------------------------------------------+-------------------------------------------------------+
+| Multi-Tenant Applications                                | Real-Time Applications                                |
++==========================================================+=======================================================+
+| Sometimes dozens or hundreds of tables in schema         | Small number of tables                                |
++----------------------------------------------------------+-------------------------------------------------------+
+| Queries relating to one tenant (company/store) at a time | Relatively simple analytics queries with aggregations |
++----------------------------------------------------------+-------------------------------------------------------+
+| OLTP workloads for serving web clients                   | High ingest volume of mostly immutable data           |
++----------------------------------------------------------+-------------------------------------------------------+
+| OLAP workloads that serve per-tenant analytical queries  | Often centering around big table of events            |
++----------------------------------------------------------+-------------------------------------------------------+
+
+Examples and Characteristics
+----------------------------
 
 **Multi-Tenant Application**
 
