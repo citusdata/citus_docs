@@ -830,7 +830,7 @@ Example
 citus_stat_statements_reset
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Removes all rows from the :ref:`citus_stat_statements <citus_stat_statements>` table.
+Removes all rows from :ref:`citus_stat_statements <citus_stat_statements>`. Note that this works independently from ``pg_stat_statements_reset()``. To reset all stats, call both functions.
 
 Arguments
 *********

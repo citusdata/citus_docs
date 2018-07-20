@@ -226,7 +226,7 @@ Citus places table rows into worker shards based on the hashed value of the rows
 
 However sharing shards can cause resource contention when tenants differ drastically in size. This is a common situation for systems with a large number of tenants -- we have observed that the size of tenant data tend to follow a Zipfian distribution as the number of tenants increases. This means there are a few very large tenants, and many smaller ones. To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.
 
-The :ref:`citus_stat_statements <citus_stat_statements>` table can help pinpoint resource usage by tenant. Here's how to see which tenant runs most queries, and the time the statements took collectively:
+The :ref:`citus_stat_statements <citus_stat_statements>` view can help pinpoint resource usage by tenant. Here's how to see which tenant runs most queries:
 
 .. code-block:: sql
 
