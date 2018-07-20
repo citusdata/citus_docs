@@ -288,10 +288,41 @@ The new shard(s) are created on the same node as the shard(s) from which the ten
 
 Note that :code:`master_move_shard_placement` will also move any shards which are co-located with the specified one, to preserve their co-location.
 
+Connection Management
+=====================
+
+When Citus nodes communicate with one another they consult a GUC for connection parameters and, in the Enterprise Edition of Citus, a table with connection credentials. This gives the database administrator flexibility to adjust parameters for security and efficiency.
+
+To set non-sensitive libpq connection parameters to be used for all node connections, update the ``citus.node_conninfo`` GUC:
+
+.. code-block:: postgresql
+
+  -- key=value pairs separated by spaces.
+  -- For example, ssl options:
+
+  ALTER DATABASE foo
+  SET citus.node_conninfo =
+    'sslrootcert=/path/to/citus.crt sslmode=verify-full';
+
+There is a whitelist of parameters that the GUC accepts. See the :ref:`node_conninfo <node_conninfo>` reference for details.
+
+Citus Enterprise Edition includes an extra table used to set sensitive connection credentials. This is fully configurable per host/user. It's easier than managing ``.pgpass`` files through the cluster and additionally supports certificate authentication.
+
+.. code-block:: postgresql
+
+  -- only superusers can access this table
+
+  INSERT INTO pg_dist_authinfo
+    (nodeid, rolename, authinfo)
+  VALUES
+    (123, 'jdoe', 'password=abc123');
+
+After this INSERT, any query needing to connect to node 123 as the user jdoe will use the supplied password. The documentation for :ref:`pg_dist_authinfo <pg_dist_authinfo>` has more info.
+
 .. _worker_security:
 
-Worker Security
-===============
+Increasing Worker Security
+--------------------------
 
 For your convenience getting started, our multi-node installation instructions direct you to set up the :code:`pg_hba.conf` on the workers with its `authentication method <https://www.postgresql.org/docs/current/static/auth-methods.html>`_ set to "trust" for local network connections. However you might desire more security.
 
@@ -307,7 +338,7 @@ To require that all connections supply a hashed password, update the PostgreSQL 
   host    all             all             127.0.0.1/32            md5
   host    all             all             ::1/128                 md5
 
-The coordinator node needs to know roles' passwords in order to communicate with the workers. Add a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file to the postgres user's home directory, with a line for each combination of worker address and role:
+The coordinator node needs to know roles' passwords in order to communicate with the workers. In Citus Enterprise the ``pg_dist_authinfo`` table can provide that information, as discussed earlier. However in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
 
 .. code-block:: ini
 
