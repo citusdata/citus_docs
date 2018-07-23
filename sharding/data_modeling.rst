@@ -45,7 +45,7 @@ Real-Time Apps
 
 While the multi-tenant architecture introduces a hierarchical structure and uses data co-location to route queries per tenant, real-time architectures depend on specific distribution properties of their data to achieve highly parallel processing.
 
-We use "entity id" as a term for distribution columns in the real-time model, as opposed to tenant ids in the multi-tenant model. Typical entites are users, hosts, or devices.
+We use "entity id" as a term for distribution columns in the real-time model, as opposed to tenant ids in the multi-tenant model. Typical entities are users, hosts, or devices.
 
 Real-time queries typically ask for numeric aggregates grouped by date or category. Citus sends these queries to each shard for partial results and assembles the final answer on the coordinator node. Queries run fastest when as many nodes contribute as possible, and when no single node must do a disproportionate amount of work.
 
@@ -150,7 +150,7 @@ If our data was in a single PostgreSQL node, we could easily express our query u
   GROUP BY page_id;
 
 
-As long the `working set <https://en.wikipedia.org/wiki/Working_set>`_ for this query fits in memory, this is an appropriate solution for many application since it offers maximum flexibility. However, even if you don’t need to scale yet, it can be useful to consider the implications of scaling out on your data model.
+As long as the `working set <https://en.wikipedia.org/wiki/Working_set>`_ for this query fits in memory, this is an appropriate solution for many application since it offers maximum flexibility. However, even if you don’t need to scale yet, it can be useful to consider the implications of scaling out on your data model.
 
 Distributing tables by ID
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -245,7 +245,7 @@ The full list of Citus features that are unlocked by co-location are:
 * Foreign keys
 * Distributed outer joins
 
-Data co-location is a powerful technique for providing both horizontal scale and supporting relational data models. The cost of migrating or building applications using a distributed database that enables relational operations through co-location is often substantially lower than moving to a restrictive data model (e.g. NoSQL) and unlike a single-node database it can scale out with the size of your business. For more information about migrating an existing database see :ref:`Transitioning to a Multi-Tenant Data Model <transitioning_mt>`.
+Data co-location is a powerful technique for providing both horizontal scale and support to relational data models. The cost of migrating or building applications using a distributed database that enables relational operations through co-location is often substantially lower than moving to a restrictive data model (e.g. NoSQL) and, unlike a single-node database, it can scale out with the size of your business. For more information about migrating an existing database see :ref:`Transitioning to a Multi-Tenant Data Model <transitioning_mt>`.
 
 .. _query_performance:
 

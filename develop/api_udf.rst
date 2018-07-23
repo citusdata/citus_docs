@@ -292,7 +292,7 @@ This example appends the contents of the github_events_local table to the shard 
 master_apply_delete_command
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The master_apply_delete_command() function is used to delete shards which match the criteria specified by the delete command. This function deletes a shard only if all rows in the shard match the delete criteria. As the function uses shard metadata to decide whether or not a shard needs to be deleted, it requires the WHERE clause in the DELETE statement to be on the distribution column. If no condition is specified, then all shards of that table are deleted.
+The master_apply_delete_command() function is used to delete shards which match the criteria specified by the delete command on an *append* distributed table. This function deletes a shard only if all rows in the shard match the delete criteria. As the function uses shard metadata to decide whether or not a shard needs to be deleted, it requires the WHERE clause in the DELETE statement to be on the distribution column. If no condition is specified, then all shards of that table are deleted.
 
 Behind the covers, this function connects to all the worker nodes which have shards matching the delete criteria and sends them a command to drop the selected shards. Then, the function updates the corresponding metadata on the coordinator. If the function is able to successfully delete a shard placement, then the metadata for it is deleted. If a particular placement could not be deleted, then it is marked as TO DELETE. The placements which are marked as TO DELETE are not considered for future queries and can be cleaned up later.
 
@@ -665,7 +665,7 @@ The example below fetches and displays the table metadata for the github_events 
 
 .. code-block:: postgresql
 
-    SELECT * from master_get_table_metadata('github_events’);
+    SELECT * from master_get_table_metadata('github_events');
      logical_relid | part_storage_type | part_method | part_key | part_replica_count | part_max_size | part_placement_policy 
     ---------------+-------------------+-------------+----------+--------------------+---------------+-----------------------
              24180 | t                 | h           | repo_id  |                  2 |    1073741824 |                     2
