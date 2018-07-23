@@ -358,6 +358,25 @@ The benefit of running INSERT or UPDATE commands, compared to issuing bulk COPY 
     INSERT INTO pgbench_history VALUES (10, 1, 10000, -5000, CURRENT_TIMESTAMP); -- Time: 10.314 ms
     INSERT INTO pgbench_history VALUES (10, 1, 22000, 5000, CURRENT_TIMESTAMP); -- Time: 3.132 ms
 
+Staging Data Temporarily
+========================
+
+When loading data for temporary staging, consider using an `unlogged table <https://www.postgresql.org/docs/current/static/sql-createtable.html#SQL-CREATETABLE-UNLOGGED>`_. These are tables which are not backed by the Postgres write-ahead log. This makes them faster for inserting rows, but not suitable for long term data storage. You can use an unlogged table as a place to load incoming data, prior to manipulating the data and moving it to permanent tables.
+
+.. code-block:: postgres
+
+  -- example unlogged table
+  CREATE UNLOGGED TABLE unlogged_table (
+    key text,
+    value text
+  );
+
+  -- its shards will be unlogged as well when
+  -- the table is distributed
+  SELECT create_distributed_table('unlogged_table', 'key');
+
+  -- ready to load data
+
 .. _bulk_copy:
 
 Bulk Copy (250K - 2M/s)
