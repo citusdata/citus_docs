@@ -42,19 +42,19 @@ Sometimes it's convenient to put multiple insert statements together into a sing
         2489368389,'WatchEvent','t',28229924,'{"action": "started"}','{"id": 28229924, "url": "https://api.github.com/repos/inf0rmer/blanket", "name": "inf0rmer/blanket"}','{"id": 1405427, "url": "https://api.github.com/users/tategakibunko", "login": "tategakibunko", "avatar_url": "https://avatars.githubusercontent.com/u/1405427?", "gravatar_id": ""}',NULL,'2015-01-01 00:00:24'
       );
 
-From Select
-~~~~~~~~~~~
+"From Select" Clause (Distributed Rollups)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Citus also supports ``INSERT … SELECT`` statements -- which insert rows based on the results of a select query. This is a convenient way to fill tables and also allows "upserts" with the ``ON CONFLICT`` clause. One useful application is :ref:`rollups`.
+Citus also supports ``INSERT … SELECT`` statements -- which insert rows based on the results of a select query. This is a convenient way to fill tables and also allows "upserts" with the ``ON CONFLICT`` clause.
 
-In Citus there are two ways that inserting from a select statement can happen. The first is if the source tables and destination table are :ref:`colocated <colocation>`, and the select/insert statements both include the distribution column. In this case Citus can push the ``INSERT … SELECT`` statement down for parallel execution on all nodes. This way supports the ``ON CONFLICT`` clause, but does not support setting default values for serial columns in the destination table.
+In Citus there are two ways that inserting from a select statement can happen. The first is if the source tables and destination table are :ref:`colocated <colocation>`, and the select/insert statements both include the distribution column. In this case Citus can push the ``INSERT … SELECT`` statement down for parallel execution on all nodes. Pushing the statement down supports the ``ON CONFLICT`` clause, the easiest way to do :ref:`distributed rollups <rollups>`.
 
-The second way of executing an ``INSERT … SELECT`` statement is selecting the results from worker nodes, pulling the data up to the coordinator node, and then issuing an INSERT statement from the coordinator with the data. Citus is forced to use this approach when the source and destination tables are not colocated. This method does not support ``ON CONFLICT``, but does support setting default values for serial columns in the destination table.
+The second way of executing an ``INSERT … SELECT`` statement is selecting the results from worker nodes, pulling the data up to the coordinator node, and then issuing an INSERT statement from the coordinator with the data. Citus is forced to use this approach when the source and destination tables are not colocated. This method does not support ``ON CONFLICT``.
 
 When in doubt about which method Citus is using, use the EXPLAIN command, as described in :ref:`postgresql_tuning`.
 
-COPY Command
-~~~~~~~~~~~~
+COPY Command (Bulk load)
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 To bulk load data from a file, you can directly use `PostgreSQL's \\COPY command <http://www.postgresql.org/docs/current/static/app-psql.html#APP-PSQL-META-COMMANDS-COPY>`_.
 
