@@ -44,7 +44,7 @@ cluster_name is set, the planner will query worker nodes in that cluster alone.
 .. _enable_version_checks:
 
 citus.enable_version_checks (boolean)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Upgrading Citus version requires a server restart (to pick up the new
 shared-library), as well as running an ALTER EXTENSION UPDATE command. The

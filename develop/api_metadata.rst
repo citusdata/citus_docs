@@ -117,7 +117,7 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
 +================+======================+===========================================================================+
-| shardid        |       bigint         | | Shard identifier associated with this placement. This value references |
+| shardid        |       bigint         | | Shard identifier associated with this placement. This value references  |
 |                |                      | | the shardid column in the pg_dist_shard catalog table.                  |
 +----------------+----------------------+---------------------------------------------------------------------------+ 
 | shardstate     |         int          | | Describes the state of this placement. Different shard states are       |
@@ -194,9 +194,10 @@ Citus manages shard health on a per-placement basis and automatically marks a pl
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 
+.. _pg_dist_node:
+
 Worker node table
 ---------------------------------------
-.. _pg_dist_node:
 
 The pg_dist_node table contains information about the worker nodes in the cluster. 
 

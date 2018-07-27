@@ -16,7 +16,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | citext             | 1.4     | public     | data type for case-insensitive character strings                   |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| citus              | 7.4-3   | pg_catalog | Citus distributed database                                         |
+| citus              | 7.5-7   | pg_catalog | Citus distributed database                                         |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | cube               | 1.2     | public     | data type for multidimensional cubes                               |
 +--------------------+---------+------------+--------------------------------------------------------------------+
@@ -40,7 +40,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | pg_freespacemap    | 1.2     | public     | examine the free space map (FSM)                                   |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| pg_partman         | 3.1.2   | partman    | Extension to manage partitioned tables by time or ID               |
+| pg_partman         | 3.1.3   | partman    | Extension to manage partitioned tables by time or ID               |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | pg_prewarm         | 1.1     | public     | prewarm relation data                                              |
 +--------------------+---------+------------+--------------------------------------------------------------------+
@@ -58,13 +58,13 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | session_analytics  | 1.0     | public     |                                                                    |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| shard_rebalancer   | 7.4     | public     |                                                                    |
+| shard_rebalancer   | 7.5     | public     |                                                                    |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | sslinfo            | 1.2     | public     | information about SSL certificates                                 |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | tablefunc          | 1.0     | public     | functions that manipulate whole tables, including crosstab         |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| topn               | 2.0.0   | public     | type for top-n JSONB                                               |
+| topn               | 2.1.0   | public     | type for top-n JSONB                                               |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | unaccent           | 1.1     | public     | text search dictionary that removes accents                        |
 +--------------------+---------+------------+--------------------------------------------------------------------+
