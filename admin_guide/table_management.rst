@@ -84,3 +84,8 @@ Citus propagates the ANALYZE command to all worker node placements.
 .. _freemap: https://www.postgresql.org/docs/current/static/storage-fsm.html
 .. _vismap: https://www.postgresql.org/docs/current/static/storage-vm.html
 .. _forks: https://www.postgresql.org/docs/current/static/storage-file-layout.html
+
+Triggers
+########
+
+Citus does not yet directly support triggers on distributed tables, but there are :ref:`workarounds <trigger_workarounds>` to create them by hand.

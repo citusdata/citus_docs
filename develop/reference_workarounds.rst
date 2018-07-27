@@ -129,6 +129,8 @@ There is another trick though. We can pull the relevant information to the coord
 
 Creating a temporary table on the coordinator is a last resort. It is limited by the disk size and CPU of the node.
 
+.. _trigger_workarounds:
+
 Triggers on Distributed Tables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
