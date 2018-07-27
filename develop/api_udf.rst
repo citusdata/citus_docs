@@ -826,6 +826,22 @@ Example
   --------------
   73 MB
 
+
+citus_stat_statements_reset
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Removes all rows from :ref:`citus_stat_statements <citus_stat_statements>`. Note that this works independently from ``pg_stat_statements_reset()``. To reset all stats, call both functions.
+
+Arguments
+*********
+
+N/A
+
+Return Value
+************
+
+None
+
 .. _cluster_management_functions:
 
 Cluster Management And Repair Functions
