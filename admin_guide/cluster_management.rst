@@ -288,8 +288,11 @@ The new shard(s) are created on the same node as the shard(s) from which the ten
 
 Note that :code:`master_move_shard_placement` will also move any shards which are co-located with the specified one, to preserve their co-location.
 
+Security
+========
+
 Connection Management
-=====================
+---------------------
 
 When Citus nodes communicate with one another they consult a GUC for connection parameters and, in the Enterprise Edition of Citus, a table with connection credentials. This gives the database administrator flexibility to adjust parameters for security and efficiency.
 
@@ -345,6 +348,95 @@ The coordinator node needs to know roles' passwords in order to communicate with
   hostname:port:database:username:password
 
 Sometimes workers need to connect to one another, such as during :ref:`repartition joins <repartition_joins>`. Thus each worker node requires a copy of the .pgpass file as well.
+
+.. _rls:
+
+Row-Level Security
+------------------
+
+.. note::
+
+  Row-level security support is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+PostgreSQL `row-level security <https://www.postgresql.org/docs/current/static/ddl-rowsecurity.html>`_ policies restrict, on a per-user basis, which rows can be returned by normal queries or inserted, updated, or deleted by data modification commands. This can be especially useful in a multi-tenant Citus cluster because it allows individual tenants to have full SQL access to the database while hiding each tenant's information from other tenants.
+
+We can implement the separation of tenant data by using a naming convention for database roles that ties into table row-level security policies. We'll assign each tenant a database role in a numbered sequence: ``tenant_1``, ``tenant_2``, etc. Tenants will connect to Citus using these separate roles. Row-level security policies can compare the role name to values in the ``tenant_id`` distribution column to decide whether to allow access.
+
+Here is how to apply the approach on a simplified events table distributed by ``tenant_id``. First create the roles ``tenant_1`` and ``tenant_2`` (it's easy on Citus Cloud, see :ref:`cloud_roles`). Then run the following as an administrator:
+
+.. code-block:: sql
+
+  CREATE TABLE events(
+    tenant_id int,
+    id int,
+    type text
+  );
+
+  SELECT create_distributed_table('events','tenant_id');
+
+  INSERT INTO events VALUES (1,1,'foo'), (2,2,'bar');
+
+  -- assumes that roles tenant_1 and tenant_2 exist
+  GRANT select, update, insert, delete
+    ON events TO tenant_1, tenant_2;
+
+As it stands, anyone with select permissions for this table can see both rows. Users from either tenant can see and update the row of the other tenant. We can solve this with row-level table security policies.
+
+Each policy consists of two clauses: USING and WITH CHECK. When a user tries to read or write rows, the database evaluates each row against these clauses. Existing table rows are checked against the expression specified in USING, while new rows that would be created via INSERT or UPDATE are checked against the expression specified in WITH CHECK.
+
+.. code-block:: postgresql
+
+  -- first a policy for the system admin "citus" user
+  CREATE POLICY admin_all ON events
+    TO citus           -- apply to this role
+    USING (true)       -- read any existing row
+    WITH CHECK (true); -- insert or update any row
+
+  -- next a policy which allows role "tenant_<n>" to
+  -- access rows where tenant_id = <n>
+  CREATE POLICY user_mod ON events
+    USING (current_user = 'tenant_' || tenant_id::text);
+    -- lack of CHECK means same condition as USING
+
+  -- enforce the policies
+  ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+
+Now roles ``tenant_1`` and ``tenant_2`` get different results for their queries:
+
+**Connected as tenant_1:**
+
+.. code-block:: sql
+
+  SELECT * FROM events;
+
+::
+
+  ┌───────────┬────┬──────┐
+  │ tenant_id │ id │ type │
+  ├───────────┼────┼──────┤
+  │         1 │  1 │ foo  │
+  └───────────┴────┴──────┘
+
+**Connected as tenant_2:**
+
+.. code-block:: sql
+
+  SELECT * FROM events;
+
+::
+
+  ┌───────────┬────┬──────┐
+  │ tenant_id │ id │ type │
+  ├───────────┼────┼──────┤
+  │         2 │  2 │ bar  │
+  └───────────┴────┴──────┘
+
+.. code-block:: sql
+
+  INSERT INTO events VALUES (3,3,'surprise');
+  /*
+  ERROR:  42501: new row violates row-level security policy for table "events_102055"
+  */
 
 .. _sql_extensions:
 
