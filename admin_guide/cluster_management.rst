@@ -291,6 +291,10 @@ Note that :code:`master_move_shard_placement` will also move any shards which ar
 Viewing Query Statistics
 ========================
 
+.. note::
+
+  The citus_stat_statements view is a feature of **Citus Enterprise Edition** and :ref:`Citus Cloud <cloud_overview>` only.
+
 When administering a Citus cluster it's useful to know what queries users are running, which nodes are involved, and which execution method Citus is using for each query. Citus records query statistics in a metadata view called :ref:`citus_stat_statements <citus_stat_statements>`, named analogously to Postgres' `pg_stat_statments <https://www.postgresql.org/docs/current/static/pgstatstatements.html>`_. Whereas pg_stat_statements stores info about query duration and I/O, citus_stat_statements stores info about Citus execution methods and shard partition keys (when applicable).
 
 Citus requires the ``pg_stat_statements`` extension to be installed in order to track query statistics. On Citus Cloud this extension will be pre-activated, but on a self-hosted Postgres instance you must load the extension in postgresql.conf via ``shared_preload_libraries``, then create the extension in SQL:
