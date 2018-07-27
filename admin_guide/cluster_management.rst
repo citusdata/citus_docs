@@ -226,17 +226,6 @@ Citus places table rows into worker shards based on the hashed value of the rows
 
 However sharing shards can cause resource contention when tenants differ drastically in size. This is a common situation for systems with a large number of tenants -- we have observed that the size of tenant data tend to follow a Zipfian distribution as the number of tenants increases. This means there are a few very large tenants, and many smaller ones. To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.
 
-The :ref:`citus_stat_statements <citus_stat_statements>` view can help pinpoint resource usage by tenant. Here's how to see which tenant runs most queries:
-
-.. code-block:: sql
-
-  select partition_key, sum(calls) as total_queries
-  from citus_stat_statements
-  where partition_key is not null
-    and partition_key <> ''
-  group by partition_key
-  order by total_queries desc;
-
 Citus Enterprise Edition and :ref:`Citus Cloud <cloud_overview>` provide the tools to isolate a tenant on a specific node. This happens in two phases: 1) isolating the tenant's data to a new dedicated shard, then 2) moving the shard to the desired node. To understand the process it helps to know precisely how rows of data are assigned to shards.
 
 Every shard is marked in Citus metadata with the range of hashed values it contains (more info in the reference for :ref:`pg_dist_shard <pg_dist_shard>`). The Citus UDF :code:`isolate_tenant_to_new_shard(table_name, tenant_id)` moves a tenant into a dedicated shard in three steps:
@@ -298,6 +287,118 @@ The new shard(s) are created on the same node as the shard(s) from which the ten
     'dest_host', dest_port);
 
 Note that :code:`master_move_shard_placement` will also move any shards which are co-located with the specified one, to preserve their co-location.
+
+Viewing Query Statistics
+========================
+
+When administering a Citus cluster it's useful to know what queries users are running, which nodes are involved, and which execution method Citus is using for each query. Citus records query statistics in a metadata view called :ref:`citus_stat_statements <citus_stat_statements>`, named analogously to Postgres' `pg_stat_statments <https://www.postgresql.org/docs/current/static/pgstatstatements.html>`_. Whereas pg_stat_statements stores info about query duration and I/O, citus_stat_statements stores info about Citus execution methods and shard partition keys (when applicable).
+
+Citus requires the ``pg_stat_statements`` extension to be installed in order to track query statistics. On Citus Cloud this extension will be pre-activated, but on a self-hosted Postgres instance you must load the extension in postgresql.conf via ``shared_preload_libraries``, then create the extension in SQL:
+
+.. code-block:: postgresql
+
+  CREATE EXTENSION pg_stat_statements;
+
+Let's see how this works. Assume we have a table called ``foo`` that is hash-distributed by its ``id`` column.
+
+.. code-block:: postgresql
+
+  -- create and populate distributed table
+  create table foo ( id int );
+  select create_distributed_table('foo', 'id');
+
+  insert into foo select generate_series(1,100);
+
+We'll run two more queries, and ``citus_stat_statements`` will show how Citus chooses to execute them.
+
+.. code-block:: postgresql
+
+  -- counting all rows executes on all nodes, and sums
+  -- the results on the coordinator
+  SELECT count(*) FROM foo;
+
+  -- specifying a row by the distribution column routes
+  -- execution to an individual node
+  SELECT * FROM foo WHERE id = 42;
+
+To find how these queries were executed, ask the stats table:
+
+.. code-block:: postgresql
+
+  SELECT * FROM citus_stat_statements;
+
+Results:
+
+::
+
+  ┌────────────┬────────┬───────┬───────────────────────────────────────────────┬───────────────┬───────────────┬───────┐
+  │  queryid   │ userid │ dbid  │                     query                     │   executor    │ partition_key │ calls │
+  ├────────────┼────────┼───────┼───────────────────────────────────────────────┼───────────────┼───────────────┼───────┤
+  │ 1496051219 │  16384 │ 16385 │ select count(*) from foo;                     │ real-time     │ NULL          │     1 │
+  │ 2530480378 │  16384 │ 16385 │ select * from foo where id = $1               │ router        │ 42            │     1 │
+  │ 3233520930 │  16384 │ 16385 │ insert into foo select generate_series($1,$2) │ insert-select │ NULL          │     1 │
+  └────────────┴────────┴───────┴───────────────────────────────────────────────┴───────────────┴───────────────┴───────┘
+
+We can see that Citus used the real-time executor to run the count query. This executor fragments the query into constituent queries to run on each node and combines the results on the coordinator node. In the case of the second query (filtering by the distribution column ``id = $1``), Citus determined that it needed the data from just one node. Thus Citus chose the router executor to send the whole query to that node for execution. Lastly, we can see that the ``insert into foo select…`` statement ran with the insert-select executor which provides flexibility to run these kind of queries.  The insert-select executor must sometimes pull results to the coordinator and push them back down to workers.
+
+So far the information in this view doesn't give us anything we couldn't already learn by running the ``EXPLAIN`` command for a given query. However in addition to getting information about individual queries, the ``citus_stat_statements`` view allows us to answer questions such as "what percentage of queries in the cluster are run by which executors?"
+
+.. code-block:: postgresql
+
+  SELECT executor, sum(calls)
+  FROM citus_stat_statements
+  GROUP BY executor;
+
+::
+
+  ┌───────────────┬─────┐
+  │   executor    │ sum │
+  ├───────────────┼─────┤
+  │ insert-select │   1 │
+  │ real-time     │   1 │
+  │ router        │   1 │
+  └───────────────┴─────┘
+
+In a multi-tenant database, for instance, we would expect to see "router" for the vast majority of queries, because the queries should route to individual tenants. Seeing too many real-time queries may indicate that queries do not have the proper filters to match a tenant, and are using unnecessary resources.
+
+We can also find which partition_ids are the most frequent targets of router execution. In a multi-tenant application these would be the busiest tenants.
+
+.. code-block:: sql
+
+  SELECT partition_key, sum(calls) as total_queries
+  FROM citus_stat_statements
+  WHERE coalesce(partition_key, '') <> ''
+  GROUP BY partition_key
+  ORDER BY total_queries desc
+  LIMIT 10;
+
+::
+
+  ┌───────────────┬───────────────┐
+  │ partition_key │ total_queries │
+  ├───────────────┼───────────────┤
+  │ 42            │             1 │
+  └───────────────┴───────────────┘
+
+
+Finally, by joining ``citus_stat_statements`` with ``pg_stat_statements`` we can gain a better view into not only how many queries use different executor types, but how much time each executor spends running queries.
+
+.. code-block:: sql
+
+  SELECT executor, sum(css.calls), sum(pss.total_time)
+  FROM citus_stat_statements css
+  JOIN pg_stat_statements pss USING (queryid)
+  GROUP BY executor;
+
+::
+
+  ┌───────────────┬─────┬───────────┐
+  │   executor    │ sum │    sum    │
+  ├───────────────┼─────┼───────────┤
+  │ insert-select │   1 │ 18.393312 │
+  │ real-time     │   1 │  3.537155 │
+  │ router        │   1 │  0.392590 │
+  └───────────────┴─────┴───────────┘
 
 Security
 ========
