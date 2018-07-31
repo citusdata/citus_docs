@@ -281,3 +281,33 @@ There are two ways to enforce uniqueness on a non-distribution column:
 
 1. Create a composite unique index or primary key that includes the desired column (*C*), but also includes the distribution column (*D*). This is not quite as strong a condition as uniqueness on *C* alone, but will ensure that the values of *C* are unique for each value of *D*. For instance if distributing by ``company_id`` in a multi-tenant system, this approach would make *C* unique within each company.
 2. Use a :ref:`reference table <reference_tables>` rather than a hash distributed table. This is only suitable for small tables, since the contents of the reference table will be duplicated on all nodes.
+
+STABLE functions used in UPDATE queries cannot be called with column references
+-------------------------------------------------------------------------------
+
+Update statements must use functions of immutable `volatility <https://www.postgresql.org/docs/current/static/xfunc-volatility.html>`_ when those functions are evaluated on worker nodes. One common problem is attempting to filter by a timestamp column:
+
+.. code-block::
+
+  -- foo_timestamp is timestamp, not timestamptz
+  UPDATE foo SET … WHERE foo_timestamp < now();
+
+::
+
+  ERROR:  0A000: STABLE functions used in UPDATE queries cannot be called with column references
+
+In this case the comparison operator ``<`` between timestamp and timestamptz is a stable (rather than immutable) function, and the calculation must be made on worker nodes because that is where the ``foo_timestamp`` values are stored.
+
+By contrast, the following statement works fine:
+
+.. code-block::
+
+  -- this works without any error
+  UPDATE foo SET foo_timestamp = now();
+
+This is because the coordinator node evaluates ``now()`` and rewrites the queries to the workers with the resulting value hard-coded. It is able to do that in the SET clause, but not yet in the WHERE clause.
+
+Resolution
+~~~~~~~~~~
+
+Try to avoid stable functions in an UPDATE statement. In particular, whenever working with times use ``timestamptz`` rather than ``timestamp``. Having a time zone in timestamps makes calculations immutable, and is compatible with UPDATE statements.
