@@ -138,7 +138,9 @@ If you would prefer a table to be in its own co-location group, specify :code:`'
 
   SELECT create_distributed_table('A', 'foo', colocate_with => 'none');
 
-To co-locate a number of tables, distribute one and then put the others into its co-location group. For example:
+Using co-location group ``'none'`` can potentially take advantage of more worker nodes than existing groups. A table distributed into an existing co-location group will be placed on exactly the same nodes as other tables in the group, which doesn't include nodes added after the group was created.
+
+When tables are indeed related (for instance will be joined), it does make sense to explicitly co-locate them. To do this for multiple tables, distribute one and then put the others into its co-location group. For example:
 
 .. code-block:: postgresql
 
