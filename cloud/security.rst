@@ -123,10 +123,28 @@ Network Perimeter Controls
 All Citus Cloud clusters run in their own isolated Amazon Virtual Private Cloud (VPC). In addition to the options discussed earlier, Citus Cloud provides the ability to further secure your cluster by limiting network access in two ways:
 
 VPC Peering
-  VPC peering forms a network connection between two VPCs which routes traffic securely between them using private IPv4 addresses or IPv6 addresses. Instances in either VPC can communicate with each other as if they are within the same network. To set up a VPC peering connecting between an existing Citus Cloud formation and an Amazon VPC, open a support ticket and we will initiate the peering request.
+-----------
+
+VPC peering forms a network connection between two VPCs which routes traffic securely between them using private IPv4 addresses or IPv6 addresses. Instances in either VPC can communicate with each other as if they are within the same network. To set up a VPC peering connecting between an existing Citus Cloud formation and an Amazon VPC, open a support ticket and we will initiate the peering request.
 
 IP Whitelisting
-  IP whitelisting restricts access to servers within a Citus Cloud cluster so that only designated IP addresses are able to connect to them. IP whitelisting is available for a single IP or a set of IP ranges. To enable IP whitelisting on your Citus Cloud formation, open a support ticket with the desired IP ranges and we'll set it up for you.
+---------------
+
+IP whitelisting restricts access to servers within a Citus Cloud cluster so that only designated IP addresses are able to connect to them, typically the addresses of application servers.
+
+To enable IP whitelisting on your Citus Cloud formation, go to the VPCs tab in the Cloud Console:
+
+.. image:: ../images/whitelist-vpc-tab.png
+
+Then find the VPC containing your formation and click View Details:
+
+.. image:: ../images/whitelist-select-vpc.png
+
+Finally, in the "IP Whitelist / Ingress Rules" tab, enter the allowable IP addresses or CIDR blocks, one per line.
+
+.. image:: ../images/whitelist-cidr-blocks.png
+
+The special address ``0.0.0.0/0`` means unrestricted access. Note that permitted connections still require a valid username and password to actually access your database.
 
 .. raw:: html
 
