@@ -202,24 +202,22 @@ Citus propagates most `ALTER TABLE <https://www.postgresql.org/docs/current/stat
 
   ALTER TABLE products ALTER COLUMN price SET DEFAULT 7.77;
 
-Significant changes to an existing column are fine too, except for those applying to the :ref:`distribution column <distributed_data_modeling>`. This column determines how table data distributes through the Citus cluster and cannot be modified in a way that would change data distribution.
+Significant changes to an existing column like renaming it or changing its data type are fine too. However the data type of the :ref:`distribution column <distributed_data_modeling>` cannot be altered. This column determines how table data distributes through the Citus cluster, and modifying its data type would require moving the data.
 
+Attempting to do so causes an error:
 
-.. code-block:: postgresql
+.. code-block:: postgres
 
-  -- Cannot be executed against a distribution column
+  -- assumining store_id is the distribution column
+  -- for products, and that it has type integer
 
-  -- Removing a column
+  ALTER TABLE products
+  ALTER COLUMN store_id TYPE text;
 
-  ALTER TABLE products DROP COLUMN description;
-
-  -- Changing column data type
-
-  ALTER TABLE products ALTER COLUMN price TYPE numeric(10,2);
-
-  -- Renaming a column
-
-  ALTER TABLE products RENAME COLUMN product_no TO product_number;
+  /*
+  ERROR:  XX000: cannot execute ALTER TABLE command involving partition column
+  LOCATION:  ErrorIfUnsupportedAlterTableStmt, multi_utility.c:2150
+  */
 
 Adding/Removing Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
