@@ -40,7 +40,7 @@ Citus is basically `worry-free Postgres <https://www.citusdata.com/product>`_ th
 When to Use Citus
 =================
 
-Citus serves many use cases. Two common ones are scaling multi-tenant (B2B) databases and real-time analytics.
+Citus serves many use cases. Two common ones are scaling multi-tenant (B2B) databases and real-time analytics. In addition to the information below, there are examples of Citus `use-cases <https://www.citusdata.com/use-cases>`_ and `customer case studies <https://www.citusdata.com/solutions/case-studies>`_ on our main web site.
 
 .. _mt_blurb:
 
@@ -67,14 +67,12 @@ Citus supports real-time queries over large datasets. Commonly these queries occ
 
 Citus' benefits here are its ability to parallelize query execution and scale linearly with the number of worker databases in a cluster.
 
-For concrete examples check out our customer `use cases <https://www.citusdata.com/solutions/case-studies>`_.
-
 Considerations for Use
 ----------------------
 
 Citus extends PostgreSQL with distributed functionality, but it is not a drop-in replacement that scales out all workloads. A performant Citus cluster involves thinking about the data model, tooling, and choice of SQL features used.
 
-A good way to think about tools and SQL features is the following: if your workload aligns with use-cases noted in the :ref:`when_to_use_citus` section and you happen to run into an unsupported tool or query, then there’s usually a good workaround.
+A good way to think about tools and SQL features is the following: if your workload aligns with use-cases described here and you happen to run into an unsupported tool or query, then there’s usually a good workaround.
 
 When Citus is Inappropriate
 ---------------------------
