@@ -175,7 +175,7 @@ However this is a distributed table, so a single trigger on the coordinator for 
     $cmd$
   );
 
-Now if we try to add fake data we will be prevented:
+Now if we try to add fake data, the author column will at least reveal who made the change:
 
 .. code-block:: postgresql
 
@@ -191,7 +191,7 @@ Now if we try to add fake data we will be prevented:
   │  1 │ a bad thing │ citus  │
   └────┴─────────────┴────────┘
 
-The author says "citus" rather than "wasnt-me."
+The author says "citus" rather than "wasnt-me," showing this column can't be spoofed.
 
 **Trigger between colocated tables.**
 
