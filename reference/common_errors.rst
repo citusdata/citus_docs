@@ -285,7 +285,13 @@ There are two ways to enforce uniqueness on a non-distribution column:
 STABLE functions used in UPDATE queries cannot be called with column references
 -------------------------------------------------------------------------------
 
-Update statements must use functions of immutable `volatility <https://www.postgresql.org/docs/current/static/xfunc-volatility.html>`_ when those functions are evaluated on worker nodes. One common problem is attempting to filter by a timestamp column:
+Each PostgreSQL function is marked with a `volatility <https://www.postgresql.org/docs/current/static/xfunc-volatility.html>`_, which indicates whether the function can update the database, and whether the function's return value can vary over time given the same inputs. A ``STABLE`` function is guaranteed to return the same results given the same arguments for all rows within a single statement, while an ``IMMUTABLE`` function is guaranteed to return the same results given the same arguments forever.
+
+Non-immutable functions can be inconvenient in distributed systems because they can introduce subtle changes when run at slightly different times across shard replicas. Differences in database configuration across nodes can also interact harmfully with non-immutable functions.
+
+One of the most common ways this can happen is using the ``timestamp`` type in Postgres, which unlike ``timestamptz`` does not keep a record of time zone. Interpreting a timestamp column makes reference to the database timezone, which can be changed between queries, hence functions operating on timestamps are not immutable.
+
+Citus forbids running distributed queries that filter results using stable functions on columns. For instance:
 
 .. code-block::
 
@@ -296,18 +302,9 @@ Update statements must use functions of immutable `volatility <https://www.postg
 
   ERROR:  0A000: STABLE functions used in UPDATE queries cannot be called with column references
 
-In this case the comparison operator ``<`` between timestamp and timestamptz is a stable (rather than immutable) function, and the calculation must be made on worker nodes because that is where the ``foo_timestamp`` values are stored.
-
-By contrast, the following statement works fine:
-
-.. code-block::
-
-  -- this works without any error
-  UPDATE foo SET foo_timestamp = now();
-
-This is because the coordinator node evaluates ``now()`` and rewrites the queries to the workers with the resulting value hard-coded. It is able to do that in the SET clause, but not yet in the WHERE clause.
+In this case the comparison operator ``<`` between timestamp and timestamptz is not immutable.
 
 Resolution
 ~~~~~~~~~~
 
-Try to avoid stable functions in an UPDATE statement. In particular, whenever working with times use ``timestamptz`` rather than ``timestamp``. Having a time zone in timestamps makes calculations immutable, and is compatible with UPDATE statements.
+Avoid stable functions on columns in a distributed UPDATE statement. In particular, whenever working with times use ``timestamptz`` rather than ``timestamp``. Having a time zone in timestamptz makes calculations immutable.
