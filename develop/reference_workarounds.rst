@@ -136,6 +136,10 @@ Triggers on Distributed Tables
 
 Citus does not yet support creating triggers on distributed tables. As a workaround you can manually create triggers on table shards directly on the worker nodes. This works differently in different scenarios.
 
+.. note::
+
+  Triggers created with these workarounds will not automatically apply to shard copies created by future :ref:`shard rebalancing <shard_rebalancing>`. The workarounds will have to be re-applied after rebalancing.
+
 **Trigger against just one distributed table.**
 
 Suppose that for each row in a table we wish to record the user who last updated it. We could add an ``author`` column to store who it was, and rather than make a default value for the column we could use a trigger. This prevents a user from overriding the record.
@@ -318,3 +322,7 @@ Include the shard ids (written below as "xxxxxx" and "yyyyyy") in custom queries
   └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 The EXPLAIN output shows that the trigger was called.
+
+**Trigger from distributed to reference table.**
+
+This is not yet possible.
