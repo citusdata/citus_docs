@@ -232,6 +232,10 @@ Foreign keys must always be declared between either
 
 To set up a foreign key between colocated distributed tables, always include the distribution column in the key. This may involve making the key compound.
 
+.. note::
+
+  Primary keys and uniqueness constraints must include the distribution column. Adding them to a non-distribution column will generate an error (see :ref:`non_distribution_uniqueness`).
+
 This example shows how to create primary and foreign keys on distributed tables:
 
 .. code-block:: postgresql
