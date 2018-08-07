@@ -281,3 +281,30 @@ There are two ways to enforce uniqueness on a non-distribution column:
 
 1. Create a composite unique index or primary key that includes the desired column (*C*), but also includes the distribution column (*D*). This is not quite as strong a condition as uniqueness on *C* alone, but will ensure that the values of *C* are unique for each value of *D*. For instance if distributing by ``company_id`` in a multi-tenant system, this approach would make *C* unique within each company.
 2. Use a :ref:`reference table <reference_tables>` rather than a hash distributed table. This is only suitable for small tables, since the contents of the reference table will be duplicated on all nodes.
+
+STABLE functions used in UPDATE queries cannot be called with column references
+-------------------------------------------------------------------------------
+
+Each PostgreSQL function is marked with a `volatility <https://www.postgresql.org/docs/current/static/xfunc-volatility.html>`_, which indicates whether the function can update the database, and whether the function's return value can vary over time given the same inputs. A ``STABLE`` function is guaranteed to return the same results given the same arguments for all rows within a single statement, while an ``IMMUTABLE`` function is guaranteed to return the same results given the same arguments forever.
+
+Non-immutable functions can be inconvenient in distributed systems because they can introduce subtle changes when run at slightly different times across shard replicas. Differences in database configuration across nodes can also interact harmfully with non-immutable functions.
+
+One of the most common ways this can happen is using the ``timestamp`` type in Postgres, which unlike ``timestamptz`` does not keep a record of time zone. Interpreting a timestamp column makes reference to the database timezone, which can be changed between queries, hence functions operating on timestamps are not immutable.
+
+Citus forbids running distributed queries that filter results using stable functions on columns. For instance:
+
+.. code-block::
+
+  -- foo_timestamp is timestamp, not timestamptz
+  UPDATE foo SET … WHERE foo_timestamp < now();
+
+::
+
+  ERROR:  0A000: STABLE functions used in UPDATE queries cannot be called with column references
+
+In this case the comparison operator ``<`` between timestamp and timestamptz is not immutable.
+
+Resolution
+~~~~~~~~~~
+
+Avoid stable functions on columns in a distributed UPDATE statement. In particular, whenever working with times use ``timestamptz`` rather than ``timestamp``. Having a time zone in timestamptz makes calculations immutable.
