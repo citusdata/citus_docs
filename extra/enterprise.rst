@@ -19,6 +19,7 @@ Ubuntu or Debian with Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # install the server and initialize db
+    # (the rebalancer package pulls in other necessary packages)
     sudo apt-get install -y postgresql-10-citus-rebalancer-7.5
 
     # preload citus extension
@@ -40,6 +41,7 @@ Ubuntu or Debian without Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     sudo apt-get clean
+    # (the rebalancer package pulls in other necessary packages)
     sudo apt-get install -y --download-only postgresql-10-citus-rebalancer-7.5
 
     # go to package downloads
@@ -82,6 +84,7 @@ Fedora, CentOS, or Red Hat with Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # install PostgreSQL with Citus extension
+    # (the rebalancer package pulls in other necessary packages)
     sudo yum install -y citus-rebalancer75_10
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
@@ -106,6 +109,7 @@ Fedora, CentOS, or Red Hat without Internet Access
     curl https://install.citusdata.com/enterprise/rpm.sh | \
       sudo CITUS_REPO_TOKEN=XYZ bash
 
+    # (the rebalancer package pulls in other necessary packages)
     sudo yum install --downloadonly --downloaddir=. citus-rebalancer75_10
 
     # put them into a tarball
@@ -152,6 +156,7 @@ Ubuntu or Debian
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # Install enterprise packages, which will remove community packages
+    # (the rebalancer package pulls in other necessary packages)
     sudo apt-get install -y postgresql-10-citus-rebalancer-X.Y
 
     # substitute X.Y with the version currently installed ^^^^^
@@ -183,6 +188,7 @@ Fedora, CentOS, or Red Hat
 
     # Install enterprise packages
     # substitute XY with the version previously installed
+    # (the rebalancer package pulls in other necessary packages)
     sudo yum install -y citus-rebalancerXY_10
 
 4. Restart the database.
