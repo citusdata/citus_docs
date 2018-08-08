@@ -132,3 +132,61 @@ Fedora, CentOS, or Red Hat without Internet Access
       sudo tee -a /var/lib/pgsql/10/data/postgresql.conf
 
 5. Continue by following the standard :ref:`multi-machine rhel <post_enterprise_rhel>` installation steps, **starting at step 3.**
+
+Upgrading from Citus Community to Enterprise
+============================================
+
+Ubuntu or Debian
+----------------
+
+1. Contact us to obtain a Citus Enterprise repository token. This token grants download access to the packages.
+
+2. Determine your current Citus version with ``select * from citus_version();``.
+
+3. Switch to Citus Enterprise packages for your current version. Do this on every node.
+
+  .. code-block:: bash
+
+    # replace XYZ with your token
+    curl https://install.citusdata.com/enterprise/deb.sh | \
+      sudo CITUS_REPO_TOKEN=XYZ bash
+
+    # Install enterprise packages, which will remove community packages
+    sudo apt-get install -y postgresql-10-citus-rebalancer-X.Y
+
+    # substitute X.Y with the version currently installed ^^^^^
+
+4. Restart the database.
+
+  .. code-block:: bash
+
+    sudo service postgresql restart
+
+Fedora, CentOS, or Red Hat
+--------------------------
+
+1. Contact us to obtain a Citus Enterprise repository token. This token grants download access to the packages.
+
+2. Determine your current Citus version with ``select * from citus_version();``.
+
+3. Switch to Citus Enterprise packages for your current version. Do this on every node.
+
+  .. code-block:: bash
+
+    # replace XYZ with your token
+    curl https://install.citusdata.com/enterprise/rpm.sh | \
+      sudo CITUS_REPO_TOKEN=XYZ bash
+
+    # remove community packages
+    # substitute XY with the version currently installed
+    sudo yum remove -y citusXY_10
+
+    # Install enterprise packages
+    # substitute XY with the version previously installed
+    sudo yum install -y citus-rebalancerXY_10
+
+4. Restart the database.
+
+  .. code-block:: bash
+
+    sudo service postgresql-10 restart
