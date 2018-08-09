@@ -130,7 +130,7 @@ Tables are co-located in groups. To manually control a table's co-location group
   SELECT create_distributed_table('A', 'some_int_col');
   SELECT create_distributed_table('B', 'other_int_col');
 
-If you would prefer a table to be in its own co-location group, specify :code:`'none'`.
+When a new table is not related to others in its would-be implicit co-location group, specify :code:`colocated_with => 'none'`.
 
 .. code-block:: postgresql
 
@@ -138,9 +138,11 @@ If you would prefer a table to be in its own co-location group, specify :code:`'
 
   SELECT create_distributed_table('A', 'foo', colocate_with => 'none');
 
-Using co-location group ``'none'`` can potentially take advantage of more worker nodes than existing groups. A table distributed into an existing co-location group will be placed on exactly the same nodes as other tables in the group, which doesn't include nodes added after the group was created.
+Splitting unrelated tables into their own co-location groups will improve :ref:`shard rebalancing <shard_rebalancing>` performance, because shards in the same group have to be moved together.
 
-When tables are indeed related (for instance when they will be joined), it does make sense to explicitly co-locate them. To do this for multiple tables, distribute one and then put the others into its co-location group. For example:
+When tables are indeed related (for instance when they will be joined), it can make sense to explicitly co-locate them. The gains of appropriate co-location are more important than any rebalancing overhead.
+
+To explicitly co-locate multiple tables, distribute one and then put the others into its co-location group. For example:
 
 .. code-block:: postgresql
 
