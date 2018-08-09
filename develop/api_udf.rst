@@ -36,6 +36,10 @@ to be distributed. Permissible values are append or hash, and defaults to 'hash'
 
 **colocate_with:** (Optional) include current table in the co-location group of another table. By default tables are co-located when they are distributed by columns of the same type, have the same shard count, and have the same replication factor. Possible values for :code:`colocate_with` are :code:`default`, :code:`none` to start a new co-location group, or the name of another table to co-locate with that table.  (See :ref:`colocation_groups`.)
 
+Keep in mind that the default value of ``colocate_with`` does implicit co-location. As :ref:`colocation` explains, this can be a great thing when tables are related or will be joined. However when two tables are unrelated but happen to use the same datatype for their distribution columns, accidentally co-locating them can decrease performance during :ref:`shard rebalancing <shard_rebalancing>`. The table shards will be moved together unnecessarily in a "cascade."
+
+If a new distributed table is not related to other tables, it's best to specify ``colocate_with => 'none'``.
+
 Return Value
 ********************************
 
@@ -43,6 +47,7 @@ N/A
 
 Example
 *************************
+
 This example informs the database that the github_events table should be distributed by hash on the repo_id column.
 
 .. code-block:: postgresql
