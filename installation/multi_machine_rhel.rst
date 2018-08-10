@@ -34,6 +34,8 @@ Steps to be executed on all nodes
 
 PostgreSQL adds version-specific binaries in `/usr/pgsql-10/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
 
+.. _post_enterprise_rhel:
+
 **3. Configure connection and authentication**
 
 Before starting the database let's change its access permissions. By default the database server listens only to clients on localhost. As a part of this step, we instruct it to listen on all IP interfaces, and then configure the client authentication file to allow all incoming connections from the local network.
