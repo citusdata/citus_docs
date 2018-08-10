@@ -33,6 +33,8 @@ Steps to be executed on all nodes
 
 This installs centralized configuration in `/etc/postgresql/10/main`, and creates a database in `/var/lib/postgresql/10/main`.
 
+.. _post_enterprise_deb:
+
 **3. Configure connection and authentication**
 
 Before starting the database let's change its access permissions. By default the database server listens only to clients on localhost. As a part of this step, we instruct it to listen on all IP interfaces, and then configure the client authentication file to allow all incoming connections from the local network.
