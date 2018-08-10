@@ -167,6 +167,14 @@ Ubuntu or Debian
 
     sudo service postgresql restart
 
+5. Update the Citus extension and initialize the Shard Rebalancer
+
+   .. code-block:: bash
+
+    sudo -i -u postgres psql -c "ALTER EXTENSION citus UPDATE;"
+    sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
+
+
 Fedora, CentOS, or Red Hat
 --------------------------
 
@@ -196,3 +204,10 @@ Fedora, CentOS, or Red Hat
   .. code-block:: bash
 
     sudo service postgresql-10 restart
+
+5. Update the Citus extension and initialize the Shard Rebalancer
+
+   .. code-block:: bash
+
+    sudo -i -u postgres psql -c "ALTER EXTENSION citus UPDATE;"
+    sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
