@@ -124,7 +124,7 @@ It is still possible to use these commands by explicitly running them on all nod
     CREATE FUNCTION ...
   $cmd$);
 
-Learn more in :ref:`manual_prop`.
+Learn more in :ref:`manual_prop`. Also note that even after manually propagating CREATE DATABASE, Citus must still be installed there. See :ref:`create_db`.
 
 What if a worker node's address changes?
 ----------------------------------------
