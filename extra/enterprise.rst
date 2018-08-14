@@ -27,6 +27,12 @@ Ubuntu or Debian with Internet Access
 
 3. Continue by following the standard :ref:`multi-machine debian <post_enterprise_deb>` installation steps, **starting at step 3.**
 
+4. Install the enterprise shard rebalancer:
+
+   .. code-block:: bash
+
+      sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
+
 Ubuntu or Debian without Internet Access
 ----------------------------------------
 
@@ -68,6 +74,12 @@ Ubuntu or Debian without Internet Access
 
 5. Continue by following the standard :ref:`multi-machine debian <post_enterprise_deb>` installation steps, **starting at step 3.**
 
+6. Install the enterprise shard rebalancer:
+
+   .. code-block:: bash
+
+      sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
+
 .. _enterprise_rhel:
 
 Fedora, CentOS, or Red Hat with Internet Access
@@ -95,6 +107,12 @@ Fedora, CentOS, or Red Hat with Internet Access
       sudo tee -a /var/lib/pgsql/10/data/postgresql.conf
 
 3. Continue by following the standard :ref:`multi-machine rhel <post_enterprise_rhel>` installation steps, **starting at step 3.**
+
+4. Install the enterprise shard rebalancer:
+
+   .. code-block:: bash
+
+      sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
 
 Fedora, CentOS, or Red Hat without Internet Access
 --------------------------------------------------
@@ -136,6 +154,12 @@ Fedora, CentOS, or Red Hat without Internet Access
       sudo tee -a /var/lib/pgsql/10/data/postgresql.conf
 
 5. Continue by following the standard :ref:`multi-machine rhel <post_enterprise_rhel>` installation steps, **starting at step 3.**
+
+6. Install the enterprise shard rebalancer:
+
+   .. code-block:: bash
+
+      sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
 
 Upgrading from Citus Community to Enterprise
 ============================================
