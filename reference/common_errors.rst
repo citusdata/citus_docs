@@ -171,6 +171,23 @@ Configure the operating system to re-use TCP sockets. Execute this on the shell 
 
 This allows reusing sockets in TIME_WAIT state for new connections when it is safe from a protocol viewpoint. Default value is 0 (disabled).
 
+Could not connect to any active placements
+------------------------------------------
+
+When all available worker connection slots are in use, further connections will fail. This happens most often when copying data into Citus in parallel:
+
+::
+
+  WARNING:  08006: connection error: hostname:5432
+  ERROR:  XX000: could not connect to any active placements
+  DETAIL:  FATAL:  sorry, too many clients already
+  LOCATION:  OpenCopyConnections, multi_copy.c:884
+
+Resolution
+~~~~~~~~~~
+
+Reduce the shard count of target distributed tables, or run fewer ``\copy`` commands in parallel.
+
 Remaining connection slots are reserved for non-replication superuser connections
 ---------------------------------------------------------------------------------
 
