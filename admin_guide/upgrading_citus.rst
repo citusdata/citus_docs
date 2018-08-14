@@ -260,3 +260,8 @@ On Worker Nodes
                                 -d $OLD_PG_DATA -D $NEW_PG_DATA
 
 4. Start the new server.
+5. Add entry to ``pg_dist_local_group``:
+
+  .. code-block:: postgres
+
+    INSERT INTO pg_dist_local_group VALUES (0);
