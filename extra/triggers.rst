@@ -129,11 +129,11 @@ Then to test it:
 
 .. note::
 
-  **This workaround is not safe.** The order in which concurrent update/delete/insert commands are applied to replicas is not guaranteed, and replicas of the reference table can get out of sync with one another.
+  **This workaround is safe in limited situations.** When using such a trigger to insert into a reference table, make sure that no concurrent updates happen on the destination table. The order in which concurrent update/delete/insert commands are applied to replicas is not guaranteed, and replicas of the reference table can get out of sync with one another.
 
 Reference tables are simpler than distributed tables in that they have exactly one shard which is replicated across all workers. To relate reference tables with a trigger, we can create a trigger for the shard on all workers.
 
-Suppose we want to record every change of ``insert_target`` in ``audit_table``, both of which are reference tables.
+Suppose we want to record every change of ``insert_target`` in ``audit_table``, both of which are reference tables. As long as nothing but our trigger updates the ``audit_table`` then this will be safe.
 
 .. code-block:: postgresql
 
