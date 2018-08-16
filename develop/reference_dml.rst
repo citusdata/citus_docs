@@ -161,6 +161,8 @@ The situation changes when dealing with late arriving data, or running the rollu
     ON CONFLICT (day, url, site_id) DO UPDATE SET
       view_count = daily_page_views.view_count + EXCLUDED.view_count;
 
+It's worth noting that for :code:`INSERT INTO ... SELECT` to work on distributed tables with :code:`ON CONFLICT`, Citus requires the source and destination table to be co-located.
+
 Updates and Deletion
 --------------------
 
