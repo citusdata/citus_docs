@@ -3,17 +3,27 @@
 Ingesting, Modifying Data (DML)
 ===============================
 
-The following code snippets use the Github events example, see :ref:`ddl`.
-
 Inserting Data
 --------------
-
-Single Row Inserts
-~~~~~~~~~~~~~~~~~~
 
 To insert data into distributed tables, you can use the standard PostgreSQL `INSERT <http://www.postgresql.org/docs/current/static/sql-insert.html>`_ commands. As an example, we pick two rows randomly from the Github Archive dataset.
 
 .. code-block:: sql
+
+    /*
+    CREATE TABLE github_events
+    (
+      event_id bigint,
+      event_type text,
+      event_public boolean,
+      repo_id bigint,
+      payload jsonb,
+      repo jsonb,
+      actor jsonb,
+      org jsonb,
+      created_at timestamp
+    );
+    */
 
     INSERT INTO github_events VALUES (2489373118,'PublicEvent','t',24509048,'{}','{"id": 24509048, "url": "https://api.github.com/repos/SabinaS/csee6868", "name": "SabinaS/csee6868"}','{"id": 2955009, "url": "https://api.github.com/users/SabinaS", "login": "SabinaS", "avatar_url": "https://avatars.githubusercontent.com/u/2955009?", "gravatar_id": ""}',NULL,'2015-01-01 00:09:13');
 
@@ -21,23 +31,32 @@ To insert data into distributed tables, you can use the standard PostgreSQL `INS
 
 When inserting rows into distributed tables, the distribution column of the row being inserted must be specified. Based on the distribution column, Citus determines the right shard to which the insert should be routed to. Then, the query is forwarded to the right shard, and the remote insert command is executed on all the replicas of that shard.
 
-Multi-Row Inserts
-~~~~~~~~~~~~~~~~~
-
 Sometimes it's convenient to put multiple insert statements together into a single insert of multiple rows. It can also be more efficient than making repeated database queries. For instance, the example from the previous section can be loaded all at once like this:
 
 .. code-block:: sql
 
-    INSERT INTO github_events VALUES (
-      2489373118,'PublicEvent','t',24509048,'{}','{"id": 24509048, "url": "https://api.github.com/repos/SabinaS/csee6868", "name": "SabinaS/csee6868"}','{"id": 2955009, "url": "https://api.github.com/users/SabinaS", "login": "SabinaS", "avatar_url": "https://avatars.githubusercontent.com/u/2955009?", "gravatar_id": ""}',NULL,'2015-01-01 00:09:13'
+    INSERT INTO github_events VALUES
+      (
+        2489373118,'PublicEvent','t',24509048,'{}','{"id": 24509048, "url": "https://api.github.com/repos/SabinaS/csee6868", "name": "SabinaS/csee6868"}','{"id": 2955009, "url": "https://api.github.com/users/SabinaS", "login": "SabinaS", "avatar_url": "https://avatars.githubusercontent.com/u/2955009?", "gravatar_id": ""}',NULL,'2015-01-01 00:09:13'
       ), (
         2489368389,'WatchEvent','t',28229924,'{"action": "started"}','{"id": 28229924, "url": "https://api.github.com/repos/inf0rmer/blanket", "name": "inf0rmer/blanket"}','{"id": 1405427, "url": "https://api.github.com/users/tategakibunko", "login": "tategakibunko", "avatar_url": "https://avatars.githubusercontent.com/u/1405427?", "gravatar_id": ""}',NULL,'2015-01-01 00:00:24'
       );
 
-Bulk Loading
-~~~~~~~~~~~~
+"From Select" Clause (Distributed Rollups)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Sometimes, you may want to bulk load many rows together into your distributed tables. To bulk load data from a file, you can directly use `PostgreSQL's \\COPY command <http://www.postgresql.org/docs/current/static/app-psql.html#APP-PSQL-META-COMMANDS-COPY>`_.
+Citus also supports ``INSERT … SELECT`` statements -- which insert rows based on the results of a select query. This is a convenient way to fill tables and also allows "upserts" with the ``ON CONFLICT`` clause.
+
+In Citus there are two ways that inserting from a select statement can happen. The first is if the source tables and destination table are :ref:`colocated <colocation>`, and the select/insert statements both include the distribution column. In this case Citus can push the ``INSERT … SELECT`` statement down for parallel execution on all nodes. Pushing the statement down supports the ``ON CONFLICT`` clause, the easiest way to do :ref:`distributed rollups <rollups>`.
+
+The second way of executing an ``INSERT … SELECT`` statement is selecting the results from worker nodes, pulling the data up to the coordinator node, and then issuing an INSERT statement from the coordinator with the data. Citus is forced to use this approach when the source and destination tables are not colocated. This method does not support ``ON CONFLICT``.
+
+When in doubt about which method Citus is using, use the EXPLAIN command, as described in :ref:`postgresql_tuning`.
+
+COPY Command (Bulk load)
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+To bulk load data from a file, you can directly use `PostgreSQL's \\COPY command <http://www.postgresql.org/docs/current/static/app-psql.html#APP-PSQL-META-COMMANDS-COPY>`_.
 
 First download our example github_events dataset by running:
 
@@ -45,7 +64,6 @@ First download our example github_events dataset by running:
 
     wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
     gzip -d github_events-2015-01-01-*.gz
-
 
 Then, you can copy the data using psql:
 
@@ -59,10 +77,10 @@ Then, you can copy the data using psql:
 
     If COPY fails to open a connection for a shard placement then it behaves in the same way as INSERT, namely to mark the placement(s) as inactive unless there are no more active placements. If any other failure occurs after connecting, the transaction is rolled back and thus no metadata changes are made.
 
-.. _dist_agg:
+.. _rollups:
 
-Distributed Aggregations
-~~~~~~~~~~~~~~~~~~~~~~~~
+Caching Aggregations with Rollups
+=================================
 
 Applications like event data pipelines and real-time dashboards require sub-second queries on large volumes of data. One way to make these queries fast is by calculating and saving aggregates ahead of time. This is called "rolling up" the data and it avoids the cost of processing raw data at run-time. As an extra benefit, rolling up timeseries data into hourly or daily statistics can also save space. Old data may be deleted when its full details are no longer needed and aggregates suffice.
 
@@ -127,12 +145,6 @@ Once we create this new distributed table, we can then run :code:`INSERT INTO ..
     WHERE site_id = 5 AND
       day >= date '2016-01-01' AND day < date '2017-01-01';
 
-It's worth noting that for :code:`INSERT INTO ... SELECT` to work on distributed tables, Citus requires the source and destination table to be co-located. In summary:
-
-- The tables queried and inserted are distributed by analogous columns
-- The select query includes the distribution column
-- The insert statement includes the distribution column
-
 The rollup query above aggregates data from the previous day and inserts it into :code:`daily_page_views`. Running the query once each day means that no rollup tables rows need to be updated, because the new day's data does not affect previous rows.
 
 The situation changes when dealing with late arriving data, or running the rollup query more than once per day. If any new rows match days already in the rollup table, the matching counts should increase. PostgreSQL can handle this situation with "ON CONFLICT," which is its technique for doing `upserts <https://www.postgresql.org/docs/10/static/sql-insert.html#SQL-ON-CONFLICT>`_. Here is an example.
@@ -148,6 +160,8 @@ The situation changes when dealing with late arriving data, or running the rollu
     GROUP BY view_time::date, site_id, url
     ON CONFLICT (day, url, site_id) DO UPDATE SET
       view_count = daily_page_views.view_count + EXCLUDED.view_count;
+
+It's worth noting that for :code:`INSERT INTO ... SELECT` to work on distributed tables with :code:`ON CONFLICT`, Citus requires the source and destination table to be co-located.
 
 Updates and Deletion
 --------------------
