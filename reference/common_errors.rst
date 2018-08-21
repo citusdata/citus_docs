@@ -174,7 +174,7 @@ This allows reusing sockets in TIME_WAIT state for new connections when it is sa
 Could not connect to any active placements
 ------------------------------------------
 
-When all available worker connection slots are in use, further connections will fail. This happens most often when copying data into Citus in parallel:
+When all available worker connection slots are in use, further connections will fail.
 
 ::
 
@@ -186,7 +186,7 @@ When all available worker connection slots are in use, further connections will 
 Resolution
 ~~~~~~~~~~
 
-Reduce the shard count of target distributed tables, or run fewer ``\copy`` commands in parallel.
+This error happens most often when copying data into Citus in parallel. The COPY command opens up one connection per shard. If you run M concurrent copies into a destination with N shards, that will result in M*N connections. To solve the error, reduce the shard count of target distributed tables, or run fewer ``\copy`` commands in parallel.
 
 Remaining connection slots are reserved for non-replication superuser connections
 ---------------------------------------------------------------------------------
