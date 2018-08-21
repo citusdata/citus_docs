@@ -580,9 +580,9 @@ In addition to our core Citus extension, we also maintain several others:
 Creating a New Database
 =======================
 
-Each PostgreSQL server can hold multiple databases. Remember that new databases do not inherit the extensions of any others; all desired extensions must be added afresh. To run Citus on a new database, you'll need to create the database on the coordinator and workers, create the Citus extension within that database, and register the workers in the coordinator database.
+Each PostgreSQL server can hold `multiple databases <https://www.postgresql.org/docs/current/static/manage-ag-overview.html>`_. However new databases do not inherit the extensions of any others; all desired extensions must be added afresh. To run Citus on a new database, you'll need to create the database on the coordinator and workers, create the Citus extension within that database, and register the workers in the coordinator database.
 
-On the coordinator run:
+On an existing database on the coordinator run:
 
 .. code-block:: psql
 

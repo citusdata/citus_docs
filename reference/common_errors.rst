@@ -282,6 +282,25 @@ There are two ways to enforce uniqueness on a non-distribution column:
 1. Create a composite unique index or primary key that includes the desired column (*C*), but also includes the distribution column (*D*). This is not quite as strong a condition as uniqueness on *C* alone, but will ensure that the values of *C* are unique for each value of *D*. For instance if distributing by ``company_id`` in a multi-tenant system, this approach would make *C* unique within each company.
 2. Use a :ref:`reference table <reference_tables>` rather than a hash distributed table. This is only suitable for small tables, since the contents of the reference table will be duplicated on all nodes.
 
+Function create_distributed_table does not exist
+------------------------------------------------
+
+.. code-block:: sql
+
+  SELECT create_distributed_table('foo', 'id');
+  /*
+  ERROR:  42883: function create_distributed_table(unknown, unknown) does not exist
+  LINE 1: SELECT create_distributed_table('foo', 'id');
+  HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+  */
+
+Resolution
+~~~~~~~~~~
+
+When basic :ref:`user_defined_functions` are not available, check whether the Citus extension is properly installed. Running ``\dx`` in psql will list installed extensions.
+
+One way to end up without extensions is by creating a new database in a Postgres server, which requires extensions to be re-installed. See :ref:`create_db` to learn how to do it right.
+
 STABLE functions used in UPDATE queries cannot be called with column references
 -------------------------------------------------------------------------------
 
