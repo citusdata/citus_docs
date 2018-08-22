@@ -133,7 +133,7 @@ Then to test it:
 
 Reference tables are simpler than distributed tables in that they have exactly one shard which is replicated across all workers. To relate reference tables with a trigger, we can create a trigger for the shard on all workers.
 
-Suppose we want to record every change of ``insert_target`` in ``audit_table``, both of which are reference tables. As long as nothing but our trigger updates the ``audit_table`` then this will be safe.
+Suppose we want to record the author of every change in ``insert_target`` to ``audit_table``, both of which are reference tables. As long as nothing but our trigger updates the ``audit_table`` then this will be safe.
 
 .. code-block:: postgresql
 
@@ -143,7 +143,7 @@ Suppose we want to record every change of ``insert_target`` in ``audit_table``, 
     value text
   );
   CREATE TABLE audit_table(
-    stamp timestamptz,
+    author name NOT NULL,
     value text
   );
   SELECT create_reference_table('insert_target');
@@ -163,7 +163,8 @@ Include the shard ids (written below as "xxxxxx" and "yyyyyy") in custom queries
   SELECT run_command_on_workers($cmd$
     CREATE OR REPLACE FUNCTION process_audit() RETURNS TRIGGER AS $$
       BEGIN
-        INSERT INTO audit_table_xxxxxx(stamp,value) VALUES (now(),'value');
+        INSERT INTO audit_table_xxxxxx(author,value)
+          VALUES (current_user,NEW.value);
         RETURN NEW;
       END;
     $$ LANGUAGE plpgsql;
@@ -171,8 +172,8 @@ Include the shard ids (written below as "xxxxxx" and "yyyyyy") in custom queries
 
   SELECT run_command_on_workers($cmd$
     CREATE TRIGGER emp_audit
-    AFTER INSERT OR UPDATE OR DELETE ON insert_target_yyyyyy
-        EXECUTE PROCEDURE process_audit();
+    AFTER INSERT OR UPDATE ON insert_target_yyyyyy
+      FOR EACH ROW EXECUTE PROCEDURE process_audit();
   $cmd$);
 
   EXPLAIN ANALYZE INSERT INTO insert_target (value) VALUES ('inserted value');
