@@ -575,6 +575,20 @@ In addition to our core Citus extension, we also maintain several others:
 * `postgresql-topn <https://github.com/citusdata/postgresql-topn>`_ - Returns the top values in a database according to some criteria. Uses an approximation algorithm to provide fast results with modest compute and memory resources.
 * `postgresql-hll <https://github.com/citusdata/postgresql-hll>`_ - HyperLogLog data structure as a native data type. It's a fixed-size, set-like structure used for distinct value counting with tunable precision.
 
+.. _unsupported_extensions:
+
+Unsupported Extensions
+----------------------
+
+* `auto_explain <https://www.postgresql.org/docs/current/static/auto-explain.html>`_ runs EXPLAIN automatically on slow queries. It helps track down un-optimized queries in large applications, but Citus does not support it.
+
+  Attempting to load auto_explain on Citus Cloud causes an error:
+
+  .. code-block:: postgres
+
+    LOAD 'auto_explain';
+    /* ERROR:  42501: access to library "auto_explain" is not allowed */
+
 .. _create_db:
 
 Creating a New Database
