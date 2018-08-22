@@ -575,6 +575,43 @@ In addition to our core Citus extension, we also maintain several others:
 * `postgresql-topn <https://github.com/citusdata/postgresql-topn>`_ - Returns the top values in a database according to some criteria. Uses an approximation algorithm to provide fast results with modest compute and memory resources.
 * `postgresql-hll <https://github.com/citusdata/postgresql-hll>`_ - HyperLogLog data structure as a native data type. It's a fixed-size, set-like structure used for distinct value counting with tunable precision.
 
+.. _create_db:
+
+Creating a New Database
+=======================
+
+Each PostgreSQL server can hold `multiple databases <https://www.postgresql.org/docs/current/static/manage-ag-overview.html>`_. However new databases do not inherit the extensions of any others; all desired extensions must be added afresh. To run Citus on a new database, you'll need to create the database on the coordinator and workers, create the Citus extension within that database, and register the workers in the coordinator database.
+
+On an existing database on the coordinator run:
+
+.. code-block:: psql
+
+  -- create the new db on coordinator and workers
+  CREATE DATABASE newbie;
+  SELECT run_command_on_workers('CREATE DATABASE newbie;');
+
+  -- review the worker nodes registered in current db
+  SELECT * FROM master_get_active_worker_nodes();
+
+  -- switch to new db on coordinator
+  \c newbie
+
+  -- create citus extension in new db
+  CREATE EXTENSION citus;
+
+  -- register workers in new db
+  SELECT * from master_add_node('node-name', 5432);
+  SELECT * from master_add_node('node-name2', 5432);
+  -- ... for each of them
+
+In the new db on every worker, manually run:
+
+.. code-block:: postgresql
+
+  CREATE EXTENSION citus;
+
+Now the new database will be operating as another Citus cluster.
+
 .. _phone_home:
 
 Checks For Updates and Cluster Statistics
