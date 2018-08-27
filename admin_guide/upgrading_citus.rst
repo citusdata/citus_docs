@@ -112,21 +112,21 @@ On Every Node (Coordinator and workers)
 
   .. code-block:: postgres
 
-    CREATE TABLE public.pg_dist_partition AS
+    CREATE TABLE        public.pg_dist_partition AS
       SELECT * FROM pg_catalog.pg_dist_partition;
-    CREATE TABLE public.pg_dist_shard AS
+    CREATE TABLE        public.pg_dist_shard AS
       SELECT * FROM pg_catalog.pg_dist_shard;
-    CREATE TABLE public.pg_dist_placement AS
+    CREATE TABLE        public.pg_dist_placement AS
       SELECT * FROM pg_catalog.pg_dist_placement;
-    CREATE TABLE public.pg_dist_node_metadata AS
+    CREATE TABLE        public.pg_dist_node_metadata AS
       SELECT * FROM pg_catalog.pg_dist_node_metadata;
-    CREATE TABLE public.pg_dist_node AS
+    CREATE TABLE        public.pg_dist_node AS
       SELECT * FROM pg_catalog.pg_dist_node;
-    CREATE TABLE public.pg_dist_local_group AS
+    CREATE TABLE        public.pg_dist_local_group AS
       SELECT * FROM pg_catalog.pg_dist_local_group;
-    CREATE TABLE public.pg_dist_transaction AS
+    CREATE TABLE        public.pg_dist_transaction AS
       SELECT * FROM pg_catalog.pg_dist_transaction;
-    CREATE TABLE public.pg_dist_colocation AS
+    CREATE TABLE        public.pg_dist_colocation AS
       SELECT * FROM pg_catalog.pg_dist_colocation;
 
 2. Configure the new database instance to use Citus.
