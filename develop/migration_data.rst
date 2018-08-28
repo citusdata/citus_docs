@@ -1,7 +1,39 @@
 .. _data_migration:
 
-Data Migration
-==============
+Migrate Data
+============
+
+At this time, you should be ready to switch over to Citus. The data migration path is dependent on downtime requirements and data size, but generally falls into one of the following 2 categories: 
+
+Small databases (below 200GB):
+
+* Put the application in maintenance mode
+* Dump the old database using pg_dump
+* Disallow connections to old database
+* Import into Citus using pg_restore
+* Test application
+* Launch!
+
+Documentation request: Page detailing this process
+
+Large databases (over 200GB): 
+
+We have developed the Citus Warp tool to use streaming replication to get most of your data into Citus before the changeover. We strongly recommend contacting us by opening a ticket, contacting one of our solutions engineers on Slack, or whatever method works for you (please no messenger pigeons). 
+
+* Install and configure Citus Warp as seen here: 
+	https://docs.citusdata.com/en/latest/develop/migration_data.html 
+* Wait until sync is complete
+* Enter maintenance mode on the application
+* Disallow connections to old database 
+* Switch over to Citus
+* Test application
+* Launch!
+
+Smaller environments use pg_dump and pg_restore
+-----------------------------------------------
+
+Larger environments use Citus Warp for online replication
+---------------------------------------------------------
 
 Migrating from one database to another has traditionally been difficult. There are two traditional approaches: using a dump and restore that takes downtime, or updating application logic to write to two databases and then switch to the new one.
 
@@ -72,8 +104,8 @@ During the first stage, creating a basebackup, the Postgres write-ahead log (WAL
 
 Some database schema changes are incompatible with an ongoing replication. Changing the structure of tables under replication can cause the process to stop. Cloud engineers would then need to manually restart the replication from the beginning. That costs time, so we recommend freezing the schema during replication.
 
-5. Switch Production System to Citus Cloud
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Switch over to Citus and stop all connections to old database
+-------------------------------------------------------------
 
 When the replication has caught up with the current state of the source database, there is one more thing to do. Due to the nature of the replication process, sequence values don't get updated correctly on the destination databases. In order to have the correct sequence value for e.g. an id column, you need to manually adjust the sequence values before turning on writes to the destination database.
 

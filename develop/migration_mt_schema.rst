@@ -1,9 +1,34 @@
 .. _mt_schema_migration:
 
-Multi-Tenant Schema Migration
-=============================
+Identify Distribution Strategy
+==============================
 
-Citus is well suited to hosting B2B multi-tenant application data. In this model application tenants share a Citus cluster and a schema. Each tenant's table data is stored in a shard determined by a configurable tenant id column. Citus pushes queries down to run directly on the relevant tenant shard in the cluster, spreading out the computation. Once queries are routed this way they can be executed without concern for the rest of the cluster. These queries can use the full features of SQL, including joins and transactions, without running into the inherent limitations of a distributed system.
+Pick distribution key that best addresses use case
+--------------------------------------------------
+
+Your first step when migrating to Citus should be to identify a suitable distribution key and plan table distribution accordingly. If your application is multi-tenant, this will typically be the internal identifier you use to identify tenants, so some linked documentation refers to this value as “tenant ID”. Certain use cases may vary, so we advise being thorough on this step. 
+
+We are happy to help review your environment to be sure that the ideal distribution key is chosen. To do so, we typically examine schema layouts, larger tables, long-running and/or problematic queries, standard use cases, and more. 
+
+The following pages go into further detail about data modeling strategies for common use cases:
+
+https://docs.citusdata.com/en/latest/use_cases/multi_tenant.html 
+
+https://docs.citusdata.com/en/latest/articles/sharding_mt_app.html 
+
+Once a distribution key is identified, the schema is reviewed to identify how each table will be handled and any modifications to table layouts that will be required. We typically advise tracking this with a spreadsheet similar to the example found here: 
+
+https://docs.google.com/spreadsheets/d/14Hsa8Yrsf5ytAcminT7RztlR_0Dn3K17PL0iLvYCR4c/edit#gid=692529705 
+
+Tables will generally fall into one of the following categories: 
+
+1. **Ready for distribution.** These tables already contain the distribution key, and are ready. 
+2. **Needs backfill.** These tables can be logically distributed by the chosen key, but do not contain a column directly referencing it. These will be modified to add the value later
+3. **Reference table.** These tables are typically small, do not contain the distribution key, are commonly joined by distributed tables, and/or are shared across tenants. A copy of each of these tables will be maintained on all nodes. Common examples include country code lookups, product categories, and the like. 
+4. **Local tables.** These tables are typically not joined to other tables, and do not contain the distribution key. They are maintained exclusively on the coordinator node. Common examples include admin user lookups and other utility tables. 
+
+Identify distributed, reference, and local tables
+-------------------------------------------------
 
 Transitioning from a standalone database instance to a sharded multi-tenant system requires identifying and modifying three types of tables which we may term *per-tenant*, *reference*, and *global*. The distinction hinges on whether the tables have (or reference) a column serving as tenant id. The concept of tenant id depends on the application and who exactly are considered its tenants.
 
@@ -66,8 +91,46 @@ There are other types of tables to consider during a transition to Citus. Some a
 
 Another kind of table are those which join with per-tenant tables but which aren't naturally specific to any one tenant. We call them *reference* tables. Two examples are shipping regions and product categories. We advise that you add a tenant id to these tables and duplicate the original rows, once for each tenant. This ensures that reference data is co-located with per-tenant data and quickly accessible to queries.
 
-Backfilling Tenant ID
----------------------
+Prepare Tables for Migration
+============================
+
+Once the scope of needed database changes is identified, the next major step is to modify your data structure. First, existing tables requiring backfill (see category 2 above) are modified to add a column for the distribution key. Type normalization may also be required at this stage to keep key columns with the same value in different data types from becoming a problem. This page contains further information on this topic:
+
+https://docs.citusdata.com/en/latest/develop/migration_mt_schema.html 
+
+Next, incoming data sources are modified to add this data automatically. This typically involves some application-level changes and possibly changes in data import processes if relevant. This article has some useful information on modifying application-level SQL queries to have the distribution key needed for maximum benefit: 
+
+Documentation request: a dedicated page for write-level application changes
+
+The following articles go into detail about migrating to Citus on several popular platforms: 
+
+Documentation request: below pages may need to differentiate between read- and write-level application changes
+
+Rails apps can use our activerecord-multi-tenant Ruby gem as seen here: 
+https://docs.citusdata.com/en/latest/develop/migration_mt_ror.html 
+Django applications can use our django-multitenant Python library:  
+https://docs.citusdata.com/en/latest/develop/migration_mt_django.html  
+ASP.NET projects can benefit from the 3rd party SAASkit as seen here: 
+https://docs.citusdata.com/en/latest/develop/migration_mt_asp.html 
+Java Hibernate projects will benefit from this blog post:
+https://www.citusdata.com/blog/2018/02/13/using-hibernate-and-spring-to-build-multitenant-java-apps/ 
+Other applications can benefit from the advice here: 
+	Documentation request: general app migration advice
+
+Once that is complete, it is time to backfill the new column(s) for existing data to ensure forwards compatibility. This page has further information on this topic: 
+
+Documentation request: how to use pg_cron to backfill in chunks
+
+https://docs.citusdata.com/en/latest/develop/migration_mt_schema.html#backfilling-tenant-id 
+
+Add distribution keys to tables as needed
+-----------------------------------------
+
+Modify data flows to add keys to incoming data
+----------------------------------------------
+
+Backfill newly created columns
+------------------------------
 
 Once the schema is updated and the per-tenant and reference tables are distributed across the cluster, it's time to copy data from the original database into Citus. Most per-tenant tables can be copied directly from source tables. However line_items was denormalized with the addition of the store_id column. We have to "backfill" the correct values into this column.
 
