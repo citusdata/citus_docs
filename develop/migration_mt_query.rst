@@ -3,26 +3,31 @@
 Prepare Application for Migration
 =================================
 
-Once the distribution key is present on all appropriate and basic functionality is established, the application needs to be prepared to take full advantage of Citus. Test suites should be updated to verify that all tests pass. 
-
-It is recommended that you use the multi_task_query_log_level tooling to identify cross-shard queries at this time and update them to be more efficient. See here for more information: 
-
-
-https://docs.citusdata.com/en/latest/develop/migration_mt_query.html 
-
-https://docs.citusdata.com/en/latest/develop/migration_mt_query.html#validating-query-migration 
-
-Documentation request: a dedicated page for the above
+Once the distribution key is present on all appropriate and basic functionality is established, the application needs to be prepared to take full advantage of Citus. A good place to start is updating application test suites and verifying that all tests pass. Also it's a good idea to enable logging to spot and remove any stray cross-shard queries that might hide in a multi-tenant app.
 
 Once application changes are complete, the Citus-ready application will be deployed against the production database to ensure stability and full compatability. We do not advise cutting over to Citus until the application has successfully gone through a soak period appropriate to your organizational needs.
-
-Update app based on test suite
-------------------------------
 
 Add distribution key to queries
 -------------------------------
 
-To execute queries efficiently for a specific tenant Citus needs to route them to the appropriate node and run them there. Thus every query must identify which tenant it involves. For simple select, update, and delete queries this means that the *where* clause must filter by tenant id.
+To execute queries efficiently for a specific tenant, Citus needs to route them to the appropriate node and run them there. Thus every query must identify which tenant it involves. For simple select, update, and delete queries this means that the *where* clause must filter by tenant id.
+
+Specialized Libraries
+~~~~~~~~~~~~~~~~~~~~~
+
+There are helper libraries for a number of popular application frameworks that make it easy to include a tenant id in queries.
+
+* :ref:`Ruby on Rails migration <rails_migration>` - uses the activerecord-multi-tenant Ruby gem
+* :ref:`Django migration <django_migration>` - uses the django-multitenant Python library
+* :ref:`ASP.NET migration <asp_migration>` - uses the 3rd party SAASkit
+* `Java Hibernate <https://www.citusdata.com/blog/2018/02/13/using-hibernate-and-spring-to-build-multitenant-java-apps/>`_ - a blog post about scoping queries to tenants
+
+Documentation request: above pages may need to differentiate between read- and write-level application changes
+
+General Principles
+~~~~~~~~~~~~~~~~~~
+
+If you're using a different ORM than those above, or doing multi-tenant queries more directly in SQL, follow these general principles. We'll use our earlier example of the ecommerce application.
 
 Suppose we want to get the details for an order. It used to suffice to filter by order_id. However once orders are distributed by store_id we must include that in the where filter as well.
 
@@ -61,6 +66,12 @@ When joining tables make sure to filter by tenant id. For instance here is how t
    WHERE p.name='Awesome Wool Pants'
      AND l.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
      AND p.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
+
+
+Update app based on test suite
+------------------------------
+
+TODO
 
 Check for cross-node traffic
 ----------------------------

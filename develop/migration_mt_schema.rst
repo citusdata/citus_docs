@@ -100,7 +100,7 @@ Be sure to modify data flows to add keys to incoming data.
 Backfill newly created columns
 ------------------------------
 
-Once the schema is updated, "backfill" values for the tenant_id column in tables where the column was added. In our example line_items requires values for store_id.
+Once the schema is updated, backfill missing values for the tenant_id column in tables where the column was added. In our example line_items requires values for store_id.
 
 We join orders and line_items for the missing values:
 
@@ -112,21 +112,7 @@ We join orders and line_items for the missing values:
    INNER JOIN orders
    WHERE line_items.order_id = orders.order_id;
 
-Next, incoming data sources are modified to add this data automatically. This typically involves some application-level changes and possibly changes in data import processes if relevant. This article has some useful information on modifying application-level SQL queries to have the distribution key needed for maximum benefit: 
+Next, ensure incoming data sources are modified to add this data. Typically it involves some application-level changes and possibly changes in data import processes if relevant. This article has some useful information on modifying application-level SQL queries to have the distribution key needed for maximum benefit: 
 
 Documentation request: a dedicated page for write-level application changes
 
-The following articles go into detail about migrating to Citus on several popular platforms:
-
-Documentation request: below pages may need to differentiate between read- and write-level application changes
-
-Rails apps can use our activerecord-multi-tenant Ruby gem as seen here:
-https://docs.citusdata.com/en/latest/develop/migration_mt_ror.html
-Django applications can use our django-multitenant Python library:
-https://docs.citusdata.com/en/latest/develop/migration_mt_django.html
-ASP.NET projects can benefit from the 3rd party SAASkit as seen here:
-https://docs.citusdata.com/en/latest/develop/migration_mt_asp.html
-Java Hibernate projects will benefit from this blog post:
-https://www.citusdata.com/blog/2018/02/13/using-hibernate-and-spring-to-build-multitenant-java-apps/
-Other applications can benefit from the advice here:
-	Documentation request: general app migration advice
