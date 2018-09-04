@@ -3,8 +3,8 @@
 Identify Distribution Strategy
 ==============================
 
-Pick distribution key that best addresses use case
---------------------------------------------------
+Pick distribution key
+---------------------
 
 The first step in migrating to Citus is to identify suitable distribution keys and plan table distribution accordingly. In multi-tenant applications this will typically be the internal identifier used to identify tenants. We typically refer to it as the "tenant ID." Use cases may vary, so we advise being thorough on this step.
 
@@ -15,8 +15,8 @@ Start by:
 1. :ref:`app_type`
 2. :ref:`distributed_data_modeling`
 
-Identify distributed, reference, and local tables
--------------------------------------------------
+Identify types of tables
+------------------------
 
 Once a distribution key is identified, review the schema to identify how each table will be handled and any whether modifications to table layouts will be required. We typically advise tracking this with a spreadsheet similar to the example `found here <https://docs.google.com/spreadsheets/d/14Hsa8Yrsf5ytAcminT7RztlR_0Dn3K17PL0iLvYCR4c/edit#gid=692529705>`_.
 
@@ -41,8 +41,8 @@ Prepare Tables for Migration
 
 Once the scope of needed database changes is identified, the next major step is to modify the data structure. First, existing tables requiring backfill are modified to add a column for the distribution key. 
 
-Add distribution keys to tables as needed
------------------------------------------
+Add distribution keys
+---------------------
 
 In our storefront example the stores and products tables have a store_id and are ready for distribution. Being normalized, the line_items table lacks a store id. If we want to distribute by store_id, the table needs this column.
 
@@ -54,8 +54,8 @@ In our storefront example the stores and products tables have a store_id and are
 
 Be sure to check that the distribution column has the same type in all tables, e.g. don't mix ``int`` and ``bigint``. The column types must match to ensure proper data colocation.
 
-Include distribution column in primary and foreign keys
--------------------------------------------------------
+Include distribution column in keys
+-----------------------------------
 
 Citus :ref:`cannot enforce <non_distribution_uniqueness>` uniqueness constraints unless a unique index or primary key contains the distribution column. Thus we must modify primary and foreign keys in our example to include store_id.
 
@@ -115,4 +115,3 @@ We join orders and line_items for the missing values:
 Next, ensure incoming data sources are modified to add this data. Typically it involves some application-level changes and possibly changes in data import processes if relevant. This article has some useful information on modifying application-level SQL queries to have the distribution key needed for maximum benefit: 
 
 Documentation request: a dedicated page for write-level application changes
-
