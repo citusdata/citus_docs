@@ -18,12 +18,12 @@ Start by:
 Identify types of tables
 ------------------------
 
-Once a distribution key is identified, review the schema to identify how each table will be handled and any whether modifications to table layouts will be required. We typically advise tracking this with a spreadsheet similar to the example `found here <https://docs.google.com/spreadsheets/d/14Hsa8Yrsf5ytAcminT7RztlR_0Dn3K17PL0iLvYCR4c/edit#gid=692529705>`_.
+Once a distribution key is identified, review the schema to identify how each table will be handled and whether any modifications to table layouts will be required. We typically advise tracking this with a spreadsheet, and have created a `template <https://examples.citusdata.com/citus-migration-plan.xlsx>`_ you can use.
 
 Tables will generally fall into one of the following categories:
 
-1. **Ready for distribution.** These tables already contain the distribution key, and are ready. 
-2. **Needs backfill.** These tables can be logically distributed by the chosen key, but do not contain a column directly referencing it. These will be modified to add the value later.
+1. **Ready for distribution.** These tables already contain the distribution key, and are ready for distribution.
+2. **Needs backfill.** These tables can be logically distributed by the chosen key, but do not contain a column directly referencing it. The tables will be modified later to add the column.
 3. **Reference table.** These tables are typically small, do not contain the distribution key, are commonly joined by distributed tables, and/or are shared across tenants. A copy of each of these tables will be maintained on all nodes. Common examples include country code lookups, product categories, and the like.
 4. **Local tables.** These tables are typically not joined to other tables, and do not contain the distribution key. They are maintained exclusively on the coordinator node. Common examples include admin user lookups and other utility tables.
 
