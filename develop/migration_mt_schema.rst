@@ -6,14 +6,14 @@ Identify Distribution Strategy
 Pick distribution key
 ---------------------
 
-The first step in migrating to Citus is to identify suitable distribution keys and plan table distribution accordingly. In multi-tenant applications this will typically be the internal identifier used to identify tenants. We typically refer to it as the "tenant ID." Use cases may vary, so we advise being thorough on this step.
+The first step in migrating to Citus is identifying suitable distribution keys and planning table distribution accordingly. In multi-tenant applications this will typically be an internal identifier for tenants. We typically refer to it as the "tenant ID." The use-cases may vary, so we advise being thorough on this step.
 
-We are happy to help review your environment to be sure that the ideal distribution key is chosen. To do so, we typically examine schema layouts, larger tables, long-running and/or problematic queries, standard use cases, and more.
-
-Start by:
+For guidance, read these sections:
 
 1. :ref:`app_type`
 2. :ref:`distributed_data_modeling`
+
+We are happy to help review your environment to be sure that the ideal distribution key is chosen. To do so, we typically examine schema layouts, larger tables, long-running and/or problematic queries, standard use cases, and more.
 
 Identify types of tables
 ------------------------
@@ -25,7 +25,7 @@ Tables will generally fall into one of the following categories:
 1. **Ready for distribution.** These tables already contain the distribution key, and are ready for distribution.
 2. **Needs backfill.** These tables can be logically distributed by the chosen key, but do not contain a column directly referencing it. The tables will be modified later to add the column.
 3. **Reference table.** These tables are typically small, do not contain the distribution key, are commonly joined by distributed tables, and/or are shared across tenants. A copy of each of these tables will be maintained on all nodes. Common examples include country code lookups, product categories, and the like.
-4. **Local tables.** These tables are typically not joined to other tables, and do not contain the distribution key. They are maintained exclusively on the coordinator node. Common examples include admin user lookups and other utility tables.
+4. **Local table.** These are typically not joined to other tables, and do not contain the distribution key. They are maintained exclusively on the coordinator node. Common examples include admin user lookups and other utility tables.
 
 Consider an example multi-tenant application similar to Etsy or Shopify where each tenant is a store. Here's a portion of a simplified schema:
 
@@ -102,7 +102,7 @@ Backfill newly created columns
 
 Once the schema is updated, backfill missing values for the tenant_id column in tables where the column was added. In our example line_items requires values for store_id.
 
-We join orders and line_items for the missing values:
+We backfill the table by obtaining the missing values from a join query with orders:
 
 .. code-block:: sql
 
@@ -112,6 +112,4 @@ We join orders and line_items for the missing values:
    INNER JOIN orders
    WHERE line_items.order_id = orders.order_id;
 
-Next, ensure incoming data sources are modified to add this data. Typically it involves some application-level changes and possibly changes in data import processes if relevant. This article has some useful information on modifying application-level SQL queries to have the distribution key needed for maximum benefit: 
-
-Documentation request: a dedicated page for write-level application changes
+The application and other data ingestion processes should be updated to include the new column for future writes. More on that in the next section.

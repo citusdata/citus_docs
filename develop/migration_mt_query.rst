@@ -3,14 +3,16 @@
 Prepare Application for Migration
 =================================
 
-Once the distribution key is present on all appropriate and basic functionality is established, the application needs to be prepared to take full advantage of Citus. A good place to start is updating application test suites and verifying that all tests pass. Also it's a good idea to enable logging to spot and remove any stray cross-shard queries that might hide in a multi-tenant app.
-
-Once application changes are complete, the Citus-ready application will be deployed against the production database to ensure stability and full compatability. We do not advise cutting over to Citus until the application has successfully gone through a soak period appropriate to your organizational needs.
+Once the distribution key is present on all appropriate tables, the application needs to include it in queries.
 
 Add distribution key to queries
 -------------------------------
 
 To execute queries efficiently for a specific tenant, Citus needs to route them to the appropriate node and run them there. Thus every query must identify which tenant it involves. For simple select, update, and delete queries this means that the *where* clause must filter by tenant id.
+
+* Application code and any other ingestion processes that write to the tables should be updated to include the new columns.
+* Running the application test suite against the modified schema on Citus is a good way to determine which areas of the code need to be modified.
+* Also it's a good idea to enable logging to spot and remove any stray cross-shard queries that might hide in a multi-tenant app.
 
 Specialized Libraries
 ~~~~~~~~~~~~~~~~~~~~~
@@ -22,7 +24,7 @@ There are helper libraries for a number of popular application frameworks that m
 * :ref:`ASP.NET migration <asp_migration>` - uses the 3rd party SAASkit
 * `Java Hibernate <https://www.citusdata.com/blog/2018/02/13/using-hibernate-and-spring-to-build-multitenant-java-apps/>`_ - a blog post about scoping queries to tenants
 
-Documentation request: above pages may need to differentiate between read- and write-level application changes
+It's possible to use the libraries for database writes first (including data ingestion), and later for read queries. The activerecord-multi-tenant gem for instance has a write-only mode that will modify only the write queries.
 
 General Principles
 ~~~~~~~~~~~~~~~~~~
@@ -34,10 +36,15 @@ Suppose we want to get the details for an order. It used to suffice to filter by
 .. code-block:: sql
 
   -- before
-  SELECT * FROM orders WHERE order_id = 123;
+  SELECT *
+    FROM orders
+   WHERE order_id = 123;
 
   -- after
-  SELECT * FROM orders WHERE order_id = 123 AND store_id = 42;
+  SELECT *
+    FROM orders
+   WHERE order_id = 123
+     AND store_id = 42; -- <== added
 
 Likewise insert statements must always include a value for the tenant id column. Citus inspects that value for routing the insert command.
 
@@ -66,12 +73,6 @@ When joining tables make sure to filter by tenant id. For instance here is how t
    WHERE p.name='Awesome Wool Pants'
      AND l.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
      AND p.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
-
-
-Update app based on test suite
-------------------------------
-
-TODO
 
 Check for cross-node traffic
 ----------------------------

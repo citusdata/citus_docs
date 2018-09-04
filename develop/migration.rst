@@ -19,7 +19,7 @@ Next, update application code and queries to deal with the schema changes.
 
   migration_mt_query.rst
 
-After testing the changes in a development environment, the last step is to migrate production data to a Citus cluster and switch over the application. We have techniques to minimize downtime for this step.
+After testing the changes in a development environment, the last step is to migrate production data to a Citus cluster and switch over the production app. We have techniques to minimize downtime for this step.
 
 .. toctree::
   :maxdepth: 2
