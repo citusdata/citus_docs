@@ -46,17 +46,17 @@ Citus scales horizontally by adding worker nodes, vertically by upgrading worker
     * 5-10B rows ingested per day
 * Kixer
     * >1B events ingested per day
-*  Heap
+* Heap
     * 500+ billion events
     * 500TB of data on a 40-node Citus database cluster 
-*  Chartbeat
+* Chartbeat
     * >2.6B rows of data added per month
-*  Pex
+* Pex
     * 30B rows updated/day
     * 20-node Citus database cluster on Google Cloud
     * 2.4TB memory, 1280 cores, and 60TB of data
     * ...with plans to grow to 45 nodes
-*  Mixrank
+* Mixrank
     * 160TB of time series data
 
 For more customers and statistics, see our `customer stories <https://www.citusdata.com/customers#customer-index>`_.
