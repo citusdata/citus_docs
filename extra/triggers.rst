@@ -149,32 +149,31 @@ Suppose we want to record the author of every change in ``insert_target`` to ``a
   SELECT create_reference_table('insert_target');
   SELECT create_reference_table('audit_table');
 
-  -- now find the shard id for each table
-
-  SELECT logicalrelid, shardid
-  FROM pg_dist_shard
-  WHERE logicalrelid IN
-    ('insert_target'::regclass, 'audit_table'::regclass);
-
-Include the shard ids (written below as "xxxxxx" and "yyyyyy") in custom queries:
+To make a trigger on each worker that updates ``audit_table``, we need to know the name of that table's shard. Rather than looking up the name in the metadata tables and using it manually in ``run_command_on_workers``, we can use ``run_command_on_placements``. Reference tables have exactly one placement per worker node, so the following creates what we want.
 
 .. code-block:: postgresql
 
-  SELECT run_command_on_workers($cmd$
-    CREATE OR REPLACE FUNCTION process_audit() RETURNS TRIGGER AS $$
-      BEGIN
-        INSERT INTO audit_table_xxxxxx(author,value)
-          VALUES (current_user,NEW.value);
-        RETURN NEW;
-      END;
-    $$ LANGUAGE plpgsql;
-  $cmd$);
+  SELECT run_command_on_placements(
+    'audit_table',
+    $cmd$
+      CREATE OR REPLACE FUNCTION process_audit() RETURNS TRIGGER AS $$
+        BEGIN
+          INSERT INTO %s (author,value)
+            VALUES (current_user,NEW.value);
+          RETURN NEW;
+        END;
+      $$ LANGUAGE plpgsql;
+    $cmd$
+  );
 
-  SELECT run_command_on_workers($cmd$
-    CREATE TRIGGER emp_audit
-    AFTER INSERT OR UPDATE ON insert_target_yyyyyy
-      FOR EACH ROW EXECUTE PROCEDURE process_audit();
-  $cmd$);
+  SELECT run_command_on_placements(
+    'insert_target',
+    $cmd$
+      CREATE TRIGGER emp_audit
+      AFTER INSERT OR UPDATE ON %s
+        FOR EACH ROW EXECUTE PROCEDURE process_audit();
+    $cmd$
+  );
 
   EXPLAIN ANALYZE INSERT INTO insert_target (value) VALUES ('inserted value');
 
