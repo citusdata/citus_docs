@@ -35,6 +35,32 @@ Citus is basically `worry-free Postgres <https://www.citusdata.com/product>`_ th
 2. On-premise with additional `enterprise grade <https://www.citusdata.com/product/enterprise>`_ security and cluster management tools
 3. As a fully-managed database as a service, called `Citus Cloud <https://www.citusdata.com/product/cloud>`_
 
+.. _how_big:
+
+How Far Can Citus Scale?
+------------------------
+
+Citus scales horizontally by adding worker nodes, vertically by upgrading workers/coordinator, and supports switching to :ref:`mx` mode if needed. In practice our customers have achieved the following scale, with room to grow even more:
+
+* `Algolia <https://www.citusdata.com/customers/algolia>`_
+    * 5-10B rows ingested per day
+* `Kixer <https://www.citusdata.com/customers/kixer>`_
+    * >1B events ingested per day
+* `Heap <https://www.citusdata.com/customers/heap>`_
+    * 500+ billion events
+    * 500TB of data on a 40-node Citus database cluster 
+* `Chartbeat <https://www.citusdata.com/customers/chartbeat>`_
+    * >2.6B rows of data added per month
+* `Pex <https://www.citusdata.com/customers/pex>`_
+    * 30B rows updated/day
+    * 20-node Citus database cluster on Google Cloud
+    * 2.4TB memory, 1280 cores, and 60TB of data
+    * ...with plans to grow to 45 nodes
+* `Mixrank <https://www.citusdata.com/customers/mixrank>`_
+    * 160TB of time series data
+
+For more customers and statistics, see our `customer stories <https://www.citusdata.com/customers#customer-index>`_.
+
 .. _when_to_use_citus:
 
 When to Use Citus
@@ -45,7 +71,7 @@ Citus serves many use cases. Two common ones are scaling multi-tenant (B2B) data
 .. _mt_blurb:
 
 Multi-Tenant Database
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Most B2B applications already have the notion of a tenant, customer, or account built into their data model. In this model, the database serves many tenants, each of whose data is separate from other tenants.
 
@@ -56,7 +82,7 @@ These capabilities allow you to scale out your tenants' data across many machine
 .. _rt_blurb:
 
 Real-Time Analytics
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 Citus supports real-time queries over large datasets. Commonly these queries occur in rapidly growing event systems or systems with time series data. Example use cases include:
 
