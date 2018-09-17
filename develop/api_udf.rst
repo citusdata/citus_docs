@@ -60,9 +60,10 @@ This example informs the database that the github_events table should be distrib
 
 For more examples, see :ref:`ddl`.
 
+.. _create_reference_table:
+
 create_reference_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-.. _create_reference_table:
 
 The create_reference_table() function is used to define a small reference or
 dimension table. This function takes in a table name, and creates a distributed
