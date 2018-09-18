@@ -1,3 +1,5 @@
+:orphan:
+
 .. _asp_migration:
 
 ASP.NET
