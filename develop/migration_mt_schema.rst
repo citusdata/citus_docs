@@ -1,11 +1,31 @@
 .. _mt_schema_migration:
 
-Multi-Tenant Schema Migration
-=============================
+Identify Distribution Strategy
+==============================
 
-Citus is well suited to hosting B2B multi-tenant application data. In this model application tenants share a Citus cluster and a schema. Each tenant's table data is stored in a shard determined by a configurable tenant id column. Citus pushes queries down to run directly on the relevant tenant shard in the cluster, spreading out the computation. Once queries are routed this way they can be executed without concern for the rest of the cluster. These queries can use the full features of SQL, including joins and transactions, without running into the inherent limitations of a distributed system.
+Pick distribution key
+---------------------
 
-Transitioning from a standalone database instance to a sharded multi-tenant system requires identifying and modifying three types of tables which we may term *per-tenant*, *reference*, and *global*. The distinction hinges on whether the tables have (or reference) a column serving as tenant id. The concept of tenant id depends on the application and who exactly are considered its tenants.
+The first step in migrating to Citus is identifying suitable distribution keys and planning table distribution accordingly. In multi-tenant applications this will typically be an internal identifier for tenants. We typically refer to it as the "tenant ID." The use-cases may vary, so we advise being thorough on this step.
+
+For guidance, read these sections:
+
+1. :ref:`app_type`
+2. :ref:`distributed_data_modeling`
+
+We are happy to help review your environment to be sure that the ideal distribution key is chosen. To do so, we typically examine schema layouts, larger tables, long-running and/or problematic queries, standard use cases, and more.
+
+Identify types of tables
+------------------------
+
+Once a distribution key is identified, review the schema to identify how each table will be handled and whether any modifications to table layouts will be required. We typically advise tracking this with a spreadsheet, and have created a `template <https://examples.citusdata.com/citus-migration-plan.xlsx>`_ you can use.
+
+Tables will generally fall into one of the following categories:
+
+1. **Ready for distribution.** These tables already contain the distribution key, and are ready for distribution.
+2. **Needs backfill.** These tables can be logically distributed by the chosen key, but do not contain a column directly referencing it. The tables will be modified later to add the column.
+3. **Reference table.** These tables are typically small, do not contain the distribution key, are commonly joined by distributed tables, and/or are shared across tenants. A copy of each of these tables will be maintained on all nodes. Common examples include country code lookups, product categories, and the like.
+4. **Local table.** These are typically not joined to other tables, and do not contain the distribution key. They are maintained exclusively on the coordinator node. Common examples include admin user lookups and other utility tables.
 
 Consider an example multi-tenant application similar to Etsy or Shopify where each tenant is a store. Here's a portion of a simplified schema:
 
@@ -14,21 +34,36 @@ Consider an example multi-tenant application similar to Etsy or Shopify where ea
 
    (Underlined items are primary keys, italicized items are foreign keys.)
 
-In our example each store is a natural tenant. This is because storefronts benefit from dedicated processing power for their customer data, and stores do not need to access each other's sales or inventory. The tenant id is in this case the store id. We want to distribute data in the cluster in such a way that rows from the above tables in our schema reside on the same node whenever the rows share a store id.
+In this example stores are a natural tenant. The tenant id is in this case the store_id. After distributing tables in the cluster, we want rows relating to the same store to reside together on the same nodes.
 
-The first step is preparing the tables for distribution. Citus requires that primary keys contain the distribution column, so we must modify the primary keys of these tables and make them compound including a store id. Making primary keys compound will require modifying the corresponding foreign keys as well.
+Prepare Tables for Migration
+============================
 
-In our example the stores and products tables are already in perfect shape. The orders table needs slight modification: updating the primary and foreign keys to include store_id. The line_items table needs the biggest change. Being normalized, it lacks a store id. We must add that column, and include it in the primary key constraint.
+Once the scope of needed database changes is identified, the next major step is to modify the data structure. First, existing tables requiring backfill are modified to add a column for the distribution key. 
 
-Here are SQL commands to accomplish these changes:
+Add distribution keys
+---------------------
+
+In our storefront example the stores and products tables have a store_id and are ready for distribution. Being normalized, the line_items table lacks a store id. If we want to distribute by store_id, the table needs this column.
 
 .. code-block:: sql
-
-  BEGIN;
 
   -- denormalize line_items by including store_id
 
   ALTER TABLE line_items ADD COLUMN store_id uuid;
+
+Be sure to check that the distribution column has the same type in all tables, e.g. don't mix ``int`` and ``bigint``. The column types must match to ensure proper data colocation.
+
+Include distribution column in keys
+-----------------------------------
+
+Citus :ref:`cannot enforce <non_distribution_uniqueness>` uniqueness constraints unless a unique index or primary key contains the distribution column. Thus we must modify primary and foreign keys in our example to include store_id.
+
+Here are SQL commands to turn the simple keys composite:
+
+.. code-block:: sql
+
+  BEGIN;
 
   -- drop simple primary keys (cascades to foreign keys)
 
@@ -53,33 +88,28 @@ Here are SQL commands to accomplish these changes:
 
   COMMIT;
 
-When the job is complete our schema will look like this:
+Thus completed, our schema will look like this:
 
 .. figure:: ../images/erd/mt-after.png
    :alt: Schema after migration
 
    (Underlined items are primary keys, italicized items are foreign keys.)
 
-We call the tables considered so far *per-tenant* because querying them for our use case requires information for only one tenant per query. Their rows are distributed across the cluster according to the hashed values of their tenant ids.
+Be sure to modify data flows to add keys to incoming data.
 
-There are other types of tables to consider during a transition to Citus. Some are system-wide tables such as information about site administrators. We call them *global* tables and they do not participate in join queries with the per-tenant tables and may remain on the Citus coordinator node unmodified.
+Backfill newly created columns
+------------------------------
 
-Another kind of table are those which join with per-tenant tables but which aren't naturally specific to any one tenant. We call them *reference* tables. Two examples are shipping regions and product categories. We advise that you add a tenant id to these tables and duplicate the original rows, once for each tenant. This ensures that reference data is co-located with per-tenant data and quickly accessible to queries.
+Once the schema is updated, backfill missing values for the tenant_id column in tables where the column was added. In our example line_items requires values for store_id.
 
-Backfilling Tenant ID
----------------------
-
-Once the schema is updated and the per-tenant and reference tables are distributed across the cluster, it's time to copy data from the original database into Citus. Most per-tenant tables can be copied directly from source tables. However line_items was denormalized with the addition of the store_id column. We have to "backfill" the correct values into this column.
-
-We join orders and line_items to output the data we need including the backfilled store_id column. The results can go into a file for later import into Citus.
+We backfill the table by obtaining the missing values from a join query with orders:
 
 .. code-block:: sql
 
-  -- This query gets line item information along with matching store_id values.
-  -- You can save the result to a file for later import into Citus.
+  UPDATE line_items
+     SET store_id = orders.store_id
+    FROM line_items
+   INNER JOIN orders
+   WHERE line_items.order_id = orders.order_id;
 
-  SELECT orders.store_id AS store_id, line_items.*
-    FROM line_items, orders
-   WHERE line_items.order_id = orders.order_id
-
-To learn how to ingest datasets such as the one generated above into a Citus cluster, see :ref:`dml`.
+The application and other data ingestion processes should be updated to include the new column for future writes. More on that in the next section.

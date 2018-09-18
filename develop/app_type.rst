@@ -1,3 +1,5 @@
+.. _app_type:
+
 Determining Application Type
 ============================
 

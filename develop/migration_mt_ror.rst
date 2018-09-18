@@ -1,3 +1,5 @@
+:orphan:
+
 .. _rails_migration:
 
 Ruby on Rails
