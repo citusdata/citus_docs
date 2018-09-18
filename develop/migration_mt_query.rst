@@ -12,7 +12,7 @@ To execute queries efficiently for a specific tenant, Citus needs to route them 
 
 * Application code and any other ingestion processes that write to the tables should be updated to include the new columns.
 * Running the application test suite against the modified schema on Citus is a good way to determine which areas of the code need to be modified.
-* Also it's a good idea to enable logging to spot and remove any stray cross-shard queries that might hide in a multi-tenant app.
+* It's a good idea to enable database logging. The logs can help uncover stray cross-shard queries in a multi-tenant app that should be converted to per-tenant queries.
 
 Specialized Libraries
 ~~~~~~~~~~~~~~~~~~~~~
@@ -31,7 +31,7 @@ General Principles
 
 If you're using a different ORM than those above, or doing multi-tenant queries more directly in SQL, follow these general principles. We'll use our earlier example of the ecommerce application.
 
-Suppose we want to get the details for an order. It used to suffice to filter by order_id. However once orders are distributed by store_id we must include that in the where filter as well.
+Suppose we want to get the details for an order. Distributed queries that filter on the tenant id run most efficiently in multi-tenant apps, so the change below makes the query faster (while both queries return the same results):
 
 .. code-block:: sql
 
@@ -46,9 +46,9 @@ Suppose we want to get the details for an order. It used to suffice to filter by
    WHERE order_id = 123
      AND store_id = 42; -- <== added
 
-Likewise insert statements must always include a value for the tenant id column. Citus inspects that value for routing the insert command.
+The tenant id column is not just beneficial -- but critical -- for insert statements. Inserts must include a value for the tenant id column or else Citus will be unable to route the data to the correct shard and will raise an error.
 
-When joining tables make sure to filter by tenant id. For instance here is how to inspect how many awesome wool pants a given store has sold:
+Finally, when joining tables make sure to filter by tenant id too. For instance here is how to inspect how many "awesome wool pants" a given store has sold:
 
 .. code-block:: sql
 
