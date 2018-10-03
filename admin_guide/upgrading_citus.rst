@@ -105,20 +105,29 @@ New data directory after upgrade
 New PostgreSQL installation path
   :code:`export NEW_PG_PATH=/usr/pgsql-10`
 
-On the Coordinator Node
------------------------
+On Every Node (Coordinator and workers)
+---------------------------------------
 
 1. Back up Citus metadata in the old server.
 
   .. code-block:: postgres
 
-    CREATE TABLE public.pg_dist_partition AS SELECT * FROM pg_catalog.pg_dist_partition;
-    CREATE TABLE public.pg_dist_shard AS SELECT * FROM pg_catalog.pg_dist_shard;
-    CREATE TABLE public.pg_dist_placement AS SELECT * FROM pg_catalog.pg_dist_placement;
-    CREATE TABLE public.pg_dist_node AS SELECT * FROM pg_catalog.pg_dist_node;
-    CREATE TABLE public.pg_dist_local_group AS SELECT * FROM pg_catalog.pg_dist_local_group;
-    CREATE TABLE public.pg_dist_transaction AS SELECT * FROM pg_catalog.pg_dist_transaction;
-    CREATE TABLE public.pg_dist_colocation AS SELECT * FROM pg_catalog.pg_dist_colocation;
+    CREATE TABLE        public.pg_dist_partition AS
+      SELECT * FROM pg_catalog.pg_dist_partition;
+    CREATE TABLE        public.pg_dist_shard AS
+      SELECT * FROM pg_catalog.pg_dist_shard;
+    CREATE TABLE        public.pg_dist_placement AS
+      SELECT * FROM pg_catalog.pg_dist_placement;
+    CREATE TABLE        public.pg_dist_node_metadata AS
+      SELECT * FROM pg_catalog.pg_dist_node_metadata;
+    CREATE TABLE        public.pg_dist_node AS
+      SELECT * FROM pg_catalog.pg_dist_node;
+    CREATE TABLE        public.pg_dist_local_group AS
+      SELECT * FROM pg_catalog.pg_dist_local_group;
+    CREATE TABLE        public.pg_dist_transaction AS
+      SELECT * FROM pg_catalog.pg_dist_transaction;
+    CREATE TABLE        public.pg_dist_colocation AS
+      SELECT * FROM pg_catalog.pg_dist_colocation;
 
 2. Configure the new database instance to use Citus.
 
@@ -161,14 +170,23 @@ On the Coordinator Node
 
   .. code-block:: postgres
 
-    INSERT INTO pg_catalog.pg_dist_partition SELECT * FROM public.pg_dist_partition;
-    INSERT INTO pg_catalog.pg_dist_shard SELECT * FROM public.pg_dist_shard;
-    INSERT INTO pg_catalog.pg_dist_placement SELECT * FROM public.pg_dist_placement;
-    INSERT INTO pg_catalog.pg_dist_node SELECT * FROM public.pg_dist_node;
+    INSERT INTO pg_catalog.pg_dist_partition
+      SELECT * FROM public.pg_dist_partition;
+    INSERT INTO pg_catalog.pg_dist_shard
+      SELECT * FROM public.pg_dist_shard;
+    INSERT INTO pg_catalog.pg_dist_placement
+      SELECT * FROM public.pg_dist_placement;
+    INSERT INTO pg_catalog.pg_dist_node_metadata
+      SELECT * FROM public.pg_dist_node_metadata;
+    INSERT INTO pg_catalog.pg_dist_node
+      SELECT * FROM public.pg_dist_node;
     TRUNCATE TABLE pg_catalog.pg_dist_local_group;
-    INSERT INTO pg_catalog.pg_dist_local_group SELECT * FROM public.pg_dist_local_group;
-    INSERT INTO pg_catalog.pg_dist_transaction SELECT * FROM public.pg_dist_transaction;
-    INSERT INTO pg_catalog.pg_dist_colocation SELECT * FROM public.pg_dist_colocation;
+    INSERT INTO pg_catalog.pg_dist_local_group
+      SELECT * FROM public.pg_dist_local_group;
+    INSERT INTO pg_catalog.pg_dist_transaction
+      SELECT * FROM public.pg_dist_transaction;
+    INSERT INTO pg_catalog.pg_dist_colocation
+      SELECT * FROM public.pg_dist_colocation;
 
 8. Drop temporary metadata tables.
 
@@ -177,6 +195,7 @@ On the Coordinator Node
     DROP TABLE public.pg_dist_partition;
     DROP TABLE public.pg_dist_shard;
     DROP TABLE public.pg_dist_placement;
+    DROP TABLE public.pg_dist_node_metadata;
     DROP TABLE public.pg_dist_node;
     DROP TABLE public.pg_dist_local_group;
     DROP TABLE public.pg_dist_transaction;
@@ -188,11 +207,11 @@ On the Coordinator Node
 
     SELECT setval('pg_catalog.pg_dist_shardid_seq', (SELECT MAX(shardid)+1 AS max_shard_id FROM pg_dist_shard), false);
 
+    SELECT setval('pg_catalog.pg_dist_placement_placementid_seq', (SELECT MAX(placementid)+1 AS max_placement_id FROM pg_dist_placement), false);
+
     SELECT setval('pg_catalog.pg_dist_groupid_seq', (SELECT MAX(groupid)+1 AS max_group_id FROM pg_dist_node), false);
 
     SELECT setval('pg_catalog.pg_dist_node_nodeid_seq', (SELECT MAX(nodeid)+1 AS max_node_id FROM pg_dist_node), false);
-
-    SELECT setval('pg_catalog.pg_dist_placement_placementid_seq', (SELECT MAX(placementid)+1 AS max_placement_id FROM pg_dist_placement), false);
 
     SELECT setval('pg_catalog.pg_dist_colocationid_seq', (SELECT MAX(colocationid)+1 AS max_colocation_id FROM pg_dist_colocation), false);
 
@@ -235,28 +254,3 @@ On the Coordinator Node
       'n' as deptype
     FROM
       pg_dist_partition p;
-
-On Worker Nodes
----------------
-
-1. Stop the old and new servers.
-2. Check upgrade compatibility to PostgreSQL 10.0.
-
-  .. code-block:: bash
-
-    $NEW_PG_PATH/bin/pg_upgrade -b $OLD_PG_PATH/bin/ -B $NEW_PG_PATH/bin/ \
-                                -d $OLD_PG_DATA -D $NEW_PG_DATA --check
-
-  You should see a "Clusters are compatible" message. If you do not, fix any errors before proceeding. Please ensure that
-
-  * :code:`NEW_PG_DATA` contains an empty database initialized by new PostgreSQL version
-  * The Citus extension **IS NOT** created
-
-3. Perform the upgrade (like before but without the :code:`--check` option).
-
-  .. code-block:: bash
-
-    $NEW_PG_PATH/bin/pg_upgrade -b $OLD_PG_PATH/bin/ -B $NEW_PG_PATH/bin/ \
-                                -d $OLD_PG_DATA -D $NEW_PG_DATA
-
-4. Start the new server.
