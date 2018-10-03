@@ -42,7 +42,7 @@ We will use three Postgres tables to represent this data. To get started, you wi
 Creating tables
 ---------------
 
-To start, you can first connect to the Citus co-ordinator using psql.
+To start, you can first connect to the Citus coordinator using psql.
 
 **If you are using Citus Cloud**, you can connect by specifying the connection string (URL in the formation details):
 
