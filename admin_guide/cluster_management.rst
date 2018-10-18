@@ -418,10 +418,10 @@ Long running queries can hold locks, queue up WAL, or just consume a lot of syst
 
    -- limit queries to five minutes
    ALTER DATABASE citus
-     SET statement_timeout TO 1000;
+     SET statement_timeout TO 300000;
    SELECT run_command_on_workers($cmd$
      ALTER DATABASE citus
-       SET statement_timeout TO 1000;
+       SET statement_timeout TO 300000;
    $cmd$);
 
 The timeout is specified in milliseconds.
