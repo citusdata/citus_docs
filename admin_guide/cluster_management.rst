@@ -406,6 +406,30 @@ Finally, by joining ``citus_stat_statements`` with ``pg_stat_statements`` we can
   │ router        │   1 │  0.392590 │
   └───────────────┴─────┴───────────┘
 
+Resource Conservation
+=====================
+
+Limiting Long-Running Queries
+-----------------------------
+
+Long running queries can hold locks, queue up WAL, or just consume a lot of system resources, so in a production environment it's good to prevent them from running too long. You can set the `statement_timeout <https://www.postgresql.org/docs/10/static/runtime-config-client.html#GUC-STATEMENT-TIMEOUT>`_ parameter on the coordinator and workers to cancel queries that run too long.
+
+.. code-block:: postgres
+
+   -- limit queries to five minutes
+   ALTER DATABASE citus
+     SET statement_timeout TO 1000;
+   SELECT run_command_on_workers($cmd$
+     ALTER DATABASE citus
+       SET statement_timeout TO 1000;
+   $cmd$);
+
+The timeout is specified in milliseconds.
+
+.. note::
+
+   It's not possible to make an exception to the timeout for individual queries. Citus does not yet propagate ``SET LOCAL`` to the workers, so the statement_timeout GUC cannot be adjusted within a session.
+
 Security
 ========
 
