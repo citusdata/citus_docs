@@ -70,7 +70,7 @@ Remember that the coordinator will send the results in the subquery or CTE to al
 .. _upsert_into_select:
 
 INSERT…SELECT upserts lacking distribution column
--------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Citus supports INSERT…SELECT…ON CONFLICT statements between co-located tables when the distribution column is among those columns selected and inserted. Also aggregates in the statement must include the distribution column in the GROUP BY clause. Failing to meet these conditions will raise an error:
 
@@ -93,8 +93,8 @@ If the upsert is an important operation in your application, the ideal solution 
   DROP TABLE temp_table;
   END;
 
-Temp Tables: the Last Resort
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Temp Tables: the Workaround of Last Resort
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are still a few queries that are :ref:`unsupported <unsupported>` even with the use of push-pull execution via subqueries. One of them is running window functions that partition by a non-distribution column.
 
@@ -128,3 +128,4 @@ There is another trick though. We can pull the relevant information to the coord
     FROM results;
 
 Creating a temporary table on the coordinator is a last resort. It is limited by the disk size and CPU of the node.
+
