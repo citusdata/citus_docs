@@ -175,28 +175,19 @@ To make a trigger on each worker that updates ``audit_table``, we need to know t
     $cmd$
   );
 
-  EXPLAIN ANALYZE INSERT INTO insert_target (value) VALUES ('inserted value');
+  INSERT INTO insert_target (value) VALUES ('inserted value');
+
+  TABLE audit_table;
 
 ::
 
-  ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  │                                                       QUERY PLAN                                                        │
-  ├─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-  │ Custom Scan (Citus Router)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.241..1.241 rows=0 loops=1)                  │
-  │   Task Count: 1                                                                                                         │
-  │   Tasks Shown: All                                                                                                      │
-  │   ->  Task                                                                                                              │
-  │         Node: host=localhost port=5433 dbname=postgres                                                                  │
-  │         ->  Insert on insert_target_102681  (cost=0.00..0.01 rows=1 width=32) (actual time=0.033..0.033 rows=0 loops=1) │
-  │               ->  Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.000..0.001 rows=1 loops=1)                   │
-  │             Planning time: 0.017 ms                                                                                     │
-  │             Trigger emp_audit: time=0.049 calls=1                                                                       │
-  │             Execution time: 0.098 ms                                                                                    │
-  │ Planning time: 0.064 ms                                                                                                 │
-  │ Execution time: 1.272 ms                                                                                                │
-  └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+   ┌────────┬────────────────┐
+   │ author │     value      │
+   ├────────┼────────────────┤
+   │ citus  │ inserted value │
+   └────────┴────────────────┘
 
-The EXPLAIN output shows that the trigger was called.
+This shows that the trigger executed and added a row including the ``author`` column.
 
 **Trigger from distributed to reference table.**
 
