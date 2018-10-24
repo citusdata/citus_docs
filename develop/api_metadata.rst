@@ -1,14 +1,17 @@
 .. _metadata_tables:
 
-Metadata Tables
-===============
+Citus Tables and Views
+======================
+
+Coordinator Metadata
+--------------------
 
 Citus divides each distributed table into multiple logical shards based on the distribution column. The coordinator then maintains metadata tables to track statistics and information about the health and location of these shards. In this section, we describe each of these metadata tables and their schema. You can view and query these tables using SQL after logging into the coordinator node.
 
 .. _partition_table:
 
 Partition table
------------------
+~~~~~~~~~~~~~~~~~
 
 The pg_dist_partition table stores metadata about which tables in the database are distributed. For each distributed table, it also stores information about the distribution method and detailed information about the distribution column.
 
@@ -49,7 +52,7 @@ The pg_dist_partition table stores metadata about which tables in the database a
 .. _pg_dist_shard:
 
 Shard table
------------------
+~~~~~~~~~~~~~~~~~
 
 The pg_dist_shard table stores metadata about individual shards of a table. This includes information about which distributed table the shard belongs to and statistics about the distribution column for that shard. For append distributed tables, these statistics correspond to min / max values of the distribution column. In case of hash distributed tables, they are hash token ranges assigned to that shard. These statistics are used for pruning away unrelated shards during SELECT queries.
 
@@ -110,7 +113,7 @@ The shardstorage column in pg_dist_shard indicates the type of storage used for 
 .. _placements:
 
 Shard placement table
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The pg_dist_placement table tracks the location of shard replicas on worker nodes. Each replica of a shard assigned to a specific node is called a shard placement. This table stores information about the health and location of each shard placement.
 
@@ -197,7 +200,7 @@ Citus manages shard health on a per-placement basis and automatically marks a pl
 .. _pg_dist_node:
 
 Worker node table
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The pg_dist_node table contains information about the worker nodes in the cluster. 
 
@@ -235,46 +238,10 @@ The pg_dist_node table contains information about the worker nodes in the cluste
           3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default
     (3 rows)
 
-.. _pg_dist_authinfo:
-
-Connection Credentials Table
-----------------------------
-
-.. note::
-
-  This table is a part of Citus Enterprise Edition. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
-
-The ``pg_dist_authinfo`` table holds authentication parameters used by Citus nodes to connect to one another.
-
-+----------+---------+-------------------------------------------------+
-| Name     | Type    | Description                                     |
-+==========+=========+=================================================+
-| nodeid   | integer | Node id from :ref:`pg_dist_node`, or 0, or -1   |
-+----------+---------+-------------------------------------------------+
-| rolename | name    | Postgres role                                   |
-+----------+---------+-------------------------------------------------+
-| authinfo | text    | Space-separated libpq connection parameters     |
-+----------+---------+-------------------------------------------------+
-
-Upon beginning a connection, a node consults the table to see whether a row with the destination ``nodeid`` and desired ``rolename`` exists. If so, the node includes the corresponding ``authinfo`` string in its libpq connection. A common example is to store a password, like ``'password=abc123'``, but you can review the `full list <https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS>`_ of possibilities.
-
-The parameters in ``authinfo`` are space-separated, in the form ``key=val``. To write an empty value, or a value containing spaces, surround it with single quotes, e.g., ``keyword='a value'``. Single quotes and backslashes within the value must be escaped with a backslash, i.e., ``\'`` and ``\\``.
-
-The ``nodeid`` column can also take the special values 0 and -1, which mean *all nodes* or *loopback connections*, respectively. If, for a given node, both specific and all-node rules exist, the specific rule has precedence.
-
-::
-
-    SELECT * FROM pg_dist_authinfo;
-
-     nodeid | rolename | authinfo
-    --------+----------+-----------------
-        123 | jdoe     | password=abc123
-    (1 row)
-
 .. _colocation_group_table:
 
 Co-location group table
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The pg_dist_colocation table contains information about which tables' shards should be placed together, or :ref:`co-located <colocation>`. When two tables are in the same co-location group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard co-location is inferred when the shard counts, replication factors, and partition column types all match between two tables; however, a custom co-location group may be specified when creating a distributed table, if so desired.
 
@@ -302,7 +269,7 @@ The pg_dist_colocation table contains information about which tables' shards sho
 .. _citus_stat_statements:
 
 Query statistics table
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
 
@@ -366,3 +333,68 @@ Caveats:
 * It's a coordinator node feature, with no :ref:`Citus MX <mx>` support
 * Tracks a limited number of queries, set by the ``pg_stat_statements.max`` GUC (default 5000)
 * To truncate the table, use the ``citus_stat_statements_reset()`` function
+
+Tables on all Nodes
+-------------------
+
+.. _pg_dist_authinfo:
+
+Connection Credentials Table
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+  This table is a part of Citus Enterprise Edition. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+The ``pg_dist_authinfo`` table holds authentication parameters used by Citus nodes to connect to one another.
+
++----------+---------+-------------------------------------------------+
+| Name     | Type    | Description                                     |
++==========+=========+=================================================+
+| nodeid   | integer | Node id from :ref:`pg_dist_node`, or 0, or -1   |
++----------+---------+-------------------------------------------------+
+| rolename | name    | Postgres role                                   |
++----------+---------+-------------------------------------------------+
+| authinfo | text    | Space-separated libpq connection parameters     |
++----------+---------+-------------------------------------------------+
+
+Upon beginning a connection, a node consults the table to see whether a row with the destination ``nodeid`` and desired ``rolename`` exists. If so, the node includes the corresponding ``authinfo`` string in its libpq connection. A common example is to store a password, like ``'password=abc123'``, but you can review the `full list <https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-PARAMKEYWORDS>`_ of possibilities.
+
+The parameters in ``authinfo`` are space-separated, in the form ``key=val``. To write an empty value, or a value containing spaces, surround it with single quotes, e.g., ``keyword='a value'``. Single quotes and backslashes within the value must be escaped with a backslash, i.e., ``\'`` and ``\\``.
+
+The ``nodeid`` column can also take the special values 0 and -1, which mean *all nodes* or *loopback connections*, respectively. If, for a given node, both specific and all-node rules exist, the specific rule has precedence.
+
+::
+
+    SELECT * FROM pg_dist_authinfo;
+
+     nodeid | rolename | authinfo
+    --------+----------+-----------------
+        123 | jdoe     | password=abc123
+    (1 row)
+
+.. _worker_shards:
+
+Shards and Indices on Worker
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Worker nodes store shards in tables that are ordinarily hidden (see :ref:`override_table_visibility`). The easiest way to obtain information about the shards on each worker is to consult that worker's ``citus_shards_on_worker`` view. For instance, here are some shards on a worker for the distributed table ``test_table``:
+
+.. code-block:: postgres
+
+   SELECT * FROM citus_shards_on_worker ORDER BY 2;
+    Schema |        Name        | Type  | Owner
+   --------+--------------------+-------+-------
+    public | test_table_1130000 | table | citus
+    public | test_table_1130002 | table | citus
+
+Indices for shards are also hidden, but discoverable through another view, ``citus_shard_indexes_on_worker``:
+
+.. code-block:: postgres
+
+   SELECT * FROM citus_shard_indexes_on_worker ORDER BY 2;
+    Schema |        Name        | Type  | Owner |       Table
+   --------+--------------------+-------+-------+--------------------
+    public | test_index_1130000 | index | citus | test_table_1130000
+    public | test_index_1130002 | index | citus | test_table_1130002
+
