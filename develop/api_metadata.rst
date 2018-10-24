@@ -334,6 +334,95 @@ Caveats:
 * Tracks a limited number of queries, set by the ``pg_stat_statements.max`` GUC (default 5000)
 * To truncate the table, use the ``citus_stat_statements_reset()`` function
 
+Distributed Query Activity
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With :ref:`mx` users can execute distributed queries from any node. Examining the standard Postgres `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ view on the coordinator won't include those worker-initiated queries, so Citus provides special views to watch queries throughout the cluster, as well as the shard-specific queries used internally to build results for distributed queries.
+
+* **citus_dist_stat_activity**: shows the distributed queries that are executing on all nodes.
+* **citus_worker_stat_activity**: shows queries on workers, including fragment queries against individual shards.
+
+Both views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the host name/port of the worker that initiated the query and the host/port of the coordinator node of the cluster.
+
+For example, consider counting the rows in a distributed table:
+
+.. code-block:: postgres
+
+   SELECT count(*) FROM users_table;
+
+We can see the query appear in ``citus_dist_stat_activity``:
+
+.. code-block:: postgres
+
+   SELECT * FROM citus_dist_stat_activity;
+
+   -[ RECORD 1 ]----------+----------------------------------
+   query_hostname         | localhost
+   query_hostport         | 9701
+   master_query_host_name | localhost
+   master_query_host_port | 9701
+   transaction_number     | 1
+   transaction_stamp      | 2018-10-05 13:27:20.691907+03
+   datid                  | 12630
+   datname                | postgres
+   pid                    | 23723
+   usesysid               | 10
+   usename                | citus
+   application_name       | psql
+   client_addr            | 
+   client_hostname        | 
+   client_port            | -1
+   backend_start          | 2018-10-05 13:27:14.419905+03
+   xact_start             | 2018-10-05 13:27:16.362887+03
+   query_start            | 2018-10-05 13:27:20.682452+03
+   state_change           | 2018-10-05 13:27:20.896546+03
+   wait_event_type        | Client
+   wait_event             | ClientRead
+   state                  | idle in transaction
+   backend_xid            | 
+   backend_xmin           | 
+   query                  | SELECT count(*) FROM users_table;
+   backend_type           | client backend
+
+This query requires specific queries on shards to collect information. We can see the constituent queries in ``citus_worker_stat_activity``:
+
+.. code-block:: postgres
+
+   SELECT * FROM citus_worker_stat_activity;
+   -[ RECORD 1 ]----------+-----------------------------------------------------------------------------------------
+   query_hostname         | localhost
+   query_hostport         | 9700
+   master_query_host_name | localhost
+   master_query_host_port | 9701
+   transaction_number     | 1
+   transaction_stamp      | 2018-10-05 13:27:20.691907+03
+   datid                  | 12630
+   datname                | postgres
+   pid                    | 23781
+   usesysid               | 10
+   usename                | citus
+   application_name       | citus
+   client_addr            | ::1
+   client_hostname        | 
+   client_port            | 51773
+   backend_start          | 2018-10-05 13:27:20.75839+03
+   xact_start             | 2018-10-05 13:27:20.84112+03
+   query_start            | 2018-10-05 13:27:20.867446+03
+   state_change           | 2018-10-05 13:27:20.869889+03
+   wait_event_type        | Client
+   wait_event             | ClientRead
+   state                  | idle in transaction
+   backend_xid            | 
+   backend_xmin           | 
+   query                  | COPY (SELECT count(*) AS count FROM users_table_102038 users_table WHERE true) TO STDOUT
+   backend_type           | client backend
+
+The ``query`` field shows data being copied from a shard into a temporary table to be counted.
+
+.. note::
+
+  If a router query (e.g. single-tenant in a multi-tenant application, ``SELECT * FROM table WHERE tenant_id = X``) is executed without a transaction block, then master_query_host_name and master_query_host_port columns will be NULL in citus_worker_stat_activity.
+
 Tables on all Nodes
 -------------------
 
