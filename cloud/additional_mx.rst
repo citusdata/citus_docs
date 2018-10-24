@@ -1,7 +1,7 @@
 .. _mx:
 
-Masterless Mode (beta)
-======================
+Masterless Mode
+===============
 
 Citus MX is a new version of Citus that adds the ability to use hash-distributed tables from any node in a Citus cluster, which allows you to scale out your query throughput by opening many connections across all the nodes. This is particularly useful for performing small reads and writes at a very high rate in a way that scales horizontally. Citus MX is currently available in private beta on `Citus Cloud <https://www.citusdata.com/product/cloud>`_.
 
