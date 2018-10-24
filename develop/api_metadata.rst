@@ -426,6 +426,8 @@ The ``query`` field shows data being copied from a shard into a temporary table 
 Tables on all Nodes
 -------------------
 
+Citus has other informational tables and views which are accessible on all nodes, not just the coordinator.
+
 .. _pg_dist_authinfo:
 
 Connection Credentials Table
@@ -464,10 +466,10 @@ The ``nodeid`` column can also take the special values 0 and -1, which mean *all
 
 .. _worker_shards:
 
-Shards and Indices on Worker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Shards and Indices on Workers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Worker nodes store shards in tables that are ordinarily hidden (see :ref:`override_table_visibility`). The easiest way to obtain information about the shards on each worker is to consult that worker's ``citus_shards_on_worker`` view. For instance, here are some shards on a worker for the distributed table ``test_table``:
+Worker nodes store shards as tables that are ordinarily hidden (see :ref:`override_table_visibility`). The easiest way to obtain information about the shards on each worker is to consult that worker's ``citus_shards_on_worker`` view. For instance, here are some shards on a worker for the distributed table ``test_table``:
 
 .. code-block:: postgres
 
