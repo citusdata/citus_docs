@@ -3,6 +3,10 @@
 Creating and Modifying Distributed Tables (DDL)
 ===============================================
 
+.. note::
+
+   Citus (including :ref:`mx`) requires that DDL commands be run from the coordinator node only.
+
 Creating And Distributing Tables
 --------------------------------
 
