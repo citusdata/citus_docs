@@ -312,11 +312,11 @@ As a final demo of SQL support, we have a query which includes aggregates and wi
            PARTITION BY a.campaign_id
            ORDER BY a.campaign_id, count(*) desc
          ), count(*) as n_impressions, a.id
-    FROM ads as a,
-         impressions as i
-   WHERE a.company_id = 5
-     AND i.company_id = a.company_id
+    FROM ads as a
+    JOIN impressions as i
+      ON i.company_id = a.company_id
      AND i.ad_id      = a.id
+   WHERE a.company_id = 5
   GROUP BY a.campaign_id, a.id
   ORDER BY a.campaign_id, n_impressions desc;
 
