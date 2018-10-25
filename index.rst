@@ -63,7 +63,6 @@ Welcome to the documentation for Citus 7.5! Citus horizontally scales PostgreSQL
    :hidden:
 
    get_started/what_is_citus.rst
-   get_started/concepts.rst
    get_started/tutorials.rst
 
 .. toctree::
@@ -81,6 +80,13 @@ Welcome to the documentation for Citus 7.5! Citus horizontally scales PostgreSQL
    use_cases/multi_tenant.rst
    use_cases/realtime_analytics.rst
    use_cases/timeseries.rst
+
+.. toctree::
+   :caption: Architecture
+   :hidden:
+
+   get_started/concepts.rst
+   arch/mx.rst
 
 .. toctree::
    :caption: Develop
