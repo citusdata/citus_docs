@@ -50,26 +50,6 @@ Fast-growing `multi-tenant apps <https://www.citusdata.com/use-cases/multi-tenan
 
 Citus allows these and other applications to enjoy the power and familiarity of a traditional relational database, but with the capability for massive scale. Applications connect to and use a Citus-enabled PostgreSQL database just like they would a traditional PostgreSQL database. Citus uses the :ref:`same SQL commands <citus_sql_reference>` that developers and frameworks already know.
 
-+--------------------------------------------------------+-------------------------------------------------------------+
-| Multi-Tenant Advantages                                | Real-Time Advantages                                        |
-+========================================================+=============================================================+
-| Fast queries for all tenants                           | Maintain sub-second responses as the dataset grows          |
-+--------------------------------------------------------+-------------------------------------------------------------+
-| Sharding logic in the database, not the application    | Analyze new events and new data as it happens, in real-time |
-+--------------------------------------------------------+-------------------------------------------------------------+
-| Hold more data than possible in single-node PostgreSQL | Parallelize SQL queries                                     |
-+--------------------------------------------------------+-------------------------------------------------------------+
-| Scale out without giving up SQL                        | Scale out without giving up SQL                             |
-+--------------------------------------------------------+-------------------------------------------------------------+
-| Maintain performance under high concurrency            | Maintain performance under high concurrency                 |
-+--------------------------------------------------------+-------------------------------------------------------------+
-| Fast metrics analysis across customer base             | Fast responses to dashboard queries                         |
-+--------------------------------------------------------+-------------------------------------------------------------+
-| Easily scale to handle new customer signups            | Use one database, not a patchwork                           |
-+--------------------------------------------------------+-------------------------------------------------------------+
-| Isolate resource usage of large and small customers    | Rich PostgreSQL data types and extensions                   |
-+--------------------------------------------------------+-------------------------------------------------------------+
-
 .. _mt_blurb:
 
 Multi-Tenant Database
@@ -80,6 +60,17 @@ Most B2B applications already have the notion of a tenant, customer, or account 
 Citus provides full SQL coverage for this workload, and enables scaling out your relational database to 100K+ tenants. Citus also adds new features for multi-tenancy. For example, Citus supports tenant isolation to provide performance guarantees for large tenants, and has the concept of reference tables to reduce data duplication across tenants.
 
 These capabilities allow you to scale out your tenants' data across many machines, and easily add more CPU, memory, and disk resources. Further, sharing the same database schema across multiple tenants makes efficient use of hardware resources and simplifies database management.
+
+Some advantages of Citus for multi-tenant applications:
+
+* Fast queries for all tenants
+* Sharding logic in the database, not the application
+* Hold more data than possible in single-node PostgreSQL
+* Scale out without giving up SQL
+* Maintain performance under high concurrency
+* Fast metrics analysis across customer base
+* Easily scale to handle new customer signups
+* Isolate resource usage of large and small customers
 
 .. _rt_blurb:
 
@@ -93,7 +84,16 @@ Citus supports real-time queries over large datasets. Commonly these queries occ
 * Large dataset archival and reporting
 * Analyzing sessions with funnel, segmentation, and cohort queries
 
-Citus' benefits here are its ability to parallelize query execution and scale linearly with the number of worker databases in a cluster.
+Citus' benefits here are its ability to parallelize query execution and scale linearly with the number of worker databases in a cluster. Some advantages of Citus for real-time applications:
+
+* Maintain sub-second responses as the dataset grows
+* Analyze new events and new data as it happens, in real-time
+* Parallelize SQL queries
+* Scale out without giving up SQL
+* Maintain performance under high concurrency
+* Fast responses to dashboard queries
+* Use one database, not a patchwork
+* Rich PostgreSQL data types and extensions
 
 Considerations for Use
 ----------------------
