@@ -337,12 +337,15 @@ Caveats:
 Distributed Query Activity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-With :ref:`mx` users can execute distributed queries from any node. Examining the standard Postgres `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ view on the coordinator won't include those worker-initiated queries, so Citus provides special views to watch queries throughout the cluster, as well as the shard-specific queries used internally to build results for distributed queries.
+With :ref:`mx` users can execute distributed queries from any node. Examining the standard Postgres `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ view on the coordinator won't include those worker-initiated queries. Also queries might get blocked on row-level locks on one of the shards on a worker node. If that happens then those queries would not show up in `pg_locks <https://www.postgresql.org/docs/current/static/view-pg-locks.html>`_ on the Citus coordinator node.
+
+Citus provides special views to watch queries and locks throughout the cluster, including shard-specific queries used internally to build results for distributed queries.
 
 * **citus_dist_stat_activity**: shows the distributed queries that are executing on all nodes.
 * **citus_worker_stat_activity**: shows queries on workers, including fragment queries against individual shards.
+* **citus_lock_waits**: Blocked queries throughout the cluster.
 
-Both views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the host name/port of the worker that initiated the query and the host/port of the coordinator node of the cluster.
+The first two views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the host name/port of the worker that initiated the query and the host/port of the coordinator node of the cluster.
 
 For example, consider counting the rows in a distributed table:
 
@@ -389,6 +392,7 @@ This query requires specific queries on shards to collect information. We can se
 .. code-block:: postgres
 
    SELECT * FROM citus_worker_stat_activity;
+
    -[ RECORD 1 ]----------+-----------------------------------------------------------------------------------------
    query_hostname         | localhost
    query_hostport         | 9700
@@ -422,6 +426,46 @@ The ``query`` field shows data being copied from a shard into a temporary table 
 .. note::
 
   If a router query (e.g. single-tenant in a multi-tenant application, ``SELECT * FROM table WHERE tenant_id = X``) is executed without a transaction block, then master_query_host_name and master_query_host_port columns will be NULL in citus_worker_stat_activity.
+
+To see how ``citus_lock_waits`` works, we can generate a locking situation manually. First we'll set up a test table from the coordinator:
+
+.. code-block:: postgres
+
+   CREATE TABLE numbers AS
+     SELECT i, 0 AS j FROM generate_series(1,10) AS i;
+   SELECT create_distributed_table('numbers', 'i');
+
+Then, using two sessions on the coordinator, we can run this sequence of statements:
+
+.. code-block:: postgres
+
+   -- session 1                           -- session 2
+   -------------------------------------  -------------------------------------
+   BEGIN;
+   UPDATE numbers SET j = 2 WHERE i = 1;
+                                          BEGIN;
+                                          UPDATE numbers SET j = 3 WHERE i = 1;
+                                          -- (this blocks)
+
+The ``citus_lock_waits`` view shows the situation.
+
+.. code-block:: postgres
+
+   SELECT * FROM citus_lock_waits;
+
+   -[ RECORD 1 ]-------------------------+----------------------------------------
+   waiting_pid                           | 88624
+   blocking_pid                          | 88615
+   blocked_statement                     | UPDATE numbers SET j = 3 WHERE i = 1;
+   current_statement_in_blocking_process | UPDATE numbers SET j = 2 WHERE i = 1;
+   waiting_node_id                       | 0
+   blocking_node_id                      | 0
+   waiting_node_name                     | coordinator_host
+   blocking_node_name                    | coordinator_host
+   waiting_node_port                     | 5432
+   blocking_node_port                    | 5432
+
+In this example the queries originated on the coordinator, but the view can also list locks between queries originating on workers (executed with Citus MX for instance).
 
 Tables on all Nodes
 -------------------
