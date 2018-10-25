@@ -345,7 +345,7 @@ Citus provides special views to watch queries and locks throughout the cluster, 
 * **citus_worker_stat_activity**: shows queries on workers, including fragment queries against individual shards.
 * **citus_lock_waits**: Blocked queries throughout the cluster.
 
-The first two views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the host name/port of the worker that initiated the query and the host/port of the coordinator node of the cluster.
+The first two views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the host host/port of the worker that initiated the query and the host/port of the coordinator node of the cluster.
 
 For example, consider counting the rows in a distributed table:
 
