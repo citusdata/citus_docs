@@ -2,7 +2,7 @@
 
 To generate HTML version:
 
-1. Install Sphinx from the [sphinx website](http://sphinx-doc.org/latest/install.html)
+1. Install Sphinx from the [sphinx website](http://www.sphinx-doc.org/en/master/usage/installation.html)
 2. Clone this repository
 4. Generate HTML
     ```bash
