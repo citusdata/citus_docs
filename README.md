@@ -14,4 +14,4 @@ To generate HTML version:
 
 ---
 
-**Sphinx Installation Note:** If you're on OSX you might want to install the Python from homebrew - then a simple `pip install sphinx` does the trick.
+**Sphinx Installation Note:** If you're on OSX you might want to install the Python from homebrew - then a simple `brew install sphinx-doc` or `pip install sphinx` does the trick.
