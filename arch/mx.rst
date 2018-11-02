@@ -101,11 +101,17 @@ The ability to perform analytical SQL queries combined with high volume data ing
 
 An important aspect to consider is that horizontally scaling out your processing power ensures that indexes don’t necessarily become an ingestion bottleneck as your application grows. PostgreSQL has very powerful indexing capabilities and with the ability to scale out you can almost always get the desired read- and write-performance.
 
-Limitations Compared to Citus
------------------------------
+MX Limitations
+--------------
 
-All Citus 7.4 features are supported in Citus MX with the following exceptions:
+Although MX allows direct reading and writing from worker nodes, it doesn't support all commands on workers.
 
-Append-distributed tables currently cannot be made available from workers. They can still be used in the traditional way, with queries going through the coordinator. However, append-distributed tables already allowed you to :ref:`bulk_copy`.
+Limitations and unsupported statements for execution on a worker node:
 
-When performing writes on a hash-distributed table with a bigserial column via the data URL, sequence numbers are no longer monotonic, but instead have the form <16-bit unique node ID><48-bit local sequence number> to ensure uniqueness. The coordinator node always has node ID 0, meaning it will generate sequence numbers as normal. Serial types smaller than bigserial cannot be used in distributed tables.
+* :ref:`DDL <ddl>` commands on distributed tables are not executable from workers, and must be done through the coordinator.
+* Workers may not call :ref:`user_defined_functions` that change Citus metadata.
+* ``CREATE VIEW`` is not propagated to other worker nodes.
+* Preparing statements (e.g. ``PREPARE p1 AS query``) is not propagated to other worker nodes.
+* Foreign data wrappers, including ``cstore_fdw``, are not supported with Citus MX.
+* Serial columns must have type "bigserial." Globally in the cluster the sequence values will not be monotonically increasing because the sixteen most significant bits hold the worker node id.
+* Queries from workers cannot access :ref:`append distributed <append_distribution>` tables.
