@@ -407,7 +407,7 @@ Example
 master_update_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The master_update_node() function changes the hostname and port for a node registered in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`.
+The master_update_node() function changes the hostname and port for a node registered in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`. This function waits until all concurrent queries on the node are finished, so keep in mind that long-running queries will block it from executing.
 
 Arguments
 ************************
