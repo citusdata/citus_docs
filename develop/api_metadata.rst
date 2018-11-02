@@ -508,6 +508,34 @@ The ``nodeid`` column can also take the special values 0 and -1, which mean *all
         123 | jdoe     | password=abc123
     (1 row)
 
+Connection Pooling Credentials
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+  This table is a part of Citus Enterprise Edition. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+The ``pg_dist_poolinfo`` table holds the host, port and database name for Citus to use when connecting to a node through a connection pooler. This table is specific to connection pooling rather than direct connections between nodes, and overrides the values in :ref:`pg_dist_node <pg_dist_node>`.
+
++----------+---------+---------------------------------------------------+
+| Name     | Type    | Description                                       |
++==========+=========+===================================================+
+| nodeid   | integer | Node id from :ref:`pg_dist_node`                  |
++----------+---------+---------------------------------------------------+
+| poolinfo | text    | Space-separated parameters: host, port, or dbname |
++----------+---------+---------------------------------------------------+
+
+.. code-block:: sql
+
+   -- how to connect to node 1 (as identified in pg_dist_node)
+
+   INSERT INTO pg_dist_poolinfo (nodeid, poolinfo)
+        VALUES (1, 'host=127.0.0.1 port=5433');
+
+.. note::
+
+   :ref:`Shard rebalancing <shard_rebalancing>` is not compatible with connection poolers such as pgbouncer and ignores the settings in ``pg_dist_poolinfo``.
+
 .. _worker_shards:
 
 Shards and Indices on Workers
