@@ -515,7 +515,9 @@ Connection Pooling Credentials
 
   This table is a part of Citus Enterprise Edition. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
-The ``pg_dist_poolinfo`` table holds the host, port and database name for Citus to use when connecting to a node through a connection pooler. This table is specific to connection pooling rather than direct connections between nodes, and overrides the values in :ref:`pg_dist_node <pg_dist_node>`.
+If you want to use a connection pooler to connect to a node, you can specify the pooler options using ``pg_dist_poolinfo``. This metadata table holds the host, port and database name for Citus to use when connecting to a node through a pooler.
+
+If pool information is present, Citus will try to use these values instead of setting up a direct connection. The pg_dist_poolinfo information in this case supersedes :ref:`pg_dist_node <pg_dist_node>`.
 
 +----------+---------+---------------------------------------------------+
 | Name     | Type    | Description                                       |
@@ -525,16 +527,16 @@ The ``pg_dist_poolinfo`` table holds the host, port and database name for Citus 
 | poolinfo | text    | Space-separated parameters: host, port, or dbname |
 +----------+---------+---------------------------------------------------+
 
+.. note::
+
+   In some situations Citus ignores the settings in pg_dist_poolinfo. For instance :ref:`Shard rebalancing <shard_rebalancing>` is not compatible with connection poolers such as pgbouncer. In these scenarios Citus will use a direct connection.
+
 .. code-block:: sql
 
    -- how to connect to node 1 (as identified in pg_dist_node)
 
    INSERT INTO pg_dist_poolinfo (nodeid, poolinfo)
         VALUES (1, 'host=127.0.0.1 port=5433');
-
-.. note::
-
-   :ref:`Shard rebalancing <shard_rebalancing>` is not compatible with connection poolers such as pgbouncer and ignores the settings in ``pg_dist_poolinfo``.
 
 .. _worker_shards:
 
