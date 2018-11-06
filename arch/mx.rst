@@ -22,7 +22,7 @@ Supported operations on the coordinator are: Create/drop distributed table, shar
 
 Supported operations on the data URL are: DML, SELECT, COPY.
 
-If you connect to the data URL using `psql` and run `\\d`, then you will see all the distributed tables. If :ref:`override_table_visibility` is enabled then some of the shards will be visible as well. Importantly, distributed tables are the same from all nodes, so it does not matter to which node you are routed when using the data URL when querying distributed tables. When performing a query on a distributed table, the right shard is determined based on the filter conditions and the query is forwarded to the node that stores the shard. If a query spans all the shards, it is parallelised across all the nodes.
+If you connect to the data URL using `psql` and run `\\d`, then you will see all the distributed tables. When performing a query on a distributed table, the right shard is determined based on the filter conditions and the query is forwarded to the node that stores the shard. If a query spans all the shards, it is parallelised across all the nodes.
 
 For some advanced usages, you may want to perform operations on shards directly (e.g. add triggers). In that case, you can connect to each individual worker node rather than using the data URL. You can find the worker nodes hostnames by running `SELECT * FROM master_get_active_worker_nodes()` from any node and use the same credentials as the data URL.
 
@@ -112,8 +112,6 @@ Supported only via coordinator
 * :ref:`DDL <ddl>` commands.
 * :ref:`user_defined_functions` that change Citus metadata.
 * Queries accessing :ref:`append distributed <append_distribution>` tables.
-* ``CREATE VIEW`` is only propagated to other nodes when run from the coordinator.
-* Prepared statements (e.g. ``PREPARE p1 AS query``).
 
 Other query limitations
 ~~~~~~~~~~~~~~~~~~~~~~~
