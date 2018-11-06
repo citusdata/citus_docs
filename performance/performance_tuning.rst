@@ -416,4 +416,4 @@ Citus MX (50k/s-500k/s)
 
 Citus MX builds on the Citus extension. It gives you the ability to query and write to distributed tables from any node, which allows you to horizontally scale out your write-throughput using PostgreSQL. It also removes the need to interact with a primary node in a Citus cluster for data ingest or queries.
 
-Citus MX is currently available in private beta on Citus Cloud. For more information see :ref:`mx`.
+Citus MX is available in Citus Enterprise Edition and on Citus Cloud. For more information see :ref:`mx`.
