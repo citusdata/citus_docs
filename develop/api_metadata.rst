@@ -540,10 +540,14 @@ If pool information is present, Citus will try to use these values instead of se
 
 .. _worker_shards:
 
-Shards and Indices on Workers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Shards and Indices on MX Workers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Worker nodes store shards as tables that are ordinarily hidden (see :ref:`override_table_visibility`). The easiest way to obtain information about the shards on each worker is to consult that worker's ``citus_shards_on_worker`` view. For instance, here are some shards on a worker for the distributed table ``test_table``:
+.. note::
+
+   The citus_shards_on_worker and citus_shard_indexes_on_worker views are relevant in Citus MX only. In the non-MX scenario they contain no rows.
+
+Worker nodes store shards as tables that are ordinarily hidden in Citus MX (see :ref:`override_table_visibility`). The easiest way to obtain information about the shards on each worker is to consult that worker's ``citus_shards_on_worker`` view. For instance, here are some shards on a worker for the distributed table ``test_table``:
 
 .. code-block:: postgres
 
