@@ -341,7 +341,7 @@ With :ref:`mx` users can execute distributed queries from any node. Examining th
 
 Citus provides special views to watch queries and locks throughout the cluster, including shard-specific queries used internally to build results for distributed queries.
 
-* **citus_dist_stat_activity**: shows the distributed queries that are executing on all nodes.
+* **citus_dist_stat_activity**: shows the distributed queries that are executing on all nodes. A superset of ``pg_stat_activity``, usable wherever the latter is.
 * **citus_worker_stat_activity**: shows queries on workers, including fragment queries against individual shards.
 * **citus_lock_waits**: Blocked queries throughout the cluster.
 
@@ -350,6 +350,8 @@ The first two views include all columns of `pg_stat_activity <https://www.postgr
 For example, consider counting the rows in a distributed table:
 
 .. code-block:: postgres
+
+   -- run from worker on localhost:9701
 
    SELECT count(*) FROM users_table;
 
@@ -387,7 +389,7 @@ We can see the query appear in ``citus_dist_stat_activity``:
    query                  | SELECT count(*) FROM users_table;
    backend_type           | client backend
 
-This query requires specific queries on shards to collect information. We can see the constituent queries in ``citus_worker_stat_activity``:
+This query requires information from all shards. Some of the information is in shard ``users_table_102038`` which happens to be stored in localhost:9700. We can see a query accessing the shard by looking at the ``citus_worker_stat_activity`` view:
 
 .. code-block:: postgres
 
@@ -421,7 +423,7 @@ This query requires specific queries on shards to collect information. We can se
    query                  | COPY (SELECT count(*) AS count FROM users_table_102038 users_table WHERE true) TO STDOUT
    backend_type           | client backend
 
-The ``query`` field shows data being copied from a shard into a temporary table to be counted.
+The ``query`` field shows data being copied out of the shard to be counted.
 
 .. note::
 
