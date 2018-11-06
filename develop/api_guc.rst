@@ -99,6 +99,35 @@ Citus honors only a whitelisted subset of the options, namely:
 
 *(† = subject to the runtime presence of optional PostgreSQL features)*
 
+.. _override_table_visibility:
+
+citus.override_table_visibility (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Shards are stored on the worker nodes as regular tables with an identifier appended to their names. By default Citus does not show shards in the list of tables, when for instance a user runs ``\d`` in psql. This is generally convenient, especially when users connect directly to workers with Citus MX. However the shards can be made visible by updating the GUC:
+
+.. code-block:: psql
+
+   SET citus.override_table_visibility TO FALSE;
+
+::
+
+   \d
+
+   +----------+--------------------+--------+----------+
+   | Schema   | Name               | Type   | Owner    |
+   |----------+--------------------+--------+----------|
+   | public   | test_table         | table  | citus    |
+   | public   | test_table_102041  | table  | citus    |
+   | public   | test_table_102043  | table  | citus    |
+   | public   | test_table_102045  | table  | citus    |
+   | public   | test_table_102047  | table  | citus    |
+   +----------+--------------------+--------+----------+
+
+Now the ``test_table`` shards (``test_table_<n>``) appear in the list.
+
+Another way to see the shards is by querying the :ref:`citus_shards_on_worker <worker_shards>` view.
+
 Data Loading
 ---------------------------
 
