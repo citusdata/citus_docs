@@ -104,14 +104,19 @@ An important aspect to consider is that horizontally scaling out your processing
 MX Limitations
 --------------
 
-Although MX allows direct reading and writing from worker nodes, it doesn't support all commands on workers.
+Although MX allows direct reading and writing from worker nodes, it doesn't support all commands on workers. The coordinator node is the authoritative source of Citus metadata, so queries that change metadata must happen via the coordinator.
 
-Limitations and unsupported statements for execution on a worker node:
+Supported only via coordinator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* :ref:`DDL <ddl>` commands on distributed tables are not executable from workers, and must be done through the coordinator.
-* Workers may not call :ref:`user_defined_functions` that change Citus metadata.
-* ``CREATE VIEW`` is not propagated to other worker nodes.
-* Preparing statements (e.g. ``PREPARE p1 AS query``) is not propagated to other worker nodes.
+* :ref:`DDL <ddl>` commands.
+* :ref:`user_defined_functions` that change Citus metadata.
+* Queries accessing :ref:`append distributed <append_distribution>` tables.
+* ``CREATE VIEW`` is only propagated to other nodes when run from the coordinator.
+* Prepared statements (e.g. ``PREPARE p1 AS query``).
+
+Other query limitations
+~~~~~~~~~~~~~~~~~~~~~~~
+
 * Foreign data wrappers, including ``cstore_fdw``, are not supported with Citus MX.
 * Serial columns must have type "bigserial." Globally in the cluster the sequence values will not be monotonically increasing because the sixteen most significant bits hold the worker node id.
-* Queries from workers cannot access :ref:`append distributed <append_distribution>` tables.
