@@ -104,7 +104,11 @@ Citus honors only a whitelisted subset of the options, namely:
 citus.override_table_visibility (boolean)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Shards are stored on the worker nodes as regular tables with an identifier appended to their names. By default Citus does not show shards in the list of tables, when for instance a user runs ``\d`` in psql. This is generally convenient, especially when users connect directly to workers with Citus MX. However the shards can be made visible by updating the GUC:
+.. note::
+
+   This GUC has an effect on Citus MX only.
+
+Shards are stored on the worker nodes as regular tables with an identifier appended to their names. Unlike regular Citus, by default Citus MX does not show shards in the list of tables, when for instance a user runs ``\d`` in psql. However the shards can be made visible in MX by updating the GUC:
 
 .. code-block:: psql
 
