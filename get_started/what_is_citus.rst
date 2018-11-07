@@ -3,9 +3,9 @@
 What is Citus?
 ==============
 
-Citus horizontally scales PostgreSQL across multiple machines using sharding and replication. Its query engine parallelizes incoming SQL queries across these servers to enable human real-time (less than a second) responses on large datasets.
-
 Citus is basically `worry-free Postgres <https://www.citusdata.com/product>`_ that is built to scale out. It's an extension to Postgres that :ref:`distributes data <distributed_arch>` and queries in a cluster of multiple machines. As an extension (rather than a fork), Citus supports new PostgreSQL releases, allowing users to benefit from new features while maintaining compatibility with existing PostgreSQL tools.
+
+Citus horizontally scales PostgreSQL across multiple machines using sharding and replication. Its query engine parallelizes incoming SQL queries across these servers to enable human real-time (less than a second) responses on large datasets.
 
 **Available in Three Ways:**
 
