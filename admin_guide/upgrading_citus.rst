@@ -15,7 +15,7 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 8.0 is currently installed:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 8.0 is currently installed on Postgres 11:
 
 **Ubuntu or Debian**
 
@@ -93,7 +93,7 @@ Upgrading PostgreSQL version from 10 to 11
 
 .. note::
 
-   Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, start with a database upgrade first.
+   Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, upgrade Citus first. Older versions of Citus are not always compatible with the newest Postgres.
 
 Record the following paths before you start (your actual paths may be different than those below):
 
