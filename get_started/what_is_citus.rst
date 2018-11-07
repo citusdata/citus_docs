@@ -42,12 +42,6 @@ For more customers and statistics, see our `customer stories <https://www.citusd
 When to Use Citus
 =================
 
-Citus serves many use cases. Two common ones are scaling multi-tenant (B2B) databases and real-time analytics.
-
-Fast-growing `multi-tenant apps <https://www.citusdata.com/use-cases/multi-tenant-apps>`_ want to add new customers, deliver great performance, and not have to worry about database infrastructure. Data analysts want sub-second response times for customer-facing `analytics dashboards <https://www.citusdata.com/use-cases/real-time-analytics>`_, even with real-time ingestion, very large data sets, complex queries, and lots of concurrent users.
-
-Citus allows these and other applications to enjoy the power and familiarity of a traditional relational database, but with the capability for massive scale. Applications connect to and use a Citus-enabled PostgreSQL database just like they would a traditional PostgreSQL database. Citus uses the :ref:`same SQL commands <citus_sql_reference>` that developers and frameworks already know.
-
 .. _mt_blurb:
 
 Multi-Tenant Database
