@@ -88,22 +88,22 @@ After installing the new package and restarting the database, run the extension 
 
 .. _upgrading_postgres:
 
-Upgrading PostgreSQL version from 9.6 to 10.0
-#############################################
+Upgrading PostgreSQL version from 10 to 11
+##########################################
 
 Record the following paths before you start (your actual paths may be different than those below):
 
-Existing data directory (e.g. /opt/pgsql/9.6/data)
-  :code:`export OLD_PG_DATA=/opt/pgsql/9.6/data`
+Existing data directory (e.g. /opt/pgsql/10/data)
+  :code:`export OLD_PG_DATA=/opt/pgsql/10/data`
 
-Existing PostgreSQL installation path (e.g. /usr/pgsql-9.6)
-  :code:`export OLD_PG_PATH=/usr/pgsql-9.6`
+Existing PostgreSQL installation path (e.g. /usr/pgsql-10)
+  :code:`export OLD_PG_PATH=/usr/pgsql-10`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/10/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/11/data`
 
 New PostgreSQL installation path
-  :code:`export NEW_PG_PATH=/usr/pgsql-10`
+  :code:`export NEW_PG_PATH=/usr/pgsql-11`
 
 On Every Node (Coordinator and workers)
 ---------------------------------------
