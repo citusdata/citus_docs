@@ -91,6 +91,10 @@ After installing the new package and restarting the database, run the extension 
 Upgrading PostgreSQL version from 10 to 11
 ##########################################
 
+.. note::
+
+   Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, start with a database upgrade first.
+
 Record the following paths before you start (your actual paths may be different than those below):
 
 Existing data directory (e.g. /opt/pgsql/10/data)
