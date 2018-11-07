@@ -49,7 +49,7 @@ Step 1. Update Citus Package
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-11-citus-8.0
+  sudo apt-get install postgresql-10-citus-8.0
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -57,8 +57,8 @@ Step 1. Update Citus Package
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus75_11 citus80_11
-  sudo service postgresql-11 restart
+  sudo yum swap citus75_10 citus80_10
+  sudo service postgresql-10 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
