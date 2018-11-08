@@ -15,22 +15,22 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 7.5 is currently installed:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 8.0 is currently installed on Postgres 11:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-10-citus-7.5
+  sudo apt-get install --only-upgrade postgresql-11-citus-8.0
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus75_10
-  sudo service postgresql-10.0 restart
+  sudo yum update citus80_11
+  sudo service postgresql-11.0 restart
 
 .. _major_minor_upgrade:
 
@@ -39,7 +39,7 @@ Major and Minor Version Upgrades
 
 Major and minor version upgrades follow the same steps, but be careful: major upgrades can make backward-incompatible changes in the Citus API. It is best to review the Citus `changelog <https://github.com/citusdata/citus/blob/master/CHANGELOG.md>`_ before a major upgrade and look for any changes which may cause problems for your application.
 
-Each major and minor version of Citus is published as a package with a separate name. Installing a newer package will automatically remove the older version. Here is how to upgrade from 6.2 to 7.5 for instance:
+Each major and minor version of Citus is published as a package with a separate name. Installing a newer package will automatically remove the older version. Here is how to upgrade from 7.5 to 8.0 for instance:
 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -49,7 +49,7 @@ Step 1. Update Citus Package
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-9.6-citus-7.5
+  sudo apt-get install postgresql-10-citus-8.0
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -57,8 +57,8 @@ Step 1. Update Citus Package
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus62_96 citus75_96
-  sudo service postgresql-9.6 restart
+  sudo yum swap citus75_10 citus80_10
+  sudo service postgresql-10 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -88,22 +88,28 @@ After installing the new package and restarting the database, run the extension 
 
 .. _upgrading_postgres:
 
-Upgrading PostgreSQL version from 9.6 to 10.0
-#############################################
+Upgrading PostgreSQL version from 10 to 11
+##########################################
+
+.. note::
+
+   Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, upgrade Citus first.
+
+   Also **Citus 7.x is not compatible with Postgres 11.** Before upgrading Postgres 10 to 11, be sure to follow the above steps to upgrade from Citus 7.x to 8.0.
 
 Record the following paths before you start (your actual paths may be different than those below):
 
-Existing data directory (e.g. /opt/pgsql/9.6/data)
-  :code:`export OLD_PG_DATA=/opt/pgsql/9.6/data`
+Existing data directory (e.g. /opt/pgsql/10/data)
+  :code:`export OLD_PG_DATA=/opt/pgsql/10/data`
 
-Existing PostgreSQL installation path (e.g. /usr/pgsql-9.6)
-  :code:`export OLD_PG_PATH=/usr/pgsql-9.6`
+Existing PostgreSQL installation path (e.g. /usr/pgsql-10)
+  :code:`export OLD_PG_PATH=/usr/pgsql-10`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/10/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/11/data`
 
 New PostgreSQL installation path
-  :code:`export NEW_PG_PATH=/usr/pgsql-10`
+  :code:`export NEW_PG_PATH=/usr/pgsql-11`
 
 On Every Node (Coordinator and workers)
 ---------------------------------------

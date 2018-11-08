@@ -20,10 +20,10 @@ Ubuntu or Debian with Internet Access
 
     # install the server and initialize db
     # (the rebalancer package pulls in other necessary packages)
-    sudo apt-get install -y postgresql-10-citus-rebalancer-7.5
+    sudo apt-get install -y postgresql-11-citus-rebalancer-8.0
 
     # preload citus extension
-    sudo pg_conftool 10 main set shared_preload_libraries citus
+    sudo pg_conftool 11 main set shared_preload_libraries citus
 
 3. Continue by following the standard :ref:`multi-machine debian <post_enterprise_deb>` installation steps, **starting at step 3.**
 
@@ -48,7 +48,7 @@ Ubuntu or Debian without Internet Access
 
     sudo apt-get clean
     # (the rebalancer package pulls in other necessary packages)
-    sudo apt-get install -y --download-only postgresql-10-citus-rebalancer-7.5
+    sudo apt-get install -y --download-only postgresql-11-citus-rebalancer-8.0
 
     # go to package downloads
     cd /var/cache/apt
@@ -70,7 +70,7 @@ Ubuntu or Debian without Internet Access
     sudo dpkg -i -R /tmp/citus
 
     # preload citus extension
-    sudo pg_conftool 10 main set shared_preload_libraries citus
+    sudo pg_conftool 11 main set shared_preload_libraries citus
 
 5. Continue by following the standard :ref:`multi-machine debian <post_enterprise_deb>` installation steps, **starting at step 3.**
 
@@ -97,14 +97,14 @@ Fedora, CentOS, or Red Hat with Internet Access
 
     # install PostgreSQL with Citus extension
     # (the rebalancer package pulls in other necessary packages)
-    sudo yum install -y citus-rebalancer75_10
+    sudo yum install -y citus-rebalancer80_11
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
-    sudo service postgresql-10 initdb || \
-      sudo /usr/pgsql-10/bin/postgresql-10-setup initdb
+    sudo service postgresql-11 initdb || \
+      sudo /usr/pgsql-11/bin/postgresql-11-setup initdb
     # preload citus extension
     echo "shared_preload_libraries = 'citus'" | \
-      sudo tee -a /var/lib/pgsql/10/data/postgresql.conf
+      sudo tee -a /var/lib/pgsql/11/data/postgresql.conf
 
 3. Continue by following the standard :ref:`multi-machine rhel <post_enterprise_rhel>` installation steps, **starting at step 3.**
 
@@ -128,7 +128,7 @@ Fedora, CentOS, or Red Hat without Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # (the rebalancer package pulls in other necessary packages)
-    sudo yum install --downloadonly --downloaddir=. citus-rebalancer75_10
+    sudo yum install --downloadonly --downloaddir=. citus-rebalancer80_11
 
     # put them into a tarball
     tar czf ~/citus-enterprise.tar.gz *.rpm
@@ -147,11 +147,11 @@ Fedora, CentOS, or Red Hat without Internet Access
     sudo rpm -ivh /tmp/citus/*.rpm
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
-    sudo service postgresql-10 initdb || \
-      sudo /usr/pgsql-10/bin/postgresql-10-setup initdb
+    sudo service postgresql-11 initdb || \
+      sudo /usr/pgsql-11/bin/postgresql-11-setup initdb
     # preload citus extension
     echo "shared_preload_libraries = 'citus'" | \
-      sudo tee -a /var/lib/pgsql/10/data/postgresql.conf
+      sudo tee -a /var/lib/pgsql/11/data/postgresql.conf
 
 5. Continue by following the standard :ref:`multi-machine rhel <post_enterprise_rhel>` installation steps, **starting at step 3.**
 
@@ -181,7 +181,7 @@ Ubuntu or Debian
 
     # Install enterprise packages, which will remove community packages
     # (the rebalancer package pulls in other necessary packages)
-    sudo apt-get install -y postgresql-10-citus-rebalancer-X.Y
+    sudo apt-get install -y postgresql-11-citus-rebalancer-X.Y
 
     # substitute X.Y with the version currently installed ^^^^^
 
@@ -216,18 +216,18 @@ Fedora, CentOS, or Red Hat
 
     # remove community packages
     # substitute XY with the version currently installed
-    sudo yum remove -y citusXY_10
+    sudo yum remove -y citusXY_11
 
     # Install enterprise packages
     # substitute XY with the version previously installed
     # (the rebalancer package pulls in other necessary packages)
-    sudo yum install -y citus-rebalancerXY_10
+    sudo yum install -y citus-rebalancerXY_11
 
 4. Restart the database.
 
   .. code-block:: bash
 
-    sudo service postgresql-10 restart
+    sudo service postgresql-11 restart
 
 5. Update the Citus extension and initialize the Shard Rebalancer
 

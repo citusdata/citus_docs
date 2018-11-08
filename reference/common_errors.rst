@@ -329,10 +329,10 @@ One of the most common ways this can happen is using the ``timestamp`` type in P
 
 Citus forbids running distributed queries that filter results using stable functions on columns. For instance:
 
-.. code-block::
+.. code-block:: postgres
 
   -- foo_timestamp is timestamp, not timestamptz
-  UPDATE foo SET … WHERE foo_timestamp < now();
+  UPDATE foo SET ... WHERE foo_timestamp < now();
 
 ::
 
