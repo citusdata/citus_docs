@@ -93,7 +93,9 @@ Upgrading PostgreSQL version from 10 to 11
 
 .. note::
 
-   Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, upgrade Citus first. Older versions of Citus are not always compatible with the newest Postgres.
+   Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, upgrade Citus first.
+
+   Also **Citus 7.x is not compatible with Postgres 11.** Before upgrading Postgres 10 to 11, be sure to follow the above steps to upgrade from Citus 7.x to 8.0.
 
 Record the following paths before you start (your actual paths may be different than those below):
 
