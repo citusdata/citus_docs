@@ -14,20 +14,20 @@ To execute queries efficiently for a specific tenant, Citus needs to route them 
 * Running the application test suite against the modified schema on Citus is a good way to determine which areas of the code need to be modified.
 * It's a good idea to enable database logging. The logs can help uncover stray cross-shard queries in a multi-tenant app that should be converted to per-tenant queries.
 
-Specialized Libraries
-~~~~~~~~~~~~~~~~~~~~~
-
 There are helper libraries for a number of popular application frameworks that make it easy to include a tenant id in queries.
 
-* :ref:`Ruby on Rails migration <rails_migration>` - uses the activerecord-multi-tenant Ruby gem
-* :ref:`Django migration <django_migration>` - uses the django-multitenant Python library
-* :ref:`ASP.NET migration <asp_migration>` - uses the 3rd party SAASkit
-* `Java Hibernate <https://www.citusdata.com/blog/2018/02/13/using-hibernate-and-spring-to-build-multitenant-java-apps/>`_ - a blog post about scoping queries to tenants
+.. toctree::
+  :maxdepth: 1
+
+  migration_mt_ror.rst
+  migration_mt_django.rst
+  migration_mt_asp.rst
+  Java Hibernate <https://www.citusdata.com/blog/2018/02/13/using-hibernate-and-spring-to-build-multitenant-java-apps/>
 
 It's possible to use the libraries for database writes first (including data ingestion), and later for read queries. The activerecord-multi-tenant gem for instance has a write-only mode that will modify only the write queries.
 
-General Principles
-~~~~~~~~~~~~~~~~~~
+Other (SQL Principles)
+~~~~~~~~~~~~~~~~~~~~~~
 
 If you're using a different ORM than those above, or doing multi-tenant queries more directly in SQL, follow these general principles. We'll use our earlier example of the ecommerce application.
 
