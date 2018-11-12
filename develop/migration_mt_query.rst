@@ -74,6 +74,11 @@ Finally, when joining tables make sure to filter by tenant id too. For instance 
      AND l.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
      AND p.store_id='8c69aa0d-3f13-4440-86ca-443566c1fc75'
 
+Enable Secure Connections
+-------------------------
+
+Clients should connect to Citus with SSL to protect information and prevent man-in-the-middle attacks. Citus Cloud, in fact, rejects unencrypted connections. To learn how to make an SSL connection see :ref:`cloud_ssl`.
+
 Check for cross-node traffic
 ----------------------------
 
