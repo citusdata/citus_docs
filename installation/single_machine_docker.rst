@@ -5,6 +5,9 @@ Docker (Mac or Linux)
 
 This section describes setting up a Citus cluster on a single machine using docker-compose.
 
+.. note::
+   **The Docker image is intended for development/testing purposes only**, and has not been prepared for production use. Consider data in Docker instances to be ephemeral.
+
 **1. Install Docker Community Edition and Docker Compose**
 
 *On Mac:*
