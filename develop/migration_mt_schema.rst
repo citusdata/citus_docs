@@ -122,7 +122,7 @@ Doing the whole table at once may cause too much load on the database and disrup
    CREATE FUNCTION backfill_batch()
    RETURNS void LANGUAGE sql AS $$
      WITH batch AS (
-       SELECT *
+       SELECT line_items_id, order_id
          FROM line_items
         WHERE store_id IS NULL
         LIMIT 1000
