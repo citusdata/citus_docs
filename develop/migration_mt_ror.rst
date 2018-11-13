@@ -138,9 +138,29 @@ table needs to have a ``customer_id`` column that references the
 customer the page view belongs to.
 
 The `activerecord-multi-tenant
-<https://github.com/citusdata/activerecord-multi-tenant>`__ Gem aims to
-make it easier to implement the above data changes in a typical Rails
-application.
+<https://github.com/citusdata/activerecord-multi-tenant>`__ Ruby gem
+aims to make it easier to implement the above data changes in a typical
+Rails application.
+
+.. note::
+
+   The library relies on the tenant id column to be present and non-null
+   for all rows. However, it is often useful to have the library set
+   the tenant id for *new* records, while backfilling missing tenant id
+   values in existing records as a background task. This makes it easier
+   to get started with activerecord-multi-tenant.
+
+   To support this, the library has a write-only mode, in which the
+   tenant id column is not filtered in queries, but is set properly for
+   new records. Include the following in a Rails initializer to enable
+   it:
+
+   .. code-block:: ruby
+
+      MultiTenant.enable_write_only_mode
+
+   Once you are ready to enforce tenancy, add a NOT NULL constraint to
+   your tenant_id column and simply remove the initializer line.
 
 As mentioned in the beginning, by adding ``multi_tenant :customer``
 annotations to your models, the library automatically takes care of
