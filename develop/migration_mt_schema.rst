@@ -112,7 +112,7 @@ We backfill the table by obtaining the missing values from a join query with ord
    INNER JOIN orders
    WHERE line_items.order_id = orders.order_id;
 
-Doing the whole table at once may cause too much load on the database and disrupt other queries. The backfill can done in small pieces over time instead. We make a function to backfill up to a certain batch size, then call the function repeatedly with `pg_cron <https://github.com/citusdata/pg_cron>`_.
+Doing the whole table at once may cause too much load on the database and disrupt other queries. The backfill can done in small pieces over time instead. One way to do that is to make a function that backfills small batches at a time, then call the function repeatedly with `pg_cron <https://github.com/citusdata/pg_cron>`_.
 
 .. code-block:: postgresql
 
@@ -124,23 +124,24 @@ Doing the whole table at once may cause too much load on the database and disrup
      WITH batch AS (
        SELECT *
          FROM line_items
+        WHERE store_id IS NULL
         LIMIT 1000
           FOR UPDATE
          SKIP LOCKED
      )
-     UPDATE batch
+     UPDATE line_items AS li
         SET store_id = orders.store_id
-       FROM batch
-      INNER JOIN orders
-      WHERE batch.order_id = orders.order_id;
+       FROM batch, orders
+      WHERE batch.line_item_id = li.line_item_id
+        AND batch.order_id = orders.order_id;
    $$;
 
    -- run the function every half hour
    SELECT cron.schedule('*/30 * * * *', 'SELECT backfill_batch()');
 
-   -- ^^ returns a job id
+   -- ^^ note the return value of cron.schedule
 
-The application and other data ingestion processes should be updated to include the new column for future writes. More on that in the next section. Once the backfill is caught up the cron job can be disabled:
+The application and other data ingestion processes should be updated to include the new column for future writes. (More on that in the next section.) Once the backfill is caught up the cron job can be disabled:
 
 .. code-block:: postgresql
 
