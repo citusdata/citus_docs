@@ -112,4 +112,38 @@ We backfill the table by obtaining the missing values from a join query with ord
    INNER JOIN orders
    WHERE line_items.order_id = orders.order_id;
 
-The application and other data ingestion processes should be updated to include the new column for future writes. More on that in the next section.
+Doing the whole table at once may cause too much load on the database and disrupt other queries. The backfill can done in small pieces over time instead. We make a function to backfill up to a certain batch size, then call the function repeatedly with `pg_cron <https://github.com/citusdata/pg_cron>`_.
+
+.. code-block:: postgresql
+
+   -- the a function to backfill up to
+   -- one thousand rows from line_items
+
+   CREATE FUNCTION backfill_batch()
+   RETURNS void LANGUAGE sql AS $$
+     WITH batch AS (
+       SELECT *
+         FROM line_items
+        LIMIT 1000
+          FOR UPDATE
+         SKIP LOCKED
+     )
+     UPDATE batch
+        SET store_id = orders.store_id
+       FROM batch
+      INNER JOIN orders
+      WHERE batch.order_id = orders.order_id;
+   $$;
+
+   -- run the function every half hour
+   SELECT cron.schedule('*/30 * * * *', 'SELECT backfill_batch()');
+
+   -- ^^ returns a job id
+
+The application and other data ingestion processes should be updated to include the new column for future writes. More on that in the next section. Once the backfill is caught up the cron job can be disabled:
+
+.. code-block:: postgresql
+
+   -- assuming 42 is the job id from before
+
+   SELECT cron.unschedule(42);
