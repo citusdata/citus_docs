@@ -36,8 +36,8 @@ Consider an example multi-tenant application similar to Etsy or Shopify where ea
 
 In this example stores are a natural tenant. The tenant id is in this case the store_id. After distributing tables in the cluster, we want rows relating to the same store to reside together on the same nodes.
 
-Prepare Tables for Migration
-============================
+Prepare Source Tables for Migration
+===================================
 
 Once the scope of needed database changes is identified, the next major step is to modify the data structure. First, existing tables requiring backfill are modified to add a column for the distribution key. 
 

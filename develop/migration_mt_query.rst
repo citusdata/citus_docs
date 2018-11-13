@@ -1,7 +1,7 @@
 .. _mt_query_migration:
 
-Prepare Application for Migration
-=================================
+Prepare Application for Citus
+=============================
 
 Once the distribution key is present on all appropriate tables, the application needs to include it in queries.
 
