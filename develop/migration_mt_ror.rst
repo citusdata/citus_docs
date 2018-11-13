@@ -80,7 +80,7 @@ nodes.
 
 To solve this problem, for the models which are logically related
 to a store (the tenant for our app), you should add store\_id to
-the constraints, effectively scoping objects unique inside a given
+the constraints, effectively scoping objects uniquely inside a given
 store. This helps add the concept of tenancy to your models, thereby
 making the multi-tenant system more robust.
 

@@ -3,12 +3,12 @@
 Prepare Application for Citus
 =============================
 
-Once the distribution key is present on all appropriate tables, the application needs to include it in queries.
+Once the distribution key is present on all appropriate tables, the application needs to include it in queries. The following steps should be done using a copy of the application running in a development environment, and testing against a Citus back-end. After the application is working with Citus we'll see how to migrate production data from the source database into a real Citus cluster.
 
 Add distribution key to queries
 -------------------------------
 
-To execute queries efficiently for a specific tenant, Citus needs to route them to the appropriate node and run them there. Thus every query must identify which tenant it involves. For simple select, update, and delete queries this means that the *where* clause must filter by tenant id.
+To execute queries efficiently for a specific tenant, Citus needs to route them to the appropriate node and run them there. Thus **every query must identify which tenant it involves**. For simple select, update, and delete queries this means that the *where* clause must filter by tenant id.
 
 * Application code and any other ingestion processes that write to the tables should be updated to include the new columns.
 * Running the application test suite against the modified schema on Citus is a good way to determine which areas of the code need to be modified.
@@ -24,7 +24,7 @@ There are helper libraries for a number of popular application frameworks that m
   migration_mt_asp.rst
   Java Hibernate <https://www.citusdata.com/blog/2018/02/13/using-hibernate-and-spring-to-build-multitenant-java-apps/>
 
-It's possible to use the libraries for database writes first (including data ingestion), and later for read queries. The activerecord-multi-tenant gem for instance has a write-only mode that will modify only the write queries.
+It's possible to use the libraries for database writes first (including data ingestion), and later for read queries. The `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ gem for instance has a `write-only mode <https://github.com/citusdata/activerecord-multi-tenant#rolling-out-activerecord-multi-tenant-for-your-application-write-only-mode>`_ that will modify only the write queries.
 
 Other (SQL Principles)
 ~~~~~~~~~~~~~~~~~~~~~~

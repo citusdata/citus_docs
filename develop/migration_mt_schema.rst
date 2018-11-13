@@ -39,7 +39,7 @@ In this example stores are a natural tenant. The tenant id is in this case the s
 Prepare Source Tables for Migration
 ===================================
 
-Once the scope of needed database changes is identified, the next major step is to modify the data structure. First, existing tables requiring backfill are modified to add a column for the distribution key. 
+Once the scope of needed database changes is identified, the next major step is to modify the data structure for the application's existing database. First, tables requiring backfill are modified to add a column for the distribution key.
 
 Add distribution keys
 ---------------------
@@ -112,7 +112,7 @@ We backfill the table by obtaining the missing values from a join query with ord
    INNER JOIN orders
    WHERE line_items.order_id = orders.order_id;
 
-Doing the whole table at once may cause too much load on the database and disrupt other queries. The backfill can done in small pieces over time instead. One way to do that is to make a function that backfills small batches at a time, then call the function repeatedly with `pg_cron <https://github.com/citusdata/pg_cron>`_.
+Doing the whole table at once may cause too much load on the database and disrupt other queries. The backfill can done more slowly instead. One way to do that is to make a function that backfills small batches at a time, then call the function repeatedly with `pg_cron <https://github.com/citusdata/pg_cron>`_.
 
 .. code-block:: postgresql
 
@@ -141,10 +141,11 @@ Doing the whole table at once may cause too much load on the database and disrup
 
    -- ^^ note the return value of cron.schedule
 
-The application and other data ingestion processes should be updated to include the new column for future writes. (More on that in the next section.) Once the backfill is caught up the cron job can be disabled:
+Once the backfill is caught up, the cron job can be disabled:
 
 .. code-block:: postgresql
 
-   -- assuming 42 is the job id from before
+   -- assuming 42 is the job id returned
+   -- from cron.schedule
 
    SELECT cron.unschedule(42);
