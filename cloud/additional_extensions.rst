@@ -26,7 +26,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | fuzzystrmatch      | 1.1     | public     | determine similarities and distance between strings                |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| hll                | 2.10    | public     | type for storing hyperloglog data                                  |
+| hll                | 2.12    | public     | type for storing hyperloglog data                                  |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | hstore             | 1.4     | public     | data type for storing sets of (key, value) pairs                   |
 +--------------------+---------+------------+--------------------------------------------------------------------+
@@ -40,7 +40,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | pg_freespacemap    | 1.2     | public     | examine the free space map (FSM)                                   |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| pg_partman         | 3.1.3   | partman    | Extension to manage partitioned tables by time or ID               |
+| pg_partman         | 4.0.0   | partman    | Extension to manage partitioned tables by time or ID               |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | pg_prewarm         | 1.1     | public     | prewarm relation data                                              |
 +--------------------+---------+------------+--------------------------------------------------------------------+
