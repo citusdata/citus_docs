@@ -1,5 +1,5 @@
-Databases over 200GB
-====================
+Big Database Migration
+======================
 
 Larger environments can use Citus Warp for online replication. Citus Warp allows you to stream changes from a PostgreSQL source database into a :ref:`Citus Cloud <cloud_overview>` cluster as they happen. It's as if the application automatically writes to two databases rather than one, except with perfect transactional logic. Citus Warp works with Postgres versions 9.4 and above which have the `logical_decoding` plugin enabled (this is supported on Amazon RDS as long as you're at version 9.4 or higher).
 

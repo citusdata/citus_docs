@@ -1,5 +1,5 @@
-Databases under 200GB
-=====================
+Small Database Migration
+========================
 
 For smaller environments that can tolerate a little downtime, use a simple pg_dump/pg_restore process. Here are the steps.
 
