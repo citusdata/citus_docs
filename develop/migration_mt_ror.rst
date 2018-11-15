@@ -3,7 +3,7 @@
 .. _rails_migration:
 
 Ruby on Rails
--------------
+=============
 
 This section investigates how to migrate multi-tenant Rails applications
 to a Citus storage backend. We'll use the `activerecord-multi-tenant
@@ -19,7 +19,7 @@ for the particular use-case of a distributed multi-tenant database like
 Citus.
 
 Preparing to scale-out a multi-tenant application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------------------
 
 Initially you’ll often start out with all tenants placed on a single
 database node, and using a framework like Ruby on Rails and ActiveRecord
@@ -120,7 +120,7 @@ the system individually and asking the shard whether it knows the given
 object\_id.
 
 Updating the Rails Application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 You can get started by including ``gem 'activerecord-multi-tenant'``
 into your Gemfile, running ``bundle install``, and then annotating your
@@ -230,8 +230,24 @@ that the primary key includes the tenant\_id column, as well as
 ``create_distributed_table`` which enables Citus to scale out the data
 to multiple nodes.
 
+Updating the Test Suite
+-----------------------
+
+If the test suite for your Rails application uses the
+``database_cleaner`` gem to reset the test database between
+runs, be sure to use the "truncation" strategy rather than
+"transaction." We have seen occassional failures during transaction
+rollbacks in the tests. The database_cleaner `documentation
+<https://www.rubydoc.info/gems/database_cleaner#How_to_use>`_ has
+instructions for changing the cleaning strategy.
+
+Continuous Integration
+~~~~~~~~~~~~~~~~~~~~~~
+
+Bar!
+
 Example Application
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 If you are interested in a more complete
 example, check out our `reference app
