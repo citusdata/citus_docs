@@ -18,7 +18,7 @@ We are happy to help review your environment to be sure that the ideal distribut
 Identify types of tables
 ------------------------
 
-Once a distribution key is identified, review the schema to identify how each table will be handled and whether any modifications to table layouts will be required. We typically advise tracking this with a spreadsheet, and have created a `template <https://examples.citusdata.com/citus-migration-plan.xlsx>`_ you can use.
+Once a distribution key is identified, review the schema to identify how each table will be handled and whether any modifications to table layouts will be required. We typically advise tracking this with a spreadsheet, and have created a `template <https://docs.google.com/spreadsheets/d/1jYlc22lHdP91pTrb6s35QfrN9nTE1BkVJnCSZeQ7ZmI/edit>`_ you can use.
 
 Tables will generally fall into one of the following categories:
 
