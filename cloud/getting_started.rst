@@ -37,6 +37,8 @@ Citus Cloud runs on top of Amazon Web Services. During provisioning you're able 
 - Asia Pacific (Mumbai) [ap-south-1]
 - EU (Frankfurt) [eu-central-1]
 - EU (Ireland) [eu-west-1]
+- EU (London) [eu-west-2]
+- EU (Paris) [eu-west-3]
 - South America (São Paulo) [sa-east-1]
 - US West (N. California) [us-west-1]
 - US West (Oregon) [us-west-2]
