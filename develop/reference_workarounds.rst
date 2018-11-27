@@ -5,21 +5,18 @@ SQL Support and Workarounds
 
 As Citus provides distributed functionality by extending PostgreSQL, it is compatible with PostgreSQL constructs. This means that users can use the tools and features that come with the rich and extensible PostgreSQL ecosystem for distributed tables created with Citus.
 
-Citus supports all SQL queries on distributed tables, with a few exceptions.
+Citus has 100% SQL coverage for any queries it is able to execute on a single worker node. These kind of queries are called :ref:`router executable <router_executor>` and are common in :ref:`mt_use_case` when accessing information about a single tenant.
 
-Not yet supported:
+Even cross-node queries (used for parallel computations) support most SQL features. However some SQL features are not supported for queries which combine information from multiple nodes.
 
-* `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_
-* `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_
-* `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`_
+**Limitations for Cross-Node SQL Queries:**
 
-Partially supported:
-
-* `SELECT … FOR UPDATE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FOR-UPDATE-SHARE>`_ are supported for :ref:`router_executor` queries.
-* `Window functions <https://www.postgresql.org/docs/current/static/tutorial-window.html>`_ are supported when they include the distribution column in PARTITION BY.
-* Correlated subqueries are supported when the correlation is on the :ref:`dist_column` and the subqueries conform to subquery pushdown rules (e.g., grouping by the distribution column, with no LIMIT or LIMIT OFFSET clause).
-
-Furthermore, in :ref:`mt_use_case` when queries are filtered by table :ref:`dist_column` to a single tenant then all SQL features work, including the ones above.
+* `Window functions <https://www.postgresql.org/docs/current/static/tutorial-window.html>`_ are supported only when they include the distribution column in PARTITION BY.
+* `SELECT … FOR UPDATE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FOR-UPDATE-SHARE>`_ work in :ref:`router_executor` queries only
+* `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_ work in :ref:`router_executor` queries only
+* Correlated subqueries are supported only when the correlation is on the :ref:`dist_column` and the subqueries conform to subquery pushdown rules (e.g., grouping by the distribution column, with no LIMIT or LIMIT OFFSET clause).
+* `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_ work in :ref:`router_executor` queries only
+* `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`_ work in :ref:`router_executor` queries only
 
 To learn more about PostgreSQL and its features, you can visit the `PostgreSQL documentation <http://www.postgresql.org/docs/current/static/index.html>`_. For a detailed reference of the PostgreSQL SQL command dialect (which can be used as is by Citus users), you can see the `SQL Command Reference <http://www.postgresql.org/docs/current/static/sql-commands.html>`_.
 
