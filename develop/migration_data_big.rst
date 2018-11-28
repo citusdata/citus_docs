@@ -59,9 +59,9 @@ This white-lists the IP address of the Citus coordinator node to make an inbound
 Begin Replication
 -----------------
 
-Contact us by opening a support ticket in the Citus Cloud console. A Cloud engineer will connect to your database with Citus Warp to create a basebackup, open a replication slot, and begin the replication. We can include/exclude your choice of tables in the migration.
+Contact us by opening a support ticket in the Citus Cloud console. A Cloud engineer will connect to your database with Citus Warp to perform an intial database dump, open a replication slot, and begin the replication. We can include/exclude your choice of tables in the migration.
 
-During the first stage, creating a basebackup, the Postgres write-ahead log (WAL) may grow substantially if the database is under write load. Make sure you have sufficient disk space on the source database before starting this process. We recommend 100GB free or 20% of total disk space, whichever is greater. Once the backup is complete and replication begins then the database will be able to archive unused WAL files again.
+During the first stage of replication, the Postgres write-ahead log (WAL) may grow substantially if the database is under write load. Make sure you have sufficient disk space on the source database before starting this process. We recommend 100GB free or 20% of total disk space, whichever is greater. Once the initial dump/restore is complete and replication begins, then the database will be able to archive unused WAL files again.
 
 Some database schema changes are incompatible with an ongoing replication. Changing the structure of tables under replication can cause the process to stop. Cloud engineers would then need to manually restart the replication from the beginning. That costs time, so we recommend freezing the schema during replication.
 
