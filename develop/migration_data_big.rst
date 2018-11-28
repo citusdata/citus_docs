@@ -63,7 +63,16 @@ Contact us by opening a support ticket in the Citus Cloud console. A Cloud engin
 
 During the first stage of replication, the Postgres write-ahead log (WAL) may grow substantially if the database is under write load. Make sure you have sufficient disk space on the source database before starting this process. We recommend 100GB free or 20% of total disk space, whichever is greater. Once the initial dump/restore is complete and replication begins, then the database will be able to archive unused WAL files again.
 
-Some database schema changes are incompatible with an ongoing replication. Changing the structure of tables under replication can cause the process to stop. Cloud engineers would then need to manually restart the replication from the beginning. That costs time, so we recommend freezing the schema during replication.
+As the Warp proceeds, **pay attention to disk usage on the source database.** If there is a data-type mismatch between the source and destination, or other unexpected schema change, the replication can stall. The replication slot can grow indefinitely on the source during a prolonged stall, leading to potential crashes.
+
+Because of the potential for replication stalls, we strongly recommend minimizing schema changes while doing a Citus warp. If an invasive schema change is required, you will need to stop the warp and try again.
+
+Steps to make an invasive schema change:
+
+1. Ask a Citus Cloud engineer to stop the warp.
+2. Change the schema on the source database.
+3. Change the schema on the destination database.
+4. Begin the warp again.
 
 Switch over to Citus and stop all connections to old database
 -------------------------------------------------------------
