@@ -36,6 +36,8 @@ Consider an example multi-tenant application similar to Etsy or Shopify where ea
 
 In this example stores are a natural tenant. The tenant id is in this case the store_id. After distributing tables in the cluster, we want rows relating to the same store to reside together on the same nodes.
 
+.. _prepare_source_tables:
+
 Prepare Source Tables for Migration
 ===================================
 
@@ -53,49 +55,6 @@ In our storefront example the stores and products tables have a store_id and are
   ALTER TABLE line_items ADD COLUMN store_id uuid;
 
 Be sure to check that the distribution column has the same type in all tables, e.g. don't mix ``int`` and ``bigint``. The column types must match to ensure proper data colocation.
-
-Include distribution column in keys
------------------------------------
-
-Citus :ref:`cannot enforce <non_distribution_uniqueness>` uniqueness constraints unless a unique index or primary key contains the distribution column. Thus we must modify primary and foreign keys in our example to include store_id.
-
-Here are SQL commands to turn the simple keys composite:
-
-.. code-block:: sql
-
-  BEGIN;
-
-  -- drop simple primary keys (cascades to foreign keys)
-
-  ALTER TABLE products   DROP CONSTRAINT products_pkey CASCADE;
-  ALTER TABLE orders     DROP CONSTRAINT orders_pkey CASCADE;
-  ALTER TABLE line_items DROP CONSTRAINT line_items_pkey CASCADE;
-
-  -- recreate primary keys to include would-be distribution column
-
-  ALTER TABLE products   ADD PRIMARY KEY (store_id, product_id);
-  ALTER TABLE orders     ADD PRIMARY KEY (store_id, order_id);
-  ALTER TABLE line_items ADD PRIMARY KEY (store_id, line_item_id);
-
-  -- recreate foreign keys to include would-be distribution column
-
-  ALTER TABLE line_items ADD CONSTRAINT line_items_store_fkey
-    FOREIGN KEY (store_id) REFERENCES stores (store_id);
-  ALTER TABLE line_items ADD CONSTRAINT line_items_product_fkey
-    FOREIGN KEY (store_id, product_id) REFERENCES products (store_id, product_id);
-  ALTER TABLE line_items ADD CONSTRAINT line_items_order_fkey
-    FOREIGN KEY (store_id, order_id) REFERENCES orders (store_id, order_id);
-
-  COMMIT;
-
-Thus completed, our schema will look like this:
-
-.. figure:: ../images/erd/mt-after.png
-   :alt: Schema after migration
-
-   (Underlined items are primary keys, italicized items are foreign keys.)
-
-Be sure to modify data flows to add keys to incoming data.
 
 Backfill newly created columns
 ------------------------------

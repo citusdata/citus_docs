@@ -15,7 +15,7 @@ Here are the steps you need to perform before starting the Citus Warp process:
 Duplicate schema
 ----------------
 
-The first step in migrating data to Citus is making sure that the schemas match exactly, at least for the tables you choose to migrate. One way to do this is by running ``pg_dump --schema-only`` against the source database. Replay the output on the coordinator Citus node. Another way to is to run application migration scripts against the destination database.
+The first step in migrating data to Citus is making sure that the schemas match exactly, at least for the tables you choose to migrate. One way to do this is by running ``pg_dump --schema-only`` against your development database (the Citus database you used for locally testing the application). Replay the output on the coordinator Citus node. Another way to is to run application migration scripts against the destination database.
 
 All tables that you wish to migrate must have primary keys. The corresponding destination tables must have primary keys as well, the only difference being that those keys are allowed to be composite to contain the distribution column as well, as described in :ref:`mt_schema_migration`.
 

@@ -3,7 +3,7 @@ Small Database Migration
 
 For smaller environments that can tolerate a little downtime, use a simple pg_dump/pg_restore process. Here are the steps.
 
-1. Save the database structure:
+1. Save the database structure from your development database:
 
    .. code-block:: bash
 
@@ -25,7 +25,7 @@ For smaller environments that can tolerate a little downtime, use a simple pg_du
 
 4. Put the application into maintenance mode, and disable any other writes to the old database.
 
-5. Save the data from the old database to disk with pg_dump:
+5. Save the data from the original production database to disk with pg_dump:
 
    .. code-block:: bash
 

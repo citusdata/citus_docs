@@ -3,10 +3,78 @@
 Prepare Application for Citus
 =============================
 
-Once the distribution key is present on all appropriate tables, the application needs to include it in queries. The following steps should be done using a copy of the application running in a development environment, and testing against a Citus back-end. After the application is working with Citus we'll see how to migrate production data from the source database into a real Citus cluster.
+Set up Development Citus Cluster
+--------------------------------
+
+When modifying the application to work with Citus, you'll need a database to test against. Follow the instructions to set up a :ref:`development` of your choice.
+
+Next dump a copy of the schema from your application's original database and restore the schema in the new development database.
+
+.. code-block:: bash
+
+   # get schema from source db
+
+   pg_dump \
+      --format=plain \
+      --no-owner \
+      --schema-only \
+      --file=schema.sql \
+      --schema=target_schema \
+      postgres://user:pass@host:5432/db
+
+   # load schema into test db
+
+   psql postgres://user:pass@testhost:5432/db -f schema.sql
+
+The schema should include a distribution key ("tenant id") in all tables you wish to distribute. Before pg_dumping the schema, be sure you have completed the step :ref:`prepare_source_tables` from the previous section.
+
+Include distribution column in keys
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Citus :ref:`cannot enforce <non_distribution_uniqueness>` uniqueness constraints unless a unique index or primary key contains the distribution column. Thus we must modify primary and foreign keys in our example to include store_id.
+
+Here are SQL commands to turn the simple keys composite in the development database:
+
+.. code-block:: sql
+
+  BEGIN;
+
+  -- drop simple primary keys (cascades to foreign keys)
+
+  ALTER TABLE products   DROP CONSTRAINT products_pkey CASCADE;
+  ALTER TABLE orders     DROP CONSTRAINT orders_pkey CASCADE;
+  ALTER TABLE line_items DROP CONSTRAINT line_items_pkey CASCADE;
+
+  -- recreate primary keys to include would-be distribution column
+
+  ALTER TABLE products   ADD PRIMARY KEY (store_id, product_id);
+  ALTER TABLE orders     ADD PRIMARY KEY (store_id, order_id);
+  ALTER TABLE line_items ADD PRIMARY KEY (store_id, line_item_id);
+
+  -- recreate foreign keys to include would-be distribution column
+
+  ALTER TABLE line_items ADD CONSTRAINT line_items_store_fkey
+    FOREIGN KEY (store_id) REFERENCES stores (store_id);
+  ALTER TABLE line_items ADD CONSTRAINT line_items_product_fkey
+    FOREIGN KEY (store_id, product_id) REFERENCES products (store_id, product_id);
+  ALTER TABLE line_items ADD CONSTRAINT line_items_order_fkey
+    FOREIGN KEY (store_id, order_id) REFERENCES orders (store_id, order_id);
+
+  COMMIT;
+
+Thus completed, our schema from the previous section will look like this:
+
+.. figure:: ../images/erd/mt-after.png
+   :alt: Schema after migration
+
+   (Underlined items are primary keys, italicized items are foreign keys.)
+
+Be sure to modify data flows to add keys to incoming data.
 
 Add distribution key to queries
 -------------------------------
+
+Once the distribution key is present on all appropriate tables, the application needs to include it in queries. The following steps should be done using a copy of the application running in a development environment, and testing against a Citus back-end. After the application is working with Citus we'll see how to migrate production data from the source database into a real Citus cluster.
 
 To execute queries efficiently for a specific tenant, Citus needs to route them to the appropriate node and run them there. Thus **every query must identify which tenant it involves**. For simple select, update, and delete queries this means that the *where* clause must filter by tenant id.
 
