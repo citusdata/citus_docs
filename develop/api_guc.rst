@@ -132,6 +132,17 @@ Now the ``test_table`` shards (``test_table_<n>``) appear in the list.
 
 Another way to see the shards is by querying the :ref:`citus_shards_on_worker <worker_shards>` view.
 
+Statistics
+---------------------------
+
+citus.stats_statements_purge_interval (integer)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Sets the frequency at which the maintenance daemon removes records from ``citus_stat_statements`` that are unmatched in ``pg_stat_statements``. This configuration value sets the time interval between purges.
+
+Citus It defaults to 10ms.
+ This parameter is effective on the coordinator and can be set at runtime.
+
 Data Loading
 ---------------------------
 
