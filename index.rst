@@ -158,12 +158,3 @@ Welcome to the documentation for Citus 8.0! Citus horizontally scales PostgreSQL
   :width: 0%
 .. image:: images/cloud-bill-ach.png
   :width: 0%
-
-.. raw:: html
-
-  <script type="text/javascript">
-  setTimeout(function(){var a=document.createElement("script");
-  var b=document.getElementsByTagName("script")[0];
-  a.src=document.location.protocol+"//script.crazyegg.com/pages/scripts/0052/6282.js?"+Math.floor(new Date().getTime()/3600000);
-  a.async=true;a.type="text/javascript";b.parentNode.insertBefore(a,b)}, 1);
-  </script>
