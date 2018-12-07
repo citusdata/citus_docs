@@ -167,3 +167,7 @@ div.wy-menu.rst-pro {
 #consentBox p:last-of-type {
   margin-bottom: 0;
 }
+
+#consentBox .consent-text a { color: #239f49; transition: color .2s ease; }
+#consentBox .consent-text a:hover, #consentBox .consent-text a:focus { color: #2cc95c; }
+#consentBox .consent-text a:visited { color: #239f49; }
