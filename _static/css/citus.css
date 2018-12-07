@@ -77,3 +77,58 @@ h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
 div.wy-menu.rst-pro {
   display: none !important;
 }
+
+/* Cookie consent */
+#consentBox {
+  border-radius: 1em 1em 0 0;
+  padding: 1.5em;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: none;
+  z-index: 9999999999;
+  width: 450px;
+  max-width: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #e7e7e7;
+  font-size: .8em;
+  font-weight: 300;
+  text-align: left;
+  overflow: hidden;
+  letter-spacing: .02em;
+  line-height: 1.4;
+  box-shadow: 0 0 0 #239f49, 0 0 10px #239f49; }
+  @media screen and (min-width: 480px) {
+    #consentBox {
+      margin: 0 1em; } }
+  #consentBox .consent-text {
+    padding-left: 2.5em;
+    position: relative; }
+    #consentBox .consent-text a {
+      text-decoration: underline; }
+    #consentBox .consent-text:before {
+      content: "i";
+      font-size: 1.25em;
+      position: absolute;
+      top: 0;
+      left: 0;
+      line-height: 22px;
+      text-align: center;
+      border: #e7e7e7 1px solid;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      font-style: italic;
+      font-weight: 400; }
+  #consentBox .consent-button {
+    margin-top: 1.5em;
+    padding-left: 2.5em; }
+  #consentBox p:last-of-type {
+    margin-bottom: 0; }
+
+#cookies:target {
+  display: block;
+  position: relative;
+  top: -68px;
+  visibility: hidden; }
