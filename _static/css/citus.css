@@ -127,6 +127,7 @@ div.wy-menu.rst-pro {
   border-radius: 50%;
   font-style: italic;
   font-weight: 400;
+  box-sizing: border-box;
 }
 #consentBox .btn {
   -webkit-appearance: none;
@@ -171,3 +172,4 @@ div.wy-menu.rst-pro {
 #consentBox .consent-text a { color: #239f49; transition: color .2s ease; }
 #consentBox .consent-text a:hover, #consentBox .consent-text a:focus { color: #2cc95c; }
 #consentBox .consent-text a:visited { color: #239f49; }
+#consentBox .consent-text p { font-size: inherit; line-height: inherit; }
