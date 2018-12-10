@@ -74,7 +74,7 @@
       };
 
       // continuing to interact with the page consents to cookies
-      $("a:not(#cookiesLink), button, iframe, input").on(
+      $("a:not(#cookiesLink), button, iframe, input, [data-toggle]").on(
         "click", clickConsent
       );
 
