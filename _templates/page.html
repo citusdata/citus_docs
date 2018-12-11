@@ -102,7 +102,7 @@
       };
 
       // continuing to interact with the page consents to cookies
-      $("a:not(#cookiesLink), button, iframe, input, [data-toggle]").on(
+      $("a:not(#cookiesLink), button, iframe, input, [data-toggle*='wy-nav-top'], [data-toggle*='rst-current-version']").on(
         "click", clickConsent
       );
 
