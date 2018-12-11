@@ -176,7 +176,15 @@
           {% include "breadcrumbs.html" %}
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            {% block body %}{% endblock %}
+             {% block body %}{% endblock %}
+             <div class="new" id="consentBox">
+               <div class="consent-text">
+                 <p>This site uses cookies for analytics, personalized content and ads. By continuing to browse this site, you agree to this use. <a href="https://www.citusdata.com/privacy#cookies" id="cookiesLink">Learn&nbsp;more</a>.</p>
+               </div>
+               <div class="consent-button">
+                 <button class="btn" id="closeConsent">CLOSE</button>
+               </div>
+             </div>
            </div>
           </div>
           {% include "footer.html" %}
@@ -263,6 +271,42 @@ var trackOutboundLink = function(url) {
   </script>
   {% endif %}
 
+  {# COOKIE CONSENT #}
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js'></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var cookieConsent = 'CitusCookieConsentCorner',
+          consentValue = 'Consented';
+      var clickConsent = function () {
+        if ($("#consentBox").is(":visible")) {
+          // although the dialog is at the bottom of the screen,
+          // "slideUp" actually makes it sink downward...
+          $("#consentBox").slideUp("linear");
+          $.cookie(cookieConsent, consentValue, {
+            expires: 365,
+            path: '/'
+          });
+        }
+      };
+      // continuing to interact with the page consents to cookies
+      $("a:not(#cookiesLink), button, iframe, input, [data-toggle*='wy-nav-top'], [data-toggle*='rst-current-version']").on(
+        "click", clickConsent
+      );
+       if (typeof(drift) == 'object' && typeof(drift.on) == 'function') {
+        // ditto drift interaction
+        drift.on('ready', function (api) {
+          drift.on('welcomeMessage:open', clickConsent);
+          drift.on('awayMessage:open', clickConsent);
+        });
+      } else {
+        console.log("Drift not found by cookie consent code");
+      }
+      if ($.cookie(cookieConsent) != consentValue) {
+        // "slideDown" makes the dialog pop up!
+        $("#consentBox").slideDown("linear");
+      }
+    });
+  </script>
   {%- block footer %} {% endblock %}
 
 </body>
