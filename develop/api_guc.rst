@@ -132,6 +132,35 @@ Now the ``test_table`` shards (``test_table_<n>``) appear in the list.
 
 Another way to see the shards is by querying the :ref:`citus_shards_on_worker <worker_shards>` view.
 
+Query Statistics
+---------------------------
+
+citus.stat_statements_purge_interval (integer)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+   This GUC is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+Sets the frequency at which the maintenance daemon removes records from :ref:`citus_stat_statements <citus_stat_statements>` that are unmatched in ``pg_stat_statements``. This configuration value sets the time interval between purges in seconds, with a default value of 10. A value of 0 disables the purges.
+
+.. code-block:: psql
+
+   SET citus.stat_statements_purge_interval TO 5;
+
+This parameter is effective on the coordinator and can be changed at runtime.
+
+citus.stat_statements_max (integer)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+   This GUC is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+The maximum number of rows to store in :ref:`citus_stat_statements <citus_stat_statements>`. Defaults to 50000, and may be changed to any value in the range 1000 - 10000000. Note that each row requires 140 bytes of storage, so setting stat_statements_max to its maximum value of 10M would consume 1.4GB of memory.
+
+Changing this GUC will not take effect until PostgreSQL is restarted.
+
 Data Loading
 ---------------------------
 

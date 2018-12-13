@@ -406,6 +406,21 @@ Finally, by joining ``citus_stat_statements`` with ``pg_stat_statements`` we can
   │ router        │   1 │  0.392590 │
   └───────────────┴─────┴───────────┘
 
+Statistics Expiration
+---------------------
+
+The pg_stat_statements view limits the number of statements it tracks, and the duration of its records. Because citus_stat_statements tracks a strict subset of the queries in pg_stat_statements, a choice of equal limits for the two views would cause a mismatch in their data retention. Mismatched records can cause joins between the views to behave unpredictably.
+
+There are three ways to help synchronize the views, and all three can be used together.
+
+1. Have the maintenance daemon periodically sync the citus and pg stats. The GUC ``citus.stats_statements_purge_interval`` sets time in seconds for the sync. A value of 0 disables periodic syncs.
+2. Adjust the number of entries in citus_stat_statements. The ``citus.stats_statements_max`` GUC removes old entries when new ones cross the threshold. The default value is 50K, and the highest allowable value is 10M. Note that each entry costs about 140 bytes in shared memory so set the value wisely.
+3. Increase ``pg_stat_statements.max``. Its default value is 5000, and could be increased to 10K, 20K or even 50K without much overhead. This is most beneficial when there is more local (i.e. coordinator) query workload.
+
+.. note::
+
+   Changing ``pg_stat_statements.max`` or ``citus.stat_statements_max`` requires restarting the PostgreSQL service. Changing ``citus.stats_statements_purge_interval``, on the other hand, will come info effect with a call to `pg_reload_conf() <https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADMIN-SIGNAL>`_.
+
 Resource Conservation
 =====================
 
