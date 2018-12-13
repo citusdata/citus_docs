@@ -260,20 +260,6 @@ Resolution
 
 :ref:`Upgrade <upgrading>` to Citus 7.2 or higher.
 
-ON CONFLICT is not supported via coordinator
---------------------------------------------
-
-Running an INSERT…SELECT statement with an ON CONFLICT clause will fail unless the source and destination tables are co-located, and unless the distribution column is among the columns selected from the source and inserted in the destination. Also if there is a GROUP BY clause it must include the distribution column. Failing to meet these conditions will raise an error:
-
-::
-
-  ERROR: ON CONFLICT is not supported in INSERT ... SELECT via coordinator
-
-Resolution
-~~~~~~~~~~
-
-Add the table distribution column to both the select and insert statements, as well as the statement GROUP BY if applicable. For more info as well as a workaround, see :ref:`upsert_into_select`.
-
 .. _non_distribution_uniqueness:
 
 Cannot create uniqueness constraint

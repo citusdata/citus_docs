@@ -45,11 +45,13 @@ Sometimes it's convenient to put multiple insert statements together into a sing
 "From Select" Clause (Distributed Rollups)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Citus also supports ``INSERT … SELECT`` statements -- which insert rows based on the results of a select query. This is a convenient way to fill tables and also allows "upserts" with the ``ON CONFLICT`` clause.
+Citus also supports ``INSERT … SELECT`` statements -- which insert rows based on the results of a select query. This is a convenient way to fill tables and also allows "upserts" with the ``ON CONFLICT`` clause, the easiest way to do :ref:`distributed rollups <rollups>`.
 
-In Citus there are two ways that inserting from a select statement can happen. The first is if the source tables and destination table are :ref:`colocated <colocation>`, and the select/insert statements both include the distribution column. In this case Citus can push the ``INSERT … SELECT`` statement down for parallel execution on all nodes. Pushing the statement down supports the ``ON CONFLICT`` clause, the easiest way to do :ref:`distributed rollups <rollups>`.
+In Citus there are two ways that inserting from a select statement can happen. The first is if the source tables and destination table are :ref:`colocated <colocation>`, and the select/insert statements both include the distribution column. In this case Citus can push the ``INSERT … SELECT`` statement down for parallel execution on all nodes.
 
-The second way of executing an ``INSERT … SELECT`` statement is selecting the results from worker nodes, pulling the data up to the coordinator node, and then issuing an INSERT statement from the coordinator with the data. Citus is forced to use this approach when the source and destination tables are not colocated. This method does not support ``ON CONFLICT``.
+The second way of executing an ``INSERT … SELECT`` statement is selecting the results from worker nodes, pulling the data up to the coordinator node, and then issuing an INSERT statement from the coordinator with the data. Citus is forced to use this approach when the source and destination tables are not colocated. Because of the network overhead, this method is not as efficient.
+
+If upserts are an important operation in your application, the ideal solution is to model the data so that the source and destination tables are colocated, and so that the distribution column can be part of the GROUP BY clause in the upsert statement (if aggregating). This allows the operation to run in parallel across worker nodes for maximum speed.
 
 When in doubt about which method Citus is using, use the EXPLAIN command, as described in :ref:`postgresql_tuning`.
 
@@ -147,7 +149,7 @@ Once we create this new distributed table, we can then run :code:`INSERT INTO ..
 
 The rollup query above aggregates data from the previous day and inserts it into :code:`daily_page_views`. Running the query once each day means that no rollup tables rows need to be updated, because the new day's data does not affect previous rows.
 
-The situation changes when dealing with late arriving data, or running the rollup query more than once per day. If any new rows match days already in the rollup table, the matching counts should increase. PostgreSQL can handle this situation with "ON CONFLICT," which is its technique for doing `upserts <https://www.postgresql.org/docs/10/static/sql-insert.html#SQL-ON-CONFLICT>`_. Here is an example.
+The situation changes when dealing with late arriving data, or running the rollup query more than once per day. If any new rows match days already in the rollup table, the matching counts should increase. PostgreSQL can handle this situation with "ON CONFLICT," which is its technique for doing `upserts <https://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_. Here is an example.
 
 .. code-block:: postgresql
 
@@ -160,8 +162,6 @@ The situation changes when dealing with late arriving data, or running the rollu
     GROUP BY view_time::date, site_id, url
     ON CONFLICT (day, url, site_id) DO UPDATE SET
       view_count = daily_page_views.view_count + EXCLUDED.view_count;
-
-It's worth noting that for :code:`INSERT INTO ... SELECT` to work on distributed tables with :code:`ON CONFLICT`, Citus requires the source and destination table to be co-located.
 
 Updates and Deletion
 --------------------

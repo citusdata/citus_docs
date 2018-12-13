@@ -67,32 +67,6 @@ Although you can't join such tables directly, by wrapping the local table in a s
 
 Remember that the coordinator will send the results in the subquery or CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
 
-.. _upsert_into_select:
-
-INSERT…SELECT upserts lacking distribution column
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Citus supports INSERT…SELECT…ON CONFLICT statements between co-located tables when the distribution column is among those columns selected and inserted. Also aggregates in the statement must include the distribution column in the GROUP BY clause. Failing to meet these conditions will raise an error:
-
-::
-
-  ERROR: ON CONFLICT is not supported in INSERT ... SELECT via coordinator
-
-If the upsert is an important operation in your application, the ideal solution is to model the data so that the source and destination tables are co-located, and so that the distribution column can be part of the GROUP BY clause in the upsert statement (if aggregating). However if this is not feasible then the workaround is to materialize the select query in a temporary distributed table, and upsert from there.
-
-.. code-block:: postgresql
-
-  -- workaround for
-  -- INSERT INTO dest_table <query> ON CONFLICT <upsert clause>
-
-  BEGIN;
-  CREATE UNLOGGED TABLE temp_table (LIKE dest_table);
-  SELECT create_distributed_table('temp_table', 'tenant_id');
-  INSERT INTO temp_table <query>;
-  INSERT INTO dest_table SELECT * FROM temp_table <upsert clause>;
-  DROP TABLE temp_table;
-  END;
-
 Temp Tables: the Workaround of Last Resort
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
