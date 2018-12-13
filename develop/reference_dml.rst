@@ -51,7 +51,7 @@ In Citus there are two ways that inserting from a select statement can happen. T
 
 The second way of executing an ``INSERT … SELECT`` statement is selecting the results from worker nodes, pulling the data up to the coordinator node, and then issuing an INSERT statement from the coordinator with the data. Citus is forced to use this approach when the source and destination tables are not colocated. Because of the network overhead, this method is not as efficient.
 
-If upserts are an important operation in your application, the ideal solution is to model the data so that the source and destination tables are colocated, and so that the distribution column can be part of the GROUP BY clause in the upsert statement (if aggregating).
+If upserts are an important operation in your application, the ideal solution is to model the data so that the source and destination tables are colocated, and so that the distribution column can be part of the GROUP BY clause in the upsert statement (if aggregating). This allows the operation to run in parallel across worker nodes for maximum speed.
 
 When in doubt about which method Citus is using, use the EXPLAIN command, as described in :ref:`postgresql_tuning`.
 
