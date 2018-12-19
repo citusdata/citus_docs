@@ -97,8 +97,7 @@
           } else {
             console.log("clickConsent: Unable to access window.yett.unblock()");
           }
-          // although the dialog is at the bottom of the screen,
-          // "slideUp" actually makes it sink downward...
+          // "slideUp" means "hide," it is not a direction of movement
           $("#consentBox").slideUp("linear");
           $.cookie(cookieConsent, consentValue, {
             expires: 365,
@@ -118,8 +117,8 @@
         "click", clickConsent
       );
 
+      // interacting with drift consents to cookies
       if (typeof(drift) == 'object' && typeof(drift.on) == 'function') {
-        // ditto drift interaction
         drift.on('ready', function (api) {
           drift.on('welcomeMessage:open', clickConsent);
           drift.on('awayMessage:open', clickConsent);
@@ -129,7 +128,7 @@
       }
 
       if ($.cookie(cookieConsent) != consentValue) {
-        // "slideDown" makes the dialog pop up!
+        // "slideDown" means "show," it's not a direction of movement
         $("#consentBox").slideDown("linear");
       }
     });
