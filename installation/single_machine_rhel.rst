@@ -15,7 +15,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
   curl https://install.citusdata.com/community/rpm.sh | sudo bash
 
   # install Citus extension
-  sudo yum install -y citus80_11
+  sudo yum install -y citus81_11
 
 .. _post_install:
 

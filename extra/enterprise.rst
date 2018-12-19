@@ -20,7 +20,7 @@ Ubuntu or Debian with Internet Access
 
     # install the server and initialize db
     # (the rebalancer package pulls in other necessary packages)
-    sudo apt-get install -y postgresql-11-citus-rebalancer-8.0
+    sudo apt-get install -y postgresql-11-citus-rebalancer-8.1
 
     # preload citus extension
     sudo pg_conftool 11 main set shared_preload_libraries citus
@@ -48,7 +48,7 @@ Ubuntu or Debian without Internet Access
 
     sudo apt-get clean
     # (the rebalancer package pulls in other necessary packages)
-    sudo apt-get install -y --download-only postgresql-11-citus-rebalancer-8.0
+    sudo apt-get install -y --download-only postgresql-11-citus-rebalancer-8.1
 
     # go to package downloads
     cd /var/cache/apt
@@ -97,7 +97,7 @@ Fedora, CentOS, or Red Hat with Internet Access
 
     # install PostgreSQL with Citus extension
     # (the rebalancer package pulls in other necessary packages)
-    sudo yum install -y citus-rebalancer80_11
+    sudo yum install -y citus-rebalancer81_11
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
     sudo service postgresql-11 initdb || \
@@ -128,7 +128,7 @@ Fedora, CentOS, or Red Hat without Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # (the rebalancer package pulls in other necessary packages)
-    sudo yum install --downloadonly --downloaddir=. citus-rebalancer80_11
+    sudo yum install --downloadonly --downloaddir=. citus-rebalancer81_11
 
     # put them into a tarball
     tar czf ~/citus-enterprise.tar.gz *.rpm

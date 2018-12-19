@@ -26,7 +26,7 @@ Steps to be executed on all nodes
 ::
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-11-citus-8.0
+  sudo apt-get -y install postgresql-11-citus-8.1
 
   # preload citus extension
   sudo pg_conftool 11 main set shared_preload_libraries citus
