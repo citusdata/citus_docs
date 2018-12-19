@@ -6,6 +6,28 @@
 #}
 
 {% block extrahead %}
+  {# track only after cookie consent is obtained #}
+  <script>
+    /*
+      Global variable shared with cookie consent dialog code.
+      This is to use its value uniformly throughout the page.
+    */
+    window.g_cookieConsentId = 'CitusCookieConsentCorner';
+
+    if (document.cookie.indexOf(window.g_cookieConsentId) == -1) {
+      window.YETT_BLACKLIST = [
+        /munchkin\.marketo\.net/,
+        /sjs\.bizographics\.com/,
+        /doubleclick\.net/,
+        /cdn\.heapanalytics\.com/,
+      ];
+    } else {
+      console.log("Cookies already accepted");
+      window.YETT_BLACKLIST = [ ];
+    }
+  </script>
+  <script src='https://unpkg.com/yett'></script>
+
   {{ super() }}
 
   {# Verify the site for Google Webmaster Tools #}
@@ -86,18 +108,30 @@
 
   <script type="text/javascript">
     $(document).ready(function() {
-      var cookieConsent = 'CitusCookieConsentCorner',
-          consentValue = 'Consented';
+      /* Uses global window.g_cookieConsentId defined in the <head> */
+
+      var consentValue = 'Notified';
 
       var clickConsent = function () {
         if ($("#consentBox").is(":visible")) {
-          // although the dialog is at the bottom of the screen,
-          // "slideUp" actually makes it sink downward...
+          if (typeof(window.yett) == 'object' &&
+              typeof(window.yett.unblock) == 'function') {
+            window.yett.unblock();
+          } else {
+            console.log("clickConsent: Unable to access window.yett.unblock()");
+          }
+          // "slideUp" means "hide," it is not a direction of movement
           $("#consentBox").slideUp("linear");
-          $.cookie(cookieConsent, consentValue, {
+          $.cookie(window.g_cookieConsentId, consentValue, {
             expires: 365,
             path: '/'
           });
+          if (typeof(ga) == 'function') {
+            ga('set', 'allowAdFeatures', true);
+            ga('send', 'event', 'cookie consent', 'accept', window.location.href);
+          } else {
+            console.log("clickConsent: Unable to access ga()");
+          }
         }
       };
 
@@ -106,8 +140,8 @@
         "click", clickConsent
       );
 
+      // interacting with drift consents to cookies
       if (typeof(drift) == 'object' && typeof(drift.on) == 'function') {
-        // ditto drift interaction
         drift.on('ready', function (api) {
           drift.on('welcomeMessage:open', clickConsent);
           drift.on('awayMessage:open', clickConsent);
@@ -116,8 +150,8 @@
         console.log("Drift not found by cookie consent code");
       }
 
-      if ($.cookie(cookieConsent) != consentValue) {
-        // "slideDown" makes the dialog pop up!
+      if ($.cookie(window.g_cookieConsentId) != consentValue) {
+        // "slideDown" means "show," it's not a direction of movement
         $("#consentBox").slideDown("linear");
       }
     });
