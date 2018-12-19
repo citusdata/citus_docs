@@ -87,10 +87,16 @@
   <script type="text/javascript">
     $(document).ready(function() {
       var cookieConsent = 'CitusCookieConsentCorner',
-          consentValue = 'Consented';
+          consentValue = 'Notified';
 
       var clickConsent = function () {
         if ($("#consentBox").is(":visible")) {
+          if (typeof(window.yett) == 'object' &&
+              typeof(window.yett.unblock) == 'function') {
+            window.yett.unblock();
+          } else {
+            console.log("clickConsent: Unable to access window.yett.unblock()");
+          }
           // although the dialog is at the bottom of the screen,
           // "slideUp" actually makes it sink downward...
           $("#consentBox").slideUp("linear");
@@ -98,6 +104,12 @@
             expires: 365,
             path: '/'
           });
+          if (typeof(ga) == 'function') {
+            ga('set', 'allowAdFeatures', true);
+            ga('send', 'event', 'cookie consent', 'accept', window.location.href);
+          } else {
+            console.log("clickConsent: Unable to access ga()");
+          }
         }
       };
 
