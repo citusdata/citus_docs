@@ -110,8 +110,6 @@
     $(document).ready(function() {
       /* Uses global window.g_cookieConsentId defined in the <head> */
 
-      var consentValue = 'Notified';
-
       var clickConsent = function () {
         if ($("#consentBox").is(":visible")) {
           if (typeof(window.yett) == 'object' &&
@@ -122,7 +120,7 @@
           }
           // "slideUp" means "hide," it is not a direction of movement
           $("#consentBox").slideUp("linear");
-          $.cookie(window.g_cookieConsentId, consentValue, {
+          $.cookie(window.g_cookieConsentId, 'Notified', {
             expires: 365,
             path: '/'
           });
@@ -150,7 +148,7 @@
         console.log("Drift not found by cookie consent code");
       }
 
-      if ($.cookie(window.g_cookieConsentId) != consentValue) {
+      if (typeof($.cookie(window.g_cookieConsentId)) == 'undefined') {
         // "slideDown" means "show," it's not a direction of movement
         $("#consentBox").slideDown("linear");
       }
