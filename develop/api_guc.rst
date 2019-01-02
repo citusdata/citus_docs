@@ -220,6 +220,10 @@ Citus can calculate count(distinct) approximates using the postgresql-hll extens
 citus.task_assignment_policy (enum)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+.. note::
+
+   This GUC is applicable only when :ref:`shard_replication_factor <replication_factor>` is greater than one, or for queries against :ref:`reference_tables`.
+
 Sets the policy to use when assigning tasks to workers. The coordinator assigns tasks to workers based on shard locations. This configuration value specifies the policy to use when making these assignments. Currently, there are three possible task assignment policies which can be used.
 
 * **greedy:** The greedy policy is the default and aims to evenly distribute tasks across workers.
