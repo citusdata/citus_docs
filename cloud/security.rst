@@ -104,12 +104,6 @@ Citus propagates single-table GRANT statements through the entire cluster, makin
     'GRANT SELECT ON ALL TABLES IN SCHEMA public TO reports;'
   );
 
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'overview', section: 'cloud'});
-  </script>
-
 Encryption at Rest
 ==================
 
@@ -145,9 +139,3 @@ Finally, in the "IP Whitelist / Ingress Rules" tab, enter the allowable IP addre
 .. image:: ../images/whitelist-cidr-blocks.png
 
 The special address ``0.0.0.0/0`` means unrestricted access. Note that permitted connections still require a valid username and password to actually access your database.
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'Security', section: 'cloud'});
-  </script>

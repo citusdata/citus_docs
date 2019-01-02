@@ -12,9 +12,3 @@ use the guide below.
    multi_machine_debian.rst
    multi_machine_rhel.rst
    multi_machine_aws.rst
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'prod', section: 'install'});
-  </script>

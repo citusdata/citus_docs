@@ -294,9 +294,3 @@ Here's a step-by-step guide to get started.
 After these steps, VividCortex should show all systems as activated. You can then proceed to the dashboard to monitor queries on your Citus cluster.
 
 .. image:: ../images/vc-final.png
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'monitoring', section: 'cloud'});
-  </script>

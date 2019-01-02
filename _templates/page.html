@@ -30,6 +30,28 @@
 
   {{ super() }}
 
+  {# Helper for tracking outbound links with GA #}
+  <script>
+    // Read The Docs is responsible for loading GA by
+    // injecting a script into all pages. The function
+    // below assumes that this has happened.
+    window.trackOutboundLink = function(url) {
+      if (typeof(ga) == 'function') {
+        ga('send', 'event', 'outbound', 'click', url, {
+          'transport': 'beacon',
+          'hitCallback': function(){document.location = url;}
+        });
+        // cancel navigation due to click, allow the hitCallback to
+        // navigate to the next page after ga() has registered event
+        return false;
+      } else {
+        console.log("trackOutboundLink: Unable to access ga()");
+        // ga() was a no-go so allow navigation to proceed
+        return true;
+      }
+    };
+  </script>
+
   {# Verify the site for Google Webmaster Tools #}
   <meta name="google-site-verification" content="v8MtCUC2nV2dO-4CSGb5flD1MyPKJvw7wBDOYRwBadw" />
 

@@ -82,9 +82,3 @@ Under the "Nodes" tab in Cloud console each node lists its amazonaws.com hostnam
 .. image:: ../images/cloud-node-host.png
 
 Replace the host in the coordinator connection string with this value, consulting the previous section for the connection string format. (As shown in the previous section, the hostname to be replaced will be immediately following an ``@`` sign.) Leave all other parameters unchanged. This will be the new connection string for the worker.
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'getting_started', section: 'cloud'});
-  </script>
