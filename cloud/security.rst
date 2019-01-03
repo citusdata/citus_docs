@@ -4,7 +4,9 @@ Security
 Connecting with SSL
 ===================
 
-For security Citus Cloud accepts only SSL connections, which is why the URL contains the :code:`?sslmode=require` parameter. To avoid a man-in-the-middle attack, you can also verify that the server certificate is correct. Download the official `Citus Cloud certificate <https://console.citusdata.com/citus.crt>`_ and refer to it in connection string parameters:
+For security Citus Cloud accepts only SSL connections, which is why the URL contains the :code:`?sslmode=require` parameter. Within the cluster, nodes also encrypt their communication with one another using SSL.
+
+To avoid a man-in-the-middle attack when connecting to the coordinator node, clients can verify that the server certificate is correct. Download the official `Citus Cloud certificate <https://console.citusdata.com/citus.crt>`_ and refer to it in connection string parameters:
 
 ::
 

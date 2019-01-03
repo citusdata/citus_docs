@@ -39,6 +39,10 @@ Major and Minor Version Upgrades
 
 Major and minor version upgrades follow the same steps, but be careful: major upgrades can make backward-incompatible changes in the Citus API. It is best to review the Citus `changelog <https://github.com/citusdata/citus/blob/master/CHANGELOG.md>`_ before a major upgrade and look for any changes which may cause problems for your application.
 
+.. note::
+
+   Starting at version 8.1, Citus encrypts inter-node communication by default. SSL settings are configured automatically during an upgrade, with no action needed on your part. Just be careful when adding a new node to a Citus cluster that does not yet use SSL. The :ref:`adding a worker <adding_worker_node>` section covers that situation.
+
 Each major and minor version of Citus is published as a package with a separate name. Installing a newer package will automatically remove the older version. Here is how to upgrade from 7.5 to 8.1 for instance:
 
 Step 1. Update Citus Package
