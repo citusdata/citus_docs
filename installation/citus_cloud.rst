@@ -9,7 +9,7 @@ Citus Cloud is a fully managed "Citus-as-a-Service" built on top of Amazon Web S
 
   <p class="wy-text-center">
     <a href="https://www.citusdata.com/cloud" class="btn wy-text-large btn-success btn-fat"
-       onclick="trackOutboundLink('https://www.citusdata.com/cloud'); return false;">
+       onclick="trackOutboundLink('https://www.citusdata.com/cloud')">
       Try Citus Cloud
       <span class="fa fa-cloud"></span>
     </a>

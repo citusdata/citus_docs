@@ -103,9 +103,3 @@ Some workloads don't need a powerful distributed database, while others require 
 * Offline analytics, without the need for real-time ingest nor real-time queries
 * Analytics apps that do not need to support a large number of concurrent users
 * Queries that return data-heavy ETL results rather than summaries
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'what-is-citus', section: 'about'});
-  </script>

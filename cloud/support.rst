@@ -53,9 +53,3 @@ Then choose either "Credit Card" or "Bank Account" and fill out the form for the
   </tbody>
   </table>
   </div>
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'support', section: 'cloud'});
-  </script>

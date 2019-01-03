@@ -17,7 +17,7 @@ Below, we explain in detail the steps required to setup a multi-node Citus clust
 
 .. raw:: html 
   
- <p>To begin, you can start a Citus cluster using CloudFormation by clicking <a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus8%2Fcloudformation%2Fcitus-8.0.0.json" onclick="trackOutboundLink('https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus8%2Fcloudformation%2Fcitus-8.0.0.json'); return false;">here</a>. This will take you directly to the AWS CloudFormation console.</p>
+ <p>To begin, you can start a Citus cluster using CloudFormation by clicking <a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus8%2Fcloudformation%2Fcitus-8.0.0.json" onclick="trackOutboundLink('https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Citus&templateURL=https:%2F%2Fcitus-deployment.s3.amazonaws.com%2Faws%2Fcitus8%2Fcloudformation%2Fcitus-8.0.0.json')">here</a>. This will take you directly to the AWS CloudFormation console.</p>
 
 
 .. note::
@@ -104,9 +104,3 @@ Similarly to restart the database, you can use the command:
 
 .. note::
   You typically want to avoid making changes to resources created by CloudFormation, such as terminating EC2 instances. To shut the cluster down, you can simply delete the stack in the CloudFormation console.
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'aws', section: 'install'});
-  </script>

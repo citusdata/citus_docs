@@ -390,9 +390,3 @@ your can modify the dashboard query to look like this:
     COALESCE(country_counters->>'USA', '0')::int AS american_visitors
   FROM http_request_1min
   WHERE ingest_time > date_trunc('minute', now()) - '5 minutes'::interval;
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'real-time', section: 'ref'});
-  </script>

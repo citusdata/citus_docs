@@ -114,9 +114,3 @@ Replace :code:`<token>` with the custom token listed in the provider's web site.
 We support other providers that can receive syslog via the BSD or IETF protocols. Internally Citus Cloud uses syslog-ng, so check your providers configuration documentation for syslog-ng settings.
 
 Please reach out if you encounter any issues.
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'logging', section: 'cloud'});
-  </script>

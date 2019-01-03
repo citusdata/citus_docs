@@ -168,9 +168,3 @@ Similar to forking, PITR creates a copy of your formation and leaves the origina
 Citus Cloud stores base backups and WAL records for up to ten days, which limits the recovery period to that amount of time. The user interface will prevent you from going back further, and will show the earliest possible recovery time.
 
 Note that Citus worker nodes have different base backup timings and sizes, so it can happen that one node restores faster than another. In general the recovery process begins with restoring base backups at roughly 30MB/second. When that is complete the Cloud Console will provide a progress meter as it replays transactions from the WAL. The length of time for this stage varies by the number of transactions that must be replayed.
-
-.. raw:: html
-
-  <script type="text/javascript">
-  analytics.track('Doc', {page: 'Availability', section: 'cloud'});
-  </script>

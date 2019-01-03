@@ -500,7 +500,7 @@ To require that all connections supply a hashed password, update the PostgreSQL 
 
 The coordinator node needs to know roles' passwords in order to communicate with the workers. In Citus Enterprise the ``pg_dist_authinfo`` table can provide that information, as discussed earlier. However in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
 
-.. code-block:: ini
+::
 
   hostname:port:database:username:password
 
