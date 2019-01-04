@@ -79,7 +79,7 @@ The new node is available for shards of new distributed tables. Existing shards 
 
 .. note::
 
-   As of Citus 8.1, workers use encrypted communication by default. A new node running version 8.1 or greater will refuse to talk with other workers who do not have SSL enabled. When adding a node to an unencrypted cluster, you must reconfigure the new node.
+   As of Citus 8.1, workers use encrypted communication by default. A new node running version 8.1 or greater will refuse to talk with other workers who do not have SSL enabled. When adding a node to a cluster without encrypted communication, you must reconfigure the new node before creating the Citus extension.
 
    First, from the coordinator node check whether the other workers use SSL:
 
@@ -92,6 +92,7 @@ The new node is available for shards of new distributed tables. Existing shards 
    .. code-block:: sql
 
       ALTER SYSTEM SET 'citus.node_conninfo' TO 'sslmode=prefer';
+      SELECT pg_reload_conf();
 
 .. _shard_rebalancing:
 
@@ -480,7 +481,7 @@ To set non-sensitive libpq connection parameters to be used for all node connect
   SET citus.node_conninfo =
     'sslrootcert=/path/to/citus.crt sslmode=verify-full';
 
-There is a whitelist of parameters that the GUC accepts. See the :ref:`node_conninfo <node_conninfo>` reference for details. By default, nodes encrypt communication with SSL (using sslmode=require).
+There is a whitelist of parameters that the GUC accepts. See the :ref:`node_conninfo <node_conninfo>` reference for details. By default, nodes require connections to be encrypted.
 
 Citus Enterprise Edition includes an extra table used to set sensitive connection credentials. This is fully configurable per host/user. It's easier than managing ``.pgpass`` files through the cluster and additionally supports certificate authentication.
 
