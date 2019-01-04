@@ -104,6 +104,21 @@ Citus propagates single-table GRANT statements through the entire cluster, makin
     'GRANT SELECT ON ALL TABLES IN SCHEMA public TO reports;'
   );
 
+.. _grant_usage:
+
+Granting Access to Other Schemas
+--------------------------------
+
+By default, users cannot access objects in schemas they do not own. Note that by default, everyone has CREATE and USAGE privileges on the ``public`` schema. This allows all users that are able to connect to a given database to create objects in its ``public`` schema.
+
+To allow object access in any other schema, the owner of the schema must grant the USAGE privilege on the schema.
+
+.. code-block:: postgresql
+
+  GRANT USAGE ON SCHEMA other_schema TO reports;
+
+Even if the ``reports`` user has SELECT access on a table like ``other_schema.foo``, the user will not be able to select rows until they also have USAGE access on ``other_schema``.
+
 Encryption at Rest
 ==================
 
