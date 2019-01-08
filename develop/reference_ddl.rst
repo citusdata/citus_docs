@@ -303,12 +303,10 @@ For example, consider an application which stores user profiles in a :ref:`refer
 
 .. code-block:: postgres
 
-   -- we'll store user emails case insensitively, so enable
-   -- the "citext" data type on the coordinator and workers
-   CREATE EXTENSION citext;
-   SELECT run_command_on_workers('CREATE EXTENSION citext;');
+   -- we're using the "text" column type here, but a real application
+   -- might use "citext" which is available in a postgres contrib module
 
-   CREATE TABLE users ( email citext PRIMARY KEY );
+   CREATE TABLE users ( email text PRIMARY KEY );
    SELECT create_reference_table('users');
 
 In the course of time imagine that a few non-addresses get into the table.
