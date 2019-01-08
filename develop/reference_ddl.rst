@@ -348,6 +348,8 @@ Later, during non-peak hours, a database administrator can attempt to fix the ba
    ALTER TABLE users
    VALIDATE CONSTRAINT syntactic_email;
 
+The PostgreSQL documentation has more information about NOT VALID and VALIDATE CONSTRAINT in the `ALTER TABLE <https://www.postgresql.org/docs/current/sql-altertable.html>`_ section.
+
 Adding/Removing Indices
 ~~~~~~~~~~~~~~~~~~~~~~~
 
