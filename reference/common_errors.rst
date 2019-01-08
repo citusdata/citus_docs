@@ -171,6 +171,25 @@ Configure the operating system to re-use TCP sockets. Execute this on the shell 
 
 This allows reusing sockets in TIME_WAIT state for new connections when it is safe from a protocol viewpoint. Default value is 0 (disabled).
 
+SSL error: certificate verify failed
+------------------------------------
+
+As of Citus 8.1, nodes are required talk to one another using SSL by default. If SSL is not enabled on a Postgres server when Citus is first installed, the install process will enable it, which includes creating and self-signing an SSL certificate.
+
+However, if a root certificate authority file exists (typically in ``~/.postgresql/root.crt``), then the certificate will be checked unsuccessfully against that CA at connection time. The Postgres documentation about `SSL support <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBQ-SSL-CERTIFICATES>`_ warns:
+
+   For backwards compatibility with earlier versions of PostgreSQL,
+   if a root CA file exists, the behavior of sslmode=require will be
+   the same as that of verify-ca, meaning the server certificate is
+   validated against the CA. Relying on this behavior is discouraged,
+   and applications that need certificate validation should always use
+   verify-ca or verify-full.
+
+Resolution
+~~~~~~~~~~
+
+Possible solutions are to sign the certificate, turn off SSL, or remove the root certificate.
+
 Could not connect to any active placements
 ------------------------------------------
 
