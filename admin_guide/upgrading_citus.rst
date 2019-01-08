@@ -41,7 +41,7 @@ Major and minor version upgrades follow the same steps, but be careful: major up
 
 .. note::
 
-   Starting at version 8.1, Citus encrypts inter-node communication by default. SSL settings are configured automatically during an upgrade, with no action needed on your part. Just be careful when adding a new node to a Citus cluster that does not yet use SSL. The :ref:`adding a worker <adding_worker_node>` section covers that situation.
+   Starting at version 8.1, new Citus nodes expect and require encrypted inter-node communication by default, whereas nodes upgraded to 8.1 from an earlier version preserve their earlier SSL settings. Be careful when adding a new Citus 8.1 node to an upgraded cluster that does not yet use SSL. The :ref:`adding a worker <adding_worker_node>` section covers that situation.
 
 Each major and minor version of Citus is published as a package with a separate name. Installing a newer package will automatically remove the older version. Here is how to upgrade from 7.5 to 8.1 for instance:
 
