@@ -481,7 +481,7 @@ To set non-sensitive libpq connection parameters to be used for all node connect
   SET citus.node_conninfo =
     'sslrootcert=/path/to/citus.crt sslmode=verify-full';
 
-There is a whitelist of parameters that the GUC accepts. See the :ref:`node_conninfo <node_conninfo>` reference for details. By default, nodes require connections to be encrypted.
+There is a whitelist of parameters that the GUC accepts, see the :ref:`node_conninfo <node_conninfo>` reference for details. As of Citus 8.1, the default value for node_conninfo is ``sslmode=require``, which prevents unencrypted communication between nodes.
 
 Citus Enterprise Edition includes an extra table used to set sensitive connection credentials. This is fully configurable per host/user. It's easier than managing ``.pgpass`` files through the cluster and additionally supports certificate authentication.
 
