@@ -338,7 +338,7 @@ This succeeds, and new rows are protected.
    ERROR:  new row for relation "users_102010" violates
            check constraint "syntactic_email_102010"
    DETAIL:  Failing row contains (fake).
-   *
+   */
 
 Later, during non-peak hours, a database administrator can attempt to fix the bad rows and re-validate the constraint.
 
