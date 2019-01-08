@@ -94,7 +94,7 @@ Citus honors only a whitelisted subset of the options, namely:
 * krbsrvname†
 * sslcompression
 * sslcrl
-* sslmode
+* sslmode  (defaults to "require" as of Citus 8.1)
 * sslrootcert
 
 *(† = subject to the runtime presence of optional PostgreSQL features)*
