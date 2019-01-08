@@ -294,6 +294,60 @@ Not-null constraints can be applied to any column (distribution or not) because 
 
   ALTER TABLE ads ALTER COLUMN image_url SET NOT NULL;
 
+Using NOT VALID Constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In some situations it can be useful to enforce constraints for new rows, while allowing existing non-conforming rows to remain unchanged. Citus supports this feature for CHECK constraints and foreign keys, using PostgreSQL's "NOT VALID" constraint designation.
+
+For example, consider an application which stores user profiles in a :ref:`reference table <reference_tables>`.
+
+.. code-block:: postgres
+
+   -- we're using the "text" column type here, but a real application
+   -- might use "citext" which is available in a postgres contrib module
+
+   CREATE TABLE users ( email text PRIMARY KEY );
+   SELECT create_reference_table('users');
+
+In the course of time imagine that a few non-addresses get into the table.
+
+.. code-block:: postgres
+
+   INSERT INTO users VALUES
+      ('foo@example.com'), ('hacker12@aol.com'), ('lol');
+
+We would like to validate the addresses, but PostgreSQL does not ordinarily allow us to add a CHECK constraint that fails for existing rows. However it *does* allow a constraint marked not valid:
+
+.. code-block:: postgres
+
+   ALTER TABLE users
+   ADD CONSTRAINT syntactic_email
+   CHECK (email ~
+      '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
+   ) NOT VALID;
+
+This succeeds, and new rows are protected.
+
+.. code-block:: postgres
+
+   INSERT INTO users VALUES ('fake');
+
+   /*
+   ERROR:  new row for relation "users_102010" violates
+           check constraint "syntactic_email_102010"
+   DETAIL:  Failing row contains (fake).
+   */
+
+Later, during non-peak hours, a database administrator can attempt to fix the bad rows and re-validate the constraint.
+
+.. code-block:: postgres
+
+   -- later, attempt to validate all rows
+   ALTER TABLE users
+   VALIDATE CONSTRAINT syntactic_email;
+
+The PostgreSQL documentation has more information about NOT VALID and VALIDATE CONSTRAINT in the `ALTER TABLE <https://www.postgresql.org/docs/current/sql-altertable.html>`_ section.
+
 Adding/Removing Indices
 ~~~~~~~~~~~~~~~~~~~~~~~
 
