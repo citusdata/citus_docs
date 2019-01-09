@@ -244,7 +244,30 @@ instructions for changing the cleaning strategy.
 Continuous Integration
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Bar!
+The easiest way to run a Citus cluster in continuous integration is by using the official Citus Docker containers. Here is how to do it on Circle CI in particular.
+
+1. Copy https://github.com/citusdata/docker/blob/master/docker-compose.yml into the Rails project, and name it citus-docker-compose.yml.
+2. Update the ``steps:`` section in ``.circleci/config.yml``. This will start a coordinator and worker node:
+
+   .. code-block:: yaml
+
+      steps:
+        - setup_remote_docker:
+            docker_layer_caching: true
+        - run:
+            name: Install Docker Compose
+            command: |
+              curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
+              chmod +x ~/docker-compose
+              mv ~/docker-compose /usr/local/bin/docker-compose
+
+        - checkout
+
+        - run:
+            name: Starting Citus Cluster
+            command: docker-compose -f citus-docker-compose.yml up -d
+
+3. Have your test suite connect to the database in Docker, which will be on localhost:5432.
 
 Example Application
 -------------------
