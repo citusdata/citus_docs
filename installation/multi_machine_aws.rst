@@ -3,6 +3,12 @@
 AWS CloudFormation
 ##################
 
+.. warning::
+
+   CloudFormation is deprecated, and can deploy only Citus versions 8.0
+   and below. For a more flexible replacement, we suggest :ref:`Citus
+   Cloud <cloud_overview>`.
+
 You can manage a Citus cluster manually on `EC2 <http://aws.amazon.com/ec2/>`_ instances using CloudFormation. The CloudFormation template for Citus enables users to start a Citus cluster on AWS in just a few clicks, with also cstore_fdw extension for columnar storage is pre-installed. The template automates the installation and configuration process so that the users don’t need to do any extra configuration steps while installing Citus.
 
 Please ensure that you have an active AWS account and an `Amazon EC2 key pair <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html>`_ before proceeding with the next steps.
