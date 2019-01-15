@@ -13,6 +13,8 @@ You may want to set a maintenance window prior to starting an upgrade. Part of t
 
 .. image:: ../images/cloud-maintenance-window.png
 
+A maintenance window is just a way to indicate a time and day of the week that you prefer intensive changes to be performed. Only the action you specify will happen in the maintenance window, it doesn't set up a recurring event.
+
 When you do start the upgrade, Citus Cloud creates new servers for the coordinator and worker nodes with the requested software versions, and replays the write-ahead log from the original nodes to transfer data. This can take a fair amount of time depending on the amount of data in existing nodes. During the transfer, the formation overview tab will contain a notice:
 
 .. image:: ../images/cloud-upgrading.png

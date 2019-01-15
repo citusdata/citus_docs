@@ -21,6 +21,8 @@ After you adjust the slider and/or buttons and accept the changes, Citus Cloud b
 
 .. image:: ../images/cloud-maintenance-window.png
 
+A maintenance window is just a way to indicate a time and day of the week that you prefer intensive changes to be performed. Only the action you specify will happen in the maintenance window, it doesn't set up a recurring event.
+
 Citus Cloud will display a popup message in the console while scaling actions have begun or are scheduled. The message will disappear when the action completes.
 
 For instance, when adding nodes:
