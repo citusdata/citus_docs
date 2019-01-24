@@ -21,6 +21,8 @@ After you adjust the slider and/or buttons and accept the changes, Citus Cloud b
 
 .. image:: ../images/cloud-maintenance-window.png
 
+A maintenance window specifies a preferred time for any maintenance tasks to be performed on your formation. When a window is set, changes to the formation (e.g. changing to a different worker size) will by default occur within this window, unless manually adjusted by Citus Cloud support. In addition, when a maintenance window is set, base backups on the node will start during the window.
+
 Citus Cloud will display a popup message in the console while scaling actions have begun or are scheduled. The message will disappear when the action completes.
 
 For instance, when adding nodes:
