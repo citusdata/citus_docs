@@ -1,6 +1,10 @@
 Formation API
 #############
 
+.. note::
+
+   Cloud API access is available upon request. Open a :ref:`support ticket <cloud_support>` to enable it for your account.
+
 Citus Cloud provides an API to list, delete, and create formations within an organization. This is a convenient way to manage frequent formation changes.
 
 Authentication
