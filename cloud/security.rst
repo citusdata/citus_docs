@@ -40,7 +40,7 @@ Requiring SSL, plus verifying against a certificate:
      adapter: postgresql
      encoding: unicode
      sslmode: verify-full
-     sslrootcert: citus.crt
+     sslrootcert: /path/to/citus.crt
      url: postgres://user:password@host:port/db
 
 Two-Factor Authentication
