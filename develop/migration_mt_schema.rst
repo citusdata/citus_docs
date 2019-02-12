@@ -84,7 +84,7 @@ Doing the whole table at once may cause too much load on the database and disrup
        SELECT line_items_id, order_id
          FROM line_items
         WHERE store_id IS NULL
-        LIMIT 1000
+        LIMIT 10000
           FOR UPDATE
          SKIP LOCKED
      )
@@ -95,8 +95,8 @@ Doing the whole table at once may cause too much load on the database and disrup
         AND batch.order_id = orders.order_id;
    $$;
 
-   -- run the function every half hour
-   SELECT cron.schedule('*/30 * * * *', 'SELECT backfill_batch()');
+   -- run the function every quarter hour
+   SELECT cron.schedule('*/15 * * * *', 'SELECT backfill_batch()');
 
    -- ^^ note the return value of cron.schedule
 
