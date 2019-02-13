@@ -33,7 +33,7 @@ Include distribution column in keys
 
 Citus :ref:`cannot enforce <non_distribution_uniqueness>` uniqueness constraints unless a unique index or primary key contains the distribution column. Thus we must modify primary and foreign keys in our example to include store_id.
 
-Here are SQL commands to turn the simple keys composite in the development database:
+Some of the libraries listed in the next section are able to help migrate the database schema to include the distribution column in keys. However, here is an example of the underlying SQL commands to turn the simple keys composite in the development database:
 
 .. code-block:: sql
 
