@@ -37,8 +37,9 @@ The pg_dist_partition table stores metadata about which tables in the database a
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   repmodel     |         char         | | The method used for data replication. The values of this column         |
 |                |                      | | corresponding to different replication methods are :-                   |
-|                |                      | | citus statement-based replication: 'c'                                  |
-|                |                      | | postgresql streaming replication:  's'                                  |
+|                |                      | | * citus statement-based replication: 'c'                                |
+|                |                      | | * postgresql streaming replication:  's'                                |
+|                |                      | | * two-phase commit (for reference tables): 't'                          |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
