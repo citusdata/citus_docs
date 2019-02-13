@@ -47,7 +47,7 @@ The :code:`run_command_on_shards` function applies a SQL command to each shard, 
           FROM pg_class c
           JOIN pg_catalog.pg_namespace n on n.oid=c.relnamespace
          WHERE (n.nspname || '.' || relname)::regclass = '%s'::regclass
-           AND n.nspname NOT IN ('citus', 'pg_toast')
+           AND n.nspname NOT IN ('citus', 'pg_toast', 'pg_catalog')
       $cmd$
     );
 
