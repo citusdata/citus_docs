@@ -1,6 +1,8 @@
 Security
 ########
 
+.. _cloud_ssl:
+
 Connecting with SSL
 ===================
 
@@ -17,6 +19,29 @@ The string may need to be quoted in your shell to preserve the ampersand.
 .. note::
 
   Database clients must support SSL to connect to Citus Cloud. In particular :code:`psql` needs to be compiled :code:`--with-openssl` if building PostgreSQL from source.
+
+Application frameworks can customize database connection parameters using config files. For example, Ruby on Rails uses a file called `config/database.yml <https://guides.rubyonrails.org/configuring.html#configuring-a-database>`_. This file accepts ``sslmode`` and ``sslrootcert`` options to specify connection security. Here are two examples.
+
+Requiring SSL for the production db connection:
+
+.. code-block:: yaml
+
+   production:
+     adapter: postgresql
+     encoding: unicode
+     sslmode: require
+     url: postgres://user:password@host:port/db
+
+Requiring SSL, plus verifying against a certificate:
+
+.. code-block:: yaml
+
+   production:
+     adapter: postgresql
+     encoding: unicode
+     sslmode: verify-full
+     sslrootcert: /path/to/citus.crt
+     url: postgres://user:password@host:port/db
 
 Two-Factor Authentication
 -------------------------

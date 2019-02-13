@@ -1,7 +1,7 @@
 .. _data_migration:
 
-Migrate Data
-============
+Migrate Production Data
+=======================
 
 At this time, having updated the database schema and application queries to work with Citus, you're ready for the final step. It's time to migrate data to the Citus cluster and cut over the application to its new database.
 

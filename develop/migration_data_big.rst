@@ -1,5 +1,5 @@
-Databases over 200GB
-====================
+Big Database Migration
+======================
 
 Larger environments can use Citus Warp for online replication. Citus Warp allows you to stream changes from a PostgreSQL source database into a :ref:`Citus Cloud <cloud_overview>` cluster as they happen. It's as if the application automatically writes to two databases rather than one, except with perfect transactional logic. Citus Warp works with Postgres versions 9.4 and above which have the `logical_decoding` plugin enabled (this is supported on Amazon RDS as long as you're at version 9.4 or higher).
 
@@ -15,7 +15,7 @@ Here are the steps you need to perform before starting the Citus Warp process:
 Duplicate schema
 ----------------
 
-The first step in migrating data to Citus is making sure that the schemas match exactly, at least for the tables you choose to migrate. One way to do this is by running ``pg_dump --schema-only`` against the source database. Replay the output on the coordinator Citus node. Another way to is to run application migration scripts against the destination database.
+The first step in migrating data to Citus is making sure that the schemas match exactly, at least for the tables you choose to migrate. One way to do this is by running ``pg_dump --schema-only`` against your development database (the Citus database you used for locally testing the application). Replay the output on the coordinator Citus node. Another way to is to run application migration scripts against the destination database.
 
 All tables that you wish to migrate must have primary keys. The corresponding destination tables must have primary keys as well, the only difference being that those keys are allowed to be composite to contain the distribution column as well, as described in :ref:`mt_schema_migration`.
 
@@ -59,11 +59,20 @@ This white-lists the IP address of the Citus coordinator node to make an inbound
 Begin Replication
 -----------------
 
-Contact us by opening a support ticket in the Citus Cloud console. A Cloud engineer will connect to your database with Citus Warp to create a basebackup, open a replication slot, and begin the replication. We can include/exclude your choice of tables in the migration.
+Contact us by opening a support ticket in the Citus Cloud console. A Cloud engineer will connect to your database with Citus Warp to perform an intial database dump, open a replication slot, and begin the replication. We can include/exclude your choice of tables in the migration.
 
-During the first stage, creating a basebackup, the Postgres write-ahead log (WAL) may grow substantially if the database is under write load. Make sure you have sufficient disk space on the source database before starting this process. We recommend 100GB free or 20% of total disk space, whichever is greater. Once the backup is complete and replication begins then the database will be able to archive unused WAL files again.
+During the first stage of replication, the Postgres write-ahead log (WAL) may grow substantially if the database is under write load. Make sure you have sufficient disk space on the source database before starting this process. We recommend 100GB free or 20% of total disk space, whichever is greater. Once the initial dump/restore is complete and replication begins, then the database will be able to archive unused WAL files again.
 
-Some database schema changes are incompatible with an ongoing replication. Changing the structure of tables under replication can cause the process to stop. Cloud engineers would then need to manually restart the replication from the beginning. That costs time, so we recommend freezing the schema during replication.
+As the Warp proceeds, **pay attention to disk usage on the source database.** If there is a data-type mismatch between the source and destination, or other unexpected schema change, the replication can stall. The replication slot can grow indefinitely on the source during a prolonged stall, leading to potential crashes.
+
+Because of the potential for replication stalls, we strongly recommend minimizing schema changes while doing a Citus warp. If an invasive schema change is required, you will need to stop the warp and try again.
+
+Steps to make an invasive schema change:
+
+1. Ask a Citus Cloud engineer to stop the warp.
+2. Change the schema on the source database.
+3. Change the schema on the destination database.
+4. Begin the warp again.
 
 Switch over to Citus and stop all connections to old database
 -------------------------------------------------------------

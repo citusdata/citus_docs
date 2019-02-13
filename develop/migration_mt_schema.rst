@@ -18,7 +18,7 @@ We are happy to help review your environment to be sure that the ideal distribut
 Identify types of tables
 ------------------------
 
-Once a distribution key is identified, review the schema to identify how each table will be handled and whether any modifications to table layouts will be required. We typically advise tracking this with a spreadsheet, and have created a `template <https://examples.citusdata.com/citus-migration-plan.xlsx>`_ you can use.
+Once a distribution key is identified, review the schema to identify how each table will be handled and whether any modifications to table layouts will be required. We typically advise tracking this with a spreadsheet, and have created a `template <https://docs.google.com/spreadsheets/d/1jYlc22lHdP91pTrb6s35QfrN9nTE1BkVJnCSZeQ7ZmI/edit>`_ you can use.
 
 Tables will generally fall into one of the following categories:
 
@@ -36,10 +36,12 @@ Consider an example multi-tenant application similar to Etsy or Shopify where ea
 
 In this example stores are a natural tenant. The tenant id is in this case the store_id. After distributing tables in the cluster, we want rows relating to the same store to reside together on the same nodes.
 
-Prepare Tables for Migration
-============================
+.. _prepare_source_tables:
 
-Once the scope of needed database changes is identified, the next major step is to modify the data structure. First, existing tables requiring backfill are modified to add a column for the distribution key. 
+Prepare Source Tables for Migration
+===================================
+
+Once the scope of needed database changes is identified, the next major step is to modify the data structure for the application's existing database. First, tables requiring backfill are modified to add a column for the distribution key.
 
 Add distribution keys
 ---------------------
@@ -53,49 +55,6 @@ In our storefront example the stores and products tables have a store_id and are
   ALTER TABLE line_items ADD COLUMN store_id uuid;
 
 Be sure to check that the distribution column has the same type in all tables, e.g. don't mix ``int`` and ``bigint``. The column types must match to ensure proper data colocation.
-
-Include distribution column in keys
------------------------------------
-
-Citus :ref:`cannot enforce <non_distribution_uniqueness>` uniqueness constraints unless a unique index or primary key contains the distribution column. Thus we must modify primary and foreign keys in our example to include store_id.
-
-Here are SQL commands to turn the simple keys composite:
-
-.. code-block:: sql
-
-  BEGIN;
-
-  -- drop simple primary keys (cascades to foreign keys)
-
-  ALTER TABLE products   DROP CONSTRAINT products_pkey CASCADE;
-  ALTER TABLE orders     DROP CONSTRAINT orders_pkey CASCADE;
-  ALTER TABLE line_items DROP CONSTRAINT line_items_pkey CASCADE;
-
-  -- recreate primary keys to include would-be distribution column
-
-  ALTER TABLE products   ADD PRIMARY KEY (store_id, product_id);
-  ALTER TABLE orders     ADD PRIMARY KEY (store_id, order_id);
-  ALTER TABLE line_items ADD PRIMARY KEY (store_id, line_item_id);
-
-  -- recreate foreign keys to include would-be distribution column
-
-  ALTER TABLE line_items ADD CONSTRAINT line_items_store_fkey
-    FOREIGN KEY (store_id) REFERENCES stores (store_id);
-  ALTER TABLE line_items ADD CONSTRAINT line_items_product_fkey
-    FOREIGN KEY (store_id, product_id) REFERENCES products (store_id, product_id);
-  ALTER TABLE line_items ADD CONSTRAINT line_items_order_fkey
-    FOREIGN KEY (store_id, order_id) REFERENCES orders (store_id, order_id);
-
-  COMMIT;
-
-Thus completed, our schema will look like this:
-
-.. figure:: ../images/erd/mt-after.png
-   :alt: Schema after migration
-
-   (Underlined items are primary keys, italicized items are foreign keys.)
-
-Be sure to modify data flows to add keys to incoming data.
 
 Backfill newly created columns
 ------------------------------
@@ -112,4 +71,40 @@ We backfill the table by obtaining the missing values from a join query with ord
    INNER JOIN orders
    WHERE line_items.order_id = orders.order_id;
 
-The application and other data ingestion processes should be updated to include the new column for future writes. More on that in the next section.
+Doing the whole table at once may cause too much load on the database and disrupt other queries. The backfill can done more slowly instead. One way to do that is to make a function that backfills small batches at a time, then call the function repeatedly with `pg_cron <https://github.com/citusdata/pg_cron>`_.
+
+.. code-block:: postgresql
+
+   -- the a function to backfill up to
+   -- one thousand rows from line_items
+
+   CREATE FUNCTION backfill_batch()
+   RETURNS void LANGUAGE sql AS $$
+     WITH batch AS (
+       SELECT line_items_id, order_id
+         FROM line_items
+        WHERE store_id IS NULL
+        LIMIT 10000
+          FOR UPDATE
+         SKIP LOCKED
+     )
+     UPDATE line_items AS li
+        SET store_id = orders.store_id
+       FROM batch, orders
+      WHERE batch.line_item_id = li.line_item_id
+        AND batch.order_id = orders.order_id;
+   $$;
+
+   -- run the function every quarter hour
+   SELECT cron.schedule('*/15 * * * *', 'SELECT backfill_batch()');
+
+   -- ^^ note the return value of cron.schedule
+
+Once the backfill is caught up, the cron job can be disabled:
+
+.. code-block:: postgresql
+
+   -- assuming 42 is the job id returned
+   -- from cron.schedule
+
+   SELECT cron.unschedule(42);
