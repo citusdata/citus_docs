@@ -3,7 +3,7 @@
 .. _rails_migration:
 
 Ruby on Rails
--------------
+=============
 
 This section investigates how to migrate multi-tenant Rails applications
 to a Citus storage backend. We'll use the `activerecord-multi-tenant
@@ -19,7 +19,7 @@ for the particular use-case of a distributed multi-tenant database like
 Citus.
 
 Preparing to scale-out a multi-tenant application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------------------
 
 Initially you’ll often start out with all tenants placed on a single
 database node, and using a framework like Ruby on Rails and ActiveRecord
@@ -80,7 +80,7 @@ nodes.
 
 To solve this problem, for the models which are logically related
 to a store (the tenant for our app), you should add store\_id to
-the constraints, effectively scoping objects unique inside a given
+the constraints, effectively scoping objects uniquely inside a given
 store. This helps add the concept of tenancy to your models, thereby
 making the multi-tenant system more robust.
 
@@ -120,7 +120,7 @@ the system individually and asking the shard whether it knows the given
 object\_id.
 
 Updating the Rails Application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 You can get started by including ``gem 'activerecord-multi-tenant'``
 into your Gemfile, running ``bundle install``, and then annotating your
@@ -138,9 +138,29 @@ table needs to have a ``customer_id`` column that references the
 customer the page view belongs to.
 
 The `activerecord-multi-tenant
-<https://github.com/citusdata/activerecord-multi-tenant>`__ Gem aims to
-make it easier to implement the above data changes in a typical Rails
-application.
+<https://github.com/citusdata/activerecord-multi-tenant>`__ Ruby gem
+aims to make it easier to implement the above data changes in a typical
+Rails application.
+
+.. note::
+
+   The library relies on the tenant id column to be present and non-null
+   for all rows. However, it is often useful to have the library set
+   the tenant id for *new* records, while backfilling missing tenant id
+   values in existing records as a background task. This makes it easier
+   to get started with activerecord-multi-tenant.
+
+   To support this, the library has a write-only mode, in which the
+   tenant id column is not filtered in queries, but is set properly for
+   new records. Include the following in a Rails initializer to enable
+   it:
+
+   .. code-block:: ruby
+
+      MultiTenant.enable_write_only_mode
+
+   Once you are ready to enforce tenancy, add a NOT NULL constraint to
+   your tenant_id column and simply remove the initializer line.
 
 As mentioned in the beginning, by adding ``multi_tenant :customer``
 annotations to your models, the library automatically takes care of
@@ -210,8 +230,47 @@ that the primary key includes the tenant\_id column, as well as
 ``create_distributed_table`` which enables Citus to scale out the data
 to multiple nodes.
 
+Updating the Test Suite
+-----------------------
+
+If the test suite for your Rails application uses the
+``database_cleaner`` gem to reset the test database between
+runs, be sure to use the "truncation" strategy rather than
+"transaction." We have seen occassional failures during transaction
+rollbacks in the tests. The database_cleaner `documentation
+<https://www.rubydoc.info/gems/database_cleaner#How_to_use>`_ has
+instructions for changing the cleaning strategy.
+
+Continuous Integration
+~~~~~~~~~~~~~~~~~~~~~~
+
+The easiest way to run a Citus cluster in continuous integration is by using the official Citus Docker containers. Here is how to do it on Circle CI in particular.
+
+1. Copy https://github.com/citusdata/docker/blob/master/docker-compose.yml into the Rails project, and name it citus-docker-compose.yml.
+2. Update the ``steps:`` section in ``.circleci/config.yml``. This will start a coordinator and worker node:
+
+   .. code-block:: yaml
+
+      steps:
+        - setup_remote_docker:
+            docker_layer_caching: true
+        - run:
+            name: Install Docker Compose
+            command: |
+              curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
+              chmod +x ~/docker-compose
+              mv ~/docker-compose /usr/local/bin/docker-compose
+
+        - checkout
+
+        - run:
+            name: Starting Citus Cluster
+            command: docker-compose -f citus-docker-compose.yml up -d
+
+3. Have your test suite connect to the database in Docker, which will be on localhost:5432.
+
 Example Application
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 If you are interested in a more complete
 example, check out our `reference app
