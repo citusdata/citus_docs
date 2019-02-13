@@ -232,7 +232,7 @@ This query will run across all worker nodes and identify any unused indexes for 
       WHERE NOT indisunique
       AND   idx_scan < 50
       AND   pg_relation_size(relid) > 5 * 8192
-      AND   schemaname || '.' || relname = '%s'
+      AND   (schemaname || '.' || relname)::regclass = '%s'::regclass
       ORDER BY
         pg_relation_size(i.indexrelid) / NULLIF(idx_scan, 0) DESC nulls first,
         pg_relation_size(i.indexrelid) DESC
