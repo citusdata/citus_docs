@@ -23,6 +23,8 @@ The key items you'll care about for each node:
 - Memory - The memory on each node varies based on the size of node you select
 - Cores - The cores on each node varies based on the size of node you select
 
+.. _cloud_regions:
+
 Supported Regions
 -----------------
 

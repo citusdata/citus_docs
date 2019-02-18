@@ -3,6 +3,8 @@ Support and Billing
 
 All Citus Cloud plans come with support included. Premium support including SLA around response time and phone escalation is available on a contract basis for customers that may need a more premium level of support.
 
+.. _cloud_support:
+
 Support
 =======
 
