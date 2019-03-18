@@ -5,62 +5,169 @@
 Django
 ------
 
-In :ref:`mt_schema_migration` we discussed the framework-agnostic database changes required for using Citus in the multi-tenant use case. Here we investigate specifically how to migrate multi-tenant Django applications to a Citus storage backend.
+In :ref:`mt_schema_migration` we discussed the framework-agnostic database changes required for using Citus in the multi-tenant use case. Here we investigate specifically how to migrate multi-tenant Django applications to a Citus storage backend with the help of the `django-multitenant <https://github.com/citusdata/django-multitenant>`_ library.
+
+
+
+This process will be in 5 steps:
+
+- Introducing the tenant column to models missing it that we want to distribute
+- Changing the primary keys of distributed tables to include the tenant column
+- Updating the models to use the :code:`TenantModelMixin`
+- Distributing the data
+- Updating the Django Application to scope queries
+
 
 Preparing to scale-out a multi-tenant application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Initially you’ll start with all tenants placed on a single database node. Django's typical conventions make some assumptions about the data storage which limit scale-out options.
+Initially you’ll start with all tenants placed on a single database node. To be able to scale out django, some simple changes will have to be made to your models.
 
-In particular, the ORM introduces a pattern where you normalize data and split it into many distinct models each identified by a single ``id`` column (usually added implicitly by the ORM). For instance, consider this simplified model:
+Let's consider this simplified model:
 
 .. code-block:: python
 
   from django.utils import timezone
   from django.db import models
 
-  class Store(models.Model):
-    name = models.CharField(max_length=255)
-    url = models.URLField()
+  class Country(models.Model):
+      name = models.CharField(max_length=255)
 
-  class Product(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=6, decimal_places=2),
-    quantity = models.IntegerField()
+  class Account(models.Model):
+      name = models.CharField(max_length=255)
+      domain = models.CharField(max_length=255)
+      subdomain = models.CharField(max_length=255)
+      country = models.ForeignKey(Country, on_delete=models.CASCADE)
 
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
 
-  class Purchase(models.Model):
-    ordered_at = models.DateTimeField(default=timezone.now)
-    billing_address = models.TextField()
-    shipping_address = models.TextField()
+  class Manager(models.Model):
+      name = models.CharField(max_length=255)
+      account = models.ForeignKey(Account, on_delete=models.CASCADE,
+                                  related_name='managers')
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
-The tricky thing with this pattern is that in order to find all purchases for a store, you'll have to query for all of a store's products first. This becomes a problem once you start sharding data, and in particular when you run UPDATE or DELETE queries on nested models like purchases in this example.
+  class Project(models.Model):
+      name = models.CharField(max_length=255)
+      account = models.ForeignKey(Account, related_name='projects',
+                                  on_delete=models.CASCADE)
+      managers = models.ManyToManyField(Manager)
 
-**1. Introduce a column for the store\_id on every record that belongs to a store**
 
-In order to scale out a multi-tenant model, it's essential that you can locate all records that belong to a store quickly. The easiest way to achieve this is to simply add a :code:`store_id` column on every object that belongs to a store. In our case:
+  class Task(models.Model):
+      name = models.CharField(max_length=255)
+      project = models.ForeignKey(Project, on_delete=models.CASCADE,
+                                  related_name='tasks')
+
+
+
+The tricky thing with this pattern is that in order to find all tasks for an account, you'll have to query for all of a account's project first. This becomes a problem once you start sharding data, and in particular when you run UPDATE or DELETE queries on nested models like task in this example.
+
+
+1. Introducing the tenant column to models belonging to an account
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+**1.1 Introducting the column to models belonging to an account**
+
+In order to scale out a multi-tenant model, it's essential that you can locate all records that belong to an account quickly.
+The reason is that we want that an ORM call like
 
 .. code-block:: python
 
-  class Purchase(models.Model):
-    ordered_at = models.DateTimeField(default=timezone.now)
-    billing_address = models.TextField()
-    shipping_address = models.TextField()
+  Project.objects.filter(account_id=1).prefetch_related('tasks')
 
-    store = models.ForeignKey(  ## Add this
-      Store, null=True,         ##
-      on_delete=models.CASCADE  ##
-    )                           ##
+Generating the following queries
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
-Create a migration to reflect the change: :code:`./manage.py makemigrations`.
+.. code-block:: postgresql
 
-**2. Include the store\_id in all primary keys**
+  SELECT *
+  FROM "myapp_project" WHERE "myapp_project"."account_id" = 1;
+
+  SELECT *
+  FROM "myapp_task" WHERE "myapp_task"."project_id" IN (1, 2, 3);
+
+
+Can be changed to
+
+.. code-block:: postgresql
+
+  SELECT *
+  FROM "myapp_project" WHERE "myapp_project"."account_id" = 1;
+
+  SELECT *
+  FROM "myapp_task
+  WHERE ("myapp_task"."account_id" = 1 AND "myapp_task"."project_id" IN (1, 2, 3));
+
+
+This way you can easily query the tasks belonging to one account.
+The easiest way to achieve this is to simply add a :code:`account_id` column on every object that belongs to an account.
+
+In our case:
+
+.. code-block:: python
+
+  class Task(models.Model):
+      name = models.CharField(max_length=255)
+      project = models.ForeignKey(Project, on_delete=models.CASCADE,
+                                  related_name='tasks')
+      account = models.ForeignKey(Account, related_name='tasks',
+                                  on_delete=models.CASCADE)
+
+
+Create a migration to reflect the change: :code:`python manage.py makemigrations`.
+
+
+**1.2. Introduce a column for the account\_id on every ManyToMany model that belongs to an account**
+
+
+The goal is the same as previously. We want to be able to have ORM calls and queries routed to one account. We also want to be able to distribute the ManyToMany relationship related to an account on the account_id.
+
+So the calls generated by:
+
+.. code-block:: python
+
+  Project.objects.filter(account_id=1).prefetch_related('managers')
+
+
+Can include in their :code:`WHERE` clause the :code:`account_id` like this:
+
+.. code-block:: postgresql
+
+  SELECT *
+  FROM "myapp_project" WHERE "myapp_project"."account_id" = 1;
+
+  SELECT *
+  FROM "myapp_manager"
+  INNER JOIN "myapp_projectmanager"
+  ON ("myapp_manager"."id" = "myapp_projectmanager"."manager_id"
+  AND  myapp_projectmanager"."account_id" = "myapp_manager"."account_id")
+  WHERE "myapp_projectmanager"."project_id" IN (1, 2, 3)
+  AND "myapp_manager"."account_id" = 1;
+
+
+For that we need to introduce :code:`through` models. In our case:
+
+.. code-block:: python
+
+  class Project(models.Model):
+      name = models.CharField(max_length=255)
+      account = models.ForeignKey(Account, related_name='projects',
+                                  on_delete=models.CASCADE)
+      managers = models.ManyToManyField(Manager, through='ProjectManager')
+
+
+  class ProjectManager(models.Model):
+      project = models.ForeignKey(Project, on_delete=models.CASCADE)
+      manager = models.ForeignKey(Manager, on_delete=models.CASCADE)
+      account = models.ForeignKey(Account, on_delete=models.CASCADE)
+
+Create a migration to reflect the change: :code:`python manage.py makemigrations`.
+
+
+
+2. Include the account\_id in all primary keys
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Primary-key constraints on values other than the tenant\_id
 will present a problem in any distributed system, since it’s difficult
@@ -69,12 +176,12 @@ the constraint would require expensive scans of the data across all
 nodes.
 
 To solve this problem, for the models which are logically related
-to a store (the tenant for our app), you should add store\_id to
+to an account (the tenant for our app), you should add account\_id to
 the primary keys, effectively scoping objects unique inside a given
-store. This helps add the concept of tenancy to your models, thereby
+account. This helps add the concept of tenancy to your models, thereby
 making the multi-tenant system more robust.
 
-Django automatically creates a simple "id" primary key on models, so we will need to circumvent that behavior with a custom migration of our own. Run :code:`./manage.py makemigrations appname --empty --name remove_simple_pk`, and edit the result to look like this:
+Django automatically creates a simple "id" primary key on models, so we will need to circumvent that behavior with a custom migration of our own. Run :code:`python manage.py makemigrations appname --empty --name remove_simple_pk`, and edit the result to look like this:
 
 .. code-block:: python
 
@@ -88,36 +195,59 @@ Django automatically creates a simple "id" primary key on models, so we will nee
 
     operations = [
       # Django considers "id" the primary key of these tables, but
-      # we want the primary key to be (store_id, id)
+      # we want the primary key to be (account_id, id)
       migrations.RunSQL("""
-        ALTER TABLE appname_product
-        DROP CONSTRAINT appname_product_pkey CASCADE;
+        ALTER TABLE myapp_manager
+        DROP CONSTRAINT myapp_manager_pkey CASCADE;
 
-        ALTER TABLE appname_product
-        ADD CONSTRAINT appname_product_pkey
-        PRIMARY KEY (store_id, id)
+        ALTER TABLE myapp_manager
+        ADD CONSTRAINT myapp_manager_pkey
+        PRIMARY KEY (account_id, id)
       """),
-      migrations.RunSQL("""
-        ALTER TABLE appname_purchase
-        DROP CONSTRAINT appname_purchase_pkey CASCADE;
 
-        ALTER TABLE appname_purchase
-        ADD CONSTRAINT appname_purchase_pkey
-        PRIMARY KEY (store_id, id)
+      migrations.RunSQL("""
+        ALTER TABLE myapp_project
+        DROP CONSTRAINT myapp_project_pkey CASCADE;
+
+        ALTER TABLE myapp_project
+        ADD CONSTRAINT myapp_product_pkey
+        PRIMARY KEY (account_id, id)
+      """),
+
+      migrations.RunSQL("""
+        ALTER TABLE myapp_task
+        DROP CONSTRAINT myapp_task_pkey CASCADE;
+
+        ALTER TABLE myapp_task
+        ADD CONSTRAINT myapp_task_pkey
+        PRIMARY KEY (account_id, id)
+      """),
+
+      migrations.RunSQL("""
+        ALTER TABLE myapp_projectmanager
+        DROP CONSTRAINT myapp_projectmanager_pkey CASCADE;
+
+        ALTER TABLE myapp_projectmanager
+        ADD CONSTRAINT myapp_projectmanager_pkey PRIMARY KEY (account_id, id);
       """),
     ]
 
-**3. Switch to TenantModel**
 
-Next, we'll use the `django-multitenant <https://github.com/citusdata/django-multitenant>`_ library to add store_id to foreign keys, and make application queries easier later on.
+
+
+3. Updating the models to use TenantModelMixin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Next, we'll use the `django-multitenant <https://github.com/citusdata/django-multitenant>`_ library to add account_id to foreign keys, and make application queries easier later on.
 
 In requirements.txt for your Django application, add
 
 ::
 
-  django_multitenant>=1.1.0
+  django_multitenant>=2.0.0
 
 Run ``pip install -r requirements.txt``.
+
 
 In settings.py, change the database engine to the customized engine provied by django-multitenant:
 
@@ -125,47 +255,147 @@ In settings.py, change the database engine to the customized engine provied by d
 
   'ENGINE': 'django_multitenant.backends.postgresql'
 
-Add a few more imports to your models file:
+
+
+**3.1 Introducing the TenantModelMixin and TenantManager**
+
+
+The models will now not only inherit from ``models.Model`` but also from the ``TenantModelMixin``.
+
+To do that in your :code:`models.py` file you will need to do the following imports
 
 .. code-block:: python
 
-  from django_multitenant.models import *
-  from django_multitenant.fields import *
+  from django_multitenant.mixins import *
 
-Change all the models to inherit from ``TenantModel`` rather than ``Model``, set the tenant\_id on each model, and use ``TenantForeignKey`` rather than ``ForeignKey`` for any foreign key which does not already contain the tenant\_id.
+
+Then your models should be changed to have the new manager and inheritance. As we are using Mixins, your models and managers can also inherits from other mixins you might have been using previously. It is for example compatible with using :code:`django.contrib.gis.db` models.
+
+You will also, at this point introduce the tenant_id, to define which column is the distribution column.
 
 .. code-block:: python
 
-  class Store(TenantModel):
+  class TenantManager(TenantManagerMixin, models.Manager):
+      pass
+
+  class Account(TenantModelMixin, models.Model):
+      ...
+      tenant_id = 'id'
+      objects = TenantManager()
+
+  class Manager(TenantModelMixin, models.Model):
+      ...
+      tenant_id = 'account_id'
+      objects = TenantManager()
+
+  class Project(TenantModelMixin, models.Model):
+      ...
+      tenant_id = 'account_id'
+      objects = TenantManager()
+
+
+  class Task(TenantModelMixin, models.Model):
+      ...
+      tenant_id = 'account_id'
+      objects = TenantManager()
+
+  class ProjectManager(models.Model):
+      ...
+      tenant_id = 'account_id'
+      objects = TenantManager()
+
+
+**3.2 Handling ForeignKey constraints**
+
+
+For ``ForeignKey`` constraint, we have a few different cases:
+
+- Foreign key between distributed tables, for which you should use the ``TenantForeignKey``.
+- Foreign key between a distributed table and a reference table, which don't require changed.
+- Foreign key between a distributed table and a local table, which require to drop the constraint by using ``models.ForeignKey(MyModel, on_delete=models.CASCADE, db_constraint=False)``.
+
+Finally your models should look like this:
+
+
+.. code-block:: python
+
+  from django.db import models
+  from django_multitenant.fields import TenantForeignKey
+  from django_multitenant.mixins import *
+
+
+  class Country(models.Model):  # This table is a reference table
     name = models.CharField(max_length=255)
-    url = models.URLField()
-    tenant_id = "id"
 
-  class Product(TenantModel):
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=6, decimal_places=2),
-    quantity = models.IntegerField()
+  class TenantManager(TenantManagerMixin, models.Manager):
+      pass
 
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
-    tenant_id = "store_id"
+  class Account(TenantModelMixin, models.Model):
+      name = models.CharField(max_length=255)
+      domain = models.CharField(max_length=255)
+      subdomain = models.CharField(max_length=255)
+      country = models.ForeignKey(Country, on_delete=models.CASCADE)  # No changes needed
 
-  class Purchase(TenantModel):
-    ordered_at = models.DateTimeField(default=timezone.now)
-    billing_address = models.TextField()
-    shipping_address = models.TextField()
+      tenant_id = 'id'
+      objects = TenantManager()
 
-    store = models.ForeignKey(Store, null=True, on_delete=models.CASCADE)
-    tenant_id = "store_id"
+  class Manager(TenantModelMixin, models.Model):
+      name = models.CharField(max_length=255)
+      account = models.ForeignKey(Account, related_name='managers',
+                                  on_delete=models.CASCADE)
+      tenant_id = 'account_id'
+      objects = TenantManager()
 
-    product = TenantForeignKey(Product, on_delete=models.CASCADE)
+  class Project(TenantModelMixin, models.Model):
+      account = models.ForeignKey(Account, related_name='projects',
+                                  on_delete=models.CASCADE)
+      managers = models.ManyToManyField(Manager, through='ProjectManager')
+      tenant_id = 'account_id'
+      objects = TenantManager()
+
+
+  class Task(TenantModelMixin, models.Model):
+      name = models.CharField(max_length=255)
+      project = TenantForeignKey(Project, on_delete=models.CASCADE,
+                               related_name='tasks')
+      account = models.ForeignKey(Account, on_delete=models.CASCADE)
+
+      tenant_id = 'account_id'
+      objects = TenantManager()
+
+  class ProjectManager(models.Model):
+      project = TenantForeignKey(Project, on_delete=models.CASCADE)
+      manager = TenantForeignKey(Manager, on_delete=models.CASCADE)
+      account = models.ForeignKey(Account, on_delete=models.CASCADE)
+
+      tenant_id = 'account_id'
+      objects = TenantManager()
+
+
+**3.3 Handling ManyToMany constraints**
+
+In the second section of this article, we introduced the fact that with citus, ``ManyToMany`` relationships require a ``through`` model with the tenant column. Which is why we have the model:
+
+
+.. code-block:: python
+
+  class ProjectManager(models.Model):
+      project = TenantForeignKey(Project, on_delete=models.CASCADE)
+      manager = TenantForeignKey(Manager, on_delete=models.CASCADE)
+      account = models.ForeignKey(Account, on_delete=models.CASCADE)
+
+      tenant_id = 'account_id'
+      objects = TenantManager()
+
 
 After installing the library, changing the engine, and updating the models, run
-:code:`./manage.py makemigrations`. This will produce a migration to make the foreign keys composite when necessary.
+:code:`python manage.py makemigrations`. This will produce a migration to make the foreign keys composite when necessary.
 
-**4. Distribute data in Citus**
 
-We need one final migration to tell Citus to mark tables for distribution. Create a new migration :code:`./manage.py makemigrations appname --empty --name distribute_tables`. Edit the result to look like this:
+4. Distribute data in Citus
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We need one final migration to tell Citus to mark tables for distribution. Create a new migration :code:`python manage.py makemigrations appname --empty --name distribute_tables`. Edit the result to look like this:
 
 .. code-block:: python
 
@@ -178,32 +408,30 @@ We need one final migration to tell Citus to mark tables for distribution. Creat
 
     operations = [
       migrations.RunSQL(
-        "SELECT create_distributed_table('mtdjango_store','id')"
+        "SELECT create_distributed_table('myapp_account','id')"
       ),
       migrations.RunSQL(
-        "SELECT create_distributed_table('mtdjango_product','store_id')"
+        "SELECT create_distributed_table('myapp_manager','account_id')"
       ),
       migrations.RunSQL(
-        "SELECT create_distributed_table('mtdjango_purchase','store_id')"
+        "SELECT create_distributed_table('myapp_project','account_id')"
       ),
+      migrations.RunSQL(
+        "SELECT create_distributed_table('myapp_projectmanager','account_id')"
+      ),
+      migrations.RunSQL(
+        "SELECT create_distributed_table('myapp_task','account_id')"
+      ),
+
     ]
 
-With all the migrations created from the steps so far, apply them to the database with ``./manage.py migrate``.
-
-There's one more little detail. Server-side cursors do not work well with Citus. Go back to the database configuration in `settings.py` and include the following parameter:
-
-.. code-block:: python
-
-  DATABASES = {
-    'default': {
-        'DISABLE_SERVER_SIDE_CURSORS': True
-    },
-  }
+With all the migrations created from the steps so far, apply them to the database with ``python manage.py migrate``.
 
 At this point the Django application models are ready to work with a Citus backend. You can continue by importing data to the new system and modifying controllers as necessary to deal with the model changes.
 
-Updating the Django Application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Updating the Django Application to scope queries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The django-multitenant library discussed in the previous section is not only useful for migrations, but for simplifying application queries. The library allows application code to easily scope queries to a single tenant. It automatically adds the correct SQL filters to all statements, including fetching objects through relations.
 
@@ -211,14 +439,14 @@ For instance, in a controller simply ``set_current_tenant`` and all the queries 
 
 .. code-block:: python
 
-  # set the current tenant to the first store
-  s = Store.objects.all()[0]
+  # set the current tenant to the first account
+  s = Account.objects.first()
   set_current_tenant(s)
 
-  # now this count query applies only to Products for that store
-  Product.objects.count()
+  # now this count query applies only to Project for that account
+  Project.objects.count()
 
-  # Find purchases for risky products in the current store
-  Purchase.objects.filter(product__description='Dangerous Toy')
+  # Find tasks for very import projects in the current account
+  Task.objects.filter(project__name='Very important project')
 
 In the context of an application controller, the current tenant object can be stored as a SESSION variable when a user logs in, and controller actions can :code:`set_current_tenant` to this value. See the README in django-multitenant for more examples.
