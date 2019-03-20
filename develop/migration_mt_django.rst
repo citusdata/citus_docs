@@ -166,10 +166,10 @@ Create a migration to reflect the change: :code:`python manage.py makemigrations
 
 
 
-2. Include the account\_id in all primary keys
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2. Include the account\_id in all primary keys and unique constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Primary-key constraints on values other than the tenant\_id
+Primary-key and unique constraints on values other than the tenant\_id
 will present a problem in any distributed system, since it’s difficult
 to make sure that no two nodes accept the same unique value. Enforcing
 the constraint would require expensive scans of the data across all
@@ -177,9 +177,11 @@ nodes.
 
 To solve this problem, for the models which are logically related
 to an account (the tenant for our app), you should add account\_id to
-the primary keys, effectively scoping objects unique inside a given
+the primary keys and unique constraints, effectively scoping objects unique inside a given
 account. This helps add the concept of tenancy to your models, thereby
 making the multi-tenant system more robust.
+
+**2.1 Including the account\_id to primary keys**
 
 Django automatically creates a simple "id" primary key on models, so we will need to circumvent that behavior with a custom migration of our own. Run :code:`python manage.py makemigrations appname --empty --name remove_simple_pk`, and edit the result to look like this:
 
@@ -233,6 +235,121 @@ Django automatically creates a simple "id" primary key on models, so we will nee
     ]
 
 
+**2.2 Including the account\_id to unique constraints**
+
+The same thing needs to be done for `UNIQUE` constraints. You can have explicit constraints that you might have set in your model with `unique=True` or `unique_together` like:
+
+
+.. code-block:: python
+
+  class Project(models.Model):
+      name = models.CharField(max_length=255, unique=True)
+      account = models.ForeignKey(Account, related_name='projects',
+                                  on_delete=models.CASCADE)
+      managers = models.ManyToManyField(Manager, through='ProjectManager')
+
+
+  class Task(models.Model):
+      name = models.CharField(max_length=255)
+      project = models.ForeignKey(Project, on_delete=models.CASCADE,
+                                  related_name='tasks')
+      account = models.ForeignKey(Account, related_name='tasks',
+                                  on_delete=models.CASCADE)
+
+      class Meta:
+          unique_together = [('name', 'project')]
+
+
+
+For these constraints, you can simply change in the models the constraints:
+
+.. code-block:: python
+
+  class Project(models.Model):
+      name = models.CharField(max_length=255)
+      account = models.ForeignKey(Account, related_name='projects',
+                                  on_delete=models.CASCADE)
+      managers = models.ManyToManyField(Manager, through='ProjectManager')
+
+      class Meta:
+          unique_together = [('account', 'name')]
+
+
+
+  class Task(models.Model):
+      name = models.CharField(max_length=255)
+      project = models.ForeignKey(Project, on_delete=models.CASCADE,
+                                  related_name='tasks')
+      account = models.ForeignKey(Account, related_name='tasks',
+                                  on_delete=models.CASCADE)
+
+      class Meta:
+          unique_together = [('account', 'name', 'project')]
+
+
+Then generate the migration with:
+
+.. code-block:: python
+
+  python manage.py makemigrations
+
+
+Some ``UNIQUE`` constraints are created by the ORM and you will need to explicitily drop them.
+This is the case for ``OneToOneField`` and ``ManyToMany`` fields.
+
+
+For these cases you will need to:
+- Find the constraints
+- Do a migration to drop them
+- Re-create constraints including the account\_id field
+
+
+To find the constraints, connect to your database and run ``\d+ myapp_projectmanager``
+
+
+You will see the ``ManyToMany`` (or ``OneToOneField`` constraint:
+
+``"myapp_projectmanager" UNIQUE CONSTRAINT myapp_projectman_project_id_manager_id_bc477b48_uniq, btree (project_id, manager_id)``
+
+
+Drop this constraint in a migration:
+
+.. code-block:: python
+
+  from django.db import migrations
+
+  class Migration(migrations.Migration):
+
+    dependencies = [
+      # leave this as it was generated
+    ]
+
+    operations = [
+      migrations.RunSQL("""
+        DROP CONSTRAINT myapp_projectman_project_id_manager_id_bc477b48_uniq;
+      """),
+
+
+Then change your models to have a ``unique_together`` including the ``account\_id``
+
+
+.. code-block:: python
+
+  class ProjectManager(models.Model):
+      project = models.ForeignKey(Project, on_delete=models.CASCADE)
+      manager = models.ForeignKey(Manager, on_delete=models.CASCADE)
+      account = models.ForeignKey(Account, on_delete=models.CASCADE)
+
+      class Meta:
+          unique_together=(('account', 'project', 'manager'))
+
+
+And finally apply the changes by creating a new migration to generate these constraints:
+
+
+.. code-block:: python
+
+  python manage.py makemigrations
 
 
 3. Updating the models to use TenantModelMixin
@@ -308,9 +425,9 @@ You will also, at this point introduce the tenant_id, to define which column is 
 **3.2 Handling ForeignKey constraints**
 
 
-For ``ForeignKey`` constraint, we have a few different cases:
+For ``ForeignKey`` and ``OneToOneField`` constraint, we have a few different cases:
 
-- Foreign key between distributed tables, for which you should use the ``TenantForeignKey``.
+- Foreign key (or One to One) between distributed tables, for which you should use the ``TenantForeignKey`` (or ``TenantOneToOneField``).
 - Foreign key between a distributed table and a reference table, which don't require changed.
 - Foreign key between a distributed table and a local table, which require to drop the constraint by using ``models.ForeignKey(MyModel, on_delete=models.CASCADE, db_constraint=False)``.
 
