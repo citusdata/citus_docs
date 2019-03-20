@@ -299,17 +299,17 @@ This is the case for ``OneToOneField`` and ``ManyToMany`` fields.
 
 
 For these cases you will need to:
-- Find the constraints
-- Do a migration to drop them
-- Re-create constraints including the account\_id field
-
+1. Find the constraints
+2. Do a migration to drop them
+3. Re-create constraints including the account\_id field
 
 To find the constraints, connect to your database and run ``\d+ myapp_projectmanager``
+You will see the ``ManyToMany`` (or ``OneToOneField``) constraint:
 
+.. code-block:: sql
 
-You will see the ``ManyToMany`` (or ``OneToOneField`` constraint:
-
-``"myapp_projectmanager" UNIQUE CONSTRAINT myapp_projectman_project_id_manager_id_bc477b48_uniq, btree (project_id, manager_id)``
+  "myapp_projectmanager" UNIQUE CONSTRAINT myapp_projectman_project_id_manager_id_bc477b48_uniq,
+  btree (project_id, manager_id)
 
 
 Drop this constraint in a migration:
