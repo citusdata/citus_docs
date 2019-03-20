@@ -237,7 +237,7 @@ Django automatically creates a simple "id" primary key on models, so we will nee
 
 **2.2 Including the account\_id to unique constraints**
 
-The same thing needs to be done for `UNIQUE` constraints. You can have explicit constraints that you might have set in your model with `unique=True` or `unique_together` like:
+The same thing needs to be done for ``UNIQUE`` constraints. You can have explicit constraints that you might have set in your model with ``unique=True`` or ``unique_together`` like:
 
 
 .. code-block:: python
