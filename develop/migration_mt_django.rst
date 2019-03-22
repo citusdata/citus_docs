@@ -37,7 +37,7 @@ Let's consider this simplified model:
       name = models.CharField(max_length=255)
       domain = models.CharField(max_length=255)
       subdomain = models.CharField(max_length=255)
-      country = models.ForeignKey(Country, on_delete=models.CASCADE)
+      country = models.ForeignKey(Country, on_delete=models.SET_NULL)
 
 
   class Manager(models.Model):
@@ -60,7 +60,7 @@ Let's consider this simplified model:
 
 
 
-The tricky thing with this pattern is that in order to find all tasks for an account, you'll have to query for all of a account's project first. This becomes a problem once you start sharding data, and in particular when you run UPDATE or DELETE queries on nested models like task in this example.
+The tricky thing with this pattern is that in order to find all tasks for an account, you'll have to query for all of an account's project first. This becomes a problem once you start sharding data, and in particular when you run UPDATE or DELETE queries on nested models like task in this example.
 
 
 1. Introducing the tenant column to models belonging to an account
@@ -69,35 +69,37 @@ The tricky thing with this pattern is that in order to find all tasks for an acc
 
 **1.1 Introducting the column to models belonging to an account**
 
-In order to scale out a multi-tenant model, it's essential that you can locate all records that belong to an account quickly.
-The reason is that we want that an ORM call like
+In order to scale out a multi-tenant model, it’s essential for queries to quickly
+locate all records that belong to an account. Consider an ORM call such as:
 
 .. code-block:: python
 
   Project.objects.filter(account_id=1).prefetch_related('tasks')
 
-Generating the following queries
+
+It generates these underlying SQL queries:
 
 
 .. code-block:: postgresql
 
   SELECT *
-  FROM "myapp_project" WHERE "myapp_project"."account_id" = 1;
+  FROM myapp_project
+  WHERE account_id = 1;
 
   SELECT *
-  FROM "myapp_task" WHERE "myapp_task"."project_id" IN (1, 2, 3);
+  FROM myapp_task
+  WHERE project_id IN (1, 2, 3);
 
 
-Can be changed to
+However the second query would go faster with an extra filter:
 
 .. code-block:: postgresql
 
+  -- the AND clause identifies the tenant
   SELECT *
-  FROM "myapp_project" WHERE "myapp_project"."account_id" = 1;
-
-  SELECT *
-  FROM "myapp_task
-  WHERE ("myapp_task"."account_id" = 1 AND "myapp_task"."project_id" IN (1, 2, 3));
+  FROM myapp_task
+  WHERE project_id IN (1, 2, 3)
+        AND account_id = 1;
 
 
 This way you can easily query the tasks belonging to one account.
@@ -138,12 +140,12 @@ Can include in their :code:`WHERE` clause the :code:`account_id` like this:
   FROM "myapp_project" WHERE "myapp_project"."account_id" = 1;
 
   SELECT *
-  FROM "myapp_manager"
-  INNER JOIN "myapp_projectmanager"
-  ON ("myapp_manager"."id" = "myapp_projectmanager"."manager_id"
-  AND  myapp_projectmanager"."account_id" = "myapp_manager"."account_id")
-  WHERE "myapp_projectmanager"."project_id" IN (1, 2, 3)
-  AND "myapp_manager"."account_id" = 1;
+  FROM myapp_manager manager
+  INNER JOIN myapp_projectmanager projectmanager
+  ON (manager.id = projectmanager.manager_id
+  AND  projectmanager.account_id = manager.account_id)
+  WHERE projectmanager.project_id IN (1, 2, 3)
+  AND manager.account_id = 1;
 
 
 For that we need to introduce :code:`through` models. In our case:
@@ -303,7 +305,7 @@ For these cases you will need to:
 2. Do a migration to drop them
 3. Re-create constraints including the account\_id field
 
-To find the constraints, connect to your database and run ``\d+ myapp_projectmanager``
+To find the constraints, connect to your database using ``psql`` and run ``\d+ myapp_projectmanager``
 You will see the ``ManyToMany`` (or ``OneToOneField``) constraint:
 
 .. code-block:: sql
@@ -361,7 +363,7 @@ In requirements.txt for your Django application, add
 
 ::
 
-  django_multitenant>=2.0.0
+  django_multitenant>=2.0.0, <3
 
 Run ``pip install -r requirements.txt``.
 
@@ -386,9 +388,13 @@ To do that in your :code:`models.py` file you will need to do the following impo
   from django_multitenant.mixins import *
 
 
-Then your models should be changed to have the new manager and inheritance. As we are using Mixins, your models and managers can also inherits from other mixins you might have been using previously. It is for example compatible with using :code:`django.contrib.gis.db` models.
+Previously our example models inherited from just models.Model, but now we need
+to change them to also inherit from TenantModelMixin. The models in real
+projects may inherit from other mixins too like ``django.contrib.gis.db``,
+which is fine.
 
-You will also, at this point introduce the tenant_id, to define which column is the distribution column.
+You will also, at this point, introduce the tenant_id to define which column is
+the distribution column.
 
 .. code-block:: python
 
@@ -451,7 +457,7 @@ Finally your models should look like this:
       name = models.CharField(max_length=255)
       domain = models.CharField(max_length=255)
       subdomain = models.CharField(max_length=255)
-      country = models.ForeignKey(Country, on_delete=models.CASCADE)  # No changes needed
+      country = models.ForeignKey(Country, on_delete=models.SET_NULL)  # No changes needed
 
       tenant_id = 'id'
       objects = TenantManager()
