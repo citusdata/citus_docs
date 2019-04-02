@@ -354,8 +354,8 @@ And finally apply the changes by creating a new migration to generate these cons
   python manage.py makemigrations
 
 
-3. Updating the models to use TenantModelMixin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+3. Updating the models to use TenantModelMixin and TenantForeignKey
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Next, we'll use the `django-multitenant <https://github.com/citusdata/django-multitenant>`_ library to add account_id to foreign keys, and make application queries easier later on.
 
@@ -422,7 +422,7 @@ the distribution column.
       tenant_id = 'account_id'
       objects = TenantManager()
 
-  class ProjectManager(models.Model):
+  class ProjectManager(TenantModelMixin, models.Model):
       ...
       tenant_id = 'account_id'
       objects = TenantManager()
@@ -486,7 +486,7 @@ Finally your models should look like this:
       tenant_id = 'account_id'
       objects = TenantManager()
 
-  class ProjectManager(models.Model):
+  class ProjectManager(TenantModelMixin, models.Model):
       project = TenantForeignKey(Project, on_delete=models.CASCADE)
       manager = TenantForeignKey(Manager, on_delete=models.CASCADE)
       account = models.ForeignKey(Account, on_delete=models.CASCADE)
@@ -502,7 +502,7 @@ In the second section of this article, we introduced the fact that with citus, `
 
 .. code-block:: python
 
-  class ProjectManager(models.Model):
+  class ProjectManager(TenantModelMixin, models.Model):
       project = TenantForeignKey(Project, on_delete=models.CASCADE)
       manager = TenantForeignKey(Manager, on_delete=models.CASCADE)
       account = models.ForeignKey(Account, on_delete=models.CASCADE)
