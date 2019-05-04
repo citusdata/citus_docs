@@ -43,17 +43,19 @@ Major and minor version upgrades follow the same steps, but be careful: major up
 
    Starting at version 8.1, new Citus nodes expect and require encrypted inter-node communication by default, whereas nodes upgraded to 8.1 from an earlier version preserve their earlier SSL settings. Be careful when adding a new Citus 8.1 (or newer) node to an upgraded cluster that does not yet use SSL. The :ref:`adding a worker <adding_worker_node>` section covers that situation.
 
-Each major and minor version of Citus is published as a package with a separate name. Installing a newer package will automatically remove the older version. Here is how to upgrade from 7.5 to 8.2 for instance:
+Each major and minor version of Citus is published as a package with a separate name. Installing a newer package will automatically remove the older version.
 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When doing a **major** version upgrade instead, be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a **minor** upgrade from 8.1 to 8.2:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-10-citus-8.2
+  sudo apt-get install postgresql-11-citus-8.2
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -61,8 +63,8 @@ Step 1. Update Citus Package
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus75_10 citus82_10
-  sudo service postgresql-10 restart
+  sudo yum swap citus81_11 citus82_11
+  sudo service postgresql-11 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
