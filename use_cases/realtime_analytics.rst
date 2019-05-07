@@ -87,6 +87,7 @@ With this, the system is ready to accept data and serve queries! Keep the follow
         ('{200,404}'::int[])[ceil(random()*2)],
         5+trunc(random()*150)
       );
+      COMMIT;
       PERFORM pg_sleep(random() * 0.25);
     END LOOP;
   END $$;
