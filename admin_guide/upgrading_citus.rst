@@ -15,21 +15,21 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 8.1 is currently installed on Postgres 11:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 8.2 is currently installed on Postgres 11:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-11-citus-8.1
+  sudo apt-get install --only-upgrade postgresql-11-citus-8.2
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus81_11
+  sudo yum update citus82_11
   sudo service postgresql-11.0 restart
 
 .. _major_minor_upgrade:
@@ -41,19 +41,21 @@ Major and minor version upgrades follow the same steps, but be careful: major up
 
 .. note::
 
-   Starting at version 8.1, new Citus nodes expect and require encrypted inter-node communication by default, whereas nodes upgraded to 8.1 from an earlier version preserve their earlier SSL settings. Be careful when adding a new Citus 8.1 node to an upgraded cluster that does not yet use SSL. The :ref:`adding a worker <adding_worker_node>` section covers that situation.
+   Starting at version 8.1, new Citus nodes expect and require encrypted inter-node communication by default, whereas nodes upgraded to 8.1 from an earlier version preserve their earlier SSL settings. Be careful when adding a new Citus 8.1 (or newer) node to an upgraded cluster that does not yet use SSL. The :ref:`adding a worker <adding_worker_node>` section covers that situation.
 
-Each major and minor version of Citus is published as a package with a separate name. Installing a newer package will automatically remove the older version. Here is how to upgrade from 7.5 to 8.1 for instance:
+Each major and minor version of Citus is published as a package with a separate name. Installing a newer package will automatically remove the older version.
 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When doing a **major** version upgrade instead, be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a **minor** upgrade from 8.1 to 8.2:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-10-citus-8.1
+  sudo apt-get install postgresql-11-citus-8.2
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -61,8 +63,8 @@ Step 1. Update Citus Package
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus75_10 citus81_10
-  sudo service postgresql-10 restart
+  sudo yum swap citus81_11 citus82_11
+  sudo service postgresql-11 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,7 +101,7 @@ Upgrading PostgreSQL version from 10 to 11
 
    Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, upgrade Citus first.
 
-   Also **Citus 7.x is not compatible with Postgres 11.** Before upgrading Postgres 10 to 11, be sure to follow the above steps to upgrade from Citus 7.x to 8.1.
+   Also **Citus 7.x is not compatible with Postgres 11.** Before upgrading Postgres 10 to 11, be sure to follow the above steps to upgrade from Citus 7.x to 8.2.
 
 Record the following paths before you start (your actual paths may be different than those below):
 
