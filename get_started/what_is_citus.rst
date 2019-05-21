@@ -11,7 +11,7 @@ Citus horizontally scales PostgreSQL across multiple machines using sharding and
 
 1. As `open source <https://www.citusdata.com/product/community>`_ to add to existing Postgres servers
 2. On-premise with additional `enterprise grade <https://www.citusdata.com/product/enterprise>`_ security and cluster management tools
-3. As a fully-managed database as a service, called `Citus Cloud <https://www.citusdata.com/product/cloud>`_
+3. As a fully-managed database as a service on both Microsoft Azure and Amazon AWS. For info on these offerings, see `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/>`_ and `Citus Cloud on AWS <https://www.citusdata.com/product/cloud>`_
 
 .. _how_big:
 
