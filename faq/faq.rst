@@ -187,6 +187,11 @@ Can I run Citus on Heroku?
 
 Yes, the `Citus Heroku add-on <https://elements.heroku.com/addons/citus>`_ provisions a Citus cluster and makes it available to a Heroku app.
 
+Can I run Citus on Microsoft Azure?
+-----------------------------------
+
+Yes, Citus is a deployment option of `Azure Database for PostgreSQL <https://docs.microsoft.com/azure/postgresql/>`_ called **Hyperscale**. It is a fully managed database-as-a-service.
+
 Can I run Citus on Amazon RDS?
 ------------------------------
 
