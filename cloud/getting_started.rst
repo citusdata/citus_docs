@@ -7,7 +7,7 @@ Citus Cloud is a fully managed hosted version of Citus Enterprise edition on top
 
 .. note::
 
-  We also offer a mamanaged deployment on `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/>`_.
+  We also offer a managed deployment on `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/>`_.
 
 Provisioning
 ============
