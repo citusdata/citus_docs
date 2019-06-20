@@ -23,9 +23,11 @@ The pg_dist_partition table stores metadata about which tables in the database a
 +----------------+----------------------+---------------------------------------------------------------------------+
 |  partmethod    |         char         | | The method used for partitioning / distribution. The values of this     |
 |                |                      | | column corresponding to different distribution methods are :-           |
-|                |                      | | append: 'a'                                                             |
-|                |                      | | hash: 'h'                                                               |
-|                |                      | | reference table: 'n'                                                    |
+|                |                      | | * append: 'a'                                                           |
+|                |                      | | * hash: 'h'                                                             |
+|                |                      | | * none: 'n'                                                             |
+|                |                      | | * range: 'r'                                                            |
+|                |                      | | * redistribute by hash: 'x'                                             |
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   partkey      |         text         | | Detailed information about the distribution column including column     |
 |                |                      | | number, type and other relevant information.                            |
