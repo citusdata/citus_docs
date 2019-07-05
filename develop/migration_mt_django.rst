@@ -206,7 +206,7 @@ Django automatically creates a simple "id" primary key on models, so we will nee
 
         ALTER TABLE myapp_manager
         ADD CONSTRAINT myapp_manager_pkey
-        PRIMARY KEY (account_id, id)
+        PRIMARY KEY (account_id, id);
       """),
 
       migrations.RunSQL("""
@@ -215,7 +215,7 @@ Django automatically creates a simple "id" primary key on models, so we will nee
 
         ALTER TABLE myapp_project
         ADD CONSTRAINT myapp_product_pkey
-        PRIMARY KEY (account_id, id)
+        PRIMARY KEY (account_id, id);
       """),
 
       migrations.RunSQL("""
@@ -224,7 +224,7 @@ Django automatically creates a simple "id" primary key on models, so we will nee
 
         ALTER TABLE myapp_task
         ADD CONSTRAINT myapp_task_pkey
-        PRIMARY KEY (account_id, id)
+        PRIMARY KEY (account_id, id);
       """),
 
       migrations.RunSQL("""
@@ -433,9 +433,9 @@ the distribution column.
 
 For ``ForeignKey`` and ``OneToOneField`` constraint, we have a few different cases:
 
-- Foreign key (or One to One) between distributed tables, for which you should use the ``TenantForeignKey`` (or ``TenantOneToOneField``).
-- Foreign key between a distributed table and a reference table, which don't require changed.
-- Foreign key between a distributed table and a local table, which require to drop the constraint by using ``models.ForeignKey(MyModel, on_delete=models.CASCADE, db_constraint=False)``.
+- Foreign keys (or One to One) between distributed tables, for which you should use the ``TenantForeignKey`` (or ``TenantOneToOneField``).
+- Foreign keys between a distributed table and a reference table don't require a change.
+- Foreign keys between a distributed table and a local table, which require to drop the constraint by using ``models.ForeignKey(MyModel, on_delete=models.CASCADE, db_constraint=False)``.
 
 Finally your models should look like this:
 

@@ -29,7 +29,7 @@ Keep in mind that, in the wrong situation, reading all these partitions can hurt
 Scaling Timeseries Data on Citus
 --------------------------------
 
-We can mix the single-node table partitioning techniques with Citus' distributed sharding to make a scalable time-series database. It's the best of both worlds. It's especially elegant atop the declarative table partitioning in Postgres 10.
+We can mix the single-node table partitioning techniques with Citus' distributed sharding to make a scalable time-series database. It's the best of both worlds. It's especially elegant atop Postgres's declarative table partitioning.
 
 .. image:: ../images/timeseries-sharding-and-partitioning.png
 
@@ -131,7 +131,7 @@ As time progresses, pg_partman will need to do some maintenance to create new pa
   -- due to aggressive locks
   SELECT partman.run_maintenance(p_analyze := false);
 
-It's best to set up a periodic job to run the maintenance function. Pg_partman can be built with support for a background worker (BGW) process to do this. Or we can use another extension like `pg_cron <https://github.com/citusdata/pg_cron>`_:
+It's best to set up a periodic job to run the maintenance function. Pg_partman can be built with support for a background worker process to do this. Or we can use another extension like `pg_cron <https://github.com/citusdata/pg_cron>`_:
 
 .. code-block:: postgresql
 
@@ -154,4 +154,4 @@ Now whenever maintenance runs, partitions older than a month are automatically d
 
 .. note::
 
-  Be aware that native partitioning in Postgres is still quite new and has a few quirks. For example, you cannot directly create an in index on a partitioned table. Instead, pg_partman lets you create a template table to define indexes for new partitions. Maintenance operations on partitioned tables will also acquire aggressive locks that can briefly stall queries. There is currently a lot of work going on within the postgres community to resolve these issues, so expect time partitioning in Postgres to only get better.
+  Be aware that native partitioning in Postgres is still quite new and has a few quirks. For example, you cannot directly create an index on a partitioned table. Instead, pg_partman lets you create a template table to define indexes for new partitions. Maintenance operations on partitioned tables will also acquire aggressive locks that can briefly stall queries. There is currently a lot of work going on within the postgres community to resolve these issues, so expect time partitioning in Postgres to only get better.

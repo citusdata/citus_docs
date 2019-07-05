@@ -87,7 +87,3 @@ When you wish to stop the docker containers, use Docker Compose:
 .. code-block:: bash
 
   COMPOSE_PROJECT_NAME=citus docker-compose down -v
-
-.. note::
-
-  Please note that Citus reports anonymous information about your cluster to the Citus Data company servers. To learn more about what information is collected and how to opt out of it, see :ref:`phone_home`.
