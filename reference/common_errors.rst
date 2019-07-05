@@ -130,25 +130,10 @@ Cannot establish a new connection for placement *n*, since DML has been executed
   ERROR:  25001: cannot establish a new connection for placement 314, since DML has been executed on a connection that is in use
   LOCATION:  FindPlacementListConnection, placement_connection.c:612
 
-This is a current limitation. In a single transaction Citus does not support running insert/update statements with the :ref:`router_executor` that reference multiple shards, followed by a read query that consults both of the shards.
-
-.. note::
-
-  A similar error also occurs (misleadingly) when the :ref:`create_distributed_table` function is executed on a table by a role other than the table's owner. See this `github discussion <https://github.com/citusdata/citus/issues/2094>`_ for details. To resolve this particular problem, identify the table's owner, switch roles, and try again.
-
-  .. code-block:: sql
-
-    -- find the role
-    SELECT tablename, tableowner FROM pg_tables;
-    -- switch into it
-    SET ROLE table_owner_name;
-
-  Also note that ``table_owner_name`` must have LOGIN permissions on the worker nodes.
-
 Resolution
 ~~~~~~~~~~
 
-Consider moving the read query into a separate transaction.
+:ref:`Upgrade <upgrading>` to Citus 8.3 or higher.
 
 Could not connect to server: Cannot assign requested address
 ------------------------------------------------------------

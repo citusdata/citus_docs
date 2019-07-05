@@ -119,7 +119,3 @@ At this step, you have completed the installation process and are ready to use y
 ::
 
   sudo -i -u postgres psql
-
-.. note::
-
-  Please note that Citus reports anonymous information about your cluster to the Citus Data company servers. To learn more about what information is collected and how to opt out of it, see :ref:`phone_home`.

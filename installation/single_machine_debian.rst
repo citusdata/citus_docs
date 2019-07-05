@@ -87,7 +87,3 @@ To verify that the installation has succeeded we check that the coordinator node
 You should see a row for each worker node including the node name and port.
 
 At this step, you have completed the installation process and are ready to use your Citus cluster. To help you get started, we have a :ref:`tutorial<multi_tenant_tutorial>` which has instructions on setting up a Citus cluster with sample data in minutes.
-
-.. note::
-
-  Please note that Citus reports anonymous information about your cluster to the Citus Data company servers. To learn more about what information is collected and how to opt out of it, see :ref:`phone_home`.
