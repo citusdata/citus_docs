@@ -15,14 +15,14 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 8.2 is currently installed on Postgres 11:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 8.3 is currently installed on Postgres 11:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-11-citus-8.2
+  sudo apt-get install --only-upgrade postgresql-11-citus-8.3
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -48,14 +48,14 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When doing a **major** version upgrade instead, be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a **minor** upgrade from 8.1 to 8.2:
+When doing a **major** version upgrade instead, be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a **minor** upgrade from 8.2 to 8.3:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-11-citus-8.2
+  sudo apt-get install postgresql-11-citus-8.3
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -63,7 +63,7 @@ When doing a **major** version upgrade instead, be sure to upgrade the Citus ext
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus81_11 citus82_11
+  sudo yum swap citus82_11 citus83_11
   sudo service postgresql-11 restart
 
 Step 2. Apply Update in DB
@@ -101,7 +101,7 @@ Upgrading PostgreSQL version from 10 to 11
 
    Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, upgrade Citus first.
 
-   Also **Citus 7.x is not compatible with Postgres 11.** Before upgrading Postgres 10 to 11, be sure to follow the above steps to upgrade from Citus 7.x to 8.2.
+   Also **Citus 7.x is not compatible with Postgres 11.** Before upgrading Postgres 10 to 11, be sure to follow the above steps to upgrade from Citus 7.x to 8.3.
 
 Record the following paths before you start (your actual paths may be different than those below):
 

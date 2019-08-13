@@ -26,7 +26,7 @@ Steps to be executed on all nodes
 ::
 
   # install PostgreSQL with Citus extension
-  sudo yum install -y citus82_11
+  sudo yum install -y citus83_11
   # initialize system database (using RHEL 6 vs 7 method as necessary)
   sudo service postgresql-11 initdb || sudo /usr/pgsql-11/bin/postgresql-11-setup initdb
   # preload citus extension
