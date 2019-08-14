@@ -3,16 +3,16 @@
 Get Started
 ###########
 
-Citus Cloud is a fully managed hosted version of Citus Enterprise edition on top of AWS. Citus Cloud comes with the benefit of Citus allowing you to easily scale out your memory and processing power, without having to worry about keeping it up and running.
-
-.. note::
-
-  We also offer a managed deployment on `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/>`_.
+.. NOTE::
+   Update: We are no longer onboarding new users to Citus Cloud on AWS. The good news is, Citus is still available to you: as open source,
+   as on-prem enterprise software, and in the cloud on Microsoft Azure, as a fully-integrated deployment option in Azure Database for PostgreSQL.
+   
+Citus Cloud is a fully managed hosted version of Citus Enterprise edition on top of AWS. Citus Cloud comes with the benefit of Citus allowing you to easily scale out your memory and processing power, without having to worry about keeping it up and running. We also offer a managed deployment on `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/>`_.
 
 Provisioning
 ============
 
-Once you've created your account at `https://console.citusdata.com <https://console.citusdata.com>`_ you can provision your Citus cluster. When you login you'll be at the home of the dashboard, and from here you can click New Formation to begin your formation creation. 
+You can provision a new Citus cluster at `https://console.citusdata.com <https://console.citusdata.com>`_. When you login you'll be at the home of the dashboard, and from here you can click New Formation to begin your formation creation. 
 
 .. image:: ../images/cloud_provisioning.png
 
@@ -55,7 +55,7 @@ If there is an AWS region you do not see listed but would like for us to add sup
 Other infrastructure providers
 ------------------------------
 
-At this time we only support Citus Cloud on top of Amazon Web Services. We are continually exploring other infrastructure providers to make Citus Cloud available on. If you have immediate needs you could consider running Citus Community Edition or Citus Enterprise Edition. Or if you have questions about our timeline for other infrastructure providers please feel free to `reach out <https://www.citusdata.com/about/contact_us/>`_.
+At this time we only support Citus Cloud on top of Amazon Web Services and `Microsoft Azure <https://docs.microsoft.com/azure/postgresql/>`_. We are continually exploring other infrastructure providers to make Citus Cloud available on. If you have immediate needs you could consider running Citus Community Edition or Citus Enterprise Edition. Or if you have questions about our timeline for other infrastructure providers please feel free to `reach out <https://www.citusdata.com/about/contact_us/>`_.
 
 .. _connection:
 

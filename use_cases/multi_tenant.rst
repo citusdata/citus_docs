@@ -186,17 +186,12 @@ Try it Yourself
 
 .. note::
 
-  This guide is designed so you can follow along in your own Citus database. Use one of these alternatives to spin up a database:
+  This guide is designed so you can follow along in your own Citus database. This tutorial assumes that you already have Citus installed and running.
+  If you don't have Citus running, you can setup Citus locally using one of the options from:ref:`development`.
 
-  * Run Citus locally using :ref:`single_machine_docker`, or
-  * `Sign up <https://console.citusdata.com/users/sign_up>`_ for Citus Cloud and provision a cluster.
-
-  You'll run the SQL commands using psql:
+  You'll run the SQL commands using psql and connect to the Coordinator node:
 
   * **Docker**: :code:`docker exec -it citus_master psql -U postgres`
-  * **Cloud**: :code:`psql "connection-string"` where the connection string for your formation is available in the Cloud Console.
-
-  In either case psql will be connected to the coordinator node for the cluster.
 
 At this point feel free to follow along in your own Citus cluster by `downloading <https://examples.citusdata.com/mt_ref_arch/schema.sql>`_ and executing the SQL to create the schema. Once the schema is ready, we can tell Citus to create shards on the workers. From the coordinator node, run:
 

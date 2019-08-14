@@ -26,7 +26,7 @@ To show the benefits of parallel indexing, we’ll walk through a small
 example of indexing ~200k rows containing large JSON objects from the
 `GitHub archive <https://www.githubarchive.org/>`__. To run the
 examples, we set up a formation using `Citus
-Cloud <https://console.citusdata.com/users/sign_up>`__ consisting of four
+Cloud <https://console.citusdata.com/>`__ consisting of four
 worker nodes with four cores each, running PostgreSQL 9.6.
 
 You can download the sample data by running the following commands:
