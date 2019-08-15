@@ -3,14 +3,10 @@
 Managed Deployment
 ==================
 
-In addition to installing Citus yourself, you can rent a fully managed
-instance. "Citus-as-a-Service" is an easy way to provision and monitor a
-high-availability cluster. We offer managed deployments on both the Microsoft
-Azure platform, and Amazon Web Services.
+In addition to installing Citus open source yourself, you can easily spin up a Citus server group in the cloud, too. Citus is available in the cloud, built-in to Azure Database for PostgreSQL.
 
 .. NOTE::
-   Update: We are no longer onboarding new users to Citus Cloud on AWS. The good news is, Citus is still available to you: as open source,
-   as on-prem enterprise software, and in the cloud on Microsoft Azure, as a fully-integrated deployment option in Azure Database for PostgreSQL.
+   Update: We are no longer onboarding new users to Citus Cloud on AWS. The good news is, Citus is still available to you: as open source, as on-prem enterprise software, and in the cloud on Microsoft Azure, as a fully-integrated deployment option in Azure Database for PostgreSQL.
 
 Learn more:
 
