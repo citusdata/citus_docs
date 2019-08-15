@@ -8,7 +8,7 @@ In this tutorial, we will demonstrate how you can use Citus to ingest events dat
 .. note::
 
     This tutorial assumes that you already have Citus installed and running. If you don't have Citus running,
-    you can setup Citus locally using one of the options from:ref:`development`.
+    you can setup Citus locally using one of the options from :ref:`development`.
 
 
 Data model and sample data

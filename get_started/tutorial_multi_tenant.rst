@@ -9,7 +9,7 @@ use Citus to power your multi-tenant application.
 .. note::
 
     This tutorial assumes that you already have Citus installed and running. If you don't have Citus running,
-    you can setup Citus locally using one of the options from:ref:`development`.
+    you can setup Citus locally using one of the options from :ref:`development`.
 
 
 Data model and sample data

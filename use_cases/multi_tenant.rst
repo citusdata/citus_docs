@@ -187,7 +187,7 @@ Try it Yourself
 .. note::
 
   This guide is designed so you can follow along in your own Citus database. This tutorial assumes that you already have Citus installed and running.
-  If you don't have Citus running, you can setup Citus locally using one of the options from:ref:`development`.
+  If you don't have Citus running, you can setup Citus locally using one of the options from :ref:`development`.
 
   You'll run the SQL commands using psql and connect to the Coordinator node:
 
