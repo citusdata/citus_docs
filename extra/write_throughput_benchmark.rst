@@ -5,7 +5,7 @@
 Benchmark Setup with Citus and pgbench
 --------------------------------------
 
-In this section, we provide step by step instructions to benchmark Citus' write throughput. For these benchmark steps, we use `Citus Cloud <https://console.citusdata.com/users/sign_up>`_ to create test clusters, and a standard benchmarking tool called `pgbench  <https://www.postgresql.org/docs/current/static/pgbench.html>`_.
+In this section, we provide step by step instructions to benchmark Citus' write throughput. For these benchmark steps, we use `Citus Cloud <https://console.citusdata.com/>`_ to create test clusters, and a standard benchmarking tool called `pgbench  <https://www.postgresql.org/docs/current/static/pgbench.html>`_.
 
 If you're interested in general throughput numbers based on these tests, you can also find them in :ref:`scaling_data_ingestion`.
 

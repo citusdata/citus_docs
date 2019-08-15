@@ -8,11 +8,7 @@ In this tutorial, we will demonstrate how you can use Citus to ingest events dat
 .. note::
 
     This tutorial assumes that you already have Citus installed and running. If you don't have Citus running,
-    you can:
-
-    * Provision a cluster using `Citus Cloud <https://console.citusdata.com/users/sign_up>`_, or
-
-    * Setup Citus locally using :ref:`single_machine_docker`.
+    you can setup Citus locally using one of the options from :ref:`development`.
 
 
 Data model and sample data
@@ -38,14 +34,6 @@ Creating tables
 ---------------
 
 To start, you can first connect to the Citus coordinator using psql.
-
-**If you are using Citus Cloud**, you can connect by specifying the connection string (URL in the formation details):
-
-.. code-block:: bash
-
-    psql connection-string
-
-Please note that certain shells may require you to quote the connection string when connecting to Citus Cloud. For example, :code:`psql "connection-string"`.
 
 **If you are using Docker**, you can connect by running psql with the docker exec command:
 

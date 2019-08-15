@@ -39,7 +39,7 @@ like:
 
 Now let's walk through the steps of creating aggregations for a typical
 example of high-volume data: page views. We set up a `Citus Cloud
-<https://console.citusdata.com/users/sign_up>`__ formation consisting
+<https://www.citusdata.com/product/cloud/>`__ formation consisting
 of 4 workers with 4 cores each, and create a distributed `facts
 <http://databases.about.com/od/datamining/a/Facts-Vs-Dimensions.htm>`__
 table with several indexes:
