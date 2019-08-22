@@ -51,11 +51,6 @@ Citus Cloud runs on top of Amazon Web Services. During provisioning you're able 
 
 If there is an AWS region you do not see listed but would like for us to add support for please `contact us <https://www.citusdata.com/about/contact_us/>`_ and we'd be happy to look into it.
 
-Other infrastructure providers
-------------------------------
-
-At this time we only support Citus Cloud on top of Amazon Web Services and `Microsoft Azure <https://docs.microsoft.com/azure/postgresql/>`_. We are continually exploring other infrastructure providers to make Citus Cloud available on. If you have immediate needs you could consider running Citus Community Edition or Citus Enterprise Edition. Or if you have questions about our timeline for other infrastructure providers please feel free to `reach out <https://www.citusdata.com/about/contact_us/>`_.
-
 .. _connection:
 
 Connecting
