@@ -6,7 +6,7 @@ Citus Cloud
 ###########
 
 .. NOTE::
-   Update: We are no longer onboarding new users to Citus Cloud on AWS. The good news is, Citus is still available to you: as open source, as on-prem enterprise software, and in the cloud on Microsoft Azure, as a fully-integrated deployment option in Azure Database for PostgreSQL.
+   We are no longer onboarding new users to Citus Cloud on AWS. The good news is, Citus is still available to you: as open source, as on-prem enterprise software, and in the cloud on Microsoft Azure, as a fully-integrated deployment option in Azure Database for PostgreSQL.
 
 Citus Cloud is a fully managed hosted version of Citus Enterprise edition on top of AWS. It goes way beyond the functionality of the Citus extension itself. Cloud does failovers in a way that’s transparent to the application, elastically scales up and scales out, takes automatic backups for disaster recovery, has monitoring and alarms built in, and provides patches and upgrades with no downtime. We also offer a managed deployment on `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/>`_.
 

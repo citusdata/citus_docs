@@ -1,3 +1,5 @@
+.. include:: deprecated.rst
+
 Monitoring
 ##########
 
