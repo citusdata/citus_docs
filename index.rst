@@ -34,7 +34,7 @@ Welcome to the documentation for Citus 8.3! Citus horizontally scales PostgreSQL
   <div class="front-menu row">
     <div class="col-md-4">
       <a class="box" href="portals/citus_cloud.html">
-        <h3>Citus Cloud</h3>
+        <h3>Managed Service</h3>
         <img src="_images/cloud.png" />
         Explore our secure, scalable, highly available
         database-as-a-service.
