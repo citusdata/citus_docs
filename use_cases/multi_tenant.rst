@@ -423,7 +423,7 @@ Scaling Hardware Resources
 
 .. note::
 
-  This section uses features available only in `Citus Cloud <https://www.citusdata.com/product/cloud>`_ and `Citus Enterprise <https://www.citusdata.com/product/enterprise>`_. Also, please note that these features are available in Citus Cloud across all plans except for the "Dev Plan".
+  This section uses features available only in `Citus Enterprise <https://www.citusdata.com/product/enterprise>`_.
 
 Multi-tenant databases should be designed for future scale as business grows or tenants want to store more data. Citus can scale out easily by adding new machines without having to make any changes or take application downtime.
 
@@ -451,7 +451,7 @@ Dealing with Big Tenants
 
 .. note::
 
-  This section uses features available only in Citus Cloud and Citus Enterprise.
+  This section uses features available only in Citus Enterprise.
 
 The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However, users often have two questions. The first is what will happen to their largest tenant if it grows too big. The second is what are the performance implications of hosting a large tenant together with small ones on a single worker node, and what can be done about it.
 
