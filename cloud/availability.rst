@@ -1,3 +1,5 @@
+.. include:: deprecated.rst
+
 .. _ha:
 
 Backup, Availability, and Replication
