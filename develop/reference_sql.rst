@@ -131,7 +131,6 @@ Next we'll add the extension, create a destination table to store the json data 
 
 .. code-block:: postgresql
 
-  -- note: Citus Cloud has extension already
   CREATE EXTENSION topn;
   SELECT run_command_on_workers(' create extension topn; ');
 

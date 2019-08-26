@@ -63,7 +63,7 @@ data across your cluster after adding new worker nodes.
 
 .. NOTE::
 
-  Citus Cloud uses `streaming replication <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high availability and thus maintaining shard replicas would be redundant. In any production environment where streaming replication is unavailable, you should set ``citus.shard_replication_factor`` to 2 or higher for fault tolerance.
+  `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/>`_ uses `streaming replication <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high availability and thus maintaining shard replicas would be redundant. In any production environment where streaming replication is unavailable, you should set ``citus.shard_replication_factor`` to 2 or higher for fault tolerance.
 
 With this, the system is ready to accept data and serve queries! Keep the following loop running in a ``psql`` console in the background while you continue with the other commands in this article. It generates fake data every second or two.
 
@@ -280,8 +280,8 @@ to enable it:
 
 .. note::
 
-  This is not necessary on Citus Cloud, which has HLL already installed,
-  along with other useful :ref:`cloud_extensions`.
+  This is not necessary on Hyperscale, which has HLL already installed,
+  along with other useful extensions.
 
 Now we're ready to track IP addresses in our rollup with HLL. First
 add a column to the rollup table.

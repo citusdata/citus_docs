@@ -1,3 +1,5 @@
+.. include:: deprecated.rst
+
 .. _cloud_scaling:
 
 Scaling

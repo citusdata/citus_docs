@@ -1,10 +1,10 @@
 .. _cloud_overview:
 
-Get Started
-###########
+Overview
+########
 
 .. NOTE::
-   Update: We are no longer onboarding new users to Citus Cloud on AWS. Of course, existing customers can continue to use Citus Cloud as they do today. If you’re new to Citus, the good news is, Citus is still available to you: as open source, as on-prem enterprise software, and in the cloud on Microsoft Azure, as a fully-integrated deployment option in Azure Database for PostgreSQL.
+   We are no longer onboarding new users to Citus Cloud on AWS. Of course, existing customers can continue to use Citus Cloud as they do today. If you’re new to Citus, the good news is, Citus is still available to you: as open source, as on-prem enterprise software, and in the cloud on Microsoft Azure, as a fully-integrated deployment option in Azure Database for PostgreSQL.
    
 Citus Cloud is a fully managed hosted version of Citus Enterprise edition on top of AWS. Citus Cloud comes with the benefit of Citus allowing you to easily scale out your memory and processing power, without having to worry about keeping it up and running. We also offer a managed deployment on `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/>`_.
 
@@ -50,11 +50,6 @@ Citus Cloud runs on top of Amazon Web Services. During provisioning you're able 
 - Canada (Central) [ca-central-1]
 
 If there is an AWS region you do not see listed but would like for us to add support for please `contact us <https://www.citusdata.com/about/contact_us/>`_ and we'd be happy to look into it.
-
-Other infrastructure providers
-------------------------------
-
-At this time we only support Citus Cloud on top of Amazon Web Services and `Microsoft Azure <https://docs.microsoft.com/azure/postgresql/>`_. We are continually exploring other infrastructure providers to make Citus Cloud available on. If you have immediate needs you could consider running Citus Community Edition or Citus Enterprise Edition. Or if you have questions about our timeline for other infrastructure providers please feel free to `reach out <https://www.citusdata.com/about/contact_us/>`_.
 
 .. _connection:
 
