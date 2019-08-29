@@ -72,7 +72,7 @@ Temp Tables: the Workaround of Last Resort
 
 There are still a few queries that are :ref:`unsupported <unsupported>` even with the use of push-pull execution via subqueries. One of them is running window functions that partition by a non-distribution column.
 
-Suppose we have a table called :code:`github_events`, distributed by the column :code:`user_id`. Then the following window function will not work:
+In our :ref:`real-time analytics tutorial <real_time_analytics_tutorial>` we created a table called :code:`github_events`, distributed by the column :code:`user_id`. If we want to query it and count the events for a preselected of repos, one way to do it in SQL is with a window function. However, partitioning on a non-distribution column does not work:
 
 .. code-block:: sql
 
@@ -83,7 +83,7 @@ Suppose we have a table called :code:`github_events`, distributed by the column 
     FROM github_events
    WHERE repo_id IN (8514, 15435, 19438, 21692);
 
-There is another trick though. We can pull the relevant information to the coordinator as a temporary table:
+There is a trick, though. We can pull the relevant information to the coordinator as a temporary table:
 
 .. code-block:: sql
 
@@ -102,4 +102,3 @@ There is another trick though. We can pull the relevant information to the coord
     FROM results;
 
 Creating a temporary table on the coordinator is a last resort. It is limited by the disk size and CPU of the node.
-
