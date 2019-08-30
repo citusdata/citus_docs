@@ -458,9 +458,16 @@ Long running queries can hold locks, queue up WAL, or just consume a lot of syst
 
 The timeout is specified in milliseconds.
 
-.. note::
+To customize the timeout per query, use ``SET LOCAL`` in a transaction:
 
-   It's not possible to make an exception to the timeout for individual queries. Citus does not yet propagate ``SET LOCAL`` to the workers, so the statement_timeout GUC cannot be adjusted within a session.
+.. code-block:: postgres
+
+   BEGIN;
+   -- this limit applies to just the current transaction
+   SET LOCAL statement_timeout TO 300000;
+
+   -- ...
+   COMMIT;
 
 Security
 ========
