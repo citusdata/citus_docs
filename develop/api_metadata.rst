@@ -292,7 +292,8 @@ This view can trace queries to originating tenants in a multi-tenant application
 | query          | text   | anonymized query string                                 |
 +----------------+--------+---------------------------------------------------------+
 | executor       | text   | Citus :ref:`executor <distributed_query_executor>` used:|
-|                |        | real-time, task-tracker, router, or insert-select       |
+|                |        | adaptive, real-time, task-tracker, router, or           |
+|                |        | insert-select                                           |
 +----------------+--------+---------------------------------------------------------+
 | partition_key  | text   | value of distribution column in router-executed queries,|
 |                |        | else NULL                                               |
@@ -320,13 +321,30 @@ Results:
 
 ::
 
-  ┌────────────┬────────┬───────┬───────────────────────────────────────────────┬───────────────┬───────────────┬───────┐
-  │  queryid   │ userid │ dbid  │                     query                     │   executor    │ partition_key │ calls │
-  ├────────────┼────────┼───────┼───────────────────────────────────────────────┼───────────────┼───────────────┼───────┤
-  │ 1496051219 │  16384 │ 16385 │ select count(*) from foo;                     │ real-time     │ NULL          │     1 │
-  │ 2530480378 │  16384 │ 16385 │ select * from foo where id = $1               │ router        │ 42            │     1 │
-  │ 3233520930 │  16384 │ 16385 │ insert into foo select generate_series($1,$2) │ insert-select │ NULL          │     1 │
-  └────────────┴────────┴───────┴───────────────────────────────────────────────┴───────────────┴───────────────┴───────┘
+  -[ RECORD 1 ]-+----------------------------------------------
+  queryid       | -909556869173432820
+  userid        | 10
+  dbid          | 13340
+  query         | insert into foo select generate_series($1,$2)
+  executor      | insert-select
+  partition_key |
+  calls         | 1
+  -[ RECORD 2 ]-+----------------------------------------------
+  queryid       | 3919808845681956665
+  userid        | 10
+  dbid          | 13340
+  query         | select count(*) from foo;
+  executor      | adaptive
+  partition_key |
+  calls         | 1
+  -[ RECORD 3 ]-+----------------------------------------------
+  queryid       | 5351346905785208738
+  userid        | 10
+  dbid          | 13340
+  query         | select * from foo where id = $1
+  executor      | adaptive
+  partition_key | 42
+  calls         | 1
 
 Caveats:
 
