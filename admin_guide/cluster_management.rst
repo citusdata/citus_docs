@@ -354,37 +354,53 @@ Results:
 
 ::
 
-  ┌────────────┬────────┬───────┬───────────────────────────────────────────────┬───────────────┬───────────────┬───────┐
-  │  queryid   │ userid │ dbid  │                     query                     │   executor    │ partition_key │ calls │
-  ├────────────┼────────┼───────┼───────────────────────────────────────────────┼───────────────┼───────────────┼───────┤
-  │ 1496051219 │  16384 │ 16385 │ select count(*) from foo;                     │ real-time     │ NULL          │     1 │
-  │ 2530480378 │  16384 │ 16385 │ select * from foo where id = $1               │ router        │ 42            │     1 │
-  │ 3233520930 │  16384 │ 16385 │ insert into foo select generate_series($1,$2) │ insert-select │ NULL          │     1 │
-  └────────────┴────────┴───────┴───────────────────────────────────────────────┴───────────────┴───────────────┴───────┘
+  -[ RECORD 1 ]-+----------------------------------------------
+  queryid       | -6844578505338488014
+  userid        | 10
+  dbid          | 13340
+  query         | SELECT count(*) FROM foo;
+  executor      | adaptive
+  partition_key |
+  calls         | 1
+  -[ RECORD 2 ]-+----------------------------------------------
+  queryid       | 185453597994293667
+  userid        | 10
+  dbid          | 13340
+  query         | insert into foo select generate_series($1,$2)
+  executor      | insert-select
+  partition_key |
+  calls         | 1
+  -[ RECORD 3 ]-+----------------------------------------------
+  queryid       | 1301170733886649828
+  userid        | 10
+  dbid          | 13340
+  query         | SELECT * FROM foo WHERE id = $1
+  executor      | adaptive
+  partition_key | 42
+  calls         | 1
 
-We can see that Citus used the real-time executor to run the count query. This executor fragments the query into constituent queries to run on each node and combines the results on the coordinator node. In the case of the second query (filtering by the distribution column ``id = $1``), Citus determined that it needed the data from just one node. Thus Citus chose the router executor to send the whole query to that node for execution. Lastly, we can see that the ``insert into foo select…`` statement ran with the insert-select executor which provides flexibility to run these kind of queries.  The insert-select executor must sometimes pull results to the coordinator and push them back down to workers.
+We can see that Citus uses the adaptive executor most commonly to run queries. This executor fragments the query into constituent queries to run on relevant nodes, and combines the results on the coordinator node. In the case of the second query (filtering by the distribution column ``id = $1``), Citus determined that it needed the data from just one node. Lastly, we can see that the ``insert into foo select…`` statement ran with the insert-select executor which provides flexibility to run these kind of queries.  The insert-select executor must sometimes pull results to the coordinator and push them back down to workers.
 
-So far the information in this view doesn't give us anything we couldn't already learn by running the ``EXPLAIN`` command for a given query. However in addition to getting information about individual queries, the ``citus_stat_statements`` view allows us to answer questions such as "what percentage of queries in the cluster are run by which executors?"
+So far the information in this view doesn't give us anything we couldn't already learn by running the ``EXPLAIN`` command for a given query. However in addition to getting information about individual queries, the ``citus_stat_statements`` view allows us to answer questions such as "what percentage of queries in the cluster are scoped to a single tenant?"
 
 .. code-block:: postgresql
 
-  SELECT executor, sum(calls)
+  SELECT sum(calls),
+         partition_key IS NOT NULL AS single_tenant
   FROM citus_stat_statements
-  GROUP BY executor;
+  GROUP BY 2;
 
 ::
 
-  ┌───────────────┬─────┐
-  │   executor    │ sum │
-  ├───────────────┼─────┤
-  │ insert-select │   1 │
-  │ real-time     │   1 │
-  │ router        │   1 │
-  └───────────────┴─────┘
+  .
+   sum | single_tenant
+  -----+---------------
+     2 | f
+     1 | t
 
-In a multi-tenant database, for instance, we would expect to see "router" for the vast majority of queries, because the queries should route to individual tenants. Seeing too many real-time queries may indicate that queries do not have the proper filters to match a tenant, and are using unnecessary resources.
+In a multi-tenant database, for instance, we would expect the vast majority of queries to be single tenant. Seeing too many multi-tenant queries may indicate that queries do not have the proper filters to match a tenant, and are using unnecessary resources.
 
-We can also find which partition_ids are the most frequent targets of router execution. In a multi-tenant application these would be the busiest tenants.
+We can also find which partition_ids are the most frequent targets. In a multi-tenant application these would be the busiest tenants.
 
 .. code-block:: sql
 
@@ -402,26 +418,6 @@ We can also find which partition_ids are the most frequent targets of router exe
   ├───────────────┼───────────────┤
   │ 42            │             1 │
   └───────────────┴───────────────┘
-
-
-Finally, by joining ``citus_stat_statements`` with ``pg_stat_statements`` we can gain a better view into not only how many queries use different executor types, but how much time each executor spends running queries.
-
-.. code-block:: sql
-
-  SELECT executor, sum(css.calls), sum(pss.total_time)
-  FROM citus_stat_statements css
-  JOIN pg_stat_statements pss USING (queryid)
-  GROUP BY executor;
-
-::
-
-  ┌───────────────┬─────┬───────────┐
-  │   executor    │ sum │    sum    │
-  ├───────────────┼─────┼───────────┤
-  │ insert-select │   1 │ 18.393312 │
-  │ real-time     │   1 │  3.537155 │
-  │ router        │   1 │  0.392590 │
-  └───────────────┴─────┴───────────┘
 
 Statistics Expiration
 ---------------------
