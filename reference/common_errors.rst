@@ -3,55 +3,6 @@ Common Error Messages
 
 .. _error_failed_execute:
 
-Failed to execute task *n*
---------------------------
-
-This happens when a task fails due to an issue on a particular worker node. For instance, consider a query that generally succeeds but raises an error on one of the workers:
-
-.. code-block:: sql
-
-  CREATE TABLE pageviews (
-    page_id int,
-    good_views int,
-    total_views int
-  );
-
-  INSERT INTO pageviews
-    VALUES (1, 50, 100), (2, 0, 0);
-
-  SELECT create_distributed_table('pageviews', 'page_id');
-
-  SELECT page_id,
-    good_views / total_views AS goodness
-  FROM pageviews;
-
-The SELECT query fails:
-
-::
-
-  ERROR:  failed to execute task 50
-  STATEMENT:  SELECT page_id, good_views/total_views AS goodness FROM pageviews;
-  ERROR:  XX000: failed to execute task 50
-  LOCATION:  MultiRealTimeExecute, multi_real_time_executor.c:255
-
-To find out what's really going on, we have to examine the database logs inside worker nodes. In our case page_id=1 is stored on one worker and page_id=2 on another. The logs for the latter reveal:
-
-::
-
-  ERROR:  division by zero
-  STATEMENT:  COPY (SELECT page_id, (good_views / total_views) AS goodness FROM pageviews_102480 pageviews WHERE true) TO STDOUT
-  WARNING:  division by zero
-  CONTEXT:  while executing command on localhost:5433
-  WARNING:  22012: division by zero
-  LOCATION:  ReportResultError, remote_commands.c:293
-
-That's because ``total_views`` is zero in a row in shard ``pageviews_102480``.
-
-Resolution
-~~~~~~~~~~
-
-Check the database logs on worker nodes to identify which query is failing. Common real-life causes for query failure on workers include invalid concatenation of jsonb objects, and typecasting errors. If PgBouncer is between the coordinator and workers, check that it is working properly as well.
-
 Relation *foo* is not distributed
 ---------------------------------
 
@@ -114,26 +65,6 @@ Resolution
 ~~~~~~~~~~
 
 Detecting deadlocks and stopping them is part of normal distributed transaction handling. It allows an application to retry queries or take another course of action.
-
-Cannot establish a new connection for placement *n*, since DML has been executed on a connection that is in use
----------------------------------------------------------------------------------------------------------------
-
-.. code-block:: sql
-
-  BEGIN;
-  INSERT INTO http_request (site_id) VALUES (1337);
-  INSERT INTO http_request (site_id) VALUES (1338);
-  SELECT count(*) FROM http_request;
-
-::
-
-  ERROR:  25001: cannot establish a new connection for placement 314, since DML has been executed on a connection that is in use
-  LOCATION:  FindPlacementListConnection, placement_connection.c:612
-
-Resolution
-~~~~~~~~~~
-
-:ref:`Upgrade <upgrading>` to Citus 8.3 or higher.
 
 Could not connect to server: Cannot assign requested address
 ------------------------------------------------------------
