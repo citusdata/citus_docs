@@ -16,7 +16,7 @@ For an example, with workarounds, see :ref:`join_local_dist`.
 Could not receive query results
 -------------------------------
 
-Caused when the :ref:`router_executor` on the coordinator node is unable to connect to a worker. (The :ref:`realtime_executor`, on the other hand, issues :ref:`error_failed_execute` in this situation.)
+Caused when the the coordinator node is unable to connect to a worker.
 
 .. code-block:: sql
 
@@ -176,8 +176,7 @@ This error no longer occurs in the current version of citus except in certain un
 .. code-block:: postgresql
 
   BEGIN;
-  -- run modification command that uses one connection via
-  -- the router executor
+  -- run modification command that uses one connection
   DELETE FROM http_request
    WHERE site_id = 8
      AND ingest_time < now() - '1 week'::interval;
