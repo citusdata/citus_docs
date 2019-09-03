@@ -44,10 +44,10 @@ Here is an example of explaining the plan for a particular example query.
 ::
 
   Sort  (cost=0.00..0.00 rows=0 width=0)
-    Sort Key: minute
+    Sort Key: remote_scan.minute
     ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)
-      Group Key: minute
-      ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+      Group Key: remote_scan.minute
+      ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
         Task Count: 32
         Tasks Shown: One of 32
         ->  Task
@@ -58,7 +58,7 @@ Here is an example of explaining the plan for a particular example query.
               Filter: (event_type = 'PushEvent'::text)
   (13 rows)
 
-This tells you several things. To begin with there are thirty-two shards, and the planner chose the Citus real-time executor to execute this query:
+This tells you several things. To begin with there are thirty-two shards, and the planner chose the Citus adaptive executor to execute this query:
 
 ::
 
