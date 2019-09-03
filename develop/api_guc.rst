@@ -270,15 +270,18 @@ Specifies whether to automatically propagate DDL changes from the coordinator to
 Executor Configuration
 ------------------------------------------------------------
 
+General
+$$$$$$$
+
 citus.all_modifications_commutative
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+************************************
 
 Citus enforces commutativity rules and acquires appropriate locks for modify operations in order to guarantee correctness of behavior. For example, it assumes that an INSERT statement commutes with another INSERT statement, but not with an UPDATE or DELETE statement. Similarly, it assumes that an UPDATE or DELETE statement does not commute with another UPDATE or DELETE statement. This means that UPDATEs and DELETEs require Citus to acquire stronger locks.
 
 If you have UPDATE statements that are commutative with your INSERTs or other UPDATEs, then you can relax these commutativity assumptions by setting this parameter to true. When this parameter is set to true, all commands are considered commutative and claim a shared lock, which can improve overall throughput. This parameter can be set at runtime and is effective on the coordinator.
 
 citus.max_task_string_size (integer)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+************************************
 
 Sets the maximum size (in bytes) of a worker task call string. Changing this value requires a server restart, it cannot be changed at runtime.
 
@@ -288,12 +291,12 @@ Minimum: 8192, Maximum 65536, Default 12288
 
 
 citus.remote_task_check_interval (integer)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+*********************************************
 
 Sets the frequency at which Citus checks for statuses of jobs managed by the task tracker executor. It defaults to 10ms. The coordinator assigns tasks to workers, and then regularly checks with them about each task's progress. This configuration value sets the time interval between two consequent checks. This parameter is effective on the coordinator and can be set at runtime.
 
 citus.task_executor_type (enum)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+*****************************************
 
 Citus has two executor types for running distributed SELECT queries. The desired executor can be selected by setting this configuration parameter. The accepted values for this parameter are:
 
@@ -306,7 +309,7 @@ This parameter can be set at run-time and is effective on the coordinator. For m
 .. _multi_task_logging:
 
 citus.multi_task_query_log_level (enum)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+*****************************************
 
 Sets a log-level for any query which generates more than one task (i.e. which
 hits more than one shard). This is useful during a multi-tenant application
