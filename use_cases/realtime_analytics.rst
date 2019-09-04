@@ -298,16 +298,16 @@ to the query in our rollup function:
   @@ -1,10 +1,12 @@
     INSERT INTO http_request_1min (
       site_id, ingest_time, request_count,
-      success_count, error_count, average_response_time_msec,
-  +   distinct_ip_addresses
+      success_count, error_count, average_response_time_msec
+  +   , distinct_ip_addresses
     ) SELECT
       site_id,
       minute,
       COUNT(1) as request_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
-      SUM(response_time_msec) / COUNT(1) AS average_response_time_msec,
-  +   hll_add_agg(hll_hash_text(ip_address)) AS distinct_ip_addresses
+      SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
+  +   , hll_add_agg(hll_hash_text(ip_address)) AS distinct_ip_addresses
     FROM http_request
 
 Dashboard queries are a little more complicated, you have to read out the distinct
@@ -362,17 +362,17 @@ Next, include it in the rollups by modifying the rollup function:
   @@ -1,14 +1,19 @@
     INSERT INTO http_request_1min (
       site_id, ingest_time, request_count,
-      success_count, error_count, average_response_time_msec,
-  +   country_counters
+      success_count, error_count, average_response_time_msec
+  +   , country_counters
     ) SELECT
       site_id,
       minute,
       COUNT(1) as request_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_c
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_cou
-      SUM(response_time_msec) / COUNT(1) AS average_response_time_msec,
+      SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
   - FROM http_request
-  +   jsonb_object_agg(request_country, country_count) AS country_counters
+  +   , jsonb_object_agg(request_country, country_count) AS country_counters
   + FROM (
   +   SELECT *,
   +     count(1) OVER (

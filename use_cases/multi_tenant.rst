@@ -467,7 +467,7 @@ To improve resource allocation and make guarantees of tenant QoS it is worthwhil
 
 In our case, let's imagine that our old friend company id=5 is very large. We can isolate the data for this tenant in two steps. We'll present the commands here, and you can consult :ref:`tenant_isolation` to learn more about them.
 
-First sequester the tenant's data into a bundle (called a shard) suitable to move. The CASCADE option also applies this change to the rest of our tables distributed by :code:`company_id`.
+First isolate the tenant's data to a dedicated shard suitable to move. The CASCADE option also applies this change to the rest of our tables distributed by :code:`company_id`.
 
 .. code-block:: sql
 
