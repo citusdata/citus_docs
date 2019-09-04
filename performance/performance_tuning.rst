@@ -118,10 +118,10 @@ This will cause EXPLAIN to show the query plan for all tasks, not just one.
 ::
 
    Sort  (cost=0.00..0.00 rows=0 width=0)
-     Sort Key: minute
+     Sort Key: remote_scan.minute
      ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)
-       Group Key: minute
-       ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+       Group Key: remote_scan.minute
+       ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
          Task Count: 32
          Tasks Shown: All
          ->  Task
