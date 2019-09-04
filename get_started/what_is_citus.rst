@@ -23,14 +23,14 @@ Citus scales horizontally by adding worker nodes, vertically by upgrading worker
 * `Algolia <https://www.citusdata.com/customers/algolia>`_
     * 5-10B rows ingested per day
 * `Heap <https://www.citusdata.com/customers/heap>`_
-    * 500+ billion events
-    * 900TB of data on a 40-node Citus database cluster
+    * 700+ billion events
+    * 1.4PB of data on a 70-node Citus database cluster
 * `Chartbeat <https://www.citusdata.com/customers/chartbeat>`_
     * >2.6B rows of data added per month
 * `Pex <https://www.citusdata.com/customers/pex>`_
-    * 30B rows updated/day
+    * 80B rows updated/day
     * 20-node Citus database cluster on Google Cloud
-    * 2.4TB memory, 1280 cores, and 60TB of data
+    * 2.4TB memory, 1280 cores, and 80TB of data
     * ...with plans to grow to 45 nodes
 * `Mixrank <https://www.citusdata.com/customers/mixrank>`_
     * 1.6PB of time series data
