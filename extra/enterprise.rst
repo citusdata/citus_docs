@@ -3,6 +3,13 @@
 Installing Citus Enterprise Edition
 ===================================
 
+.. note::
+
+    Note that configuring high availability is best done at cluster creation
+    time, and the following instructions do not cover it. Please `contact us
+    <https://www.citusdata.com/about/contact_us>`_ if you require high
+    availability with Citus Enterprise.
+
 .. _enterprise_debian:
 
 Ubuntu or Debian with Internet Access
