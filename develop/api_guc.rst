@@ -351,6 +351,11 @@ The supported values are:
 
 * **local:** only SET LOCAL commands are propagated.
 
+citus.enable_repartition_joins (boolean)
+****************************************
+
+Ordinarily, attempting to perform :ref:`repartition_joins` with the adaptive executor will fail with an error message. However setting ``citus.enable_repartition_joins`` to true allows Citus to temporarily switch into the task-tracker executor to perform the join. The default value is false.
+
 Adaptive executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -493,12 +498,6 @@ Sets the maximum number of simultaneously open files for each server process and
 
 .. note::
   Along with max_files_per_process, one may also have to increase the kernel limit for open file descriptors per process using the ulimit command.
-
-citus.enable_repartition_joins (boolean)
-****************************************
-
-Ordinarily, attempting to perform :ref:`repartition_joins` with the real-time executor will fail with an error message. However setting ``citus.enable_repartition_joins`` to true allows Citus to temporarily switch into the task-tracker executor to perform the join. The default value is false.
-
 
 Explain output
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
