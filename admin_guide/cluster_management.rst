@@ -379,7 +379,7 @@ Results:
   partition_key | 42
   calls         | 1
 
-We can see that Citus uses the adaptive executor most commonly to run queries. This executor fragments the query into constituent queries to run on relevant nodes, and combines the results on the coordinator node. In the case of the second query (filtering by the distribution column ``id = $1``), Citus determined that it needed the data from just one node. Lastly, we can see that the ``insert into foo select…`` statement ran with the insert-select executor which provides flexibility to run these kind of queries.  The insert-select executor must sometimes pull results to the coordinator and push them back down to workers.
+We can see that Citus uses the adaptive executor most commonly to run queries. This executor fragments the query into constituent queries to run on relevant nodes, and combines the results on the coordinator node. In the case of the second query (filtering by the distribution column ``id = $1``), Citus determined that it needed the data from just one node. Lastly, we can see that the ``insert into foo select…`` statement ran with the insert-select executor which provides flexibility to run these kind of queries.
 
 So far the information in this view doesn't give us anything we couldn't already learn by running the ``EXPLAIN`` command for a given query. However in addition to getting information about individual queries, the ``citus_stat_statements`` view allows us to answer questions such as "what percentage of queries in the cluster are scoped to a single tenant?"
 

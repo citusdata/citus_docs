@@ -339,24 +339,20 @@ Note that it may be useful to use :code:`error` during development testing, and 
   HINT:  Queries are split to multiple tasks if they have to be split into several queries on the workers.
   STATEMENT:  select * from foo;
 
+citus.propagate_set_commands (enum)
+***********************************
+
+Determines which SET commands are propagated from the coordinator to workers.
+The default value for this parameter is 'none'.
+
+The supported values are:
+
+* **none:** no SET commands are propagated.
+
+* **local:** only SET LOCAL commands are propagated.
+
 Adaptive executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-citus.executor_slow_start_interval (integer)
-********************************************
-
-Time to wait in milliseconds between opening connections to the same worker
-node.
-
-When the individual tasks of a multi-shard query take very little time, they
-can often be finished over a single (often already cached) connection. To avoid
-redundantly opening additional connections, the executor waits between
-connection attempts for the configured number of milliseconds. At the end of
-the interval, it increases the number of connections it is allowed to open next
-time.
-
-For long queries (those taking >500ms), slow start simply adds latency, but for
-short queries it's faster. The default value is 10ms.
 
 citus.max_adaptive_executor_pool_size (integer)
 ***********************************************
@@ -378,6 +374,26 @@ The default value is 16, however it's hard to make a good static choice
 manually. In the future the adaptive executor may adjust this GUC on the fly,
 shrinking the pool when workers are busy, and growing it when they are idle.
 
+This is a session-level GUC, and thus can be used to limit the resource usage
+for individual sessions. Lowering the the value can limit the queries' use of
+connections, cores, or memory.
+
+citus.executor_slow_start_interval (integer)
+********************************************
+
+Time to wait in milliseconds between opening connections to the same worker
+node.
+
+When the individual tasks of a multi-shard query take very little time, they
+can often be finished over a single (often already cached) connection. To avoid
+redundantly opening additional connections, the executor waits between
+connection attempts for the configured number of milliseconds. At the end of
+the interval, it increases the number of connections it is allowed to open next
+time.
+
+For long queries (those taking >500ms), slow start might add latency, but for
+short queries it's faster. The default value is 10ms.
+
 citus.max_cached_conns_per_worker (integer)
 *******************************************
 
@@ -390,18 +406,6 @@ The default value is 1. A larger value such as 2 might be helpful for clusters
 that use a small number of concurrent sessions, but it's not wise to go much
 further (e.g. 16 would be too high).
 
-citus.propagate_set_commands (enum)
-***********************************
-
-Determines which SET commands are propagated from the coordinator to workers.
-The default value for this parameter is 'none'.
-
-The supported values are:
-
-* **none:** no SET commands are propagated.
-
-* **local:** only SET LOCAL commands are propagated.
-
 citus.force_max_query_parallelization (boolean)
 ***********************************************
 
@@ -413,6 +417,26 @@ connections as possible while executing a parallel distributed query. If not
 enabled, the executor might choose to use less connections to optimize overall
 query execution throughput. Internally, setting this true will end up using one
 connection per task.
+
+Once place where this is useful is in a transaction whose first query is
+lightweight and requires few connections, while a subsequent query would
+benefit from more connections. Citus decides how many connections to use in a
+transaction based on the first statement, which can throttle other queries
+without us providing a hint.
+
+.. code-block:: postgresql
+
+    BEGIN;
+    -- add this hint
+    SET citus.force_max_query_parallelization TO ON;
+
+    -- a lightweight query that doesn't require many connections
+    SELECT count(*) FROM table WHERE filter = x;
+
+    -- a query that benefits from more connections, and can obtain
+    -- them since we forced max parallelization above
+    SELECT ... very .. complex .. SQL;
+    COMMIT;
 
 The default value is false.
 
