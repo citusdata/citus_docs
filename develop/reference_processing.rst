@@ -34,7 +34,7 @@ Distributed Query Executor
 
 Citus’s distributed executors run distributed query plans and handle failures that occur during query execution. The executors connect to the workers, send the assigned tasks to them and oversee their execution. If the executor cannot assign a task to the designated worker or if a task execution fails, then the executor dynamically re-assigns the task to replicas on other workers. The executor processes only the failed query sub-tree, and not the entire query while handling failures.
 
-Citus has three executor types: adaptive, push-pull, and task tracker. It chooses which to use dynamically, depending on the structure of each query, and can use more than one at once for a single query, assigning different executors to different subqueries/CTEs as needed to support the SQL functionality. This process is recursive: if Citus cannot determine how to run a subquery then it examines sub-subqueries.
+Citus has two executor types: adaptive, and task tracker. It chooses which to use dynamically, depending on the structure of each query, and can use more than one at once for a single query, assigning different executors to different subqueries/CTEs as needed to support the SQL functionality. This process is recursive: if Citus cannot determine how to run a subquery then it examines sub-subqueries.
 
 At a high level, the adaptive executor is used for most queries. However, the task tracker is required for :ref:`repartition_join`.  The choice of executor for each query can be displayed by running PostgreSQL's `EXPLAIN <https://www.postgresql.org/docs/current/static/sql-explain.html>`_ command. This can be useful for debugging performance issues.
 
