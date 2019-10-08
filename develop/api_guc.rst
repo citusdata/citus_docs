@@ -270,15 +270,18 @@ Specifies whether to automatically propagate DDL changes from the coordinator to
 Executor Configuration
 ------------------------------------------------------------
 
+General
+$$$$$$$
+
 citus.all_modifications_commutative
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+************************************
 
 Citus enforces commutativity rules and acquires appropriate locks for modify operations in order to guarantee correctness of behavior. For example, it assumes that an INSERT statement commutes with another INSERT statement, but not with an UPDATE or DELETE statement. Similarly, it assumes that an UPDATE or DELETE statement does not commute with another UPDATE or DELETE statement. This means that UPDATEs and DELETEs require Citus to acquire stronger locks.
 
 If you have UPDATE statements that are commutative with your INSERTs or other UPDATEs, then you can relax these commutativity assumptions by setting this parameter to true. When this parameter is set to true, all commands are considered commutative and claim a shared lock, which can improve overall throughput. This parameter can be set at runtime and is effective on the coordinator.
 
 citus.max_task_string_size (integer)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+************************************
 
 Sets the maximum size (in bytes) of a worker task call string. Changing this value requires a server restart, it cannot be changed at runtime.
 
@@ -288,12 +291,12 @@ Minimum: 8192, Maximum 65536, Default 12288
 
 
 citus.remote_task_check_interval (integer)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+*********************************************
 
 Sets the frequency at which Citus checks for statuses of jobs managed by the task tracker executor. It defaults to 10ms. The coordinator assigns tasks to workers, and then regularly checks with them about each task's progress. This configuration value sets the time interval between two consequent checks. This parameter is effective on the coordinator and can be set at runtime.
 
 citus.task_executor_type (enum)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+*****************************************
 
 Citus has two executor types for running distributed SELECT queries. The desired executor can be selected by setting this configuration parameter. The accepted values for this parameter are:
 
@@ -306,7 +309,7 @@ This parameter can be set at run-time and is effective on the coordinator. For m
 .. _multi_task_logging:
 
 citus.multi_task_query_log_level (enum)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+*****************************************
 
 Sets a log-level for any query which generates more than one task (i.e. which
 hits more than one shard). This is useful during a multi-tenant application
@@ -336,30 +339,111 @@ Note that it may be useful to use :code:`error` during development testing, and 
   HINT:  Queries are split to multiple tasks if they have to be split into several queries on the workers.
   STATEMENT:  select * from foo;
 
-Real-time executor configuration
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+citus.propagate_set_commands (enum)
+***********************************
 
-The Citus query planner first prunes away the shards unrelated to a query and then hands the plan over to the real-time executor. For executing the plan, the real-time executor opens one connection and uses two file descriptors per unpruned shard. If the query hits a high number of shards, then the executor may need to open more connections than max_connections or use more file descriptors than max_files_per_process.
+Determines which SET commands are propagated from the coordinator to workers.
+The default value for this parameter is 'none'.
 
-In such cases, the real-time executor will begin throttling tasks to prevent overwhelming the worker resources. Since this throttling can reduce query performance, the real-time executor will issue an appropriate warning suggesting that increasing these parameters might be required to maintain the desired performance. These parameters are discussed in brief below.
+The supported values are:
 
-max_connections (integer)
-************************************************
+* **none:** no SET commands are propagated.
 
-Sets the maximum number of concurrent connections to the database server. The default is typically 100 connections, but might be less if your kernel settings will not support it (as determined during initdb). The real time executor maintains an open connection for each shard to which it sends queries. Increasing this configuration parameter will allow the executor to have more concurrent connections and hence handle more shards in parallel. This parameter has to be changed on the workers as well as the coordinator, and can be done only during server start.
-
-max_files_per_process (integer)
-*******************************************************
-
-Sets the maximum number of simultaneously open files for each server process and defaults to 1000. The real-time executor requires two file descriptors for each shard it sends queries to. Increasing this configuration parameter will allow the executor to have more open file descriptors, and hence handle more shards in parallel. This change has to be made on the workers as well as the coordinator, and can be done only during server start.
-
-.. note::
-  Along with max_files_per_process, one may also have to increase the kernel limit for open file descriptors per process using the ulimit command.
+* **local:** only SET LOCAL commands are propagated.
 
 citus.enable_repartition_joins (boolean)
 ****************************************
 
-Ordinarily, attempting to perform :ref:`repartition_joins` with the real-time executor will fail with an error message. However setting ``citus.enable_repartition_joins`` to true allows Citus to temporarily switch into the task-tracker executor to perform the join. The default value is false.
+Ordinarily, attempting to perform :ref:`repartition_joins` with the adaptive executor will fail with an error message. However setting ``citus.enable_repartition_joins`` to true allows Citus to temporarily switch into the task-tracker executor to perform the join. The default value is false.
+
+Adaptive executor configuration
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+citus.max_adaptive_executor_pool_size (integer)
+***********************************************
+
+The maximum number of connections per worker node used by the adaptive executor
+to execute a multi-shard command.
+
+The adaptive executor opens multiple connections per worker node when running
+multi-shard commands to parallelize the command across multiple cores on the
+worker. This setting specifies the maximum number of connections it will open.
+(The number of connections is also bounded by the number of shards on the
+node.)
+
+Although increasing parallelism for a single query is generally good, it also
+puts connection pressure on the workers in a production environment.  This GUC
+provides a knob to trade off parallelism vs connection pressure.
+
+The default value is 16, however it's hard to make a good static choice
+manually. In the future the adaptive executor may adjust this GUC on the fly,
+shrinking the pool when workers are busy, and growing it when they are idle.
+
+This is a session-level GUC, and thus can be used to limit the resource usage
+for individual sessions. Lowering the value can limit the queries' use of
+connections, cores, or memory.
+
+citus.executor_slow_start_interval (integer)
+********************************************
+
+Time to wait in milliseconds between opening connections to the same worker
+node.
+
+When the individual tasks of a multi-shard query take very little time, they
+can often be finished over a single (often already cached) connection. To avoid
+redundantly opening additional connections, the executor waits between
+connection attempts for the configured number of milliseconds. At the end of
+the interval, it increases the number of connections it is allowed to open next
+time.
+
+For long queries (those taking >500ms), slow start might add latency, but for
+short queries it's faster. The default value is 10ms.
+
+citus.max_cached_conns_per_worker (integer)
+*******************************************
+
+Each backend opens connections to the workers to query the shards. At the end
+of the transaction, the configured number of connections is kept open to speed
+up subsequent commands.  Increasing this value will reduce the latency of
+multi-shard queries, but will also increase overhead on the workers.
+
+The default value is 1. A larger value such as 2 might be helpful for clusters
+that use a small number of concurrent sessions, but it's not wise to go much
+further (e.g. 16 would be too high).
+
+citus.force_max_query_parallelization (boolean)
+***********************************************
+
+Simulates the deprecated real-time executor. This is used to open as many
+connections as possible to maximize query parallelization.
+
+When this GUC is enabled, Citus will force the adaptive executor to use as many
+connections as possible while executing a parallel distributed query. If not
+enabled, the executor might choose to use fewer connections to optimize overall
+query execution throughput. Internally, setting this true will end up using one
+connection per task.
+
+Once place where this is useful is in a transaction whose first query is
+lightweight and requires few connections, while a subsequent query would
+benefit from more connections. Citus decides how many connections to use in a
+transaction based on the first statement, which can throttle other queries
+unless we use the GUC to provide a hint.
+
+.. code-block:: postgresql
+
+    BEGIN;
+    -- add this hint
+    SET citus.force_max_query_parallelization TO ON;
+
+    -- a lightweight query that doesn't require many connections
+    SELECT count(*) FROM table WHERE filter = x;
+
+    -- a query that benefits from more connections, and can obtain
+    -- them since we forced max parallelization above
+    SELECT ... very .. complex .. SQL;
+    COMMIT;
+
+The default value is false.
 
 Task tracker executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -395,6 +479,25 @@ citus.partition_buffer_size (integer)
 
 Sets the buffer size to use for partition operations and defaults to 8MB. Citus allows for table data to be re-partitioned into multiple files when two large tables are being joined. After this partition buffer fills up, the repartitioned data is flushed into files on disk. This configuration entry can be set at run-time and is effective on the workers.
 
+Real-time executor configuration (deprecated)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The Citus query planner first prunes away the shards unrelated to a query and then hands the plan over to the real-time executor. For executing the plan, the real-time executor opens one connection and uses two file descriptors per unpruned shard. If the query hits a high number of shards, then the executor may need to open more connections than max_connections or use more file descriptors than max_files_per_process.
+
+In such cases, the real-time executor will begin throttling tasks to prevent overwhelming the worker resources. Since this throttling can reduce query performance, the real-time executor will issue an appropriate warning suggesting that increasing these parameters might be required to maintain the desired performance. These parameters are discussed in brief below.
+
+max_connections (integer)
+************************************************
+
+Sets the maximum number of concurrent connections to the database server. The default is typically 100 connections, but might be less if your kernel settings will not support it (as determined during initdb). The real time executor maintains an open connection for each shard to which it sends queries. Increasing this configuration parameter will allow the executor to have more concurrent connections and hence handle more shards in parallel. This parameter has to be changed on the workers as well as the coordinator, and can be done only during server start.
+
+max_files_per_process (integer)
+*******************************************************
+
+Sets the maximum number of simultaneously open files for each server process and defaults to 1000. The real-time executor requires two file descriptors for each shard it sends queries to. Increasing this configuration parameter will allow the executor to have more open file descriptors, and hence handle more shards in parallel. This change has to be made on the workers as well as the coordinator, and can be done only during server start.
+
+.. note::
+  Along with max_files_per_process, one may also have to increase the kernel limit for open file descriptors per process using the ulimit command.
 
 Explain output
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
