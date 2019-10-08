@@ -380,7 +380,7 @@ manually. In the future the adaptive executor may adjust this GUC on the fly,
 shrinking the pool when workers are busy, and growing it when they are idle.
 
 This is a session-level GUC, and thus can be used to limit the resource usage
-for individual sessions. Lowering the the value can limit the queries' use of
+for individual sessions. Lowering the value can limit the queries' use of
 connections, cores, or memory.
 
 citus.executor_slow_start_interval (integer)
@@ -419,7 +419,7 @@ connections as possible to maximize query parallelization.
 
 When this GUC is enabled, Citus will force the adaptive executor to use as many
 connections as possible while executing a parallel distributed query. If not
-enabled, the executor might choose to use less connections to optimize overall
+enabled, the executor might choose to use fewer connections to optimize overall
 query execution throughput. Internally, setting this true will end up using one
 connection per task.
 
@@ -427,7 +427,7 @@ Once place where this is useful is in a transaction whose first query is
 lightweight and requires few connections, while a subsequent query would
 benefit from more connections. Citus decides how many connections to use in a
 transaction based on the first statement, which can throttle other queries
-without us providing a hint.
+unless we use the GUC to provide a hint.
 
 .. code-block:: postgresql
 
