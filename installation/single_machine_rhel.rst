@@ -15,7 +15,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
   curl https://install.citusdata.com/community/rpm.sh | sudo bash
 
   # install Citus extension
-  sudo yum install -y citus83_11
+  sudo yum install -y citus90_12
 
 .. _post_install:
 
@@ -31,7 +31,7 @@ Let's create directories for those nodes to store their data. For convenience in
   sudo su - postgres
 
   # include path to postgres binaries
-  export PATH=$PATH:/usr/pgsql-11/bin
+  export PATH=$PATH:/usr/pgsql-12/bin
 
   cd ~
   mkdir -p citus/coordinator citus/worker1 citus/worker2
