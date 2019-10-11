@@ -94,52 +94,37 @@ After installing the new package and restarting the database, run the extension 
 
 .. _upgrading_postgres:
 
-Upgrading PostgreSQL version from 10 to 11
+Upgrading PostgreSQL version from 11 to 12
 ##########################################
 
 .. note::
 
    Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, upgrade Citus first.
 
-   Also **Citus 7.x is not compatible with Postgres 11.** Before upgrading Postgres 10 to 11, be sure to follow the above steps to upgrade from Citus 7.x to 8.3.
-
 Record the following paths before you start (your actual paths may be different than those below):
 
 Existing data directory (e.g. /opt/pgsql/10/data)
-  :code:`export OLD_PG_DATA=/opt/pgsql/10/data`
+  :code:`export OLD_PG_DATA=/opt/pgsql/11/data`
 
 Existing PostgreSQL installation path (e.g. /usr/pgsql-10)
-  :code:`export OLD_PG_PATH=/usr/pgsql-10`
+  :code:`export OLD_PG_PATH=/usr/pgsql-11`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/11/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/12/data`
 
 New PostgreSQL installation path
-  :code:`export NEW_PG_PATH=/usr/pgsql-11`
+  :code:`export NEW_PG_PATH=/usr/pgsql-12`
 
-On Every Node (Coordinator and workers)
----------------------------------------
+For Every Node
+--------------
 
-1. Back up Citus metadata in the old server.
+1. Back up Citus metadata in the old coordinator node.
 
   .. code-block:: postgres
 
-    CREATE TABLE        public.pg_dist_partition AS
-      SELECT * FROM pg_catalog.pg_dist_partition;
-    CREATE TABLE        public.pg_dist_shard AS
-      SELECT * FROM pg_catalog.pg_dist_shard;
-    CREATE TABLE        public.pg_dist_placement AS
-      SELECT * FROM pg_catalog.pg_dist_placement;
-    CREATE TABLE        public.pg_dist_node_metadata AS
-      SELECT * FROM pg_catalog.pg_dist_node_metadata;
-    CREATE TABLE        public.pg_dist_node AS
-      SELECT * FROM pg_catalog.pg_dist_node;
-    CREATE TABLE        public.pg_dist_local_group AS
-      SELECT * FROM pg_catalog.pg_dist_local_group;
-    CREATE TABLE        public.pg_dist_transaction AS
-      SELECT * FROM pg_catalog.pg_dist_transaction;
-    CREATE TABLE        public.pg_dist_colocation AS
-      SELECT * FROM pg_catalog.pg_dist_colocation;
+    -- this step for the coordinator node only, not workers
+
+    SELECT citus_prepare_pg_upgrade();
 
 2. Configure the new database instance to use Citus.
 
@@ -149,7 +134,7 @@ On Every Node (Coordinator and workers)
 
       shared_preload_libraries = 'citus'
 
-  * **DO NOT CREATE** Citus extension yet
+  * **DO NOT CREATE** Citus extension
 
   * **DO NOT** start the new server
 
@@ -178,91 +163,10 @@ On Every Node (Coordinator and workers)
 
   * **DO NOT** run any query before running the queries given in the next step
 
-7. Restore metadata.
+7. Restore metadata on new coordinator node.
 
   .. code-block:: postgres
 
-    INSERT INTO pg_catalog.pg_dist_partition
-      SELECT * FROM public.pg_dist_partition;
-    INSERT INTO pg_catalog.pg_dist_shard
-      SELECT * FROM public.pg_dist_shard;
-    INSERT INTO pg_catalog.pg_dist_placement
-      SELECT * FROM public.pg_dist_placement;
-    INSERT INTO pg_catalog.pg_dist_node_metadata
-      SELECT * FROM public.pg_dist_node_metadata;
-    INSERT INTO pg_catalog.pg_dist_node
-      SELECT * FROM public.pg_dist_node;
-    TRUNCATE TABLE pg_catalog.pg_dist_local_group;
-    INSERT INTO pg_catalog.pg_dist_local_group
-      SELECT * FROM public.pg_dist_local_group;
-    INSERT INTO pg_catalog.pg_dist_transaction
-      SELECT * FROM public.pg_dist_transaction;
-    INSERT INTO pg_catalog.pg_dist_colocation
-      SELECT * FROM public.pg_dist_colocation;
+    -- this step for the coordinator node only, not workers
 
-8. Drop temporary metadata tables.
-
-  .. code-block:: postgres
-
-    DROP TABLE public.pg_dist_partition;
-    DROP TABLE public.pg_dist_shard;
-    DROP TABLE public.pg_dist_placement;
-    DROP TABLE public.pg_dist_node_metadata;
-    DROP TABLE public.pg_dist_node;
-    DROP TABLE public.pg_dist_local_group;
-    DROP TABLE public.pg_dist_transaction;
-    DROP TABLE public.pg_dist_colocation;
-
-9. Restart sequences.
-
-  .. code-block:: postgres
-
-    SELECT setval('pg_catalog.pg_dist_shardid_seq', (SELECT MAX(shardid)+1 AS max_shard_id FROM pg_dist_shard), false);
-
-    SELECT setval('pg_catalog.pg_dist_placement_placementid_seq', (SELECT MAX(placementid)+1 AS max_placement_id FROM pg_dist_placement), false);
-
-    SELECT setval('pg_catalog.pg_dist_groupid_seq', (SELECT MAX(groupid)+1 AS max_group_id FROM pg_dist_node), false);
-
-    SELECT setval('pg_catalog.pg_dist_node_nodeid_seq', (SELECT MAX(nodeid)+1 AS max_node_id FROM pg_dist_node), false);
-
-    SELECT setval('pg_catalog.pg_dist_colocationid_seq', (SELECT MAX(colocationid)+1 AS max_colocation_id FROM pg_dist_colocation), false);
-
-10. Register triggers.
-
-  .. code-block:: postgres
-
-    CREATE OR REPLACE FUNCTION create_truncate_trigger(table_name regclass) RETURNS void LANGUAGE plpgsql as $$
-    DECLARE
-      command  text;
-      trigger_name text;
-
-    BEGIN
-      trigger_name := 'truncate_trigger_' || table_name::oid;
-      command := 'create trigger ' || trigger_name || ' after truncate on ' || table_name || ' execute procedure pg_catalog.citus_truncate_trigger()';
-      execute command;
-      command := 'update pg_trigger set tgisinternal = true where tgname
-     = ' || quote_literal(trigger_name);
-      execute command;
-    END;
-    $$;
-
-    SELECT create_truncate_trigger(logicalrelid) FROM pg_dist_partition ;
-
-    DROP FUNCTION create_truncate_trigger(regclass);
-
-11. Set dependencies.
-
-  .. code-block:: postgres
-
-    INSERT INTO
-      pg_depend
-    SELECT
-      'pg_class'::regclass::oid as classid,
-      p.logicalrelid::regclass::oid as objid,
-      0 as objsubid,
-      'pg_extension'::regclass::oid as refclassid,
-      (select oid from pg_extension where extname = 'citus') as refobjid,
-      0 as refobjsubid ,
-      'n' as deptype
-    FROM
-      pg_dist_partition p;
+    SELECT citus_finish_pg_upgrade();
