@@ -157,6 +157,71 @@ This example puts ``products`` and ``line_items`` in the same co-location group 
 
   SELECT mark_tables_colocated('stores', ARRAY['products', 'line_items']);
 
+create_distributed_function
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+.. _create_distributed_function:
+
+Propagates a function from the coordinator node to workers, and marks it for
+distributed execution. When a distributed function is called on the
+coordinator, Citus uses the value of the "distribution argument" to pick a
+worker node to run the function. Executing the function on workers increases
+parallelism, and can bring the code closer to data in shards for lower latency.
+
+Note that the Postgres search path is not propagated from the coordinator to
+workers during distributed function execution, so distributed function code
+should fully-qualify the names of database objects. Also notices emitted by
+the functions will not be displayed to the user.
+
+Arguments
+************************
+
+**function_name:** Name of the function to be distributed. The name must
+include the function's parameter types in parentheses, because multiple
+functions can have the same name in PostgreSQL. For instance, ``'foo(int)'`` is
+different from ``'foo(int, text)'``.
+
+**distribution_arg_name:** (Optional) The argument name by which to distribute.
+For convenience (or if the function arguments do not have names), a positional
+placeholder is allowed, such as ``'$1'``. If this parameter is not specified,
+then the function named by ``function_name`` is merely created on the workers.
+If worker nodes are added in the future the function will automatically be
+created there too.
+
+**colocate_with:** (Optional) When the distributed function reads or writes to
+a distributed table (or more generally :ref:`colocation_groups`), be sure to
+name that table using the ``colocate_with`` parameter. This ensures that each
+invocation of the function runs on the worker node containing relevant shards.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+
+.. code-block:: postgresql
+
+  -- an example function which updates a hypothetical
+  -- event_responses table which itself is distributed by event_id
+  CREATE OR REPLACE FUNCTION
+    register_for_event(p_event_id int, p_user_id int)
+  RETURNS void LANGUAGE plpgsql AS $fn$
+  BEGIN
+    INSERT INTO event_responses VALUES ($1, $2, 'yes')
+    ON CONFLICT (event_id, user_id)
+    DO UPDATE SET response = EXCLUDED.response;
+  END;
+  $fn$;
+
+  -- distribute the function to workers, using the p_event_id argument
+  -- to determine which shard each invocation affects, and explicitly
+  -- colocating with event_responses which the function updates
+  SELECT create_distributed_function(
+    'register_for_event(int, int)', 'p_event_id',
+    colocate_with := 'event_responses'
+  );
+
 master_create_distributed_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. _master_create_distributed_table:

@@ -126,6 +126,8 @@ It is still possible to use these commands by explicitly running them on all nod
 
 Learn more in :ref:`manual_prop`. Also note that even after manually propagating CREATE DATABASE, Citus must still be installed there. See :ref:`create_db`.
 
+For propagating functions to workers, see also :ref:`create_distributed_function`.
+
 What if a worker node's address changes?
 ----------------------------------------
 
