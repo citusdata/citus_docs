@@ -36,7 +36,7 @@ Citus’s distributed executors run distributed query plans and handle failures 
 
 Citus has two executor types: adaptive, and task tracker. It chooses which to use dynamically, depending on the structure of each query, and can use more than one at once for a single query, assigning different executors to different subqueries/CTEs as needed to support the SQL functionality. This process is recursive: if Citus cannot determine how to run a subquery then it examines sub-subqueries.
 
-At a high level, the adaptive executor is used for most queries. However, the task tracker is required for :ref:`repartition_join`.  The choice of executor for each query can be displayed by running PostgreSQL's `EXPLAIN <https://www.postgresql.org/docs/current/static/sql-explain.html>`_ command. This can be useful for debugging performance issues.
+At a high level, the adaptive executor is used for most queries. However, the task tracker is required for :ref:`repartition_joins`.  The choice of executor for each query can be displayed by running PostgreSQL's `EXPLAIN <https://www.postgresql.org/docs/current/static/sql-explain.html>`_ command. This can be useful for debugging performance issues.
 
 .. _adaptive_executor:
 
