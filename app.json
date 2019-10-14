@@ -12,6 +12,7 @@
   "addons": [
 
   ],
+  "stack": "heroku-18",
   "buildpacks": [
     {
       "url": "https://github.com/citusdata/sphinx-heroku-buildpack.git"
