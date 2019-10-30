@@ -69,7 +69,7 @@ Remember that -- even with this extensive SQL coverage -- data modeling can have
 How do I choose the shard count when I hash-partition my data?
 --------------------------------------------------------------
 
-One of the choices when first distributing a table is its shard count. This setting can be set differently for each table, and the optimal value depends on use-case. It is possible, but difficult, to change the count after cluster creation, so use these guidelines to choose the right size.
+One of the choices when first distributing a table is its shard count. This setting can be set differently for each co-location group, and the optimal value depends on use-case. It is possible, but difficult, to change the count after cluster creation, so use these guidelines to choose the right size.
 
 In the :ref:`mt_blurb` use-case we recommend choosing between 32 - 128 shards.  For smaller workloads say <100GB, you could start with 32 shards and for larger workloads you could choose 64 or 128. This means that you have the leeway to scale from 32 to 128 worker machines.
 
