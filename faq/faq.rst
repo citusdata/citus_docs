@@ -199,6 +199,11 @@ Existing customers of :ref:`Citus Cloud <cloud_overview>` can provision a Citus 
 
 For a fully managed Citus database-as-a-service, try `Azure Database for PostgreSQL - Hyperscale (Citus) <https://docs.microsoft.com/en-us/azure/postgresql/overview#azure-database-for-postgresql---hyperscale-citus-preview>`_.
 
+Can I create a new DB in a Citus Cloud instance?
+------------------------------------------------
+
+No, but you can use database `schemas <https://www.postgresql.org/docs/current/ddl-schemas.html>`_ to separate and group related sets of tables.
+
 Can I shard by schema on Citus for multi-tenant applications?
 -------------------------------------------------------------
 
