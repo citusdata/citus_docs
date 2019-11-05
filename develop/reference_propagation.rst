@@ -14,15 +14,20 @@ Manual query propagation bypasses coordinator logic, locking, and any other cons
 Running on all Workers
 ----------------------
 
-The least granular level of execution is broadcasting a statement for execution on all workers. This is useful for viewing properties of entire worker databases or creating UDFs uniformly throughout the cluster. For example:
+The least granular level of execution is broadcasting a statement for execution
+on all workers. This is useful for viewing properties of entire worker
+databases.
 
 .. code-block:: postgresql
 
-  -- Make a UDF available on all workers
-  SELECT run_command_on_workers($cmd$ CREATE FUNCTION ... $cmd$);
-
   -- List the work_mem setting of each worker database
   SELECT run_command_on_workers($cmd$ SHOW work_mem; $cmd$);
+
+Although this command can also be used to create UDFs (or other objects) on the
+workers, it's best to use :ref:`create_distributed_function` on the coordinator
+node for that. Registering functions on the coordinator tracks them in the
+:ref:`pg_dist_object` metadata table, so Citus will know to automatically
+create a copy of the function in any future nodes added to the cluster.
 
 .. note::
 
