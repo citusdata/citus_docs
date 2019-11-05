@@ -61,22 +61,22 @@ Subquery/CTE Push-Pull Execution
 
 If necessary Citus can gather results from subqueries and CTEs into the coordinator node and then push them back across workers for use by an outer query. This allows Citus to support a greater variety of SQL constructs, and even mix executor types between a query and its subqueries.
 
-For example, having subqueries in a WHERE clause sometimes cannot execute inline at the same time as the main query, but must be done separately. Suppose a web analytics application maintains a ``visits`` table partitioned by ``page_id``. To query the number of visitor sessions on the top twenty most visited pages, we can use a subquery to find the list of pages, then an outer query to count the sessions.
+For example, having subqueries in a WHERE clause sometimes cannot execute inline at the same time as the main query, but must be done separately. Suppose a web analytics application maintains a ``page_views`` table partitioned by ``page_id``. To query the number of visitor hosts on the top twenty most visited pages, we can use a subquery to find the list of pages, then an outer query to count the hosts.
 
 .. code-block:: sql
 
-  SELECT page_id, count(distinct session_id)
-  FROM visits
+  SELECT page_id, count(distinct host_ip)
+  FROM page_views
   WHERE page_id IN (
     SELECT page_id
-    FROM visits
+    FROM page_views
     GROUP BY page_id
     ORDER BY count(*) DESC
     LIMIT 20
   )
   GROUP BY page_id;
 
-The real-time executor would like to run a fragment of this query against each shard by page_id, counting distinct session_ids, and combining the results on the coordinator. However the LIMIT in the subquery means the subquery cannot be executed as part of the fragment. By recursively planning the query Citus can run the subquery separately, push the results to all workers, run the main fragment query, and pull the results back to the coordinator. The "push-pull" design supports a subqueries like the one above.
+The adaptive executor would like to run a fragment of this query against each shard by page_id, counting distinct host_ips, and combining the results on the coordinator. However the LIMIT in the subquery means the subquery cannot be executed as part of the fragment. By recursively planning the query Citus can run the subquery separately, push the results to all workers, run the main fragment query, and pull the results back to the coordinator. The "push-pull" design supports a subqueries like the one above.
 
 Let's see this in action by reviewing the `EXPLAIN <https://www.postgresql.org/docs/current/static/sql-explain.html>`_ output for this query. It's fairly involved:
 
@@ -86,33 +86,30 @@ Let's see this in action by reviewing the `EXPLAIN <https://www.postgresql.org/d
     Group Key: remote_scan.page_id
     ->  Sort  (cost=0.00..0.00 rows=0 width=0)
       Sort Key: remote_scan.page_id
-      ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+      ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
         ->  Distributed Subplan 6_1
           ->  Limit  (cost=0.00..0.00 rows=0 width=0)
             ->  Sort  (cost=0.00..0.00 rows=0 width=0)
               Sort Key: COALESCE((pg_catalog.sum((COALESCE((pg_catalog.sum(remote_scan.worker_column_2))::bigint, '0'::bigint))))::bigint, '0'::bigint) DESC
               ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)
                 Group Key: remote_scan.page_id
-                ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+                ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
                   Task Count: 32
                   Tasks Shown: One of 32
                   ->  Task
-                    Node: host=localhost port=5433 dbname=postgres
-                    ->  Limit  (cost=1883.00..1883.05 rows=20 width=12)
-                      ->  Sort  (cost=1883.00..1965.54 rows=33017 width=12)
-                        Sort Key: (count(*)) DESC
-                        ->  HashAggregate  (cost=674.25..1004.42 rows=33017 width=12)
-                          Group Key: page_id
-                          ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=4)
+                    Node: host=localhost port=9701 dbname=postgres
+                    ->  HashAggregate  (cost=54.70..56.70 rows=200 width=12)
+                      Group Key: page_id
+                      ->  Seq Scan on page_views_102008 page_views  (cost=0.00..43.47 rows=2247 width=4)
         Task Count: 32
         Tasks Shown: One of 32
         ->  Task
-          Node: host=localhost port=5433 dbname=postgres
-          ->  HashAggregate  (cost=734.53..899.61 rows=16508 width=8)
-            Group Key: visits.page_id, visits.session_id
-            ->  Hash Join  (cost=17.00..651.99 rows=16508 width=8)
-              Hash Cond: (visits.page_id = intermediate_result.page_id)
-              ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=8)
+          Node: host=localhost port=9701 dbname=postgres
+          ->  HashAggregate  (cost=84.50..86.75 rows=225 width=36)
+            Group Key: page_views.page_id, page_views.host_ip
+            ->  Hash Join  (cost=17.00..78.88 rows=1124 width=36)
+              Hash Cond: (page_views.page_id = intermediate_result.page_id)
+              ->  Seq Scan on page_views_102008 page_views  (cost=0.00..43.47 rows=2247 width=36)
               ->  Hash  (cost=14.50..14.50 rows=200 width=4)
                 ->  HashAggregate  (cost=12.50..14.50 rows=200 width=4)
                   Group Key: intermediate_result.page_id
@@ -131,7 +128,7 @@ The root of the tree is what the coordinator node does with the results from the
 
 ::
 
-      ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+      ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
         ->  Distributed Subplan 6_1
   .
 
@@ -144,17 +141,14 @@ The custom scan has two large sub-trees, starting with a "distributed subplan."
               Sort Key: COALESCE((pg_catalog.sum((COALESCE((pg_catalog.sum(remote_scan.worker_column_2))::bigint, '0'::bigint))))::bigint, '0'::bigint) DESC
               ->  HashAggregate  (cost=0.00..0.00 rows=0 width=0)
                 Group Key: remote_scan.page_id
-                ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+                ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
                   Task Count: 32
                   Tasks Shown: One of 32
                   ->  Task
-                    Node: host=localhost port=5433 dbname=postgres
-                    ->  Limit  (cost=1883.00..1883.05 rows=20 width=12)
-                      ->  Sort  (cost=1883.00..1965.54 rows=33017 width=12)
-                        Sort Key: (count(*)) DESC
-                        ->  HashAggregate  (cost=674.25..1004.42 rows=33017 width=12)
-                          Group Key: page_id
-                          ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=4)
+                    Node: host=localhost port=9701 dbname=postgres
+                    ->  HashAggregate  (cost=54.70..56.70 rows=200 width=12)
+                      Group Key: page_id
+                      ->  Seq Scan on page_views_102008 page_views  (cost=0.00..43.47 rows=2247 width=4)
   .
 
 Worker nodes run the above for each of the thirty-two shards (Citus is choosing one representative for display). We can recognize all the pieces of the ``IN (…)`` subquery: the sorting, grouping and limiting. When all workers have completed this query, they send their output back to the coordinator which puts it together as "intermediate results."
@@ -164,18 +158,18 @@ Worker nodes run the above for each of the thirty-two shards (Citus is choosing 
         Task Count: 32
         Tasks Shown: One of 32
         ->  Task
-          Node: host=localhost port=5433 dbname=postgres
-          ->  HashAggregate  (cost=734.53..899.61 rows=16508 width=8)
-            Group Key: visits.page_id, visits.session_id
-            ->  Hash Join  (cost=17.00..651.99 rows=16508 width=8)
-              Hash Cond: (visits.page_id = intermediate_result.page_id)
+          Node: host=localhost port=9701 dbname=postgres
+          ->  HashAggregate  (cost=84.50..86.75 rows=225 width=36)
+            Group Key: page_views.page_id, page_views.host_ip
+            ->  Hash Join  (cost=17.00..78.88 rows=1124 width=36)
+              Hash Cond: (page_views.page_id = intermediate_result.page_id)
   .
 
-Citus starts another real-time job in this second subtree. It's going to count distinct sessions in visits. It uses a JOIN to connect with the intermediate results. The intermediate results will help it restrict to the top twenty pages.
+Citus starts another adaptive executor job in this second subtree. It's going to count distinct hosts in page_views. It uses a JOIN to connect with the intermediate results. The intermediate results will help it restrict to the top twenty pages.
 
 ::
 
-              ->  Seq Scan on visits_102264 visits  (cost=0.00..509.17 rows=33017 width=8)
+              ->  Seq Scan on page_views_102008 page_views  (cost=0.00..43.47 rows=2247 width=36)
               ->  Hash  (cost=14.50..14.50 rows=200 width=4)
                 ->  HashAggregate  (cost=12.50..14.50 rows=200 width=4)
                   Group Key: intermediate_result.page_id
