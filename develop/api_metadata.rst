@@ -239,6 +239,72 @@ The pg_dist_node table contains information about the worker nodes in the cluste
           3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default
     (3 rows)
 
+.. _pg_dist_object:
+
+Distributed object table
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The citus.pg_dist_object table contains a list of objects such as types and
+functions that have been created on the coordinator node and propagated to
+worker nodes. When an administrator adds new worker nodes to the cluster, Citus
+automatically creates copies of the distributed objects on the new nodes, in
+the correct order to satisfy object dependencies.
+
++-----------------------------+---------+------------------------------------------------------+
+| Name                        | Type    | Description                                          |
++=============================+=========+======================================================+
+| classid                     | oid     | Class of the distributed object                      |
+| objid                       | oid     | Object id of the distributed object                  |
+| objsubid                    | integer | Object sub id of the distributed object, e.g. attnum |
+| type                        | text    |                                                      |
+| object_names                | text[]  |                                                      |
+| object_args                 | text[]  |                                                      |
+| distribution_argument_index | integer | Only valid for distributed functions/procedures      |
+| colocationid                | integer | Only valid for distributed functions/procedures      |
++-----------------------------+---------+------------------------------------------------------+
+
+.. code-block:: psql
+
+    CREATE TYPE stoplight AS enum ('green', 'yellow', 'red');
+
+    CREATE OR REPLACE FUNCTION intersection()
+    RETURNS stoplight AS $$
+    DECLARE
+            color stoplight;
+    BEGIN
+            SELECT *
+              FROM unnest(enum_range(NULL::stoplight)) INTO color
+             ORDER BY random() LIMIT 1;
+            RETURN color;
+    END;
+    $$ LANGUAGE plpgsql VOLATILE;
+
+    SELECT create_distributed_function('intersection()');
+
+    -- will have two rows, one for the TYPE and one for the FUNCTION
+    TABLE citus.pg_dist_object;
+
+.. code-block::
+
+    -[ RECORD 1 ]---------------+------
+    classid                     | 1247
+    objid                       | 16780
+    objsubid                    | 0
+    type                        |
+    object_names                |
+    object_args                 |
+    distribution_argument_index |
+    colocationid                |
+    -[ RECORD 2 ]---------------+------
+    classid                     | 1255
+    objid                       | 16788
+    objsubid                    | 0
+    type                        |
+    object_names                |
+    object_args                 |
+    distribution_argument_index |
+    colocationid                |
+
 .. _colocation_group_table:
 
 Co-location group table

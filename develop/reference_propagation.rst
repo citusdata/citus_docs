@@ -23,9 +23,11 @@ databases.
   -- List the work_mem setting of each worker database
   SELECT run_command_on_workers($cmd$ SHOW work_mem; $cmd$);
 
-Although this command can also be used to create UDFs (or other objects) on the
-workers, it's best to use :ref:`create_distributed_function` on the coordinator
-node for that. Registering functions on the coordinator tracks them in the
+Although this command can also be used to create database objects on the
+workers, doing so will make it harder to add worker nodes in an automated
+fashion. To create functions on the workers, it's best to use
+:ref:`create_distributed_function` on the coordinator node for that.
+Registering functions on the coordinator tracks them in the
 :ref:`pg_dist_object` metadata table, so Citus will know to automatically
 create a copy of the function in any future nodes added to the cluster.
 
