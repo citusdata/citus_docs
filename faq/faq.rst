@@ -109,24 +109,25 @@ Certain commands, when run on the coordinator node, do not get propagated to the
 
 * ``CREATE ROLE/USER``
 * ``CREATE FUNCTION``
-* ``CREATE TYPE``
 * ``CREATE EXTENSION``
 * ``CREATE DATABASE``
 * ``ALTER … SET SCHEMA``
 * ``ALTER TABLE ALL IN TABLESPACE``
 
-It is still possible to use these commands by explicitly running them on all nodes. Citus provides a function to execute queries across all workers:
+To propagate functions/procedures to workers, use :ref:`create_distributed_function`.
+
+For the other types of objects above, create them explicitly on all nodes. Citus provides a function to execute queries across all workers:
 
 .. code-block:: postgresql
 
   SELECT run_command_on_workers($cmd$
     /* the command to run */
-    CREATE FUNCTION ...
+    CREATE EXTENSION ...
   $cmd$);
 
 Learn more in :ref:`manual_prop`. Also note that even after manually propagating CREATE DATABASE, Citus must still be installed there. See :ref:`create_db`.
 
-For propagating functions to workers, see also :ref:`create_distributed_function`.
+In the future Citus will automatically propagate more kinds of objects. The advantage of automatic propagation is that Citus will automatically create a copy on any newly added worker nodes (see :ref:`pg_dist_object` for more about that.)
 
 What if a worker node's address changes?
 ----------------------------------------

@@ -247,8 +247,8 @@ Distributed object table
 The citus.pg_dist_object table contains a list of objects such as types and
 functions that have been created on the coordinator node and propagated to
 worker nodes. When an administrator adds new worker nodes to the cluster, Citus
-automatically creates copies of the distributed objects on the new nodes, in
-the correct order to satisfy object dependencies.
+automatically creates copies of the distributed objects on the new nodes (in
+the correct order to satisfy object dependencies).
 
 +-----------------------------+---------+------------------------------------------------------+
 | Name                        | Type    | Description                                          |
