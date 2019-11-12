@@ -108,23 +108,24 @@ How do I create database roles, functions, extensions etc in a Citus cluster?
 Certain commands, when run on the coordinator node, do not get propagated to the workers:
 
 * ``CREATE ROLE/USER``
-* ``CREATE FUNCTION``
-* ``CREATE TYPE``
-* ``CREATE EXTENSION``
 * ``CREATE DATABASE``
 * ``ALTER … SET SCHEMA``
 * ``ALTER TABLE ALL IN TABLESPACE``
+* ``CREATE FUNCTION`` (use :ref:`create_distributed_function`)
+* ``CREATE TABLE`` (see :ref:`table_types`)
 
-It is still possible to use these commands by explicitly running them on all nodes. Citus provides a function to execute queries across all workers:
+For the other types of objects above, create them explicitly on all nodes. Citus provides a function to execute queries across all workers:
 
 .. code-block:: postgresql
 
   SELECT run_command_on_workers($cmd$
     /* the command to run */
-    CREATE FUNCTION ...
+    CREATE ROLE ...
   $cmd$);
 
 Learn more in :ref:`manual_prop`. Also note that even after manually propagating CREATE DATABASE, Citus must still be installed there. See :ref:`create_db`.
+
+In the future Citus will automatically propagate more kinds of objects. The advantage of automatic propagation is that Citus will automatically create a copy on any newly added worker nodes (see :ref:`pg_dist_object` for more about that.)
 
 What if a worker node's address changes?
 ----------------------------------------
