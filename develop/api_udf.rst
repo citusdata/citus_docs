@@ -157,9 +157,10 @@ This example puts ``products`` and ``line_items`` in the same co-location group 
 
   SELECT mark_tables_colocated('stores', ARRAY['products', 'line_items']);
 
+.. _create_distributed_function:
+
 create_distributed_function
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
-.. _create_distributed_function:
 
 Propagates a function from the coordinator node to workers, and marks it for
 distributed execution. When a distributed function is called on the

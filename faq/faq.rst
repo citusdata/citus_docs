@@ -108,12 +108,11 @@ How do I create database roles, functions, extensions etc in a Citus cluster?
 Certain commands, when run on the coordinator node, do not get propagated to the workers:
 
 * ``CREATE ROLE/USER``
-* ``CREATE FUNCTION``
 * ``CREATE DATABASE``
 * ``ALTER … SET SCHEMA``
 * ``ALTER TABLE ALL IN TABLESPACE``
-
-To propagate functions/procedures to workers, use :ref:`create_distributed_function`.
+* ``CREATE FUNCTION`` (use :ref:`create_distributed_function`)
+* ``CREATE TABLE`` (see :ref:`table_types`)
 
 For the other types of objects above, create them explicitly on all nodes. Citus provides a function to execute queries across all workers:
 
