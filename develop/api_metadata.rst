@@ -256,12 +256,21 @@ the correct order to satisfy object dependencies).
 | classid                     | oid     | Class of the distributed object                      |
 | objid                       | oid     | Object id of the distributed object                  |
 | objsubid                    | integer | Object sub id of the distributed object, e.g. attnum |
-| type                        | text    |                                                      |
-| object_names                | text[]  |                                                      |
-| object_args                 | text[]  |                                                      |
+| type                        | text    | Part of the stable address used during pg upgrades   |
+| object_names                | text[]  | Part of the stable address used during pg upgrades   |
+| object_args                 | text[]  | Part of the stable address used during pg upgrades   |
 | distribution_argument_index | integer | Only valid for distributed functions/procedures      |
 | colocationid                | integer | Only valid for distributed functions/procedures      |
 +-----------------------------+---------+------------------------------------------------------+
+
+"Stable addresses" uniquely identify objects independently of a specific
+server.  Citus tracks objects during a PostgreSQL upgrade using stable
+addresses created with the `pg_identify_object_as_address()
+<https://www.postgresql.org/docs/current/functions-info.html#FUNCTIONS-INFO-OBJECT-TABLE>`_
+function.
+
+Here's an example of how ``create_distributed_function()`` adds entries to the
+``citus.pg_dist_object`` table:
 
 .. code-block:: psql
 
