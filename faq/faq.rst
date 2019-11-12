@@ -109,7 +109,6 @@ Certain commands, when run on the coordinator node, do not get propagated to the
 
 * ``CREATE ROLE/USER``
 * ``CREATE FUNCTION``
-* ``CREATE EXTENSION``
 * ``CREATE DATABASE``
 * ``ALTER … SET SCHEMA``
 * ``ALTER TABLE ALL IN TABLESPACE``
@@ -122,7 +121,7 @@ For the other types of objects above, create them explicitly on all nodes. Citus
 
   SELECT run_command_on_workers($cmd$
     /* the command to run */
-    CREATE EXTENSION ...
+    CREATE ROLE ...
   $cmd$);
 
 Learn more in :ref:`manual_prop`. Also note that even after manually propagating CREATE DATABASE, Citus must still be installed there. See :ref:`create_db`.
