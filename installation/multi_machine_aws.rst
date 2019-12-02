@@ -1,3 +1,5 @@
+:orphan:
+
 .. _multi_machine_aws:
 
 AWS CloudFormation

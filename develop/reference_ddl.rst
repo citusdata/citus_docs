@@ -198,7 +198,7 @@ Here is a reference of the categories of DDL statements which propagate. Note th
 Adding/Modifying Columns
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Citus propagates most `ALTER TABLE <https://www.postgresql.org/docs/current/static/ddl-alter.html>`_ commands automatically. Adding columns or changing their default values work as they would in a single-machine PostgreSQL database:
+Citus propagates most `ALTER TABLE <https://www.postgresql.org/docs/current/static/ddl-alter.html>`__ commands automatically. Adding columns or changing their default values work as they would in a single-machine PostgreSQL database:
 
 .. code-block:: postgresql
 
@@ -349,7 +349,7 @@ Later, during non-peak hours, a database administrator can attempt to fix the ba
    ALTER TABLE users
    VALIDATE CONSTRAINT syntactic_email;
 
-The PostgreSQL documentation has more information about NOT VALID and VALIDATE CONSTRAINT in the `ALTER TABLE <https://www.postgresql.org/docs/current/sql-altertable.html>`_ section.
+The PostgreSQL documentation has more information about NOT VALID and VALIDATE CONSTRAINT in the `ALTER TABLE <https://www.postgresql.org/docs/current/sql-altertable.html>`__ section.
 
 Adding/Removing Indices
 ~~~~~~~~~~~~~~~~~~~~~~~
