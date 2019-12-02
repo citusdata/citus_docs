@@ -293,7 +293,7 @@ Here's an example of how ``create_distributed_function()`` adds entries to the
     -- will have two rows, one for the TYPE and one for the FUNCTION
     TABLE citus.pg_dist_object;
 
-.. code-block::
+.. code-block:: text
 
     -[ RECORD 1 ]---------------+------
     classid                     | 1247

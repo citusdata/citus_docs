@@ -298,11 +298,14 @@ Sets the frequency at which Citus checks for statuses of jobs managed by the tas
 citus.task_executor_type (enum)
 *****************************************
 
-Citus has two executor types for running distributed SELECT queries. The desired executor can be selected by setting this configuration parameter. The accepted values for this parameter are:
+Citus has three executor types for running distributed SELECT queries. The desired executor can be selected by setting this configuration parameter. The accepted values for this parameter are:
 
-* **real-time:** The real-time executor is the default executor and is optimal when you require fast responses to queries that involve aggregations and co-located joins spanning across multiple shards.
+* **adaptive:** The default. It is optimal for fast responses to queries that involve aggregations and co-located joins spanning across multiple shards.
 
 * **task-tracker:** The task-tracker executor is well suited for long running, complex queries which require shuffling of data across worker nodes and efficient resource management.
+
+* **real-time:** (deprecated) Serves a similar purpose as the adaptive executor, but is less flexible and can cause more connection pressure on worker nodes.
+
 
 This parameter can be set at run-time and is effective on the coordinator. For more details about the executors, you can visit the :ref:`distributed_query_executor` section of our documentation.
 

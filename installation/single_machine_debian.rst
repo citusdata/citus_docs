@@ -15,7 +15,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
   curl https://install.citusdata.com/community/deb.sh | sudo bash
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-11-citus-8.3
+  sudo apt-get -y install postgresql-12-citus-9.0
 
 
 .. _post_install:
@@ -32,7 +32,7 @@ Let's create directories for those nodes to store their data. For convenience in
   sudo su - postgres
 
   # include path to postgres binaries
-  export PATH=$PATH:/usr/lib/postgresql/11/bin
+  export PATH=$PATH:/usr/lib/postgresql/12/bin
 
   cd ~
   mkdir -p citus/coordinator citus/worker1 citus/worker2

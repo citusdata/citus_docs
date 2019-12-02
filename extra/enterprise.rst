@@ -26,19 +26,12 @@ Ubuntu or Debian with Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # install the server and initialize db
-    # (the rebalancer package pulls in other necessary packages)
-    sudo apt-get install -y postgresql-11-citus-rebalancer-8.3
+    sudo apt-get install -y postgresql-12-citus-enterprise-9.0
 
     # preload citus extension
-    sudo pg_conftool 11 main set shared_preload_libraries citus
+    sudo pg_conftool 12 main set shared_preload_libraries citus
 
 3. Continue by following the standard :ref:`multi-machine debian <post_enterprise_deb>` installation steps, **starting at step 3.**
-
-4. Install the enterprise shard rebalancer:
-
-   .. code-block:: bash
-
-      sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
 
 Ubuntu or Debian without Internet Access
 ----------------------------------------
@@ -54,8 +47,7 @@ Ubuntu or Debian without Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     sudo apt-get clean
-    # (the rebalancer package pulls in other necessary packages)
-    sudo apt-get install -y --download-only postgresql-11-citus-rebalancer-8.3
+    sudo apt-get install -y --download-only postgresql-12-citus-enterprise-9.0
 
     # go to package downloads
     cd /var/cache/apt
@@ -77,15 +69,9 @@ Ubuntu or Debian without Internet Access
     sudo dpkg -i -R /tmp/citus
 
     # preload citus extension
-    sudo pg_conftool 11 main set shared_preload_libraries citus
+    sudo pg_conftool 12 main set shared_preload_libraries citus
 
 5. Continue by following the standard :ref:`multi-machine debian <post_enterprise_deb>` installation steps, **starting at step 3.**
-
-6. Install the enterprise shard rebalancer:
-
-   .. code-block:: bash
-
-      sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
 
 .. _enterprise_rhel:
 
@@ -103,23 +89,16 @@ Fedora, CentOS, or Red Hat with Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # install PostgreSQL with Citus extension
-    # (the rebalancer package pulls in other necessary packages)
-    sudo yum install -y citus-rebalancer83_11
+    sudo yum install -y citus-enterprise90_12
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
-    sudo service postgresql-11 initdb || \
-      sudo /usr/pgsql-11/bin/postgresql-11-setup initdb
+    sudo service postgresql-12 initdb || \
+      sudo /usr/pgsql-12/bin/postgresql-12-setup initdb
     # preload citus extension
     echo "shared_preload_libraries = 'citus'" | \
-      sudo tee -a /var/lib/pgsql/11/data/postgresql.conf
+      sudo tee -a /var/lib/pgsql/12/data/postgresql.conf
 
 3. Continue by following the standard :ref:`multi-machine rhel <post_enterprise_rhel>` installation steps, **starting at step 3.**
-
-4. Install the enterprise shard rebalancer:
-
-   .. code-block:: bash
-
-      sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
 
 Fedora, CentOS, or Red Hat without Internet Access
 --------------------------------------------------
@@ -134,8 +113,8 @@ Fedora, CentOS, or Red Hat without Internet Access
     curl https://install.citusdata.com/enterprise/rpm.sh | \
       sudo CITUS_REPO_TOKEN=XYZ bash
 
-    # (the rebalancer package pulls in other necessary packages)
-    sudo yum install --downloadonly --downloaddir=. citus-rebalancer83_11
+    # get package
+    sudo yum install --downloadonly --downloaddir=. citus-enterprise90_12
 
     # put them into a tarball
     tar czf ~/citus-enterprise.tar.gz *.rpm
@@ -154,19 +133,13 @@ Fedora, CentOS, or Red Hat without Internet Access
     sudo rpm -ivh /tmp/citus/*.rpm
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
-    sudo service postgresql-11 initdb || \
-      sudo /usr/pgsql-11/bin/postgresql-11-setup initdb
+    sudo service postgresql-12 initdb || \
+      sudo /usr/pgsql-12/bin/postgresql-12-setup initdb
     # preload citus extension
     echo "shared_preload_libraries = 'citus'" | \
-      sudo tee -a /var/lib/pgsql/11/data/postgresql.conf
+      sudo tee -a /var/lib/pgsql/12/data/postgresql.conf
 
 5. Continue by following the standard :ref:`multi-machine rhel <post_enterprise_rhel>` installation steps, **starting at step 3.**
-
-6. Install the enterprise shard rebalancer:
-
-   .. code-block:: bash
-
-      sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
 
 Upgrading from Citus Community to Enterprise
 ============================================
@@ -187,8 +160,7 @@ Ubuntu or Debian
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # Install enterprise packages, which will remove community packages
-    # (the rebalancer package pulls in other necessary packages)
-    sudo apt-get install -y postgresql-11-citus-rebalancer-X.Y
+    sudo apt-get install -y postgresql-12-citus-enterprise-X.Y
 
     # substitute X.Y with the version currently installed ^^^^^
 
@@ -198,13 +170,11 @@ Ubuntu or Debian
 
     sudo service postgresql restart
 
-5. Update the Citus extension and initialize the Shard Rebalancer
+5. Update the Citus extension
 
    .. code-block:: bash
 
     sudo -i -u postgres psql -c "ALTER EXTENSION citus UPDATE;"
-    sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
-
 
 Fedora, CentOS, or Red Hat
 --------------------------
@@ -223,22 +193,20 @@ Fedora, CentOS, or Red Hat
 
     # remove community packages
     # substitute XY with the version currently installed
-    sudo yum remove -y citusXY_11
+    sudo yum remove -y citusXY_12
 
     # Install enterprise packages
     # substitute XY with the version previously installed
-    # (the rebalancer package pulls in other necessary packages)
-    sudo yum install -y citus-rebalancerXY_11
+    sudo yum install -y citus-enterpriseXY_12
 
 4. Restart the database.
 
   .. code-block:: bash
 
-    sudo service postgresql-11 restart
+    sudo service postgresql-12 restart
 
-5. Update the Citus extension and initialize the Shard Rebalancer
+5. Update the Citus extension
 
    .. code-block:: bash
 
     sudo -i -u postgres psql -c "ALTER EXTENSION citus UPDATE;"
-    sudo -i -u postgres psql -c "CREATE EXTENSION shard_rebalancer;"
