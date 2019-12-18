@@ -170,8 +170,10 @@ First create a function that does the deletions:
       delete_campaign(company_id int, campaign_id int)
     RETURNS void LANGUAGE plpgsql AS $fn$
     BEGIN
-	  DELETE from campaigns where id = $2 AND company_id = $1;
-	  DELETE from ads where campaign_id = $2 AND company_id = $1;
+	  DELETE FROM campaigns
+       WHERE id = $2 AND campaigns.company_id = $1;
+	  DELETE FROM ads
+       WHERE ads.campaign_id = $2 AND ads.company_id = $1;
     END;
     $fn$;
 
@@ -184,10 +186,11 @@ function on whatever worker holds the :ref:`shards` for tables ``ads`` and
 
     SELECT create_distributed_function(
       'delete_campaign(int, int)', 'company_id',
+      colocate_with := 'campaigns'
     );
 
     -- you can run the function as usual
-    SELECT delete_campaign(46, 5);
+    SELECT delete_campaign(5, 46);
 
 Besides transactional operations, you can also run analytics queries using
 standard SQL.  One interesting query for a company to run would be to see
