@@ -147,7 +147,7 @@ If you want to double the budget for all the campaigns of a company, you can run
     WHERE company_id = 5;
 
 Another example of such an operation would be to run transactions which span multiple tables. Let's
-say you want to delete a campaign and all its associated ads, you could do it atomically by running.
+say you want to delete a campaign and all its associated ads, you could do it atomically by running:
 
 .. code-block:: sql
 
@@ -156,8 +156,42 @@ say you want to delete a campaign and all its associated ads, you could do it at
     DELETE from ads where campaign_id = 46 AND company_id = 5;
     COMMIT;
 
-Other than transactional operations, you can also run analytics queries on this data using standard SQL.
-One interesting query for a company to run would be to see details about its campaigns with maximum budget.
+Each statement in a transactions causes roundtrips between the coordinator and
+workers in Citus.  For multi-tenant workloads, it's more efficient to run
+transactions in distributed functions. The efficiency gains become more
+apparent for larger transactions, but we can use the small transaction above as
+an example.
+
+First create a function that does the deletions:
+
+.. code-block:: postgres
+
+    CREATE OR REPLACE FUNCTION
+      delete_campaign(company_id int, campaign_id int)
+    RETURNS void LANGUAGE plpgsql AS $fn$
+    BEGIN
+	  DELETE from campaigns where id = $2 AND company_id = $1;
+	  DELETE from ads where campaign_id = $2 AND company_id = $1;
+    END;
+    $fn$;
+
+Next use :ref:`create_distributed_function` to instruct Citus to run the
+function directly on workers rather than on the coordinator. It will run the
+function on whatever worker holds the :ref:`shards` for tables ``ads`` and
+``campaigns`` corresponding to the value ``company_id``.
+
+.. code-block:: sql
+
+    SELECT create_distributed_function(
+      'delete_campaign(int, int)', 'company_id',
+    );
+
+    -- you can run the function as usual
+    SELECT delete_campaign(46, 5);
+
+Besides transactional operations, you can also run analytics queries using
+standard SQL.  One interesting query for a company to run would be to see
+details about its campaigns with maximum budget.
 
 .. code-block:: sql
 
