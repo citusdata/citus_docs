@@ -107,6 +107,9 @@ In this case, we will shard all the tables on the :code:`company_id`.
 
 .. code-block:: sql
 
+    -- before distributing tables, enable some extra features
+    SET citus.replication_model = 'streaming';
+
     SELECT create_distributed_table('companies', 'id');
     SELECT create_distributed_table('campaigns', 'company_id');
     SELECT create_distributed_table('ads', 'company_id');
@@ -152,8 +155,8 @@ say you want to delete a campaign and all its associated ads, you could do it at
 .. code-block:: sql
 
     BEGIN;
-    DELETE from campaigns where id = 46 AND company_id = 5;
-    DELETE from ads where campaign_id = 46 AND company_id = 5;
+    DELETE FROM campaigns WHERE id = 46 AND company_id = 5;
+    DELETE FROM ads WHERE campaign_id = 46 AND company_id = 5;
     COMMIT;
 
 Each statement in a transactions causes roundtrips between the coordinator and
@@ -170,9 +173,9 @@ First create a function that does the deletions:
       delete_campaign(company_id int, campaign_id int)
     RETURNS void LANGUAGE plpgsql AS $fn$
     BEGIN
-	  DELETE FROM campaigns
+      DELETE FROM campaigns
        WHERE id = $2 AND campaigns.company_id = $1;
-	  DELETE FROM ads
+      DELETE FROM ads
        WHERE ads.campaign_id = $2 AND ads.company_id = $1;
     END;
     $fn$;
@@ -180,7 +183,8 @@ First create a function that does the deletions:
 Next use :ref:`create_distributed_function` to instruct Citus to run the
 function directly on workers rather than on the coordinator. It will run the
 function on whatever worker holds the :ref:`shards` for tables ``ads`` and
-``campaigns`` corresponding to the value ``company_id``.
+``campaigns`` corresponding to the value ``company_id``. (This feature
+requires the ``citus.replication_model`` change we made earlier.)
 
 .. code-block:: sql
 
