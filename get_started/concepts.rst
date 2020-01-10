@@ -69,6 +69,8 @@ When you use Citus, the coordinator node you connect to and interact with is a r
 
 Creating standard PostgreSQL tables is easy because it's the default. It’s what you get when you run CREATE TABLE. In almost every Citus deployment we see standard PostgreSQL tables co-existing with distributed and reference tables. Indeed, Citus itself uses local tables to hold cluster metadata, as mentioned earlier.
 
+.. _shards:
+
 Shards
 ------
 
