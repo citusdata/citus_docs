@@ -444,7 +444,7 @@ Arguments
 **node_port:** The port on which PostgreSQL is listening on the worker node.
 
 **group_id:** A group of one primary server and zero or more secondary
-servers, relevant only for streaming replication.  Default 0
+servers, relevant only for streaming replication.  Default -1
 
 **node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
 
@@ -542,7 +542,7 @@ Arguments
 **node_port:** The port on which PostgreSQL is listening on the worker node.
 
 **group_id:** A group of one primary server and zero or more secondary
-servers, relevant only for streaming replication.  Default 0
+servers, relevant only for streaming replication.  Default -1
 
 **node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
 
