@@ -504,7 +504,7 @@ The master_set_node_property() function changes properties in the Citus metadata
 Arguments
 ************************
 
-**node_name:** updated DNS name or IP address for the node.
+**node_name:** DNS name or IP address for the node.
 
 **node_port:** the port on which PostgreSQL is listening on the worker node.
 
@@ -1129,7 +1129,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. note::
   The master_drain_node function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
-The master_drain_node() function moves shards off the designated node and onto other nodes who have ``shouldhaveshards`` set to true in :ref:`pg_dist_node`. This function is designed to be called prior to removing a node from the cluster.
+The master_drain_node() function moves shards off the designated node and onto other nodes who have ``shouldhaveshards`` set to true in :ref:`pg_dist_node`. This function is designed to be called prior to removing a node from the cluster, i.e. turning the node's physical server off.
 
 Arguments
 **************************
@@ -1163,7 +1163,7 @@ Here are the typical steps to remove a single node (for example '10.0.0.1' on a 
 2. Wait until the command finishes
 3. Remove the node
 
-When draining multiple nodes it's recommended to use :ref:`rebalance_table_shards` instead:
+When draining multiple nodes it's recommended to use :ref:`rebalance_table_shards` instead. Doing so allows Citus to plan ahead and move shards the minimum number of times.
 
 1. Run this for each node that you want to remove:
 

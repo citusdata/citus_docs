@@ -228,7 +228,9 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 +------------------+----------------------+---------------------------------------------------------------------------+
 | nodecluster      |        text          | | The name of the cluster containing this node                            |
 +------------------+----------------------+---------------------------------------------------------------------------+
-| shouldhaveshards |        boolean       | | If false, shards will be moved off node (drained) when rebalancing      |
+| shouldhaveshards |        boolean       | | If false, shards will be moved off node (drained) when rebalancing,     |
+|                  |                      | | nor will shards from new distributed tables be placed on the node,      |
+|                  |                      | | unless they are colocated with shards already there                     |
 +------------------+----------------------+---------------------------------------------------------------------------+
 
 ::
