@@ -509,3 +509,11 @@ For instance, in a controller simply ``set_current_tenant`` and all the queries 
   Task.objects.filter(project__name='Very important project')
 
 In the context of an application controller, the current tenant object can be stored as a SESSION variable when a user logs in, and controller actions can :code:`set_current_tenant` to this value. See the README in django-multitenant for more examples.
+
+The ``set_current_tenant`` function can also take an array of objects, like
+
+.. code-block:: python
+
+  set_current_tenant([s1, s2, s3])
+
+which updates the internal SQL query with a filter like ``tenant_id IN (a,b,c)``.
