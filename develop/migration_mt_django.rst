@@ -477,22 +477,12 @@ We need one final migration to tell Citus to mark tables for distribution. Creat
     ]
 
     operations = [
-      migrations.RunSQL(
-        "SELECT create_distributed_table('myapp_account','id')"
-      ),
-      migrations.RunSQL(
-        "SELECT create_distributed_table('myapp_manager','account_id')"
-      ),
-      migrations.RunSQL(
-        "SELECT create_distributed_table('myapp_project','account_id')"
-      ),
-      migrations.RunSQL(
-        "SELECT create_distributed_table('myapp_projectmanager','account_id')"
-      ),
-      migrations.RunSQL(
-        "SELECT create_distributed_table('myapp_task','account_id')"
-      ),
-
+      tenant_migrations.Distribute('Country', reference=True),
+      tenant_migrations.Distribute('Account'),
+      tenant_migrations.Distribute('Manager'),
+      tenant_migrations.Distribute('Project'),
+      tenant_migrations.Distribute('ProjectManager'),
+      tenant_migrations.Distribute('Task'),
     ]
 
 With all the migrations created from the steps so far, apply them to the database with ``python manage.py migrate``.
