@@ -205,38 +205,42 @@ Worker node table
 
 The pg_dist_node table contains information about the worker nodes in the cluster. 
 
-+----------------+----------------------+---------------------------------------------------------------------------+
-|      Name      |         Type         |       Description                                                         |
-+================+======================+===========================================================================+
-| nodeid         |         int          | | Auto-generated identifier for an individual node.                       |
-+----------------+----------------------+---------------------------------------------------------------------------+
-| groupid        |         int          | | Identifier used to denote a group of one primary server and zero or more|
-|                |                      | | secondary servers, when the streaming replication model is used. By     |
-|                |                      | | default it is the same as the nodeid.                                   | 
-+----------------+----------------------+---------------------------------------------------------------------------+
-| nodename       |         text         | | Host Name or IP Address of the PostgreSQL worker node.                  |
-+----------------+----------------------+---------------------------------------------------------------------------+
-| nodeport       |         int          | | Port number on which the PostgreSQL worker node is listening.           |
-+----------------+----------------------+---------------------------------------------------------------------------+
-| noderack       |        text          | | (Optional) Rack placement information for the worker node.              |
-+----------------+----------------------+---------------------------------------------------------------------------+
-| hasmetadata    |        boolean       | | Reserved for internal use.                                              |
-+----------------+----------------------+---------------------------------------------------------------------------+
-| isactive       |        boolean       | | Whether the node is active accepting shard placements.                  |
-+----------------+----------------------+---------------------------------------------------------------------------+
-| noderole       |        text          | | Whether the node is a primary or secondary                              |
-+----------------+----------------------+---------------------------------------------------------------------------+
-| nodecluster    |        text          | | The name of the cluster containing this node                            |
-+----------------+----------------------+---------------------------------------------------------------------------+
++------------------+----------------------+---------------------------------------------------------------------------+
+|      Name        |         Type         |       Description                                                         |
++==================+======================+===========================================================================+
+| nodeid           |         int          | | Auto-generated identifier for an individual node.                       |
++------------------+----------------------+---------------------------------------------------------------------------+
+| groupid          |         int          | | Identifier used to denote a group of one primary server and zero or more|
+|                  |                      | | secondary servers, when the streaming replication model is used. By     |
+|                  |                      | | default it is the same as the nodeid.                                   |
++------------------+----------------------+---------------------------------------------------------------------------+
+| nodename         |         text         | | Host Name or IP Address of the PostgreSQL worker node.                  |
++------------------+----------------------+---------------------------------------------------------------------------+
+| nodeport         |         int          | | Port number on which the PostgreSQL worker node is listening.           |
++------------------+----------------------+---------------------------------------------------------------------------+
+| noderack         |        text          | | (Optional) Rack placement information for the worker node.              |
++------------------+----------------------+---------------------------------------------------------------------------+
+| hasmetadata      |        boolean       | | Reserved for internal use.                                              |
++------------------+----------------------+---------------------------------------------------------------------------+
+| isactive         |        boolean       | | Whether the node is active accepting shard placements.                  |
++------------------+----------------------+---------------------------------------------------------------------------+
+| noderole         |        text          | | Whether the node is a primary or secondary                              |
++------------------+----------------------+---------------------------------------------------------------------------+
+| nodecluster      |        text          | | The name of the cluster containing this node                            |
++------------------+----------------------+---------------------------------------------------------------------------+
+| shouldhaveshards |        boolean       | | If false, shards will be moved off node (drained) when rebalancing,     |
+|                  |                      | | nor will shards from new distributed tables be placed on the node,      |
+|                  |                      | | unless they are colocated with shards already there                     |
++------------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
     SELECT * from pg_dist_node;
-     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata | isactive | noderole | nodecluster
-    --------+---------+-----------+----------+----------+-------------+----------+----------+ -------------
-          1 |       1 | localhost |    12345 | default  | f           | t        | primary  | default
-          2 |       2 | localhost |    12346 | default  | f           | t        | primary  | default
-          3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default
+     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata | isactive | noderole | nodecluster | shouldhaveshards
+    --------+---------+-----------+----------+----------+-------------+----------+----------+-------------+------------------
+          1 |       1 | localhost |    12345 | default  | f           | t        | primary  | default     | t
+          2 |       2 | localhost |    12346 | default  | f           | t        | primary  | default     | t
+          3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default     | t
     (3 rows)
 
 .. _pg_dist_object:

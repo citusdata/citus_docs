@@ -444,7 +444,7 @@ Arguments
 **node_port:** The port on which PostgreSQL is listening on the worker node.
 
 **group_id:** A group of one primary server and zero or more secondary
-servers, relevant only for streaming replication.  Default 0
+servers, relevant only for streaming replication.  Default -1
 
 **node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
 
@@ -494,6 +494,36 @@ Example
 
     select * from master_update_node(123, 'new-address', 5432);
 
+.. _master_set_node_property:
+
+master_set_node_property
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The master_set_node_property() function changes properties in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`. Currently it can change only the ``shouldhaveshards`` property.
+
+Arguments
+************************
+
+**node_name:** DNS name or IP address for the node.
+
+**node_port:** the port on which PostgreSQL is listening on the worker node.
+
+**property:** the column to change in ``pg_dist_node``, currently only ``shouldhaveshard`` is supported.
+
+**value:** the new value for the column.
+
+Return Value
+******************************
+
+N/A
+
+Example
+***********************
+
+.. code-block:: postgresql
+
+    SELECT * FROM master_set_node_property('localhost', 5433, 'shouldhaveshards', false);
+
 .. _master_add_inactive_node:
 
 master_add_inactive_node
@@ -512,7 +542,7 @@ Arguments
 **node_port:** The port on which PostgreSQL is listening on the worker node.
 
 **group_id:** A group of one primary server and zero or more secondary
-servers, relevant only for streaming replication.  Default 0
+servers, relevant only for streaming replication.  Default -1
 
 **node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
 
@@ -1006,7 +1036,7 @@ The rebalance_table_shards() function moves shards of the given table to make th
 Arguments
 **************************
 
-**table_name:** The name of the table whose shards need to be rebalanced.
+**table_name:** (Optional) The name of the table whose shards need to be rebalanced. If NULL, then rebalance all existing colocation groups.
 
 **threshold:** (Optional) A float number between 0.0 and 1.0 which indicates the maximum difference ratio of node utilization from average utilization. For example, specifying 0.1 will cause the shard rebalancer to attempt to balance all nodes to hold the same number of shards ±10%. Specifically, the shard rebalancer will try to converge utilization of all worker nodes to the (1 - threshold) * average_utilization ... (1 + threshold) * average_utilization range.
 
@@ -1019,6 +1049,8 @@ Arguments
   * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
+
+**drain_only:** (Optional) When true, move shards off worker nodes who have ``shouldhaveshards`` set to false in :ref:`pg_dist_node`; move no other shards.
 
 Return Value
 *********************************
@@ -1088,6 +1120,65 @@ Example
   │      7083 │ foo        │  102018 │     614400 │ n2.foobar.com │       5432 │ n4.foobar.com │       5432 │        1 │
   │      7083 │ foo        │  102019 │       8192 │ n3.foobar.com │       5432 │ n4.foobar.com │       5432 │        2 │
   └───────────┴────────────┴─────────┴────────────┴───────────────┴────────────┴───────────────┴────────────┴──────────┘
+
+.. _master_drain_node:
+
+master_drain_node
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+  The master_drain_node function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+The master_drain_node() function moves shards off the designated node and onto other nodes who have ``shouldhaveshards`` set to true in :ref:`pg_dist_node`. This function is designed to be called prior to removing a node from the cluster, i.e. turning the node's physical server off.
+
+Arguments
+**************************
+
+**nodename:** The hostname name of the node to be drained.
+
+**nodeport:** The port number of the node to be drained.
+
+**shard_transfer_mode:** (Optional) Specify the method of replication, whether to use PostgreSQL logical replication or a cross-worker COPY command. The possible values are:
+
+  * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
+  * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
+  * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
+
+Return Value
+*********************************
+
+N/A
+
+Example
+**************************
+
+Here are the typical steps to remove a single node (for example '10.0.0.1' on a standard PostgreSQL port):
+
+1. Drain the node.
+
+   .. code-block:: postgresql
+
+     SELECT * from master_drain_node('10.0.0.1', 5432);
+
+2. Wait until the command finishes
+3. Remove the node
+
+When draining multiple nodes it's recommended to use :ref:`rebalance_table_shards` instead. Doing so allows Citus to plan ahead and move shards the minimum number of times.
+
+1. Run this for each node that you want to remove:
+
+   .. code-block:: postgresql
+
+     SELECT * FROM master_set_node_property(node_hostname, node_port, 'shouldhaveshards', false);
+
+2. Drain them all at once with :ref:`rebalance_table_shards`:
+
+   .. code-block:: postgresql
+
+     SELECT * FROM rebalance_table_shards(drain_only := true);
+
+3. Wait until the draining rebalance finishes
+4. Remove the nodes
 
 replicate_table_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
