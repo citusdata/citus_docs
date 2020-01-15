@@ -517,3 +517,36 @@ The ``set_current_tenant`` function can also take an array of objects, like
   set_current_tenant([s1, s2, s3])
 
 which updates the internal SQL query with a filter like ``tenant_id IN (a,b,c)``.
+
+Automating with middleware
+##########################
+
+Rather than calling ``set_current_tenant()`` in each controller, you can create and install a new `middleware <https://docs.djangoproject.com/en/3.0/topics/http/middleware/>`_ class in your Django application to do it automatically.
+
+.. code-block:: python
+
+  # src/appname/middleware.py
+
+  from django_multitenant.utils import set_current_tenant
+
+  class MultitenantMiddleware:
+      def __init__(self, get_response):
+          self.get_response = get_response
+
+      def __call__(self, request):
+          if request.user and not request.user.is_anonymous:
+              set_current_tenant(request.user.employee.company)
+          response = self.get_response(request)
+          return response
+
+Enable the middleware by updating the MIDDLEWARE array in src/appname/settings/base.py:
+
+.. code-block:: python
+
+  MIDDLEWARE = [
+      # ...
+      # existing items
+      # ...
+
+      'appname.middleware.MultitenantMiddleware'
+  ]
