@@ -38,7 +38,7 @@ For increased performance you can choose to make an approximate count instead. F
 
    Please visit the PostgreSQL hll `github repository <https://github.com/citusdata/postgresql-hll>`_ for specifics on obtaining the extension.
 
-2. Create the hll extension on all the PostgreSQL instances
+2. Create the hll extension on all the PostgreSQL instances by simply running the below command from the coordinator
 
   .. code-block:: postgresql
 
@@ -131,8 +131,8 @@ Next we'll add the extension, create a destination table to store the json data 
 
 .. code-block:: postgresql
 
+  -- run below command from coordinator, it will be propagated to the worker nodes as well
   CREATE EXTENSION topn;
-  SELECT run_command_on_workers(' create extension topn; ');
 
   -- a table to materialize the daily aggregate
   CREATE TABLE reviews_by_day

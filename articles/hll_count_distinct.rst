@@ -153,14 +153,13 @@ To play with HLL we will use Citus Cloud and GitHub events data. You can
 see and learn more about Citus Cloud and this data set from
 `here <https://www.citusdata.com/blog/2017/01/27/getting-started-with-github-events-data/>`__.
 Assuming you created your Citus Cloud instance and connected it via
-psql, you can create HLL extension by;
+psql, you can create HLL extension by simply running the below command from the coordinator;
 
 .. code:: sql
 
     CREATE EXTENSION hll;
 
-You should create the extension at master and all workers. Then enable
-count distinct approximations by setting the
+Then enable count distinct approximations by setting the
 *citus.count\_distinct\_error\_rate* configuration value. Lower values
 for this configuration setting are expected to give more accurate
 results but take more time and use more memory for computation. We
