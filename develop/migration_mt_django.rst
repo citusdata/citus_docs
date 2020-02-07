@@ -487,14 +487,14 @@ We need one final migration to tell Citus to mark tables for distribution. Creat
 
 With all the migrations created from the steps so far, apply them to the database with ``python manage.py migrate``.
 
-At this point the Django application models are ready to work with a Citus backend. You can continue by importing data to the new system and modifying controllers as necessary to deal with the model changes.
+At this point the Django application models are ready to work with a Citus backend. You can continue by importing data to the new system and modifying views as necessary to deal with the model changes.
 
 Updating the Django Application to scope queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The django-multitenant library discussed in the previous section is not only useful for migrations, but for simplifying application queries. The library allows application code to easily scope queries to a single tenant. It automatically adds the correct SQL filters to all statements, including fetching objects through relations.
 
-For instance, in a controller simply ``set_current_tenant`` and all the queries or joins afterward will include a filter to scope results to a single tenant.
+For instance, in a view simply ``set_current_tenant`` and all the queries or joins afterward will include a filter to scope results to a single tenant.
 
 .. code-block:: python
 
@@ -508,7 +508,7 @@ For instance, in a controller simply ``set_current_tenant`` and all the queries 
   # Find tasks for very import projects in the current account
   Task.objects.filter(project__name='Very important project')
 
-In the context of an application controller, the current tenant object can be stored as a SESSION variable when a user logs in, and controller actions can :code:`set_current_tenant` to this value. See the README in django-multitenant for more examples.
+In the context of an application view, the current tenant object can be stored as a SESSION variable when a user logs in, and view actions can :code:`set_current_tenant` to this value. See the README in django-multitenant for more examples.
 
 The ``set_current_tenant`` function can also take an array of objects, like
 
@@ -521,7 +521,7 @@ which updates the internal SQL query with a filter like ``tenant_id IN (a,b,c)``
 Automating with middleware
 ##########################
 
-Rather than calling ``set_current_tenant()`` in each controller, you can create and install a new `middleware <https://docs.djangoproject.com/en/3.0/topics/http/middleware/>`_ class in your Django application to do it automatically.
+Rather than calling ``set_current_tenant()`` in each view, you can create and install a new `middleware <https://docs.djangoproject.com/en/3.0/topics/http/middleware/>`_ class in your Django application to do it automatically.
 
 .. code-block:: python
 
