@@ -470,6 +470,7 @@ We need one final migration to tell Citus to mark tables for distribution. Creat
 .. code-block:: python
 
   from django.db import migrations
+  from django_multitenant.db import migrations as tenant_migrations
 
   class Migration(migrations.Migration):
     dependencies = [
