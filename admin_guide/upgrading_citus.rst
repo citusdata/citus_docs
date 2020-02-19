@@ -15,21 +15,21 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 9.1 is currently installed on Postgres 11:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 9.2 is currently installed on Postgres 11:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-11-citus-9.1
+  sudo apt-get install --only-upgrade postgresql-11-citus-9.2
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus91_11
+  sudo yum update citus92_11
   sudo service postgresql-11.0 restart
 
 .. _major_minor_upgrade:
@@ -48,14 +48,14 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 8.3 to 9.1:
+If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 8.3 to 9.2
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-11-citus-9.1
+  sudo apt-get install postgresql-11-citus-9.2
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -63,7 +63,7 @@ If upgrading both Citus and Postgres, always be sure to upgrade the Citus extens
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus83_11 citus91_11
+  sudo yum swap citus83_11 citus92_11
   sudo service postgresql-11 restart
 
 Step 2. Apply Update in DB
