@@ -382,7 +382,7 @@ Next, include it in the rollups by modifying the rollup function:
   + ) h
 
 Now, if you want to get the number of requests which came from America in your dashboard,
-your can modify the dashboard query to look like this:
+you can modify the dashboard query to look like this:
 
 .. code-block:: sql
 
