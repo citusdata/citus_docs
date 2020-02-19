@@ -91,7 +91,7 @@ The new node is available for shards of new distributed tables. Existing shards 
 
    .. code-block:: sql
 
-      ALTER SYSTEM SET 'citus.node_conninfo' TO 'sslmode=prefer';
+      ALTER SYSTEM SET citus.node_conninfo TO 'sslmode=prefer';
       SELECT pg_reload_conf();
 
 .. _shard_rebalancing:
