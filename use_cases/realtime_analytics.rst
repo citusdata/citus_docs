@@ -273,9 +273,6 @@ to enable it:
 
 .. code-block:: sql
 
-  --------------------------------------------------------
-  -- Run on all nodes ------------------------------------
-
   CREATE EXTENSION hll;
 
 .. note::
