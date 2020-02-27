@@ -1031,7 +1031,29 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. note::
   The rebalance_table_shards function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
-The rebalance_table_shards() function moves shards of the given table to make them evenly distributed among the workers. The function first calculates the list of moves it needs to make in order to ensure that the cluster is balanced within the given threshold. Then, it moves shard placements one by one from the source node to the destination node and updates the corresponding shard metadata to reflect the move.
+The rebalance_table_shards() function moves shards of the given table to make
+them evenly distributed among the workers. The function first calculates the
+list of moves it needs to make in order to ensure that the cluster is balanced
+within the given threshold. Then, it moves shard placements one by one from the
+source node to the destination node and updates the corresponding shard
+metadata to reflect the move.
+
+Every shard is assigned a cost when determining whether shards are "evenly
+distributed." By default each shard has the same cost (a value of 1), so
+distributing to equalize the cost across workers is the same as equalizing the
+number of shards on each. The constant cost strategy is called "by_shard_count"
+and is the default rebalancing strategy.
+
+The default strategy is appropriate under these circumstances:
+
+1. The shards are roughly the same size
+2. The shards get roughly the same amount of traffic
+3. Worker nodes are all the same size/type
+4. Shards haven't been pinned to particular workers
+
+If any of these assumptions don't hold, then the default rebalancing can result
+in a bad plan. In this case you may customize the strategy, using the
+``rebalance_strategy`` parameter.
 
 Arguments
 **************************
@@ -1051,6 +1073,8 @@ Arguments
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
 
 **drain_only:** (Optional) When true, move shards off worker nodes who have ``shouldhaveshards`` set to false in :ref:`pg_dist_node`; move no other shards.
+
+**rebalance_strategy:** (Optional) the name of a strategy in :ref:`pg_dist_rebalance_strategy`. If this argument is omitted, the function chooses the default strategy, as indicated in the table.
 
 Return Value
 *********************************
