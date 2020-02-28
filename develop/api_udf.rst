@@ -1145,6 +1145,33 @@ Example
   │      7083 │ foo        │  102019 │       8192 │ n3.foobar.com │       5432 │ n4.foobar.com │       5432 │        2 │
   └───────────┴────────────┴─────────┴────────────┴───────────────┴────────────┴───────────────┴────────────┴──────────┘
 
+.. _citus_add_rebalance_strategy:
+
+citus_add_rebalance_strategy
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Append a row to the ``pg_dist_rebalance_strategy``. For the meaning of column values in this table, see :ref:`pg_dist_rebalance_strategy`.
+
+Arguments
+**************************
+
+**name:** identifier for the new strategy
+
+**shard_cost_function:** identifies the function used to determine the "cost" of each shard
+
+**node_capacity_function:** identifies the function to measure node capacity
+
+**shard_allowed_on_node_function:** identifies the function which determines which shards can be placed on which nodes
+
+**default_threshold:** a floating point threshold that tunes how precisely the cumulative shard cost should be balanced between nodes
+
+**minimum_threshold:** (Optional) a safeguard column that holds the minimum value allowed for the default_threshold. Its default value is 0
+
+Return Value
+*********************************
+
+N/A
+
 .. _master_drain_node:
 
 master_drain_node
