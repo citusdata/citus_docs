@@ -413,12 +413,14 @@ The default strategy, ``by_shard_count``, assigns every shard the same cost. Its
 Creating custom rebalancer strategies
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Here are examples of functions that can be used within new shard rebalancer strategies, and registered in the :ref:`pg_dist_rebalance_strategy`.
+Here are examples of functions that can be used within new shard rebalancer strategies, and registered in the :ref:`pg_dist_rebalance_strategy` with the :ref:`citus_add_rebalance_strategy` function.
 
-* Setting a node capacity exception by specific hostname:
+* Setting a node capacity exception by hostname pattern:
 
   .. code-block:: postgres
-  
+
+      -- example of node_capacity_function
+
       CREATE FUNCTION v2_node_double_capacity(nodeidarg int)
           RETURNS boolean AS $$
           SELECT
@@ -426,10 +428,12 @@ Here are examples of functions that can be used within new shard rebalancer stra
           FROM pg_dist_node where nodeid = nodeidarg
           $$ LANGUAGE sql;
   
-* Rebalance by number of queries that go to a shard, as measured by the :ref:`citus_stat_statements`:
+* Rebalancing by number of queries that go to a shard, as measured by the :ref:`citus_stat_statements`:
   
   .. code-block:: postgres
   
+      -- example of shard_cost_function
+
       CREATE FUNCTION cost_of_shard_by_number_of_queries(shardid bigint)
           RETURNS real AS $$
           SELECT coalesce(sum(calls)::real, 0.001) as shard_total_queries
@@ -442,6 +446,8 @@ Here are examples of functions that can be used within new shard rebalancer stra
   
   .. code-block:: postgres
   
+      -- example of shard_allowed_on_node_function
+
       CREATE FUNCTION isolate_shard_10000_on_10_0_0_1(shardid bigint, nodeidarg int)
           RETURNS boolean AS $$
           SELECT
