@@ -355,6 +355,8 @@ Rebalancer strategy table
 
   The pg_dist_rebalance_strategy table is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
+This table defines strategies that :ref:`rebalance_table_shards` can use to determine where to move shards.
+
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 |      Name                      |         Type         |       Description                                                         |
 +================================+======================+===========================================================================+
@@ -381,13 +383,28 @@ Rebalancer strategy table
 
 A Citus installation ships with these strategies in the table:
 
-+----------------+------------------+-------------------------------+------------------------+----------------------------------+-------------------+-------------------+
-| Name           | default_strategy | shard_cost_function           | node_capacity_function | shard_allowed_on_node_function   | default_threshold | minimum_threshold |
-+================+==================+===============================+========================+==================================+===================+===================+
-| by_shard_count | true             | citus_shard_cost_1            | citus_node_capacity_1  | citus_shard_allowed_on_node_true | 0                 | 0                 |
-+----------------+------------------+-------------------------------+------------------------+----------------------------------+-------------------+-------------------+
-| by_disk_size   | false            | citus_shard_cost_by_disk_size | citus_node_capacity_1  | citus_shard_allowed_on_node_true | 0.1               | 0                 |
-+----------------+------------------+-------------------------------+------------------------+----------------------------------+-------------------+-------------------+
+.. code-block:: postgres
+
+    SELECT * FROM pg_dist_rebalance_strategy;
+
+::
+
+    -[ RECORD 1 ]-------------------+-----------------------------------
+    Name                            | by_shard_count
+    default_strategy                | true
+    shard_cost_function             | citus_shard_cost_1
+    node_capacity_function          | citus_node_capacity_1
+    shard_allowed_on_node_function  | citus_shard_allowed_on_node_true
+    default_threshold               | 0
+    minimum_threshold               | 0
+    -[ RECORD 2 ]-------------------+-----------------------------------
+    Name                            | by_disk_size
+    default_strategy                | false
+    shard_cost_function             | citus_shard_cost_by_disk_size
+    node_capacity_function          | citus_node_capacity_1
+    shard_allowed_on_node_function  | citus_shard_allowed_on_node_true
+    default_threshold               | 0.1
+    minimum_threshold               | 0
 
 The default strategy, ``by_shard_count``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The other predefined strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
 
