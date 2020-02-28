@@ -1184,10 +1184,12 @@ Example
 citus_add_rebalance_strategy
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Append a row to the ``pg_dist_rebalance_strategy``. For the meaning of column values in this table, see :ref:`pg_dist_rebalance_strategy`.
+Append a row to the ``pg_dist_rebalance_strategy``.
 
 Arguments
 **************************
+
+For more about these arguments, see the corresponding column values in :ref:`pg_dist_rebalance_strategy`.
 
 **name:** identifier for the new strategy
 
@@ -1205,6 +1207,34 @@ Return Value
 *********************************
 
 N/A
+
+.. _citus_set_default_rebalance_strategy:
+
+citus_set_default_rebalance_strategy
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+  The citus_set_default_rebalance_strategy function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+Update the :ref:`pg_dist_rebalance_strategy` table, changing the strategy named
+by its argument to be the default chosen when rebalancing shards.
+
+Arguments
+**************************
+
+**name:** the name of the strategy in pg_dist_rebalance_strategy
+
+Return Value
+*********************************
+
+N/A
+
+Example
+**************************
+
+.. code-block:: postgresql
+
+    SELECT citus_set_default_rebalance_strategy('by_disk_size');
 
 .. _master_drain_node:
 
@@ -1228,6 +1258,8 @@ Arguments
   * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
+
+**rebalance_strategy:** (Optional) the name of a strategy in :ref:`pg_dist_rebalance_strategy`. If this argument is omitted, the function chooses the default strategy, as indicated in the table.
 
 Return Value
 *********************************
