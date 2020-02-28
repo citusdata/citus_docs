@@ -346,6 +346,106 @@ The pg_dist_colocation table contains information about which tables' shards sho
                  2 |         32 |                 2 |                     20
       (1 row)
 
+.. _pg_dist_rebalance_strategy:
+
+Rebalancer strategy table
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+  The pg_dist_rebalance_strategy table is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
++--------------------------------+----------------------+---------------------------------------------------------------------------+
+|      Name                      |         Type         |       Description                                                         |
++================================+======================+===========================================================================+
+| name                           |         name         | | Unique name for the strategy                                            |
++--------------------------------+----------------------+---------------------------------------------------------------------------+
+| default_strategy               |         boolean      | | Whether :ref:`rebalance_table_shards` should choose this strategy by    |
+|                                |                      | | default. Use :ref:`citus_set_default_rebalance_strategy` to update      |
+|                                |                      | | this column                                                             |
++--------------------------------+----------------------+---------------------------------------------------------------------------+
+| shard_cost_function            |         regproc      | | Identifier for a cost function, which must take a shardid as bigint,    |
+|                                |                      | | and return its notion of a cost, as type real                           |
++--------------------------------+----------------------+---------------------------------------------------------------------------+
+| node_capacity_function         |         regproc      | | Identifier for a capacity function, which must take a nodeid as int,    |
+|                                |                      | | and return its notion of node capacity as type real                     |
++--------------------------------+----------------------+---------------------------------------------------------------------------+
+| shard_allowed_on_node_function |         regproc      | | Identifier for a function that given shardid bigint, and nodeidarg int, |
+|                                |                      | | returns boolean for whether the shard is allowed to be stored on the    |
+|                                |                      | | node                                                                    |
++--------------------------------+----------------------+---------------------------------------------------------------------------+
+| default_threshold              |         float4       | | Replication factor for all tables in this co-location group.            |
++--------------------------------+----------------------+---------------------------------------------------------------------------+
+| minimum_threshold              |         float4       | | A safeguard to prevent default_threshold from being set too low         |
++--------------------------------+----------------------+---------------------------------------------------------------------------+
+
+A Citus installation ships with these strategies in the table:
+
++----------------+------------------+-------------------------------+------------------------+----------------------------------+-------------------+-------------------+
+| Name           | default_strategy | shard_cost_function           | node_capacity_function | shard_allowed_on_node_function   | default_threshold | minimum_threshold |
++================+==================+===============================+========================+==================================+===================+===================+
+| by_shard_count | true             | citus_shard_cost_1            | citus_node_capacity_1  | citus_shard_allowed_on_node_true | 0                 | 0                 |
++----------------+------------------+-------------------------------+------------------------+----------------------------------+-------------------+-------------------+
+| by_disk_size   | false            | citus_shard_cost_by_disk_size | citus_node_capacity_1  | citus_shard_allowed_on_node_true | 0.1               | 0                 |
++----------------+------------------+-------------------------------+------------------------+----------------------------------+-------------------+-------------------+
+
+The default strategy, ``by_shard_count``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The other predefined strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
+
+.. _custom_rebalancer_strategies:
+
+Creating custom rebalancer strategies
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Here are examples of functions that can be used within new shard rebalancer strategies, and registered in the :ref:`pg_dist_rebalance_strategy`.
+
+* Setting a node capacity exception by specific hostname:
+
+  .. code-block:: postgres
+  
+      CREATE FUNCTION v2_node_double_capacity(nodeidarg int)
+          RETURNS boolean AS $$
+          SELECT
+              (CASE WHEN nodename LIKE '%.v2.worker.citusdata.com' THEN 2 ELSE 1 END)
+          FROM pg_dist_node where nodeid = nodeidarg
+          $$ LANGUAGE sql;
+  
+* Rebalance by number of queries that go to a shard, as measured by the :ref:`citus_stat_statements`:
+  
+  .. code-block:: postgres
+  
+      CREATE FUNCTION cost_of_shard_by_number_of_queries(shardid bigint)
+          RETURNS real AS $$
+          SELECT coalesce(sum(calls)::real, 0.001) as shard_total_queries
+          FROM citus_stat_statements
+          WHERE partition_key is not null
+              AND get_shard_id_for_distribution_column('tab', partition_key) = shardid;
+      $$ LANGUAGE sql;
+  
+* Isolating a specific shard (10000) on a node (address '10.0.0.1'):
+  
+  .. code-block:: postgres
+  
+      CREATE FUNCTION isolate_shard_10000_on_10_0_0_1(shardid bigint, nodeidarg int)
+          RETURNS boolean AS $$
+          SELECT
+              (CASE WHEN nodename = '10.0.0.1' THEN shardid = 10000 ELSE shardid != 10000 END)
+          FROM pg_dist_node where nodeid = nodeidarg
+          $$ LANGUAGE sql;
+
+      -- The next two definitions are recommended in combination with the above function.
+      -- This way the average utilization of nodes is not impacted by the isolated shard.
+      CREATE FUNCTION no_capacity_for_10_0_0_1(nodeidarg int)
+          RETURNS real AS $$
+          SELECT
+              (CASE WHEN nodename = '10.0.0.1' THEN 0 ELSE 1 END)::real
+          FROM pg_dist_node where nodeid = nodeidarg
+          $$ LANGUAGE sql;
+      CREATE FUNCTION no_cost_for_10000(shardid bigint)
+          RETURNS real AS $$
+          SELECT
+              (CASE WHEN shardid = 10000 THEN 0 ELSE 1 END)::real
+          $$ LANGUAGE sql;
+
 .. _citus_stat_statements:
 
 Query statistics table
