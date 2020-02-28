@@ -1108,13 +1108,17 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   The get_rebalance_table_shards_plan function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
 Output the planned shard movements of :ref:`rebalance_table_shards` without
-performing them.
+performing them. While it's unlikely, get_rebalance_table_shards_plan can
+output a slightly different plan than what a rebalance_table_shards call with
+the same arguments will do. This could haopen because they are not executed at
+the same time, so facts about the cluster -- e.g. disk space -- might differ
+between the calls.
 
 Arguments
 **************************
 
 The same arguments as rebalance_table_shards: relation, threshold,
-max_shard_moves, excluded_shard_list, drain_only. See documentation of that
+max_shard_moves, excluded_shard_list, and drain_only. See documentation of that
 function for the arguments' meaning.
 
 Return Value
