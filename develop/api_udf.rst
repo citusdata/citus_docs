@@ -1055,6 +1055,9 @@ If any of these assumptions don't hold, then the default rebalancing can result
 in a bad plan. In this case you may customize the strategy, using the
 ``rebalance_strategy`` parameter.
 
+It's advisable to call :ref:`get_rebalance_table_shards_plan` before running
+rebalance_table_shards, to see and verify the actions to be performed.
+
 Arguments
 **************************
 
@@ -1095,6 +1098,37 @@ This example usage will attempt to rebalance the github_events table without mov
 .. code-block:: postgresql
 
 	SELECT rebalance_table_shards('github_events', excluded_shard_list:='{1,2}');
+
+.. _get_rebalance_table_shards_plan:
+
+get_rebalance_table_shards_plan
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+  The get_rebalance_table_shards_plan function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+Output the planned shard movements of :ref:`rebalance_table_shards` without
+performing them.
+
+Arguments
+**************************
+
+The same arguments as rebalance_table_shards: relation, threshold,
+max_shard_moves, excluded_shard_list, drain_only. See documentation of that
+function for the arguments' meaning.
+
+Return Value
+*********************************
+
+Tuples containing these columns:
+
+* **table_name**: The table whose shards would move
+* **shardid**: The shard in question
+* **shard_size**: Size in bytes
+* **sourcename**: Hostname of the source node
+* **sourceport**: Port of the source node
+* **targetname**: Hostname of the destination node
+* **targetport**: Port of the destination node
 
 .. _get_rebalance_progress:
 
