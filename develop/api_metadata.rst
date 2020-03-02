@@ -376,9 +376,11 @@ This table defines strategies that :ref:`rebalance_table_shards` can use to dete
 |                                |                      | | returns boolean for whether the shard is allowed to be stored on the    |
 |                                |                      | | node                                                                    |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
-| default_threshold              |         float4       | | Replication factor for all tables in this co-location group.            |
+| default_threshold              |         float4       | | Threshold for deeming a node too full or too empty, which determines    |
+|                                |                      | | when the rebalance_table_shards should try to move shards               |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
-| minimum_threshold              |         float4       | | A safeguard to prevent default_threshold from being set too low         |
+| minimum_threshold              |         float4       | | A safeguard to prevent the threshold argument of                        |
+|                                |                      | | rebalance_table_shards() from being set too low                         |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 
 A Citus installation ships with these strategies in the table:
@@ -404,7 +406,7 @@ A Citus installation ships with these strategies in the table:
     node_capacity_function          | citus_node_capacity_1
     shard_allowed_on_node_function  | citus_shard_allowed_on_node_true
     default_threshold               | 0.1
-    minimum_threshold               | 0
+    minimum_threshold               | 0.01
 
 The default strategy, ``by_shard_count``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The other predefined strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
 

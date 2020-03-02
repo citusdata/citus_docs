@@ -1110,7 +1110,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 Output the planned shard movements of :ref:`rebalance_table_shards` without
 performing them. While it's unlikely, get_rebalance_table_shards_plan can
 output a slightly different plan than what a rebalance_table_shards call with
-the same arguments will do. This could haopen because they are not executed at
+the same arguments will do. This could happen because they are not executed at
 the same time, so facts about the cluster -- e.g. disk space -- might differ
 between the calls.
 
