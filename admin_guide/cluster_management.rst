@@ -101,9 +101,14 @@ Rebalance Shards without Downtime
 
 If you want to move existing shards to a newly added worker, Citus Enterprise provides a :ref:`rebalance_table_shards` function to make it easier. This function will move the shards of a given table to distribute them evenly among the workers.
 
+The function is configurable to rebalance shards according to a number of
+strategies, to best match your database workload. See the function reference to
+learn which strategy to choose. Here's an example of rebalancing shards using
+the default strategy:
+
 .. code-block:: postgresql
 
-  SELECT rebalance_table_shards('github_events');
+  SELECT rebalance_table_shards();
 
 Many products, like multi-tenant SaaS applications, cannot tolerate downtime, and Citus rebalancing is able to honor this requirement on PostgreSQL 10 or above. This means reads and writes from the application can continue with minimal interruption while data is being moved.
 
