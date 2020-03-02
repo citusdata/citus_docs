@@ -66,6 +66,23 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Sets the time to wait before checking for distributed deadlocks. In particular the time to wait will be this value multiplied by PostgreSQL's `deadlock_timeout <https://www.postgresql.org/docs/current/static/runtime-config-locks.html>`_ setting. The default value is ``2``. A value of ``-1`` disables distributed deadlock detection.
 
+.. _node_connection_timeout:
+
+citus.node_connection_timeout (integer)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The ``citus.node_connection_timeout`` GUC sets the maximum duration (in milliseconds) to wait while connecting to worker nodes.
+
+* Default: five seconds
+* Minimum: ten milliseconds
+* Maximum: one hour
+
+.. code-block:: postgresql
+
+  -- set to 30 seconds
+  ALTER DATABASE foo
+  SET citus.node_connection_timeout = 30000;
+
 .. _node_conninfo:
 
 citus.node_conninfo (text)
