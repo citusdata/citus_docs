@@ -1031,7 +1031,32 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$
 .. note::
   The rebalance_table_shards function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
-The rebalance_table_shards() function moves shards of the given table to make them evenly distributed among the workers. The function first calculates the list of moves it needs to make in order to ensure that the cluster is balanced within the given threshold. Then, it moves shard placements one by one from the source node to the destination node and updates the corresponding shard metadata to reflect the move.
+The rebalance_table_shards() function moves shards of the given table to make
+them evenly distributed among the workers. The function first calculates the
+list of moves it needs to make in order to ensure that the cluster is balanced
+within the given threshold. Then, it moves shard placements one by one from the
+source node to the destination node and updates the corresponding shard
+metadata to reflect the move.
+
+Every shard is assigned a cost when determining whether shards are "evenly
+distributed." By default each shard has the same cost (a value of 1), so
+distributing to equalize the cost across workers is the same as equalizing the
+number of shards on each. The constant cost strategy is called "by_shard_count"
+and is the default rebalancing strategy.
+
+The default strategy is appropriate under these circumstances:
+
+1. The shards are roughly the same size
+2. The shards get roughly the same amount of traffic
+3. Worker nodes are all the same size/type
+4. Shards haven't been pinned to particular workers
+
+If any of these assumptions don't hold, then the default rebalancing can result
+in a bad plan. In this case you may customize the strategy, using the
+``rebalance_strategy`` parameter.
+
+It's advisable to call :ref:`get_rebalance_table_shards_plan` before running
+rebalance_table_shards, to see and verify the actions to be performed.
 
 Arguments
 **************************
@@ -1052,6 +1077,8 @@ Arguments
 
 **drain_only:** (Optional) When true, move shards off worker nodes who have ``shouldhaveshards`` set to false in :ref:`pg_dist_node`; move no other shards.
 
+**rebalance_strategy:** (Optional) the name of a strategy in :ref:`pg_dist_rebalance_strategy`. If this argument is omitted, the function chooses the default strategy, as indicated in the table.
+
 Return Value
 *********************************
 
@@ -1071,6 +1098,41 @@ This example usage will attempt to rebalance the github_events table without mov
 .. code-block:: postgresql
 
 	SELECT rebalance_table_shards('github_events', excluded_shard_list:='{1,2}');
+
+.. _get_rebalance_table_shards_plan:
+
+get_rebalance_table_shards_plan
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+  The get_rebalance_table_shards_plan function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+Output the planned shard movements of :ref:`rebalance_table_shards` without
+performing them. While it's unlikely, get_rebalance_table_shards_plan can
+output a slightly different plan than what a rebalance_table_shards call with
+the same arguments will do. This could happen because they are not executed at
+the same time, so facts about the cluster -- e.g. disk space -- might differ
+between the calls.
+
+Arguments
+**************************
+
+The same arguments as rebalance_table_shards: relation, threshold,
+max_shard_moves, excluded_shard_list, and drain_only. See documentation of that
+function for the arguments' meaning.
+
+Return Value
+*********************************
+
+Tuples containing these columns:
+
+* **table_name**: The table whose shards would move
+* **shardid**: The shard in question
+* **shard_size**: Size in bytes
+* **sourcename**: Hostname of the source node
+* **sourceport**: Port of the source node
+* **targetname**: Hostname of the destination node
+* **targetport**: Port of the destination node
 
 .. _get_rebalance_progress:
 
@@ -1121,6 +1183,63 @@ Example
   │      7083 │ foo        │  102019 │       8192 │ n3.foobar.com │       5432 │ n4.foobar.com │       5432 │        2 │
   └───────────┴────────────┴─────────┴────────────┴───────────────┴────────────┴───────────────┴────────────┴──────────┘
 
+.. _citus_add_rebalance_strategy:
+
+citus_add_rebalance_strategy
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Append a row to the ``pg_dist_rebalance_strategy``.
+
+Arguments
+**************************
+
+For more about these arguments, see the corresponding column values in :ref:`pg_dist_rebalance_strategy`.
+
+**name:** identifier for the new strategy
+
+**shard_cost_function:** identifies the function used to determine the "cost" of each shard
+
+**node_capacity_function:** identifies the function to measure node capacity
+
+**shard_allowed_on_node_function:** identifies the function which determines which shards can be placed on which nodes
+
+**default_threshold:** a floating point threshold that tunes how precisely the cumulative shard cost should be balanced between nodes
+
+**minimum_threshold:** (Optional) a safeguard column that holds the minimum value allowed for the threshold argument of rebalance_table_shards(). Its default value is 0
+
+Return Value
+*********************************
+
+N/A
+
+.. _citus_set_default_rebalance_strategy:
+
+citus_set_default_rebalance_strategy
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+  The citus_set_default_rebalance_strategy function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+Update the :ref:`pg_dist_rebalance_strategy` table, changing the strategy named
+by its argument to be the default chosen when rebalancing shards.
+
+Arguments
+**************************
+
+**name:** the name of the strategy in pg_dist_rebalance_strategy
+
+Return Value
+*********************************
+
+N/A
+
+Example
+**************************
+
+.. code-block:: postgresql
+
+    SELECT citus_set_default_rebalance_strategy('by_disk_size');
+
 .. _master_drain_node:
 
 master_drain_node
@@ -1143,6 +1262,8 @@ Arguments
   * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
+
+**rebalance_strategy:** (Optional) the name of a strategy in :ref:`pg_dist_rebalance_strategy`. If this argument is omitted, the function chooses the default strategy, as indicated in the table.
 
 Return Value
 *********************************
