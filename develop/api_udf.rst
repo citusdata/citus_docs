@@ -1205,7 +1205,7 @@ For more about these arguments, see the corresponding column values in :ref:`pg_
 
 **default_threshold:** a floating point threshold that tunes how precisely the cumulative shard cost should be balanced between nodes
 
-**minimum_threshold:** (Optional) a safeguard column that holds the minimum value allowed for the default_threshold. Its default value is 0
+**minimum_threshold:** (Optional) a safeguard column that holds the minimum value allowed for the threshold argument of rebalance_table_shards(). Its default value is 0
 
 Return Value
 *********************************
