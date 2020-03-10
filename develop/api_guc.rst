@@ -71,7 +71,7 @@ Sets the time to wait before checking for distributed deadlocks. In particular t
 citus.node_connection_timeout (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The ``citus.node_connection_timeout`` GUC sets the maximum duration (in milliseconds) to wait while connecting to worker nodes.
+The ``citus.node_connection_timeout`` GUC sets the maximum duration (in milliseconds) to wait for connection establishment. Citus raises an error if the timeout elapses before at least one worker connection is established. This GUC affects connections from the coordinator to workers, and workers to each other.
 
 * Default: five seconds
 * Minimum: ten milliseconds
