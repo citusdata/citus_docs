@@ -212,19 +212,13 @@ If the query has subqueries or CTEs that exceed this limit, the query will be ca
   DETAIL:  Citus restricts the size of intermediate results of complex subqueries and CTEs to avoid accidentally pulling large result sets into once place.
   HINT:  To run the current query, set citus.max_intermediate_result_size to a higher value or -1 to disable.
 
-If this happens, consider whether you can move limits or filters inside CTEs/subqueries. For instance
+When using CTEs, or joins between CTEs and distributed tables, you can avoid push-pull execution by following these rules:
 
-.. code-block:: sql
+* Tables should be colocated
+* The CTE queries should not require any merge steps (e.g., LIMIT or GROUP BY on a non-distribution key)
+* Tables and CTEs should be joined on distribution keys
 
-  -- It's slow to retrieve all rows and limit afterward
-
-  WITH cte_slow AS (SELECT * FROM users_table)
-  SELECT * FROM cte_slow LIMIT 10;
-
-  -- Limiting inside makes the intermediate results small
-
-  WITH cte_fast AS (SELECT * FROM users_table LIMIT 10)
-  SELECT * FROM cte_fast;
+Also PostgreSQL 12 or above allows Citus to take advantage of *CTE inlining* to push CTEs down to workers in more circumstances. The inlining behavior can be controlled with the ``MATERIALIZED`` keyword -- see the `PostgreSQL docs <https://www.postgresql.org/docs/current/queries-with.html>`_ for details.
 
 .. _advanced_performance_tuning:
 
