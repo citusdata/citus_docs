@@ -218,7 +218,7 @@ When using CTEs, or joins between CTEs and distributed tables, you can avoid pus
 * The CTE queries should not require any merge steps (e.g., LIMIT or GROUP BY on a non-distribution key)
 * Tables and CTEs should be joined on distribution keys
 
-Also PostgreSQL 12 or above allows Citus to take advantage of *CTE inlining* to push CTEs down to workers in more circumstances.
+Also PostgreSQL 12 or above allows Citus to take advantage of *CTE inlining* to push CTEs down to workers in more circumstances. The inlining behavior can be controlled with the ``MATERIALIZED`` keyword -- see the `PostgreSQL docs <https://www.postgresql.org/docs/current/queries-with.html>`_ for details.
 
 .. _advanced_performance_tuning:
 
