@@ -47,11 +47,20 @@ Sometimes it's convenient to put multiple insert statements together into a sing
 
 Citus also supports ``INSERT … SELECT`` statements -- which insert rows based on the results of a select query. This is a convenient way to fill tables and also allows "upserts" with the ``ON CONFLICT`` clause, the easiest way to do :ref:`distributed rollups <rollups>`.
 
-In Citus there are two ways that inserting from a select statement can happen. The first is if the source tables and destination table are :ref:`colocated <colocation>`, and the select/insert statements both include the distribution column. In this case Citus can push the ``INSERT … SELECT`` statement down for parallel execution on all nodes.
+In Citus there are three ways that inserting from a select statement can happen. The first is if the source tables and destination table are :ref:`colocated <colocation>`, and the select/insert statements both include the distribution column. In this case Citus can push the ``INSERT … SELECT`` statement down for parallel execution on all nodes.
 
-The second way of executing an ``INSERT … SELECT`` statement is selecting the results from worker nodes, pulling the data up to the coordinator node, and then issuing an INSERT statement from the coordinator with the data. Citus is forced to use this approach when the source and destination tables are not colocated. Because of the network overhead, this method is not as efficient.
+The second way of executing an ``INSERT … SELECT`` statement is by repartioning the results of the result set into chunks, and sending those chunks among workers to matching destination table shards. Each worker node can insert the values into local destination shards.
 
-If upserts are an important operation in your application, the ideal solution is to model the data so that the source and destination tables are colocated, and so that the distribution column can be part of the GROUP BY clause in the upsert statement (if aggregating). This allows the operation to run in parallel across worker nodes for maximum speed.
+The repartitioning optimization can happen when the SELECT query doesn't require a merge step on the coordinator. It doesn't work with the following SQL features, which require a merge step:
+
+* ORDER BY
+* LIMIT
+* OFFSET
+* GROUP BY when distribution column is not part of the group key
+* Window functions when partition by a non-distribution column in the source table(s)
+* Joins between non-colocated tables (i.e. repartition joins)
+
+When the source and destination tables are not colocated, and the repartition optimization cannot be applied, then Citus uses the third way of executing ``INSERT … SELECT``. It selects the results from worker nodes, and pulls the data up to the coordinator node, issuing an INSERT statement from the coordinator with the data. Because of the network overhead, this method is not as efficient.
 
 When in doubt about which method Citus is using, use the EXPLAIN command, as described in :ref:`postgresql_tuning`.
 
