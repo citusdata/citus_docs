@@ -60,9 +60,9 @@ The repartitioning optimization can happen when the SELECT query doesn't require
 * Window functions when partition by a non-distribution column in the source table(s)
 * Joins between non-colocated tables (i.e. repartition joins)
 
-When the source and destination tables are not colocated, and the repartition optimization cannot be applied, then Citus uses the third way of executing ``INSERT … SELECT``. It selects the results from worker nodes, and pulls the data up to the coordinator node, issuing an INSERT statement from the coordinator with the data. Because of the network overhead, this method is not as efficient.
+When the source and destination tables are not colocated, and the repartition optimization cannot be applied, then Citus uses the third way of executing ``INSERT … SELECT``. It selects the results from worker nodes, and pulls the data up to the coordinator node, issuing an INSERT statement from the coordinator with the data. Because all the data must pass through a single node, this method is not as efficient.
 
-When in doubt about which method Citus is using, use the EXPLAIN command, as described in :ref:`postgresql_tuning`.
+When in doubt about which method Citus is using, use the EXPLAIN command, as described in :ref:`postgresql_tuning`. When the target table has a very large shard count, it may be wise to disable repartitioning, see :ref:`enable_repartitioned_insert_select`.
 
 COPY Command (Bulk load)
 ~~~~~~~~~~~~~~~~~~~~~~~~
