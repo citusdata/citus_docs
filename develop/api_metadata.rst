@@ -258,12 +258,19 @@ the correct order to satisfy object dependencies).
 | Name                        | Type    | Description                                          |
 +=============================+=========+======================================================+
 | classid                     | oid     | Class of the distributed object                      |
++-----------------------------+---------+------------------------------------------------------+
 | objid                       | oid     | Object id of the distributed object                  |
++-----------------------------+---------+------------------------------------------------------+
 | objsubid                    | integer | Object sub id of the distributed object, e.g. attnum |
++-----------------------------+---------+------------------------------------------------------+
 | type                        | text    | Part of the stable address used during pg upgrades   |
++-----------------------------+---------+------------------------------------------------------+
 | object_names                | text[]  | Part of the stable address used during pg upgrades   |
++-----------------------------+---------+------------------------------------------------------+
 | object_args                 | text[]  | Part of the stable address used during pg upgrades   |
++-----------------------------+---------+------------------------------------------------------+
 | distribution_argument_index | integer | Only valid for distributed functions/procedures      |
++-----------------------------+---------+------------------------------------------------------+
 | colocationid                | integer | Only valid for distributed functions/procedures      |
 +-----------------------------+---------+------------------------------------------------------+
 
