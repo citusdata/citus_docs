@@ -376,6 +376,13 @@ citus.enable_repartition_joins (boolean)
 
 Ordinarily, attempting to perform :ref:`repartition_joins` with the adaptive executor will fail with an error message. However setting ``citus.enable_repartition_joins`` to true allows Citus to temporarily switch into the task-tracker executor to perform the join. The default value is false.
 
+.. _enable_repartitioned_insert_select:
+
+citus.enable_repartitioned_insert_select (boolean)
+**************************************************
+
+By default, an INSERT INTO … SELECT statement that cannot be pushed down will attempt to repartition rows from the SELECT statement and transfer them between workers for insertion. However, if the target table has too many shards then repartitioning will probably not perform well. The overhead of processing the shard intervals when determining how to partition the results is too great. Repartitioning can be disabled manually by setting ``citus.enable_repartitioned_insert_select`` to false.
+
 Adaptive executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
