@@ -157,6 +157,70 @@ This example puts ``products`` and ``line_items`` in the same co-location group 
 
   SELECT mark_tables_colocated('stores', ARRAY['products', 'line_items']);
 
+.. _update_distributed_table_colocation:
+
+update_distributed_table_colocation
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The update_distributed_table_colocation() function is used to update colocation
+of a distributed table. This function can also be used to break colocation of a 
+distributed table. Citus will implicitly colocate two tables if the distribution
+column is the same type, this can be useful if the tables are related and will 
+do some joins. If table A and B are colocated, and table A gets rebalanced, table B 
+will also be rebalanced. If table B does not have a replica identity, the rebalance will 
+fail. Therefore, this function can be useful breaking the implicit colocation in that case.
+
+Both of the arguments should be a hash distributed table, currently we do not support colocation 
+of APPEND or RANGE distributed tables.
+
+Note that this function does not move any data around physically.
+
+Arguments
+************************
+
+**table_name:** Name of the table colocation of which will be updated.
+
+**colocate_with:** The table to which the table should be colocated with.
+
+If you want to break the colocation of a table, you should specify ``colocate_with => 'none'``.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+
+This example shows that colocation of ``table A`` is updated as colocation of ``table B``.
+
+.. code-block:: postgresql
+
+  SELECT update_distributed_table_colocation('A', colocate_with => 'B');
+
+
+Assume that ``table A`` and ``table B`` are colocated( possibily implicitly), if you want to break the colocation:
+
+.. code-block:: postgresql
+
+  SELECT update_distributed_table_colocation('A', colocate_with => 'none');
+
+Now, assume that ``table A``, ``table B``, ``table C`` and ``table D`` are colocated and you want to colocate ``table A`` 
+and ``table B`` together, and ``table C`` and ``table D`` together:
+
+.. code-block:: postgresql
+
+  SELECT update_distributed_table_colocation('C', colocate_with => 'none');
+  SELECT update_distributed_table_colocation('D', colocate_with => 'C');
+
+If you have a hash distributed table named ``none`` and you want to update its colocation, you can do:
+
+.. code-block:: postgresql
+
+  SELECT update_distributed_table_colocation('"none"', colocate_with => 'some_other_hash_distributed_table');
+
+
+
 .. _create_distributed_function:
 
 create_distributed_function
