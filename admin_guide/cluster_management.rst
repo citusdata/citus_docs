@@ -532,9 +532,7 @@ After this INSERT, any query needing to connect to node 123 as the user jdoe wil
 
 This changes the user from using a password to use a certificate and keyfile while connecting to node 123 instead. Make sure the user certificate is signed by a certificate that is trusted by the worker you are connecting to and authentication settings on the worker allow for certificate based authentication. Full documentation on how to use client certificates can be found in `the postgres libpq documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-CLIENTCERT>`_.
 
-.. note::
-
-   Same reload and restart policy applies to ``pg_dist_authinfo`` as described above for ``citus.node_conninfo``.
+Changing ``pg_dist_authinof`` does not force any existing connection to reconnect.
 
 .. _worker_security:
 
