@@ -476,6 +476,12 @@ Security
 Connection Management
 ---------------------
 
+.. note::
+
+   Since Citus version 8.1.0 (released 2018-12-17) the traffic between the different nodes in the cluster is encrypted for NEW installations. This is done by using TLS with self-signed certificates. This means that this **does not protect against Man-In-The-Middle attacks.** This only protects against passive eavesdropping on the network.
+
+   For setting up TLS on existing installations follow the steps in `official postgres documentation <https://www.postgresql.org/docs/current/ssl-tcp.html#SSL-CERTIFICATE-CREATION>`_ together with the citus specific settings described here. Setup should be done on coordinator and workers.
+
 When Citus nodes communicate with one another they consult a GUC for connection parameters and, in the Enterprise Edition of Citus, a table with connection credentials. This gives the database administrator flexibility to adjust parameters for security and efficiency.
 
 To set non-sensitive libpq connection parameters to be used for all node connections, update the ``citus.node_conninfo`` GUC:
@@ -487,9 +493,21 @@ To set non-sensitive libpq connection parameters to be used for all node connect
 
   ALTER DATABASE foo
   SET citus.node_conninfo =
-    'sslrootcert=/path/to/citus.crt sslmode=verify-full';
+    'sslrootcert=/path/to/citus-ca.crt sslcrl=/path/to/citus-ca.crl sslmode=verify-full';
 
 There is a whitelist of parameters that the GUC accepts, see the :ref:`node_conninfo <node_conninfo>` reference for details. As of Citus 8.1, the default value for node_conninfo is ``sslmode=require``, which prevents unencrypted communication between nodes.
+
+After changing this setting it is important to reload the postgres configuration. Even though the changed setting might be visible in all sessions, the setting is only consulted by Citus when new connections are established. When a reload signal is received citus marks all existing connections to be closed which causes a reconnect after running transactions have been completed.
+
+... code-block:: postgresql
+
+  SELECT pg_reload_conf();
+
+.. warning:: 
+
+   Versions before 9.2.4 require a restart for existing connections to be closed.
+
+   For these versions a reload of the configuration does not trigger connection ending and subsequent reconnecting. Instead the server should be restarted to enforce all connections to use the new settings.
 
 Citus Enterprise Edition includes an extra table used to set sensitive connection credentials. This is fully configurable per host/user. It's easier than managing ``.pgpass`` files through the cluster and additionally supports certificate authentication.
 
@@ -497,12 +515,26 @@ Citus Enterprise Edition includes an extra table used to set sensitive connectio
 
   -- only superusers can access this table
 
+  -- add a password for user jdoe
   INSERT INTO pg_dist_authinfo
     (nodeid, rolename, authinfo)
   VALUES
     (123, 'jdoe', 'password=abc123');
 
 After this INSERT, any query needing to connect to node 123 as the user jdoe will use the supplied password. The documentation for :ref:`pg_dist_authinfo <pg_dist_authinfo>` has more info.
+
+.. code-block:: postgresql
+
+  -- update user jdoe to use certificate authenticaion
+  UPDATE pg_dist_authinfo
+  WHERE nodeid = 123 AND rolename = 'jdoe'
+  SET authinfo = 'sslcert=/path/to/user.crt sslkey=/path/to/user.key';
+
+This changes the user from using a password to use a certificate and keyfile while connecting to node 123 instead. Make sure the user certificate is signed by a certificate that is trusted by the worker you are connecting to and authentication settings on the worker allow for certificate based authentication. Full documentation on how to use client certificates can be found in `the postgres libpq documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-CLIENTCERT>`_.
+
+.. note::
+
+   Same reload and restart policy applies to ``pg_dist_authinfo`` as described above for ``citus.node_conninfo``.
 
 .. _worker_security:
 
