@@ -491,8 +491,7 @@ To set non-sensitive libpq connection parameters to be used for all node connect
   -- key=value pairs separated by spaces.
   -- For example, ssl options:
 
-  ALTER DATABASE foo
-  SET citus.node_conninfo =
+  ALTER SYSTEM SET citus.node_conninfo =
     'sslrootcert=/path/to/citus-ca.crt sslcrl=/path/to/citus-ca.crl sslmode=verify-full';
 
 There is a whitelist of parameters that the GUC accepts, see the :ref:`node_conninfo <node_conninfo>` reference for details. As of Citus 8.1, the default value for node_conninfo is ``sslmode=require``, which prevents unencrypted communication between nodes. If your cluster was originally created before Citus 8.1 the value will be ``sslmode=prefer``. After setting up self-signed certificates on all nodes it's recommended to change this setting to ``sslmode=require``.
