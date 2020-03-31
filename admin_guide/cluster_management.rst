@@ -580,6 +580,8 @@ To verify the connections from the coordinator to the workers are encrypted you 
   SELECT run_command_on_workers($$
     SELECT version FROM pg_stat_ssl WHERE pid = pg_backend_pid()
   $$);
+
+::
   
   ┌────────────────────────────┐
   │   run_command_on_workers   │
