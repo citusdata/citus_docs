@@ -555,8 +555,8 @@ Once all files are in place on the nodes the following settings need to be confi
 
 .. code-block:: ini
 
-   # the following settings enable the postgres server to enable ssl and configure the server to present the certifacte
-   # to clients when connecting over tls/ssl
+   # the following settings enable the postgres server to enable ssl and configure the 
+   # server to present the certificate to clients when connecting over tls/ssl
    ssl = on
    ssl_key_file = '/path/to/server.key'
    ssl_cert_file = '/path/to/server.crt'
