@@ -480,7 +480,7 @@ Connection Management
 
    Since Citus version 8.1.0 (released 2018-12-17) the traffic between the different nodes in the cluster is encrypted for NEW installations. This is done by using TLS with self-signed certificates. This means that this **does not protect against Man-In-The-Middle attacks.** This only protects against passive eavesdropping on the network.
 
-   For setting up self-signed TLS on installations that were originally created before Citus version 8.1.0 follow the steps in `official postgres documentation <https://www.postgresql.org/docs/current/ssl-tcp.html#SSL-CERTIFICATE-CREATION>`_ together with the citus specific settings described here. Setup should be done on coordinator and workers.
+   Clusters originally created with a Citus version before 8.1.0 do not have any network encryption enabled between nodes (even if upgraded later). To set up self-signed TLS on on this type of installation follow the steps in `official postgres documentation <https://www.postgresql.org/docs/current/ssl-tcp.html#SSL-CERTIFICATE-CREATION>`_ together with the citus specific settings described here, i.e. changing ``citus.node_conninfo`` to ``sslmode=require``. This setup should be done on coordinator and workers.
 
 When Citus nodes communicate with one another they consult a GUC for connection parameters and, in the Enterprise Edition of Citus, a table with connection credentials. This gives the database administrator flexibility to adjust parameters for security and efficiency.
 
