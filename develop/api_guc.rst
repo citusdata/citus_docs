@@ -116,7 +116,7 @@ Citus honors only a whitelisted subset of the options, namely:
 
 *(† = subject to the runtime presence of optional PostgreSQL features)*
 
-Setting only takes effect on newly opened connections. To force all connections to use the new settings make sure to reload the postgres configuration:
+The ``node_conninfo`` setting takes effect only on newly opened connections. To force all connections to use the new settings, make sure to reload the postgres configuration:
 
 .. code-block:: postgresql
 
