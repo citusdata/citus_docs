@@ -539,12 +539,14 @@ Setup Certificate Authority signed certificates
 This section assumes you have a trusted Certificate Authority that can issue server certificates to you for all nodes in your cluster. It is recommended to work with the security department in your organization to prevent key material from being handled incorrectly. This guide covers only Citus specific configuration that needs to be applied, not best practices for PKI management.
 
 For all nodes in the cluster you need to get a valid certificate signed by the *same Certificate Authority*. The following **machine specific** files are assumed to be available on every machine:
- * ``/path/to/server.key``: Server Private Key
- * ``/path/to/server.crt``: Server Certificate or Certificate Chain for Server Key, signed by trusted Certificate Authority.
+
+* ``/path/to/server.key``: Server Private Key
+* ``/path/to/server.crt``: Server Certificate or Certificate Chain for Server Key, signed by trusted Certificate Authority.
 
 Next to these machine specific files you need these cluster or CA wide files available:
- * ``/path/to/ca.crt``: Certificate of the Certificate Authority
- * ``/path/to/ca.crl``: Certificate Revocation List of the Certificate Authority
+
+* ``/path/to/ca.crt``: Certificate of the Certificate Authority
+* ``/path/to/ca.crl``: Certificate Revocation List of the Certificate Authority
 
 .. note::
 
