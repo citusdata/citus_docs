@@ -562,9 +562,9 @@ Once all files are in place on the nodes the following settings need to be confi
    ssl_cert_file = '/path/to/server.crt'
 
    # this will tell citus to verify the certificate of the server it is connecting to 
-   citus.node_conninfo = 'sslmode=verify-ca sslrootcert=/path/to/ca.crt sslcrl=/path/to/ca.crl'
+   citus.node_conninfo = 'sslmode=verify-full sslrootcert=/path/to/ca.crt sslcrl=/path/to/ca.crl'
 
-Depending on the policy of the Certificate Authority used you might need or want to change ``sslmode=verify-ca`` in ``citus.node_conninfo`` to ``sslmode=verify-full``. For the difference between the two settings please consult `the official postgres documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_.
+Depending on the policy of the Certificate Authority used you might need or want to change ``sslmode=verify-full`` in ``citus.node_conninfo`` to ``sslmode=verify-ca``. For the difference between the two settings please consult `the official postgres documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_.
 
 Lastly, to prevent any user from connecting via an unencrypted connection changes need to be made to ``pg_hba.conf``. Many Postgres installations will have entries allowing ``host`` connections which both allow SSL/TLS connections as well as plain TCP connections. By changing all ``host`` entries with ``hostssl`` entries only encrypted connections will be allowed to authenticate to Postgres. For full documentation on these settings take a look at `the pg_hba.conf file <https://www.postgresql.org/docs/current/auth-pg-hba-conf.html>`_ documentation on the official Postgres documentation.
 
