@@ -495,7 +495,7 @@ To set non-sensitive libpq connection parameters to be used for all node connect
   SET citus.node_conninfo =
     'sslrootcert=/path/to/citus-ca.crt sslcrl=/path/to/citus-ca.crl sslmode=verify-full';
 
-There is a whitelist of parameters that the GUC accepts, see the :ref:`node_conninfo <node_conninfo>` reference for details. As of Citus 8.1, the default value for node_conninfo is ``sslmode=require``, which prevents unencrypted communication between nodes.
+There is a whitelist of parameters that the GUC accepts, see the :ref:`node_conninfo <node_conninfo>` reference for details. As of Citus 8.1, the default value for node_conninfo is ``sslmode=require``, which prevents unencrypted communication between nodes. If your cluster was originally created before Citus 8.1 the value will be ``sslmode=prefer``. After setting up self-signed certificates on all nodes it's recommended to change this setting to ``sslmode=require``.
 
 After changing this setting it is important to reload the postgres configuration. Even though the changed setting might be visible in all sessions, the setting is only consulted by Citus when new connections are established. When a reload signal is received citus marks all existing connections to be closed which causes a reconnect after running transactions have been completed.
 
