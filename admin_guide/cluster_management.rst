@@ -534,6 +534,44 @@ This changes the user from using a password to use a certificate and keyfile whi
 
 Changing ``pg_dist_authinof`` does not force any existing connection to reconnect.
 
+Setup Certificate Authority signed certificates
+-----------------------------------------------
+
+This section assumes you have a trusted Certificate Authority that can issue server certificates to you for all nodes in your cluster. It is recommended to work with the security department in your organisation to prevent key material be handled incorrectly. This guide only covers Citus specific configuration that needs to be applied, no best practices on PKI management.
+
+For all nodes in the cluster you need to get a valid certificate signed by the *same Certificate Authority*. The following **machine specific** files are assumed to be available on every machine:
+ * ``/path/to/server.key``: Server Private Key
+ * ``/path/to/server.crt``: Server Certifiacte or Certificate Chain for Server Key, signed by trusted Certifiacte Authority.
+
+Next to these machine specific files you need these cluster or CA wide files available:
+ * ``/path/to/ca.crt``: Certificate of the Certificate Authority
+ * ``/path/to/ca.crl``: Certificate Revocation List of the Certificate Authority
+
+.. note::
+
+   The Certificate Revocation List is likely to change over time. Work with your security department on a mechanism to get up to date versions of the revocation list on to all nodes in the cluster in a timely manner. A reload of every node in the cluster is required after the revocation list has been updated.
+
+Once all files are in place on the nodes the following settings need to be configured in the Postgres configuration file:
+
+.. code:: ini
+
+   # the following settings enable the postgres server to enable ssl and configure the server to present the certifacte
+   # to clients when connecting over tls/ssl
+   ssl = on
+   ssl_key_file = '/path/to/server.key'
+   ssl_cert_file = '/path/to/server.crt'
+
+   # this will tell citus to verify the certificate of the server it is connecting to 
+   citus.node_conninfo = 'sslmode=verify-ca sslrootcert=/path/to/ca.crt sslcrl=/path/to/ca.crl'
+
+Depending on the policy of the Certificate Authority used you might need or want to change ``sslmode=verify-ca`` in ``citus.node_conninfo`` to ``sslmode=verify-full``. For the difference between the two settings please consult `the official postgres documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_.
+
+Lastly, to prevent any user from connecting via an unencrypted connection changes need to be made to ``pg_hba.conf``. Many Postgres installations will have entries allowing ``host`` connections which both allow SSL/TLS connections as well as plain TCP connections. By changing all ``host`` entries with ``hostssl`` entries only encrypted connections will be allowed to authenticate to Postgres. For full documentation on these settings take a look at `the pg_hba.conf file <https://www.postgresql.org/docs/current/auth-pg-hba-conf.html>`_ documentation on the official Postgres documentation.
+
+.. note::
+
+   When a trusted Certificate Authority is not available one can create their own via a self-signed root certificate. This is non-trivial and the developer or operator should seek guidance from their security team when doing so.
+
 .. _worker_security:
 
 Increasing Worker Security
@@ -545,13 +583,15 @@ To require that all connections supply a hashed password, update the PostgreSQL 
 
 .. code-block:: bash
 
-  # Require password access to nodes in the local network. The following ranges
-  # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
-  host    all             all             10.0.0.0/8              md5
+  # Require password access and a ssl/tls connection to nodes in the local
+  # network. The following ranges correspond to 24, 20, and 16-bit blocks
+  # in Private IPv4 address spaces.
+  hostssl    all             all             10.0.0.0/8              md5
 
-  # Require passwords when the host connects to itself as well
-  host    all             all             127.0.0.1/32            md5
-  host    all             all             ::1/128                 md5
+  # Require passwords and ssl/tls connections when the host connects to
+  # itself as well.
+  hostssl    all             all             127.0.0.1/32            md5
+  hostssl    all             all             ::1/128                 md5
 
 The coordinator node needs to know roles' passwords in order to communicate with the workers. In Citus Enterprise the ``pg_dist_authinfo`` table can provide that information, as discussed earlier. However in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
 
