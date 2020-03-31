@@ -499,7 +499,7 @@ There is a whitelist of parameters that the GUC accepts, see the :ref:`node_conn
 
 After changing this setting it is important to reload the postgres configuration. Even though the changed setting might be visible in all sessions, the setting is only consulted by Citus when new connections are established. When a reload signal is received citus marks all existing connections to be closed which causes a reconnect after running transactions have been completed.
 
-... code-block:: postgresql
+.. code-block:: postgresql
 
   SELECT pg_reload_conf();
 
@@ -553,7 +553,7 @@ Next to these machine specific files you need these cluster or CA wide files ava
 
 Once all files are in place on the nodes the following settings need to be configured in the Postgres configuration file:
 
-.. code:: ini
+.. code-block:: ini
 
    # the following settings enable the postgres server to enable ssl and configure the server to present the certifacte
    # to clients when connecting over tls/ssl
