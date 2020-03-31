@@ -564,6 +564,8 @@ Once all files are in place on the nodes the following settings need to be confi
    # this will tell citus to verify the certificate of the server it is connecting to 
    citus.node_conninfo = 'sslmode=verify-full sslrootcert=/path/to/ca.crt sslcrl=/path/to/ca.crl'
 
+After changing either restart the database or reload the configuration.
+
 Depending on the policy of the Certificate Authority used you might need or want to change ``sslmode=verify-full`` in ``citus.node_conninfo`` to ``sslmode=verify-ca``. For the difference between the two settings please consult `the official postgres documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_.
 
 Lastly, to prevent any user from connecting via an unencrypted connection changes need to be made to ``pg_hba.conf``. Many Postgres installations will have entries allowing ``host`` connections which both allow SSL/TLS connections as well as plain TCP connections. By changing all ``host`` entries with ``hostssl`` entries only encrypted connections will be allowed to authenticate to Postgres. For full documentation on these settings take a look at `the pg_hba.conf file <https://www.postgresql.org/docs/current/auth-pg-hba-conf.html>`_ documentation on the official Postgres documentation.
@@ -571,6 +573,22 @@ Lastly, to prevent any user from connecting via an unencrypted connection change
 .. note::
 
    When a trusted Certificate Authority is not available one can create their own via a self-signed root certificate. This is non-trivial and the developer or operator should seek guidance from their security team when doing so.
+
+To verify the connections from the coordinator to the workers are encrypted you can run the following query. It will show the SSL/TLS version used to encrypt the connection that the coordinator uses to talk to the worker:
+
+.. code-block:: postgresql
+
+  SELECT run_command_on_workers($$
+    SELECT version FROM pg_stat_ssl WHERE pid = pg_backend_pid()
+  $$);
+  
+  ┌────────────────────────────┐
+  │   run_command_on_workers   │
+  ├────────────────────────────┤
+  │ (localhost,9701,t,TLSv1.2) │
+  │ (localhost,9702,t,TLSv1.2) │
+  └────────────────────────────┘
+  (2 rows)
 
 .. _worker_security:
 
