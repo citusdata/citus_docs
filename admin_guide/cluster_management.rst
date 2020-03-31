@@ -505,7 +505,7 @@ After changing this setting it is important to reload the postgres configuration
 
 .. warning:: 
 
-   Versions before 9.2.4 require a restart for existing connections to be closed.
+   Citus versions before 9.2.4 require a restart for existing connections to be closed.
 
    For these versions a reload of the configuration does not trigger connection ending and subsequent reconnecting. Instead the server should be restarted to enforce all connections to use the new settings.
 
