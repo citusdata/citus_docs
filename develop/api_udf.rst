@@ -34,9 +34,11 @@ Arguments
 **distribution_type:** (Optional) The method according to which the table is
 to be distributed. Permissible values are append or hash, and defaults to 'hash'.
 
-**colocate_with:** (Optional) include current table in the co-location group of another table. By default tables are co-located when they are distributed by columns of the same type, have the same shard count, and have the same replication factor. Possible values for :code:`colocate_with` are :code:`default`, :code:`none` to start a new co-location group, or the name of another table to co-locate with that table.  (See :ref:`colocation_groups`.)
+**colocate_with:** (Optional) include current table in the co-location group of another table. By default tables are co-located when they are distributed by columns of the same type, have the same shard count, and have the same replication factor.
+If you want to break this colocation later, you can use :ref:`update_distributed_table_colocation <update_distributed_table_colocation>`. Possible values for :code:`colocate_with` are :code:`default`, :code:`none` to start a new co-location group, or the name of another table to co-locate with that table.  (See :ref:`colocation_groups`.)
 
 Keep in mind that the default value of ``colocate_with`` does implicit co-location. As :ref:`colocation` explains, this can be a great thing when tables are related or will be joined. However when two tables are unrelated but happen to use the same datatype for their distribution columns, accidentally co-locating them can decrease performance during :ref:`shard rebalancing <shard_rebalancing>`. The table shards will be moved together unnecessarily in a "cascade."
+If you want to break this implicit colocation, you can use :ref:`update_distributed_table_colocation <update_distributed_table_colocation>`.
 
 If a new distributed table is not related to other tables, it's best to specify ``colocate_with => 'none'``.
 
@@ -124,6 +126,8 @@ The mark_tables_colocated() function takes a distributed table (the source), and
 
 Usually colocating tables ought to be done at table distribution time via the ``colocate_with`` parameter of :ref:`create_distributed_table`. But ``mark_tables_colocated`` can take care of it if necessary.
 
+If you want to break colocation of a table, you can use :ref:`update_distributed_table_colocation <update_distributed_table_colocation>`.
+
 Arguments
 ************************
 
@@ -156,6 +160,70 @@ This example puts ``products`` and ``line_items`` in the same co-location group 
 .. code-block:: postgresql
 
   SELECT mark_tables_colocated('stores', ARRAY['products', 'line_items']);
+
+.. _update_distributed_table_colocation:
+
+update_distributed_table_colocation
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The update_distributed_table_colocation() function is used to update colocation
+of a distributed table. This function can also be used to break colocation of a 
+distributed table. Citus will implicitly colocate two tables if the distribution
+column is the same type, this can be useful if the tables are related and will 
+do some joins. If table A and B are colocated, and table A gets rebalanced, table B 
+will also be rebalanced. If table B does not have a replica identity, the rebalance will 
+fail. Therefore, this function can be useful breaking the implicit colocation in that case.
+
+Both of the arguments should be a hash distributed table, currently we do not support colocation 
+of APPEND or RANGE distributed tables.
+
+Note that this function does not move any data around physically.
+
+Arguments
+************************
+
+**table_name:** Name of the table colocation of which will be updated.
+
+**colocate_with:** The table to which the table should be colocated with.
+
+If you want to break the colocation of a table, you should specify ``colocate_with => 'none'``.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+
+This example shows that colocation of ``table A`` is updated as colocation of ``table B``.
+
+.. code-block:: postgresql
+
+  SELECT update_distributed_table_colocation('A', colocate_with => 'B');
+
+
+Assume that ``table A`` and ``table B`` are colocated( possibily implicitly), if you want to break the colocation:
+
+.. code-block:: postgresql
+
+  SELECT update_distributed_table_colocation('A', colocate_with => 'none');
+
+Now, assume that ``table A``, ``table B``, ``table C`` and ``table D`` are colocated and you want to colocate ``table A`` 
+and ``table B`` together, and ``table C`` and ``table D`` together:
+
+.. code-block:: postgresql
+
+  SELECT update_distributed_table_colocation('C', colocate_with => 'none');
+  SELECT update_distributed_table_colocation('D', colocate_with => 'C');
+
+If you have a hash distributed table named ``none`` and you want to update its colocation, you can do:
+
+.. code-block:: postgresql
+
+  SELECT update_distributed_table_colocation('"none"', colocate_with => 'some_other_hash_distributed_table');
+
+
 
 .. _create_distributed_function:
 
