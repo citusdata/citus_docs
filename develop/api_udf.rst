@@ -164,7 +164,7 @@ This example puts ``products`` and ``line_items`` in the same co-location group 
 .. _update_distributed_table_colocation:
 
 update_distributed_table_colocation
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The update_distributed_table_colocation() function is used to update colocation
 of a distributed table. This function can also be used to break colocation of a 
