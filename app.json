@@ -15,7 +15,7 @@
   "stack": "heroku-18",
   "buildpacks": [
     {
-      "url": "https://github.com/citusdata/sphinx-heroku-buildpack.git"
+      "url": "https://github.com/Thermondo/heroku-buildpack-sphinx#1.1.0"
     },
     {
       "url": "heroku/python"
