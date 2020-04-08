@@ -115,7 +115,7 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
     'big_vals',
     $cmd$
       CREATE TRIGGER after_insert AFTER INSERT ON %s
-        FOR EACH ROW EXECUTE PROCEDURE embiggen(%s)
+        FOR EACH ROW EXECUTE PROCEDURE embiggen(%L)
     $cmd$
   );
 
