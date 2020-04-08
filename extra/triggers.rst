@@ -105,7 +105,7 @@ Suppose that for every value inserted into ``little_vals`` we want to insert one
     'big_vals',
     $cmd$
       CREATE TRIGGER after_insert AFTER INSERT ON %s
-        FOR EACH ROW EXECUTE PROCEDURE embiggen(%s)
+        FOR EACH ROW EXECUTE PROCEDURE embiggen(%L)
     $cmd$
   );
 
