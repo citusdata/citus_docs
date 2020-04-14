@@ -12,7 +12,60 @@ In the following sections, we discuss the different types of queries you can run
 Aggregate Functions
 -------------------
 
-Citus supports and parallelizes most aggregate functions supported by PostgreSQL. Citus's query planner transforms the aggregate into its commutative and associative form so it can be parallelized. In this process, the workers run an aggregation query on the shards and the coordinator then combines the results from the workers to produce the final output.
+Citus supports and parallelizes most aggregate functions supported by
+PostgreSQL, including custom user-defined aggregates. Aggregates execute using
+one of three methods, in this order of preference:
+
+1. When the aggregate is grouped by a table's distribution column, Citus can
+   push down execution of the entire query to each worker. All aggregates are
+   supported in this situation and execute in parallel on the worker nodes.
+   (Any custom aggregates being used must be installed on the workers.)
+2. When the aggregate is *not* grouped by a table's distribution column, Citus
+   can still optimize on a case-by-case basis. Citus has internal rules for
+   certain aggregates like sum(), avg(), and count(distinct) that allows it to
+   rewrite queries for *partial aggregation* on workers. For instance, to
+   calculate an average, Citus obtains a sum and a count from each worker,
+   and then the coordinator node computes the final average.
+
+   Full list of the special-case aggregates:
+
+     avg, min, max, sum, count, array_agg, jsonb_agg, jsonb_object_agg,
+     json_agg, json_object_agg, bit_and, bit_or, bool_and, bool_or,
+     every, hll_add_agg, hll_union_agg, topn_add_agg, topn_union_agg,
+     any_value, var_pop(float4), var_pop(float8), var_samp(float4),
+     var_samp(float8), variance(float4), variance(float8) stddev_pop(float4),
+     stddev_pop(float8), stddev_samp(float4), stddev_samp(float8)
+     stddev(float4), stddev(float8)
+
+3. Last resort: pull all rows from the workers and perform the aggregation on
+   the coordinator node. When the aggregate is not grouped on a distribution
+   column, and is not one of the predefined special cases, then Citus falls
+   back to this approach. It causes network overhead, and can exhaust the
+   coordinator's resources if the data set to be aggregated is too large.
+   (It's possible to disable this fallback, see below.)
+
+Beware that small changes in a query can change execution modes, causing
+potentially surprising inefficiency. For example ``sum(x)`` grouped by a
+non-distribution column could use distributed execution, while ``sum(distinct
+x)`` has to pull up the entire set of input records to the coordinator.
+
+All it takes is one column to hurt the execution of a whole query. In the
+example below, if ``sum(distinct value2)`` has to be grouped on the
+coordinator, then so will ``sum(value1)`` even if the latter was fine on its
+own.
+
+.. code-block:: sql
+
+  SELECT sum(value1), sum(distinct value2) FROM distributed_table;
+
+To avoid accidentally pulling data to the coordinator, you can set a GUC:
+
+.. code-block:: sql
+
+  SET citus.coordinator_aggregation_strategy TO 'disabled';
+
+Note that disabling the coordinator aggregation strategy will prevent "type
+three" aggregate queries from working at all.
 
 .. _count_distinct:
 
