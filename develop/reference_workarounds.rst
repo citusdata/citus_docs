@@ -11,7 +11,6 @@ Even cross-node queries (used for parallel computations) support most SQL featur
 
 **Limitations for Cross-Node SQL Queries:**
 
-* `Window functions <https://www.postgresql.org/docs/current/static/tutorial-window.html>`_ are supported only when they include the distribution column in PARTITION BY.
 * `SELECT … FOR UPDATE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FOR-UPDATE-SHARE>`_ work in single-shard queries only
 * `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_ work in single-shard queries only
 * Correlated subqueries are supported only when the correlation is on the :ref:`dist_column` and the subqueries conform to subquery pushdown rules (e.g., grouping by the distribution column, with no LIMIT or LIMIT OFFSET clause).
