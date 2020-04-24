@@ -107,7 +107,7 @@ How do I create database roles, functions, extensions etc in a Citus cluster?
 
 Certain commands, when run on the coordinator node, do not get propagated to the workers:
 
-* ``CREATE USER``
+* ``CREATE ROLE/USER (gets propagated in Citus Enterprise)``
 * ``CREATE DATABASE``
 * ``ALTER … SET SCHEMA``
 * ``ALTER TABLE ALL IN TABLESPACE``
