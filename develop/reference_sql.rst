@@ -241,6 +241,8 @@ Reference table joins
 
 :ref:`reference_tables` can be used as "dimension" tables to join efficiently with large "fact" tables. Because reference tables are replicated in full across all worker nodes, a reference join can be decomposed into local joins on each worker and performed in parallel. A reference join is like a more flexible version of a co-located join because reference tables aren't distributed on any particular column and are free to join on any of their columns.
 
+Reference tables can also join with tables local to the coordinator node, but only if you enable reference table placement on the coordinator. See :ref:`join_local_ref`.
+
 .. _repartition_joins:
 
 Repartition joins

@@ -43,7 +43,7 @@ ingest workflows.
 Can I join distributed and non-distributed tables together in the same query?
 -----------------------------------------------------------------------------
 
-If you want to do joins between small dimension tables (regular Postgres tables) and large tables (distributed), then wrap the local table in a subquery. Citus' subquery execution logic will allow the join to work. See :ref:`join_local_dist`.
+If you want to do joins between small dimension tables (regular Postgres tables) and large tables (distributed), then wrap the local table in a subquery. Citus' subquery execution logic will allow the join to work. See :ref:`join_local_dist` and :ref:`join_local_ref`.
 
 .. _unsupported:
 

@@ -11,7 +11,7 @@ This is caused by attempting to join local and distributed tables in the same qu
 Resolution
 ~~~~~~~~~~
 
-For an example, with workarounds, see :ref:`join_local_dist`.
+For an example, with workarounds, see :ref:`join_local_dist` and :ref:`join_local_ref`.
 
 Could not receive query results
 -------------------------------

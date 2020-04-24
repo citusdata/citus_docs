@@ -66,6 +66,31 @@ Although you can't join such tables directly, by wrapping the local table in a s
 
 Remember that the coordinator will send the results in the subquery or CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
 
+.. _join_local_ref:
+
+JOIN a local and a reference table
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Attempting to execute a JOIN between a local table "local" and a reference table "ref" causes an error:
+
+.. code-block:: sql
+
+  SELECT * FROM local JOIN ref USING (id);
+
+::
+
+  ERROR:  relation local is not distributed
+
+Ordinarily a copy of every reference table exists on each worker node, but does not exist on the coordinator. Thus a reference table's data is not placed for efficient joins with tables local to the coordinator. To allow these kind of joins we can request that Citus place a copy of every reference table on the coordinator as well:
+
+.. code-block:: postgres
+
+  SELECT master_add_node('localhost', 5432, groupid => 0);
+
+This adds the coordinator to :ref:`pg_dist_node` with a group ID of 0. Joins between reference and local tables will then be possible.
+
+If the reference tables are large there is a risk that they might exhaust the coordinator disk space. Use caution.
+
 Temp Tables: the Workaround of Last Resort
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
