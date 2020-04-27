@@ -66,7 +66,7 @@ Replace :code:`<token>` with the custom token listed in the provider's web site.
 +------------------+------------------------------------------------------------------------------------------------------+
 | Protocol         | BSD Syslog over TCP                                                                                  |
 +------------------+------------------------------------------------------------------------------------------------------+
-| Message Template | ``"<${PRI}>1 ${ISODATE} ${HOST} ${PROGRAM} ${PID} ${MSGID} [<token>@41058 tag=\"CITUS\" ] $MSG\n"`` |
+| Message Template | ``"<${PRI}>1 ${ISODATE} ${HOST} ${PROGRAM} ${PID} ${MSGID} [<token>@41058 tag=\"CITUS\" ] $MSG\n"``  |
 +------------------+------------------------------------------------------------------------------------------------------+
 
 **Sumologic**
@@ -80,7 +80,7 @@ Replace :code:`<token>` with the custom token listed in the provider's web site.
 +------------------+-------------------------------------------------------------------------------------+
 | Protocol         | IETF Syslog                                                                         |
 +------------------+-------------------------------------------------------------------------------------+
-| Message Template | ``"<${PRI}>1 ${ISODATE} ${HOST} ${PROGRAM} ${PID} ${MSGID} [<token>@41123] $MSG\n"`` |
+| Message Template | ``"<${PRI}>1 ${ISODATE} ${HOST} ${PROGRAM} ${PID} ${MSGID} [<token>@41123] $MSG\n"``|
 +------------------+-------------------------------------------------------------------------------------+
 
 **Logentries** / **Rapid7 insightOps**
@@ -94,7 +94,7 @@ Replace :code:`<token>` with the custom token listed in the provider's web site.
 +------------------+------------------------------------+
 | Protocol         | BSD                                |
 +------------------+------------------------------------+
-| Message Template | ``"<token> $ISODATE $HOST $MSG\n"`` |
+| Message Template | ``"<token> $ISODATE $HOST $MSG\n"``|
 +------------------+------------------------------------+
 
 **LogDNA**
@@ -108,7 +108,7 @@ Replace :code:`<token>` with the custom token listed in the provider's web site.
 +------------------+------------------------------------------------------------------------------------------------------+
 | Protocol         | BSD Syslog over TCP                                                                                  |
 +------------------+------------------------------------------------------------------------------------------------------+
-| Message Template | ``"<${PRI}>1 ${ISODATE} ${HOST} ${PROGRAM} ${PID} ${MSGID} [logdna@48950 key=\"<token>\"] $MSG\n"`` |
+| Message Template | ``"<${PRI}>1 ${ISODATE} ${HOST} ${PROGRAM} ${PID} ${MSGID} [logdna@48950 key=\"<token>\"] $MSG\n"``  |
 +------------------+------------------------------------------------------------------------------------------------------+
 
 **Other**
