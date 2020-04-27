@@ -91,9 +91,10 @@ reference table
 
 	SELECT create_reference_table('nation');
 
+.. _upgrade_to_reference_table:
+
 upgrade_to_reference_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-.. _upgrade_to_reference_table:
 
 The upgrade_to_reference_table() function takes an existing distributed table which has a shard count of one, and upgrades it to be a recognized reference table. After calling this function, the table will be as if it had been created with :ref:`create_reference_table <create_reference_table>`.
 
@@ -631,6 +632,8 @@ Example
     --------------------------
                             7
     (1 row)
+
+.. _master_activate_node:
 
 master_activate_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

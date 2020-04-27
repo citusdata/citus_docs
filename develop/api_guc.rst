@@ -231,6 +231,27 @@ Sets the maximum size to which a shard will grow before it gets split and defaul
 
    * **local-node-first:** The local node first policy places the first replica of the shard on the client node from which the \\copy command is being run. As the coordinator node does not store any data, the policy requires that the command be run from a worker node. As the first replica is always placed locally, it provides better shard placement guarantees.
 
+.. _replicate_reference_tables_on_activate:
+
+citus.replicate_reference_tables_on_activate (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Reference table shards must be placed on all nodes which have distributed
+tables. By default, reference table shards are copied to a node at node
+activation time, that is, when such functions as :ref:`master_add_node` or
+:ref:`master_activate_node` are called. However node activation might be an
+inconvenient time to copy the placements, because it can take a long time when
+there are large reference tables.
+
+You can defer reference table replication by setting the
+``citus.replicate_reference_tables_on_activate`` GUC to 'off'. Reference table
+replication will then happen we create new shards on the node. For instance,
+when calling :ref:`create_distributed_table`, :ref:`create_reference_table`,
+:ref:`upgrade_to_reference_table`, or when the shard rebalancer moves shards to
+the new node.
+
+The default value for this GUC is 'on'.
+
 Planner Configuration
 ------------------------------------------------
 
