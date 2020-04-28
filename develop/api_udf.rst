@@ -67,7 +67,7 @@ For more examples, see :ref:`ddl`.
 truncate_local_data_after_distributing_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Truncate all local rows after distributing a table, and prevent constraints from failing due to outdated local records. The truncation cascades to tables having a foreign key to the designated table. If the referring tables are themselves not distributed then truncation is forbidden until they are, to protect referential integrity:
+Truncate all local rows after distributing a table, and prevent constraints from failing due to outdated local records. The truncation cascades to tables having a foreign key to the designated table. If the referring tables are not themselves distributed then truncation is forbidden until they are, to protect referential integrity:
 
 ::
 
