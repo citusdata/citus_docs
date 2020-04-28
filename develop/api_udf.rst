@@ -73,7 +73,7 @@ Truncate all local rows after distributing a table, and prevent constraints from
 
   ERROR:  cannot truncate a table referenced in a foreign key constraint by a local table
 
-Truncatating local coordinator node table data is safe for distributed tables because their rows, if they have any, are copied to worker nodes during distribution.
+Truncating local coordinator node table data is safe for distributed tables because their rows, if they have any, are copied to worker nodes during distribution.
 
 Arguments
 ************************
