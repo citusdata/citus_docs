@@ -110,11 +110,18 @@ The :code:`create_distributed_table` function described earlier works on both em
 
 Writes on the table are blocked while the data is migrated, and pending writes are handled as distributed queries once the function commits. (If the function fails then the queries become local again.) Reads can continue as normal and will become distributed queries once the function commits.
 
-.. note::
+When distributing tables A and B, where A has a foreign key to B, distribute the key destination table B first. Doing it in the wrong order will cause an error:
 
-  When distributing a number of tables with foreign keys between them, it's best to drop the foreign keys before running :code:`create_distributed_table` and recreating them after distributing the tables. Foreign keys cannot always be enforced when one table is distributed and the other is not. However foreign keys *are* supported between distributed tables and reference tables.
+::
 
-When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table.
+  ERROR:  cannot create foreign key constraint
+  DETAIL:  Referenced table must be a distributed table or a reference table.
+
+If it's not possible to distribute in the correct order then drop the foreign keys, distribute the tables, and recreate the foreign keys.
+
+After the tables are distributed, use the :ref:`truncate_local_data_after_distributing_table` function to remove local data. Leftover local data in distributed tables is inaccessible to Citus queries, and can cause irrelevant constraint violations on the coordinator.
+
+When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table. Copying into distributed tables avoids running out of space on the coordinator node.
 
 .. _colocation_groups:
 

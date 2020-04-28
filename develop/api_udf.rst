@@ -62,6 +62,37 @@ This example informs the database that the github_events table should be distrib
 
 For more examples, see :ref:`ddl`.
 
+.. _truncate_local_data_after_distributing_table:
+
+truncate_local_data_after_distributing_table
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Truncate all local rows after distributing a table, and prevent constraints from failing due to outdated local records. The truncation cascades to tables having a foreign key to the designated table. If the referring tables are not themselves distributed then truncation is forbidden until they are, to protect referential integrity:
+
+::
+
+  ERROR:  cannot truncate a table referenced in a foreign key constraint by a local table
+
+Truncating local coordinator node table data is safe for distributed tables because their rows, if they have any, are copied to worker nodes during distribution.
+
+Arguments
+************************
+
+**table_name:** Name of the distributed table whose local counterpart on the coordinator node should be truncated.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+
+.. code-block:: postgresql
+
+  -- requires that argument is a distributed table
+  SELECT truncate_local_data_after_distributing_table('public.github_events');
+
 .. _create_reference_table:
 
 create_reference_table
