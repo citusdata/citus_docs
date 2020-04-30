@@ -470,7 +470,7 @@ each worker proportional to the number of shards it accesses (in particular,
 #shards/#workers). Running dozens of multi-shard queries at once can easily hit
 worker nodes' ``max_connections`` limit, causing queries to fail.
 
-The default value, 0, caps the connections to the coordinator's
+The default value, 0, caps the connections to the coordinator's own
 ``max_connections``, which isn't guaranteed to match that of the workers (see
 the note below). The value -1 disables throttling.
 
