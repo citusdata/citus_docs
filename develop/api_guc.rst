@@ -471,8 +471,16 @@ each worker proportional to the number of shards it accesses (in particular,
 worker nodes' ``max_connections`` limit, causing queries to fail.
 
 The default value, 0, caps the connections to the coordinator's
-``max_connections``, which isn't guaranteed to match that of the workers, but
-is a good estimate. The value -1 disables throttling.
+``max_connections``, which isn't guaranteed to match that of the workers (see
+the note below). The value -1 disables throttling.
+
+.. note::
+
+  There are certain operations that do not obey citus.max_shared_pool_size,
+  most importantly COPY and repartition joins. That's why it can be prudent to
+  increase the max_connections on the workers a bit higher than max_connections
+  on the coordinator. This gives extra space for connections required for COPY
+  and repartition queries on the workers.
 
 citus.max_cached_conns_per_worker (integer)
 *******************************************
