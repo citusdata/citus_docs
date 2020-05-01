@@ -417,6 +417,31 @@ By default, an INSERT INTO … SELECT statement that cannot be pushed down will 
 Adaptive executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+citus.max_shared_pool_size (integer)
+************************************
+
+Specifies the maximum number of connections that the coordinator node, across
+all simultaneous sessions, is allowed to make per worker node. PostgreSQL must
+allocate fixed resources for every connection and this GUC helps ease
+connection pressure on workers.
+
+Without connection throttling, every multi-shard query creates connections on
+each worker proportional to the number of shards it accesses (in particular,
+#shards/#workers). Running dozens of multi-shard queries at once can easily hit
+worker nodes' ``max_connections`` limit, causing queries to fail.
+
+The default value, 0, caps the connections to the coordinator's own
+``max_connections``, which isn't guaranteed to match that of the workers (see
+the note below). The value -1 disables throttling.
+
+.. note::
+
+  There are certain operations that do not obey citus.max_shared_pool_size,
+  most importantly COPY and repartition joins. That's why it can be prudent to
+  increase the max_connections on the workers a bit higher than max_connections
+  on the coordinator. This gives extra space for connections required for COPY
+  and repartition queries on the workers.
+
 citus.max_adaptive_executor_pool_size (integer)
 ***********************************************
 
@@ -456,31 +481,6 @@ time.
 
 For long queries (those taking >500ms), slow start might add latency, but for
 short queries it's faster. The default value is 10ms.
-
-citus.max_shared_pool_size (integer)
-************************************
-
-Specifies the maximum number of connections that the coordinator node, across
-all simultaneous sessions, is allowed to make per worker node. PostgreSQL must
-allocate fixed resources for every connection and this GUC helps ease
-connection pressure on workers.
-
-Without connection throttling, every multi-shard query creates connections on
-each worker proportional to the number of shards it accesses (in particular,
-#shards/#workers). Running dozens of multi-shard queries at once can easily hit
-worker nodes' ``max_connections`` limit, causing queries to fail.
-
-The default value, 0, caps the connections to the coordinator's own
-``max_connections``, which isn't guaranteed to match that of the workers (see
-the note below). The value -1 disables throttling.
-
-.. note::
-
-  There are certain operations that do not obey citus.max_shared_pool_size,
-  most importantly COPY and repartition joins. That's why it can be prudent to
-  increase the max_connections on the workers a bit higher than max_connections
-  on the coordinator. This gives extra space for connections required for COPY
-  and repartition queries on the workers.
 
 citus.max_cached_conns_per_worker (integer)
 *******************************************
