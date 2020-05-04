@@ -428,9 +428,9 @@ allocate fixed resources for every connection and this GUC helps ease
 connection pressure on workers.
 
 Without connection throttling, every multi-shard query creates connections on
-each worker proportional to the number of shards it accesses (in particular,
-#shards/#workers). Running dozens of multi-shard queries at once can easily hit
-worker nodes' ``max_connections`` limit, causing queries to fail.
+each worker proportional to the number of shards it accesses (in particular, up
+to #shards/#workers). Running dozens of multi-shard queries at once can easily
+hit worker nodes' ``max_connections`` limit, causing queries to fail.
 
 By default, the value is automatically set equal to the coordinator's own
 ``max_connections``, which isn't guaranteed to match that of the workers (see
