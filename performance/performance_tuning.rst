@@ -181,7 +181,7 @@ General
 
 For higher INSERT performance, the factor which impacts insert rates the most is the level of concurrency. You should try to run several concurrent INSERT statements in parallel. This way you can achieve very high insert rates if you have a powerful coordinator node and are able to use all the CPU cores on that node together.
 
-Citus has two executor types for running SELECT queries. The desired executor can be selected by setting the citus.task_executor_type configuration parameter. In general, adaptive executor is the default one and it can handle all different workloads very efficiently. The task-tracker executor is designed to execute long running queries which require repartitioning and shuffling of data across the workers. The only advantage of using task-tracker is its more advanced failure handling for tables with citus.replication_factor > 1. As long as the workload doesn't specifically require task-tracker, we advice to use adaptive executor.
+Citus has two executor types for running SELECT queries. The desired executor can be selected by setting the citus.task_executor_type configuration parameter. Adaptive executor is the default one and can handle all different workloads very efficiently. The task-tracker executor is designed to execute long running queries which require repartitioning and shuffling of data across the workers. The only advantage of using task-tracker is its more advanced failure handling for tables with citus.replication_factor > 1. As long as the workload doesn't specifically require task-tracker, we advise to use adaptive executor.
 
 .. _subquery_perf:
 
@@ -244,7 +244,7 @@ Adaptive Executor
 
 Adaptive executor is the default executor, and it can handle all workloads very efficiently.
 
-The adaptive executor is smart enough to use as less connections as possible to utilize minimal resources on the worker nodes for multi-shard queries. The executor starts using a single connection to a remote node, which is almost always cached so it doesn't incur any additional overhead. If the query execution finishes in citus.executor_slow_start_interval, we're done, no more connections are opened. Else, the executor keeps establishing new connections in every citus.executor_slow_start_interval.
+The adaptive executor conserves database connections to help reduce resource usage on worker nodes during multi-shard queries. When running a query, the executor begins by using a single -- usually precached -- connection to a remote node. If the query finishes within the time period specified by citus.executor_slow_start_interval, no more connections are required. Otherwise the executor gradually establishes new connections as directed by citus.executor_slow_start_interval. (See also https://docs.citusdata.com/en/latest/develop/api_guc.html#adaptive-executor-configuration)
 
 With the behavior explained above, the executor aims to open optimal number of connections to remote nodes. For short running multi-shard queries, like an index-only-scan on the shards, the executor may use only a single connection and execute all the queries on the shards over a single connection. For longer running multi-shard queries, the executor will keep opening connections to parallelize the execution on the remote nodes. If the queries on the shards take long (such as > 500ms), the executor converges to using one connection per shard (or up to citus.max_adaptive_executor_pool_size), in order to maximize the parallelism.
 
