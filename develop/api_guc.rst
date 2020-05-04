@@ -417,29 +417,46 @@ By default, an INSERT INTO … SELECT statement that cannot be pushed down will 
 Adaptive executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+.. _max_shared_pool_size:
+
+citus.max_shared_pool_size (integer)
+************************************
+
+Specifies the maximum number of connections that the coordinator node, across
+all simultaneous sessions, is allowed to make per worker node. PostgreSQL must
+allocate fixed resources for every connection and this GUC helps ease
+connection pressure on workers.
+
+Without connection throttling, every multi-shard query creates connections on
+each worker proportional to the number of shards it accesses (in particular, up
+to #shards/#workers). Running dozens of multi-shard queries at once can easily
+hit worker nodes' ``max_connections`` limit, causing queries to fail.
+
+By default, the value is automatically set equal to the coordinator's own
+``max_connections``, which isn't guaranteed to match that of the workers (see
+the note below). The value -1 disables throttling.
+
+.. note::
+
+  There are certain operations that do not obey citus.max_shared_pool_size,
+  most importantly COPY and repartition joins. That's why it can be prudent to
+  increase the max_connections on the workers a bit higher than max_connections
+  on the coordinator. This gives extra space for connections required for COPY
+  and repartition queries on the workers.
+
 citus.max_adaptive_executor_pool_size (integer)
 ***********************************************
 
-The maximum number of connections per worker node used by the adaptive executor
-to execute a multi-shard command.
+Whereas :ref:`max_shared_pool_size` limits worker connections across all
+sessions, ``max_adaptive_executor_pool_size`` limits worker connections from
+just the *current* session. This GUC is useful for:
 
-The adaptive executor opens multiple connections per worker node when running
-multi-shard commands to parallelize the command across multiple cores on the
-worker. This setting specifies the maximum number of connections it will open.
-(The number of connections is also bounded by the number of shards on the
-node.)
+* Preventing a single backend from getting all the worker resources
+* Providing priority management: designate low priority sessions with low
+  max_adaptive_executor_pool_size, and high priority sessions with higher
+  values
 
-Although increasing parallelism for a single query is generally good, it also
-puts connection pressure on the workers in a production environment.  This GUC
-provides a knob to trade off parallelism vs connection pressure.
-
-The default value is 16, however it's hard to make a good static choice
-manually. In the future the adaptive executor may adjust this GUC on the fly,
-shrinking the pool when workers are busy, and growing it when they are idle.
-
-This is a session-level GUC, and thus can be used to limit the resource usage
-for individual sessions. Lowering the value can limit the queries' use of
-connections, cores, or memory.
+The default value is 16.
 
 citus.executor_slow_start_interval (integer)
 ********************************************
