@@ -501,6 +501,11 @@ Next we move the data across the network to a new dedicated node. Create a new n
   -- move the shard to your choice of worker (it will also move the
   -- other shards created with the CASCADE option)
 
+  -- note that you should set wal_level for all nodes to be >= logical
+  -- to use master_move_shard_placement.
+  -- you also need to restart your cluster after setting wal_level in
+  -- postgresql.conf files.
+
   SELECT master_move_shard_placement(
     102240,
     'source_host', source_port,
