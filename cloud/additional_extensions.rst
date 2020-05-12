@@ -28,7 +28,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | fuzzystrmatch      | 1.1     | public     | determine similarities and distance between strings                |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| hll                | 2.13    | public     | type for storing hyperloglog data                                  |
+| hll                | 2.14    | public     | type for storing hyperloglog data                                  |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | hstore             | 1.6     | public     | data type for storing sets of (key, value) pairs                   |
 +--------------------+---------+------------+--------------------------------------------------------------------+
@@ -48,7 +48,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | pg_stat_statements | 1.7     | public     | track execution statistics of all SQL statements executed          |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| pg_trgm            | 1.3     | public     | text similarity measurement and index searching based on trigrams  |
+| pg_trgm            | 1.4     | public     | text similarity measurement and index searching based on trigrams  |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | pgcrypto           | 1.3     | public     | cryptographic functions                                            |
 +--------------------+---------+------------+--------------------------------------------------------------------+
@@ -59,8 +59,6 @@ Generally there is no need to install extensions, however, because every Cloud c
 | plpgsql            | 1.0     | pg_catalog | PL/pgSQL procedural language                                       |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | session_analytics  | 1.0     | public     |                                                                    |
-+--------------------+---------+------------+--------------------------------------------------------------------+
-| shard_rebalancer   | 8.3     | public     |                                                                    |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | sslinfo            | 1.2     | public     | information about SSL certificates                                 |
 +--------------------+---------+------------+--------------------------------------------------------------------+
