@@ -30,7 +30,7 @@ To upgrade a Citus version to its latest patch, issue a standard upgrade command
 .. code-block:: bash
 
   sudo yum update citus93_11
-  sudo service postgresql-11.0 restart
+  sudo service postgresql-11 restart
 
 .. _major_minor_upgrade:
 
