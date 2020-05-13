@@ -1342,6 +1342,35 @@ Example
 
     SELECT citus_set_default_rebalance_strategy('by_disk_size');
 
+
+.. _citus_remote_connection_stats:
+
+citus_remote_connection_stats
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The citus_remote_connection_stats() function shows the number of active
+connections to each remote node.
+
+Arguments
+**************************
+
+N/A
+
+Example
+**************************
+
+.. code-block:: postgresql
+
+  SELECT * from citus_remote_connection_stats();
+
+::
+
+  .
+      hostname    | port | database_name | connection_count_to_node
+  ----------------+------+---------------+--------------------------
+   citus_worker_1 | 5432 | postgres      |                        3
+  (1 row)
+
 .. _master_drain_node:
 
 master_drain_node
