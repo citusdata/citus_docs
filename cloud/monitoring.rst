@@ -239,6 +239,10 @@ To integrate VividCortex with Citus Cloud we'll be using the `Off-Host Configura
 
 Here's a step-by-step guide to get started.
 
+.. note::
+
+  The steps below give VividCortex access to the database as the "citus" role. This role has fairly elevated permissions. Consider possible issues of data confidentiality before enabling VividCortex monitoring.
+
 1. Create a special VividCortex schema and relations on the Citus coordinator node.
 
    .. code-block:: bash
