@@ -235,9 +235,13 @@ VividCortex External Monitoring
 
 Like the systems above, VividCortex provides a metrics dashboard. While the other systems mostly focus on computer resources, VividCortex focuses on the performance of queries. It tracks their throughput, error rate, 99th percentile latency, and concurrency.
 
-To integrate VividCortex with Citus Cloud we'll be using the `Off-Host Configuration <https://docs.vividcortex.com/getting-started/off-host-installation/>`_. In this mode we create a database role with permissions to read the PostgreSQL statistics tables, and give the role's login information to the VividCortex agent. VividCortex then connects and periodically collects information.
+To integrate VividCortex with Citus Cloud we'll be using the `Off-Host Configuration <https://docs.vividcortex.com/getting-started/off-host-installation/>`_. In this mode we choose a database role with permissions to read the PostgreSQL statistics tables, and give the role's login information to the VividCortex agent. VividCortex then connects and periodically collects information.
 
 Here's a step-by-step guide to get started.
+
+.. note::
+
+  The steps below give VividCortex access to the database as the "citus" role. This role has fairly elevated permissions. Consider possible issues of data confidentiality before enabling VividCortex monitoring.
 
 1. Create a special VividCortex schema and relations on the Citus coordinator node.
 
@@ -251,11 +255,7 @@ Here's a step-by-step guide to get started.
 
 2. Create a VividCortex account.
 
-2. On the **inventory** page, click "Setup your first host." This will open a wizard.
-
-   .. image:: ../images/vc-setup-first-host.png
-
-3. Choose the off-host installation method.
+3. The **Summary** page will prompt you to "Install Database Performance Monitor On A New Host." Choose **OFF-HOST**.
 
    .. image:: ../images/vc-method-type.png
 
@@ -263,36 +263,41 @@ Here's a step-by-step guide to get started.
 
    .. image:: ../images/vc-db.png
 
-5. In Citus Cloud, :ref:`create a new role <cloud_roles>` called ``vividcortex``. Then grant it access to the VividCortex schema like so:
-
-   .. code-block:: bash
-
-      # Grant our new role access to vividcortex schema
-
-      psql [connection_uri] -c \
-        "GRANT USAGE ON SCHEMA vividcortex TO vividcortex;"
-
-  Finally note the generated password for the new account. Click "Show full URL" to see it.
-
-   .. image:: ../images/vc-new-role.png
-
-6. Input the connection information into the credentials screen in the VividCortex wizard. Make sure SSL Enabled is on, and that you're using SSL Mode "Verify Full." Specify ``/etc/ssl/certs/citus.crt`` for the SSL Authority.
+5. Input the connection information into the credentials screen in the VividCortex wizard. The "citus" user is required. Make sure SSL Enabled is on, and that you're using SSL Mode "Verify Full." Specify ``/etc/ssl/certs/citus.crt`` for the SSL Authority.
 
    .. image:: ../images/vc-connection.png
 
-7. Provision a server to act as the VividCortex agent. For instance a small EC2 instance will do. On this new host install the Citus Cloud SSL certificate.
+6. Skip the **create user** step. We'll be using the "citus" user, because it's the only one with enough permissions to view query statistics on Citus Cloud.
+
+   .. figure:: ../images/vc-create-user.png
+
+     (Skip this step)
+
+7. Skip the **configuration** step. We know that ``pg_stat_statements`` is pre-configured properly on Citus Cloud.
+
+   .. figure:: ../images/vc-config.png
+
+     (Skip this step)
+
+8. Provision a server to act as the VividCortex agent. For instance a small EC2 instance will do. On this new host install the Citus Cloud SSL certificate.
 
    .. code-block:: bash
 
      sudo curl -L https://console.citusdata.com/citus.crt \
        -o /etc/ssl/certs/citus.crt
 
-8. Advance to the next screen in the wizard. It will contain commands to run on the agent server, customized with a token for your account.
+9. Advance to the next screen in the wizard. It will contain commands to run on the agent server, customized with a token for your account.
 
    .. image:: ../images/vc-commands.png
 
-  After running the commands on your server, the server will appear under "Select host." Click it and then continue.
+   After running the commands on your server, the server will appear under **Select host.** Click it and go to the next step in the wizard.
 
-After these steps, VividCortex should show all systems as activated. You can then proceed to the dashboard to monitor queries on your Citus cluster.
+   .. image:: ../images/vc-commands-2.png
 
-.. image:: ../images/vc-final.png
+10. After these steps, VividCortex should show all systems as activated.
+
+   .. image:: ../images/vc-check-agent.png
+
+You can then proceed to the dashboard to monitor queries on your Citus cluster.
+
+.. image:: ../images/vc-dashboard.png
