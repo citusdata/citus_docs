@@ -214,8 +214,8 @@ Start at step 3: :ref:`Configure connection and authentication
 <post_enterprise_rhel>`.
 
 
-Install the pg_auto_failover enterprise package
------------------------------------------------
+\(Optional\) Install the pg_auto_failover enterprise package
+------------------------------------------------------------
 
 Debian/Ubuntu
 ~~~~~~~~~~~~~
@@ -243,8 +243,8 @@ the running pg_auto_failover service and remove the old package
 
 .. _pgautofailover_sku_setup:
 
-Run the Citus Enterprise setup
-------------------------------
+\(Optional\) Run the pg_auto_failover enterprise setup
+------------------------------------------------------
 
 .. note::
 
