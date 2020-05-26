@@ -15,6 +15,7 @@ guide:
 3. :ref:`sku_pkg`
 4. :ref:`sku_setup`
 5. :ref:`sku_use`
+6. :ref:`sku_failover`
 
 .. _sku_configure:
 
@@ -241,7 +242,7 @@ the running pg_auto_failover service and remove the old package
     # Change to pg-auto-failover-enterprise13_12 for PostgreSQL 11
     sudo yum install -y pg-auto-failover-enterprise13_12
 
-.. _pgautofailover_sku_setup:
+.. _sku_failover:
 
 \(Optional\) Run the pg_auto_failover enterprise setup
 ------------------------------------------------------
