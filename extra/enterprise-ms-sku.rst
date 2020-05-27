@@ -15,7 +15,8 @@ guide:
 3. :ref:`sku_pkg`
 4. :ref:`sku_setup`
 5. :ref:`sku_use`
-6. :ref:`sku_failover`
+6. :ref:`sku_failover_pkg`
+7. :ref:`sku_failover_setup`
 
 .. _sku_configure:
 
@@ -215,6 +216,8 @@ Start at step 3: :ref:`Configure connection and authentication
 <post_enterprise_rhel>`.
 
 
+.. _sku_failover_pkg:
+
 \(Optional\) Install the pg_auto_failover enterprise package
 ------------------------------------------------------------
 
@@ -242,7 +245,7 @@ the running pg_auto_failover service and remove the old package
     # Change to pg-auto-failover-enterprise13_12 for PostgreSQL 11
     sudo yum install -y pg-auto-failover-enterprise13_12
 
-.. _sku_failover:
+.. _sku_failover_setup:
 
 \(Optional\) Run the pg_auto_failover enterprise setup
 ------------------------------------------------------
