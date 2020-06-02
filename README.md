@@ -7,7 +7,7 @@ To generate HTML version:
 4. Generate HTML
     ```bash
     cd citus_docs
-    sphinx-build -b html -a -n . _build
+    make
 
     # open _build/index.html in your browser
     ```
