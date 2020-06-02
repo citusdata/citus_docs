@@ -130,11 +130,6 @@ Citus propagates single-table GRANT statements through the entire cluster, makin
   -- applies to the coordinator node
   GRANT SELECT ON ALL TABLES IN SCHEMA public TO reports;
 
-  -- make it apply to workers as well
-  SELECT run_command_on_workers(
-    'GRANT SELECT ON ALL TABLES IN SCHEMA public TO reports;'
-  );
-
 .. _grant_usage:
 
 Granting Access to Other Schemas
