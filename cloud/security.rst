@@ -123,17 +123,12 @@ Citus Cloud also supports :ref:`rls` for greater control in a multi-tenant envir
 Granting Privileges in Bulk
 ---------------------------
 
-Citus propagates single-table GRANT statements through the entire cluster, making them apply on all worker nodes. However GRANTs that are system-wide (e.g. for all tables in a schema) need to be applied individually to every data node using a Citus helper function.
+Citus propagates single-table GRANT statements through the entire cluster, making them apply on all worker nodes. It also propagates GRANTs that are system-wide (e.g. for all tables in a schema):
 
 .. code-block:: postgresql
 
-  -- applies to the coordinator node
+  -- applies to the coordinator node and propagates to workers
   GRANT SELECT ON ALL TABLES IN SCHEMA public TO reports;
-
-  -- make it apply to workers as well
-  SELECT run_command_on_workers(
-    'GRANT SELECT ON ALL TABLES IN SCHEMA public TO reports;'
-  );
 
 .. _grant_usage:
 
