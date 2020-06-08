@@ -16,6 +16,11 @@ a {
   color: #2678AF;
 }
 
+a.skiplink {
+  color: #757575;
+  margin-bottom: 0;
+}
+
 .wy-menu-vertical li.current a {
   color: #656565;
 }
