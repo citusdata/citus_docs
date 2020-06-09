@@ -9,7 +9,7 @@ Welcome to the documentation for Citus 9.3! Citus horizontally scales PostgreSQL
     <div class="col-md-4">
       <a class="box" href="portals/getting_started.html">
         <h3>Getting Started</h3>
-        <img src="_images/number-one.png" />
+        <img src="_images/number-one.png" role="presentation" alt="" />
         Learn the Citus architecture, install locally,
         and follow some ten-minute tutorials.
       </a>
@@ -17,7 +17,7 @@ Welcome to the documentation for Citus 9.3! Citus horizontally scales PostgreSQL
     <div class="col-md-4">
       <a class="box" href="portals/use_cases.html">
         <h3>Use Cases</h3>
-        <img src="_images/use-cases.png" />
+        <img src="_images/use-cases.png" role="presentation" alt="" />
         See how Citus allows multi-tenant applications
         to scale with minimal database changes.
       </a>
@@ -25,7 +25,7 @@ Welcome to the documentation for Citus 9.3! Citus horizontally scales PostgreSQL
     <div class="col-md-4">
       <a class="box" href="portals/migrating.html">
         <h3>Migrating to Citus</h3>
-        <img src="_images/migrating.png" />
+        <img src="_images/migrating.png" role="presentation" alt="" />
         Move from plain PostgreSQL to Citus, and discover
         data modeling techniques for distributed systems.
       </a>
@@ -35,7 +35,7 @@ Welcome to the documentation for Citus 9.3! Citus horizontally scales PostgreSQL
     <div class="col-md-4">
       <a class="box" href="portals/citus_cloud.html">
         <h3>Managed Service</h3>
-        <img src="_images/cloud.png" />
+        <img src="_images/cloud.png" role="presentation" alt="" />
         Explore our secure, scalable, highly available
         database-as-a-service.
       </a>
@@ -43,7 +43,7 @@ Welcome to the documentation for Citus 9.3! Citus horizontally scales PostgreSQL
     <div class="col-md-4">
       <a class="box" href="portals/reference.html">
         <h3>API / Reference</h3>
-        <img src="_images/reference.png" />
+        <img src="_images/reference.png" role="presentation" alt="" />
         Get the most out of Citus by learning its
         functions and configuration.
       </a>
@@ -51,7 +51,7 @@ Welcome to the documentation for Citus 9.3! Citus horizontally scales PostgreSQL
     <div class="col-md-4">
       <a class="box" href="portals/support.html">
         <h3>Help and Support</h3>
-        <img src="_images/help.png" />
+        <img src="_images/help.png" role="presentation" alt="" />
         See the frequently asked questions, and
         contact us. This is the page to get unstuck.
       </a>

@@ -10,14 +10,17 @@ To deal with this workload, a single-node PostgreSQL database would typically us
 Storing data in multiple physical tables speeds up data expiration. In a single big table, deleting rows incurs the cost of scanning to find which to delete, and then `vacuuming <https://www.postgresql.org/docs/10/static/routine-vacuuming.html>`_ the emptied space. On the other hand, dropping a partition is a fast operation independent of data size. It's the equivalent of simply removing files on disk that contain the data.
 
 .. image:: ../images/timeseries-delete-vs-drop.png
+    :alt: autovacuum removing part of a table, and a partition being erased
 
 Partitioning a table also makes indices smaller and faster within each date range. Queries operating on recent data are likely to operate on "hot" indices that fit in memory. This speeds up reads.
 
 .. image:: ../images/timeseries-multiple-indices-select.png
+    :alt: select from a big table vs select from a smaller partition
 
 Also inserts have smaller indices to update, so they go faster too.
 
 .. image:: ../images/timeseries-multiple-indices-insert.png
+    :alt: insert into a big table vs insert into a smaller partition
 
 Time-based partitioning makes most sense when:
 
@@ -32,6 +35,7 @@ Scaling Timeseries Data on Citus
 We can mix the single-node table partitioning techniques with Citus' distributed sharding to make a scalable time-series database. It's the best of both worlds. It's especially elegant atop Postgres's declarative table partitioning.
 
 .. image:: ../images/timeseries-sharding-and-partitioning.png
+    :alt: shards of partitions
 
 For example, let's distribute *and* partition a table holding historical `GitHub events data <https://examples.citusdata.com/events.csv>`__.
 

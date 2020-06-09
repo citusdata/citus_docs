@@ -16,6 +16,7 @@ The easiest way to start a Citus Cluster is by vising the Citus Cloud dashboard.
 
 .. image:: ../images/cloud-coordinator-worker-slider.png
   :align: center
+  :alt: formation creation dialog, with sizing options
 
 A pop-up will ask you the AWS region (US East, US West) where your formation will be created. Please remember the region where you created your Citus Cloud formation. We will use it in the next step.
 

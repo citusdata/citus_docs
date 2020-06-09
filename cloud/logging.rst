@@ -23,6 +23,7 @@ Recent Logs
 The Citus Cloud dashboard automatically shows you the most recent 100 log lines from each of your servers. You don't need to configure anything to access this information.
 
 .. image:: ../images/citus_logs_dashboard.png
+    :alt: log output in embedded terminal
 
 
 External Log Destinations
@@ -31,6 +32,7 @@ External Log Destinations
 For anything more than a quick look at your logs, we recommend setting up an external provider. Through this method the logs will transmit to a dedicated logging service and you can analyze and retain them according to your own preferences. To use an external provider, create a new logging destination in the Citus Cloud console. For instance, here is the new destination dialog filled in with Papertrail settings:
 
 .. image:: ../images/citus_logs_add_log_form.png
+    :alt: screen to establish log destination
 
 Note that after creation, it might take up to five minutes for logging preferences to be applied. You'll then see logs show up in your chosen provider's dashboard.
 

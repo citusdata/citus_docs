@@ -10,6 +10,7 @@ Within the configuration tab you can see any configuration parameters that have 
 To access these settings, go to the Configuration tab in your Cloud formation and click "Change a Parameter." It will present a dropdown list of config parameters:
 
 .. image:: ../images/cloud-pg-conf.png
+    :alt: dropdown list of config parameters
 
 The options are grouped by which server and system they control:
 
@@ -20,5 +21,6 @@ The options are grouped by which server and system they control:
 Selecting an option opens an input box that accepts the appropriate values, whether numerical, textual, or a pre-set list. The selected option also shows a link to learn more about the configuration parameter.
 
 .. image:: ../images/cloud-pg-conf-option.png
+    :alt: parameter view
 
 Numerical parameters do not yet allow specifying units in this interface, and are interpreted as their default unit. The default unit appears in the description under the selected parameter. For instance in the picture above it says, "in kilobytes." In this example one could specify a ``work_mem`` of ``1GB`` using the value 1048576 (= 1024*1024).
