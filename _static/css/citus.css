@@ -21,6 +21,10 @@ a.skiplink {
   margin-bottom: 0;
 }
 
+.wy-menu-vertical li.current {
+  border-left: 2px solid;
+}
+
 .wy-menu-vertical li.current a {
   color: #656565;
 }
