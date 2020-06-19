@@ -42,6 +42,10 @@ a.skiplink {
   color: #4b4b4b;
 }
 
+.wy-menu-vertical li span.toctree-expand {
+  color: #b3b3b3;
+}
+
 .wy-table-odd a, .wy-table-striped tr:nth-child(2n-1) a, .rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) a {
   color: #2575AB;
 }
