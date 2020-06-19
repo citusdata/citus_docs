@@ -12,6 +12,10 @@ h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
   padding: 1em !important;
 }
 
+#search-results .context {
+  color: #404040 !important;
+}
+
 a {
   color: #2678AF;
 }
