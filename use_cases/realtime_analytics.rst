@@ -175,7 +175,7 @@ The following function wraps the rollup query up for convenience.
   -- function to do the rollup
   CREATE OR REPLACE FUNCTION rollup_http_request() RETURNS void AS $$
   DECLARE
-    curr_rollup_time timestamptz := date_trunc('minute', now());
+    curr_rollup_time timestamptz := date_trunc('minute', now() - interval '1 minute');
     last_rollup_time timestamptz := minute from latest_rollup;
   BEGIN
     INSERT INTO http_request_1min (
