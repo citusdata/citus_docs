@@ -71,6 +71,12 @@ div.admonition.note a {
   color: #2473A7;
 }
 
+/* version picker */
+
+.rst-versions .rst-other-versions {
+  color: #d9d9d9 !important;
+}
+
 /* code blocks */
 
 .highlight .c1, .highlight .cm {
