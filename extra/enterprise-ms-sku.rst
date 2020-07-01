@@ -15,8 +15,12 @@ guide:
 3. :ref:`sku_pkg`
 4. :ref:`sku_setup`
 5. :ref:`sku_use`
-6. :ref:`sku_failover_pkg`
-7. :ref:`sku_failover_setup`
+
+The final two steps are optional for test or development clusters. They
+configure high availability for the cluster.
+
+1. :ref:`sku_failover_pkg`
+2. :ref:`sku_failover_setup`
 
 .. _sku_configure:
 
@@ -215,11 +219,18 @@ Continue by following the standard multi-machine Debian/Ubuntu installation.
 Start at step 3: :ref:`Configure connection and authentication
 <post_enterprise_rhel>`.
 
+Setting up High Availability
+============================
+
+The two steps in this section are optional for non-production clusters. The
+goal is to use `pg_auto_failover <https://pg-auto-failover.readthedocs.io>`_ to
+create secondary database nodes and fail over to them if primary nodes become
+unhealthy.
 
 .. _sku_failover_pkg:
 
-\(Optional\) Install the pg_auto_failover enterprise package
-------------------------------------------------------------
+Install the pg_auto_failover enterprise package
+-----------------------------------------------
 
 Debian/Ubuntu
 ~~~~~~~~~~~~~
@@ -247,8 +258,8 @@ the running pg_auto_failover service and remove the old package
 
 .. _sku_failover_setup:
 
-\(Optional\) Run the pg_auto_failover enterprise setup
-------------------------------------------------------
+Run the pg_auto_failover enterprise setup
+-----------------------------------------
 
 .. note::
 
