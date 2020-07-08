@@ -56,6 +56,7 @@ join behaviors:
 
 .. image:: ../images/articles-join-inner.png
    :align: right
+   :alt: inner join venn diagram
 
 .. code:: sql
 
@@ -72,6 +73,7 @@ join behaviors:
 
 .. image:: ../images/articles-join-left.png
    :align: right
+   :alt: left join venn diagram
 
 .. code:: sql
 
@@ -88,6 +90,7 @@ join behaviors:
 
 .. image:: ../images/articles-join-right.png
    :align: right
+   :alt: right join venn diagram
 
 .. code:: sql
 
@@ -105,6 +108,7 @@ join behaviors:
 
 .. image:: ../images/articles-join-full.png
    :align: right
+   :alt: full join venn diagram
 
 .. code:: sql
 

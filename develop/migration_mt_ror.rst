@@ -278,6 +278,7 @@ example, check out our `reference app
 showcases a simplified sample SaaS application for ad analytics.
 
 .. image:: ../images/rails-ref-app.png
+    :alt: dashboard in example application showing a campaign
 
 As you can see in the screenshot, most data is associated to the
 currently logged in customer - even though this is complex analytical

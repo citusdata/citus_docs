@@ -12,16 +12,19 @@ For most cases either approach to scaling is fine and will improve performance. 
 Both adjustments are available in the formation configuration panel of the settings tab:
 
 .. image:: ../images/cloud-nodes-slider.png
+    :alt: interface to add nodes and change node sizes
 
 The slider, **Total Nodes**, scales out the cluster by adding new nodes. The **RAM** buttons scale it up by changing the instance size (RAM and CPU cores) of existing nodes.
 
 For example, just drag the slider for node count:
 
 .. image:: ../images/cloud-nodes-slider-2.png
+    :alt: same interface, with a changed slider
 
 After you adjust the slider and/or buttons and accept the changes, Citus Cloud begins applying the changes. Increasing the number of nodes will begin immediately, whereas increasing node instance size will wait for a time in the user-specified maintenance window.
 
 .. image:: ../images/cloud-maintenance-window.png
+    :alt: dropdown menu to change maintenance window
 
 A maintenance window specifies a preferred time for any maintenance tasks to be performed on your formation. When a window is set, changes to the formation (e.g. changing to a different worker size) will by default occur within this window, unless manually adjusted by Citus Cloud support. In addition, when a maintenance window is set, base backups on the node will start during the window.
 
@@ -30,10 +33,12 @@ Citus Cloud will display a popup message in the console while scaling actions ha
 For instance, when adding nodes:
 
 .. image:: ../images/cloud-scaling-out.png
+    :alt: how the status indicator looks
 
 Or when waiting for node resize to begin in the maintenance window:
 
 .. image:: ../images/cloud-scaling-up.png
+    :alt: how the status indicator looks
 
 Scaling Up (increasing node size)
 =================================
@@ -53,10 +58,12 @@ Rebalancing
 You can go to the "Rebalancer" tab in the Cloud console to see the shard balance across nodes. Ordinarily this page will show, "No rebalance required."
 
 .. image:: ../images/cloud-rebalance-unnecessary.png
+    :alt: gray squares representing evently balanced shards
 
 However if the shards could be placed more evenly, such as after a new node has been added to the cluster, the page will show a "Rebalance recommended."
 
 .. image:: ../images/cloud-rebalance-recommended.png
+    :alt: squares of different colors representing unbalanced shards
 
 For maximum control, the choice of when to run the shard rebalancer is left to the database administrator. Citus does not automatically rebalance on node creation. To start the shard rebalancer, connect to the cluster coordinator node with psql and run:
 
@@ -73,6 +80,7 @@ For maximum control, the choice of when to run the shard rebalancer is left to t
 Citus will output progress in both psql (saying which shards are moving) and graphically in the Cloud console:
 
 .. image:: ../images/cloud-rebalancer-gui.gif
+    :alt: animation of rebalancer in operation
 
 The rebalance progress is also queryable in SQL with the :ref:`get_rebalance_progress() <get_rebalance_progress>` function.
 

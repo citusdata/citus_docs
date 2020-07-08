@@ -96,6 +96,7 @@ Multi-tenant applications have a nice property that we can take advantage of: qu
 Because application queries are restricted to a single tenant, such as a store or company, one approach for making multi-tenant application queries fast is to store *all* data for a given tenant on the same node. This minimizes network overhead between the nodes and allows Citus to support all your application's joins, key constraints and transactions efficiently. With this, you can scale across multiple nodes without having to totally re-write or re-architect your application.
 
 .. image:: ../images/mt-ad-routing-diagram.png
+    :alt: query "where" clause routing to a single node
 
 We do this in Citus by making sure every table in our schema has a column to clearly mark which tenant owns which rows. In the ad analytics application the tenants are companies, so we must ensure all tables have a :code:`company_id` column.
 
@@ -434,6 +435,7 @@ Also, if data increases for only a few large tenants, then you can isolate those
 To scale out your Citus cluster, first add a new worker node to it. On Citus Cloud, you can use the slider present in the "Settings" tab, sliding it to add the required number of nodes. Alternately, if you run your own Citus installation, you can add nodes manually with the :ref:`master_add_node` UDF.
 
 .. image:: ../images/cloud-nodes-slider.png
+    :alt: graphical interface to add nodes and change their size
 
 Once you add the node it will be available in the system. However at this point no tenants are stored on it and Citus will not yet run any queries there. To move your existing data, you can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node.
 
@@ -458,6 +460,7 @@ The previous section describes a general-purpose way to scale a cluster as the n
 Regarding the first question, investigating data from large SaaS sites reveals that as the number of tenants increases, the size of tenant data typically tends to follow a `Zipfian distribution <https://en.wikipedia.org/wiki/Zipf%27s_law>`_.
 
 .. image:: ../images/zipf.png
+    :alt: general graph of rank vs frequency in a zipfian distribution
 
 For instance, in a database of 100 tenants, the largest is predicted to account for about 20% of the data. In a more realistic example for a large SaaS company, if there are 10k tenants, the largest will account for around 2% of the data. Even at 10TB of data, the largest tenant will require 200GB, which can pretty easily fit on a single node.
 

@@ -104,6 +104,7 @@ The Citus extension for PostgreSQL is unique in being able to form a distributed
 In Citus a row is stored in a shard if the hash of the value in the distribution column falls within the shard’s hash range. To ensure co-location, shards with the same hash range are always placed on the same node even after rebalance operations, such that equal distribution column values are always on the same node across tables.
 
 .. image:: ../images/colocation-shards.png
+    :alt: illustration of shard hash ranges
 
 A distribution column that we’ve found to work well in practice is tenant ID in multi-tenant applications. For example, SaaS applications typically have many tenants, but every query they make is specific to a particular tenant. While one option is providing a database or schema for every tenant, it is often costly and impractical as there can be many operations that span across users (data loading, migrations, aggregations, analytics, schema changes, backups, etc). That becomes harder to manage as the number of tenants grows.
 
@@ -188,6 +189,7 @@ Afterwards, the results from the two steps need to be combined by the applicatio
 The data required to answer the query is scattered across the shards on the different nodes and each of those shards will need to be queried:
 
 .. image:: ../images/colocation-inefficient-queries.png
+    :alt: queries 1 and 2 hitting multiple nodes
 
 In this case the data distribution creates substantial drawbacks:
 
@@ -229,6 +231,7 @@ In this case, Citus can answer the same query that you would run on a single Pos
 Because of the tenantid filter and join on tenantid, Citus knows that the entire query can be answered using the set of co-located shards that contain the data for that particular tenant, and the PostgreSQL node can answer the query in a single step, which enables full SQL support.
 
 .. image:: ../images/colocation-better-query.png
+    :alt: query 1 accessing just one node
 
 In some cases, queries and table schemas will require minor modifications to ensure that the tenant_id is always included in unique constraints and join conditions. However, this is usually a straightforward change, and the extensive rewrite that would be required without having co-location is avoided.
 

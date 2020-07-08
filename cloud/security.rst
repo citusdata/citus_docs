@@ -60,10 +60,12 @@ As we saw above, every new Citus Cloud formation includes a user account called 
 We'll want to create new roles for specialized purposes. For instance, a user with read-only access is perfect for a web/reporting tool. The Cloud console allows us to create a new user, and will set up a new password automatically. Go to the "Roles" tab and click "Create New Role."
 
 .. image:: ../images/cloud-roles-tab.png
+    :alt: list of roles, with button to add another
 
 It pops up a dialog where we will fill in the role name, which we can call :code:`reports`.
 
 .. image:: ../images/cloud-role-dialog.png
+    :alt: form to set new role name
 
 After creating the role on a fresh formation, there will be three roles:
 
@@ -170,13 +172,16 @@ IP whitelisting restricts access to servers within a Citus Cloud cluster so that
 To enable IP whitelisting on your Citus Cloud formation, go to the VPCs tab in the Cloud Console:
 
 .. image:: ../images/whitelist-vpc-tab.png
+    :alt: selected button saying "VPCs" in menu bar
 
 Then find the VPC containing your formation and click View Details:
 
 .. image:: ../images/whitelist-select-vpc.png
+    :alt: list of VPCs
 
 Finally, in the "IP Whitelist / Ingress Rules" tab, enter the allowable IP addresses or CIDR blocks, one per line.
 
 .. image:: ../images/whitelist-cidr-blocks.png
+    :alt: textbox with newline separated CIDR blocks
 
 The special address ``0.0.0.0/0`` means unrestricted access. Note that permitted connections still require a valid username and password to actually access your database.

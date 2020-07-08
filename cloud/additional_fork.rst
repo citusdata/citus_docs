@@ -13,6 +13,7 @@ How to Fork a Formation
 Citus Cloud makes forking easy. The control panel for each formation has a "Fork" tab. Go there and enter the name, region, and node sizing information for the destination cluster.
 
 .. image:: ../images/cloud-fork.png
+    :alt: dialog to fork formation
 
 Shortly after you click "Fork Formation," the new formation will appear in the Cloud console. It runs on separate hardware and your database can connect to it in the :ref:`usual way <connection>`.
 
@@ -55,5 +56,6 @@ Contrast followers with :ref:`cloud_forking`. In a fork the copied formation doe
 To create a follower, head to the "Fork / PITR / Follower" tab in the Cloud console. Select the "Create follower formation" radio button, and fill in a name.
 
 .. image:: ../images/cloud-follower.png
+    :alt: dialog to create follower
 
 Click "Create Follower Formation" and wait. On completion the process will redirect you to a console for the new formation. The follower formation is distinct from the original and has its own database connection string.

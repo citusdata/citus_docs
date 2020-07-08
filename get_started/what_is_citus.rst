@@ -21,19 +21,28 @@ How Far Can Citus Scale?
 Citus scales horizontally by adding worker nodes, vertically by upgrading workers/coordinator, and supports switching to :ref:`mx` mode if needed. In practice our customers have achieved the following scale, with room to grow even more:
 
 * `Algolia <https://www.citusdata.com/customers/algolia>`_
-    * 5-10B rows ingested per day
+
+  * 5-10B rows ingested per day
+
 * `Heap <https://www.citusdata.com/customers/heap>`_
-    * 700+ billion events
-    * 1.4PB of data on a 70-node Citus database cluster
+
+  * 700+ billion events
+  * 1.4PB of data on a 70-node Citus database cluster
+
 * `Chartbeat <https://www.citusdata.com/customers/chartbeat>`_
-    * >2.6B rows of data added per month
+
+  * >2.6B rows of data added per month
+
 * `Pex <https://www.citusdata.com/customers/pex>`_
-    * 80B rows updated/day
-    * 20-node Citus database cluster on Google Cloud
-    * 2.4TB memory, 1280 cores, and 80TB of data
-    * ...with plans to grow to 45 nodes
+
+  * 80B rows updated/day
+  * 20-node Citus database cluster on Google Cloud
+  * 2.4TB memory, 1280 cores, and 80TB of data
+  * ...with plans to grow to 45 nodes
+
 * `Mixrank <https://www.citusdata.com/customers/mixrank>`_
-    * 1.6PB of time series data
+
+  * 1.6PB of time series data
 
 For more customers and statistics, see our `customer stories <https://www.citusdata.com/customers#customer-index>`_.
 

@@ -38,6 +38,7 @@ distributed nodes.
 
 .. image:: ../images/ha-availability.gif
    :align: right
+   :alt: animation of chunks of data replicating
 
 For HA, any data that is written to a primary database called the Writer
 is instantly replicated onto a secondary database called the Reader in
@@ -56,6 +57,7 @@ Disaster Recovery (DR)
 
 .. image:: ../images/ha-disaster.gif
    :align: right
+   :alt: animation of WAL shipping
 
 For DR, read-only data is replayed from colder storage. On AWS this is
 from S3, and for Postgres this is downloaded in 16 MB pieces. On Citus
@@ -164,6 +166,7 @@ While :ref:`cloud_forking` means making a copy of the database at the current mo
 Suppose a customer deletes a record stored in your Citus cluster and you want to recover it, or an engineer drops a table by accident. Just navigate to the "Fork / PITR" tab in the Citus Cloud console and select the "Recover to a point in time" option:
 
 .. image:: ../images/cloud-pitr.png
+    :alt: interface to recover to a point in time
 
 Similar to forking, PITR creates a copy of your formation and leaves the original unaffected. It uses the same operations internally as forking does: base backups and WAL shipping. This means that performing PITR causes no extra load on the original database.
 
