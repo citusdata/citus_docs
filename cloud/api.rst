@@ -15,10 +15,12 @@ Authentication
 All formation API requests must include an authentication token. To get one, visit the `tokens <https://console.citusdata.com/api_tokens>`_ page, accessible through the Cloud menu bar in ``Org > API Tokens``:
 
 .. image:: ../images/cloud-api-get-token.png
+    :alt: org menu
 
 Create a token with a name that's meaningful to you. The name does not affect the API, it exists so you can revoke the token later if desired. Tokens last for one year.
 
 .. image:: ../images/cloud-api-name-token.png
+    :alt: dialog to create token
 
 After generating the token, its value will be displayed just once. Copy it to a secure place because it will never be visible again from the Cloud console.
 

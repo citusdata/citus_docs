@@ -38,6 +38,7 @@ Payments
 We accept payments through credit card or directly through bank ACH. To set up payment details, go to "Org" -> "Billing" in the main menu of the Cloud Console.
 
 .. image:: ../images/cloud-bill-menu.png
+    :alt: org menu
 
 Then choose either "Credit Card" or "Bank Account" and fill out the form for the desired payment option:
 
@@ -51,8 +52,8 @@ Then choose either "Credit Card" or "Bank Account" and fill out the form for the
   </thead>
   <tbody>
     <tr>
-      <td><img src="../_images/cloud-bill-credit.png" alt="cc details" /></td>
-      <td><img src="../_images/cloud-bill-ach.png" alt="ach details" /></td>
+      <td><img src="../_images/cloud-bill-credit.png" alt="CC details" /></td>
+      <td><img src="../_images/cloud-bill-ach.png" alt="ACH details" /></td>
     <tr>
   </tbody>
   </table>

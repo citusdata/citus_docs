@@ -14,6 +14,7 @@ Provisioning
 You can provision a new Citus cluster at `https://console.citusdata.com <https://console.citusdata.com>`_. When you login you'll be at the home of the dashboard, and from here you can click New Formation to begin your formation creation. 
 
 .. image:: ../images/cloud_provisioning.png
+    :alt: cluster provisioning interface
 
 Configuring Your Plan
 ---------------------
@@ -65,10 +66,12 @@ Applications connect to Citus the same way they would PostgreSQL, using a `conne
 The connection string for each Cloud Formation is provided on the Overview tab in Citus Console.
 
 .. image:: ../images/cloud-overview-1.png
+    :alt: cluster overview tab
 
 By default the URL displays only the hostname of the connection, but the full URL is available by clicking the "Show Full URL" link.
 
 .. image:: ../images/cloud-overview-2.png
+    :alt: cluster overview tab showing full URL
 
 Notice how the end of the connection string contains ``?sslmode=require``. Citus Cloud accepts only SSL connections for security, so this url parameter is required. When connecting from an application framework such as Rails, Django, or Spring you may need to explicitly specify the sslmode as well.
 
@@ -80,5 +83,6 @@ The previous section shows how to get a connection string for the coordinator no
 Under the "Nodes" tab in Cloud console each node lists its amazonaws.com hostname, like:
 
 .. image:: ../images/cloud-node-host.png
+    :alt: interface to see node hostname
 
 Replace the host in the coordinator connection string with this value, consulting the previous section for the connection string format. (As shown in the previous section, the hostname to be replaced will be immediately following an ``@`` sign.) Leave all other parameters unchanged. This will be the new connection string for the worker.

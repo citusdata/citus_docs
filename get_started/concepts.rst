@@ -37,6 +37,7 @@ Type 1: Distributed Tables
 The first type, and most common, is *distributed* tables. These appear to be normal tables to SQL statements, but are horizontally *partitioned* across worker nodes.
 
 .. image:: ../images/diagram-parallel-select.png
+    :alt: select statement parallelized across shards
 
 Here the rows of ``table`` are stored in tables ``table_1001``, ``table_1002`` etc on the workers. The component worker tables are called *shards*.
 

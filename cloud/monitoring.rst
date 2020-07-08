@@ -58,6 +58,7 @@ To monitor events in the life of a formation with outside tools via a standard f
 On the upper right of the "Formations" list in the Cloud console, follow the "Formation Events" link to the RSS feed.
 
 .. image:: ../images/cloud-formation-events.png
+    :alt: location of "new formation" button
 
 The feed includes entries for three types of events, each with the following details:
 
@@ -185,10 +186,12 @@ Citus Cloud can send events to an external `StatsD <https://github.com/etsy/stat
 To send these metrics to a statsd server, use the "Create New Metrics Destination" button in the "Metrics" tab of Cloud Console.
 
 .. image:: ../images/cloud-metrics-tab.png
+    :alt: metrics tab showing create metrics destination button
 
 Then fill in the host details in the resulting dialog box.
 
 .. image:: ../images/cloud-metrics-destination.png
+    :alt: screen to enter details of destination
 
 The statsd protocol is not encrypted, so we advise setting up :ref:`VPC peering <perimeter_controls>` between the server and your Citus Cloud cluster.
 
@@ -227,6 +230,7 @@ Example: Datadog with statsd
 6. The agent should now appear in the `Infrastructure <https://app.datadoghq.com/infrastructure>`_ section in Datadog.
 
    .. image:: ../images/datadog-infrastructure.png
+        :alt: hostname of service, with status "UP"
 
 Clicking the hostname link goes into a full dashboard of all the metrics, with the ability to write queries and set alerts.
 
@@ -258,14 +262,17 @@ Here's a step-by-step guide to get started.
 3. The **Summary** page will prompt you to "Install Database Performance Monitor On A New Host." Choose **OFF-HOST**.
 
    .. image:: ../images/vc-method-type.png
+        :alt: installation methods selector
 
 4. Select the PostgreSQL database.
 
    .. image:: ../images/vc-db.png
+        :alt: database selector
 
 5. Input the connection information into the credentials screen in the VividCortex wizard. The "citus" user is required. Make sure SSL Enabled is on, and that you're using SSL Mode "Verify Full." Specify ``/etc/ssl/certs/citus.crt`` for the SSL Authority.
 
    .. image:: ../images/vc-connection.png
+        :alt: database connection details
 
 6. Skip the **create user** step. We'll be using the "citus" user, because it's the only one with enough permissions to view query statistics on Citus Cloud.
 
@@ -289,15 +296,19 @@ Here's a step-by-step guide to get started.
 9. Advance to the next screen in the wizard. It will contain commands to run on the agent server, customized with a token for your account.
 
    .. image:: ../images/vc-commands.png
+        :alt: textbox with commands to copy
 
    After running the commands on your server, the server will appear under **Select host.** Click it and go to the next step in the wizard.
 
    .. image:: ../images/vc-commands-2.png
+        :alt: confirmation that host is active
 
 10. After these steps, VividCortex should show all systems as activated.
 
    .. image:: ../images/vc-check-agent.png
+        :alt: checklist of all components active
 
 You can then proceed to the dashboard to monitor queries on your Citus cluster.
 
 .. image:: ../images/vc-dashboard.png
+    :alt: live bar charts on dashboard
