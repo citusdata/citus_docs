@@ -162,7 +162,7 @@ All Citus Cloud clusters run in their own isolated Amazon Virtual Private Cloud 
 VPC Peering
 -----------
 
-VPC peering forms a network connection between two VPCs which routes traffic securely between them using private IPv4 addresses or IPv6 addresses. Instances in either VPC can communicate with each other as if they are within the same network. To set up a VPC peering connecting between an existing Citus Cloud formation and an Amazon VPC, open a support ticket and we will initiate the peering request.
+VPC peering forms a network connection between two VPCs which routes traffic securely between them using private IPv4 addresses or IPv6 addresses. Instances in either VPC can communicate with each other as if they are within the same network. To set up a VPC peering connecting between an existing Citus Cloud formation and an Amazon VPC, open a support ticket and we will initiate the peering request. Please keep in mind that inter-region VPC peering is currently not supported.
 
 IP Whitelisting
 ---------------
