@@ -29,11 +29,11 @@ Tuning the parameters is a matter of experimentation and often takes several att
 
 To begin the tuning process create a Citus cluster and load data in it. From the coordinator node, run the EXPLAIN command on representative queries to inspect performance. Citus extends the EXPLAIN command to provide information about distributed query execution. The EXPLAIN output shows how each worker processes the query and also a little about how the coordinator node combines their results.
 
-Here is an example of explaining the plan for a particular example query.
+Here is an example of explaining the plan for a particular example query. We use the VERBOSE flag to see the actual queries which were sent to the worker nodes.
 
 .. code-block:: postgresql
 
-  EXPLAIN
+  EXPLAIN VERBOSE
    SELECT date_trunc('minute', created_at) AS minute,
           sum((payload->>'distinct_size')::int) AS num_commits
      FROM github_events
@@ -51,6 +51,7 @@ Here is an example of explaining the plan for a particular example query.
         Task Count: 32
         Tasks Shown: One of 32
         ->  Task
+          Query: SELECT date_trunc('minute'::text, created_at) AS minute, sum(((payload OPERATOR(pg_catalog.->>) 'distinct_size'::text))::integer) AS num_commits FROM github_events_102042 github_events WHERE (event_type OPERATOR(pg_catalog.=) 'PushEvent'::text) GROUP BY (date_trunc('minute'::text, created_at))
           Node: host=localhost port=5433 dbname=postgres
           ->  HashAggregate  (cost=93.42..98.36 rows=395 width=16)
             Group Key: date_trunc('minute'::text, created_at)
@@ -65,12 +66,13 @@ This tells you several things. To begin with there are thirty-two shards, and th
   ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
     Task Count: 32
 
-Next it picks one of the workers and shows you more about how the query behaves there. It indicates the host, port, and database so you can connect to the worker directly if desired:
+Next it picks one of the workers and shows you more about how the query behaves there. It indicates the host, port, database, and the query that was sent to the worker so you can connect to the worker directly and try the query if desired:
 
 ::
 
   Tasks Shown: One of 32
   ->  Task
+    Query: SELECT date_trunc('minute'::text, created_at) AS minute, sum(((payload OPERATOR(pg_catalog.->>) 'distinct_size'::text))::integer) AS num_commits FROM github_events_102042 github_events WHERE (event_type OPERATOR(pg_catalog.=) 'PushEvent'::text) GROUP BY (date_trunc('minute'::text, created_at))
     Node: host=localhost port=5433 dbname=postgres
 
 Distributed EXPLAIN next shows the results of running a normal PostgreSQL EXPLAIN on that worker for the fragment query:
@@ -209,6 +211,74 @@ If the query has subqueries or CTEs that exceed this limit, the query will be ca
   ERROR:  the intermediate result size exceeds citus.max_intermediate_result_size (currently 512 kB)
   DETAIL:  Citus restricts the size of intermediate results of complex subqueries and CTEs to avoid accidentally pulling large result sets into once place.
   HINT:  To run the current query, set citus.max_intermediate_result_size to a higher value or -1 to disable.
+
+Size of intermediate results and their destination is available in EXPLAIN ANALYZE output:
+
+.. code-block:: sql
+
+  EXPLAIN ANALYZE
+  WITH deleted_rows AS (
+    DELETE FROM page_views WHERE tenant_id IN (3, 4) RETURNING *
+  ), viewed_last_week AS (
+    SELECT * FROM deleted_rows WHERE view_time > current_timestamp - interval '7 days'
+  )
+  SELECT count(*) FROM viewed_last_week;
+
+::
+
+  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=570.076..570.077 rows=1 loops=1)
+    ->  Distributed Subplan 31_1
+          Subplan Duration: 6978.07 ms
+          Intermediate Data Size: 26 MB
+          Result destination: Write locally
+          ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=364.121..364.122 rows=0 loops=1)
+                Task Count: 2
+                Tuple data received from nodes: 0 bytes
+                Tasks Shown: One of 2
+                ->  Task
+                      Tuple data received from node: 0 bytes
+                      Node: host=localhost port=5433 dbname=postgres
+                      ->  Delete on page_views_102016 page_views  (cost=5793.38..49272.28 rows=324712 width=6) (actual time=362.985..362.985 rows=0 loops=1)
+                            ->  Bitmap Heap Scan on page_views_102016 page_views  (cost=5793.38..49272.28 rows=324712 width=6) (actual time=362.984..362.984 rows=0 loops=1)
+                                  Recheck Cond: (tenant_id = ANY ('{3,4}'::integer[]))
+                                  ->  Bitmap Index Scan on view_tenant_idx_102016  (cost=0.00..5712.20 rows=324712 width=0) (actual time=19.193..19.193 rows=325733 loops=1)
+                                        Index Cond: (tenant_id = ANY ('{3,4}'::integer[]))
+                          Planning Time: 0.050 ms
+                          Execution Time: 363.426 ms
+          Planning Time: 0.000 ms
+          Execution Time: 364.241 ms
+   Task Count: 1
+   Tuple data received from nodes: 6 bytes
+   Tasks Shown: All
+   ->  Task
+         Tuple data received from node: 6 bytes
+         Node: host=localhost port=5432 dbname=postgres
+         ->  Aggregate  (cost=33741.78..33741.79 rows=1 width=8) (actual time=565.008..565.008 rows=1 loops=1)
+               ->  Function Scan on read_intermediate_result intermediate_result  (cost=0.00..29941.56 rows=1520087 width=0) (actual time=326.645..539.158 rows=651466 loops=1)
+                     Filter: (view_time > (CURRENT_TIMESTAMP - '7 days'::interval))
+             Planning Time: 0.047 ms
+             Execution Time: 569.026 ms
+  Planning Time: 1.522 ms
+  Execution Time: 7549.308 ms
+
+
+In the above EXPLAIN ANALYZE output, you can see the following information about the intermediate results:
+
+::
+
+  Intermediate Data Size: 26 MB
+  Result destination: Write locally
+
+It tells us how large the intermediate results where, and where the intermediate results were written to. In this case,
+they were written to the node coordinating the query execution, as specified by "Write locally". For some other queries
+it can also be of the following format:
+
+::
+
+  Intermediate Data Size: 26 MB
+  Result destination: Send to 2 nodes
+
+Which means intermediate result was pushed to 2 worker nodes and it involved more network traffic.
 
 When using CTEs, or joins between CTEs and distributed tables, you can avoid push-pull execution by following these rules:
 
