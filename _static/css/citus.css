@@ -77,6 +77,10 @@ div.admonition.note a {
   color: #d9d9d9 !important;
 }
 
+.rst-other-versions a {
+  color: #fcfcfc !important;
+}
+
 /* code blocks */
 
 .highlight .c1, .highlight .cm {
@@ -172,7 +176,7 @@ div.wy-menu.rst-pro {
 /* Footer */
 
 footer {
-  color: #747474 !important;
+  color: #404040 !important;
 }
 
 /* Cookie consent */
