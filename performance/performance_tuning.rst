@@ -212,7 +212,7 @@ If the query has subqueries or CTEs that exceed this limit, the query will be ca
   DETAIL:  Citus restricts the size of intermediate results of complex subqueries and CTEs to avoid accidentally pulling large result sets into once place.
   HINT:  To run the current query, set citus.max_intermediate_result_size to a higher value or -1 to disable.
 
-Size of intermediate results and their destination is available in EXPLAIN ANALYZE output:
+The size of intermediate results and their destination is available in EXPLAIN ANALYZE output:
 
 .. code-block:: sql
 
@@ -278,7 +278,7 @@ it can also be of the following format:
   Intermediate Data Size: 26 MB
   Result destination: Send to 2 nodes
 
-Which means intermediate result was pushed to 2 worker nodes and it involved more network traffic.
+Which means the intermediate result was pushed to 2 worker nodes and it involved more network traffic.
 
 When using CTEs, or joins between CTEs and distributed tables, you can avoid push-pull execution by following these rules:
 
