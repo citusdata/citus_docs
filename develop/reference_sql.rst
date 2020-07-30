@@ -251,7 +251,7 @@ For more details and examples see the `TopN readme <https://github.com/citusdata
 .. _percentile_calculations:
 
 Percentile Calculations
----------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Calculating percentiles over lots of rows might be prohibitively expensive as all rows need to be transferred to the coordinator to find the percentile you are interested in. If an exact percentile is required there is no substitute for this transfer. However if an approximation of the percentile suffices Citus can speed up the query times significantly. Instead of sorting the data to find the percentile it can be run in a single pass over the rows while at the same time only sharing a summary instead of all rows accross the network to the coordinator. Citus has integrated support for the `tdigest extension <https://github.com/tvondra/tdigest>`_ for Postgres.
 
