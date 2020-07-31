@@ -36,6 +36,7 @@ one of three methods, in this order of preference:
      var_samp(float8), variance(float4), variance(float8) stddev_pop(float4),
      stddev_pop(float8), stddev_samp(float4), stddev_samp(float8)
      stddev(float4), stddev(float8)
+     tdigest(double precision, int), tdigest_percentile(double precision, int, double precision), tdigest_percentile(double precision, int, double precision[]), tdigest_percentile(tdigest, double precision), tdigest_percentile(tdigest, double precision[]), tdigest_percentile_of(double precision, int, double precision), tdigest_percentile_of(double precision, int, double precision[]), tdigest_percentile_of(tdigest, double precision), tdigest_percentile_of(tdigest, double precision[])
 
 3. Last resort: pull all rows from the workers and perform the aggregation on
    the coordinator node. When the aggregate is not grouped on a distribution
@@ -246,6 +247,48 @@ The json fields created by TopN can be merged with ``topn_union`` and ``topn_uni
   └────────────┴───────────┘
 
 For more details and examples see the `TopN readme <https://github.com/citusdata/postgresql-topn/blob/master/README.md>`_.
+
+.. _percentile_calculations:
+
+Percentile Calculations
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Finding an exact percentile over a large number of rows can be prohibitively
+expensive, because all rows must be transferred to the coordinator for final
+sorting and processing. Finding an approximation, on the other hand, can be
+done in parallel on worker nodes using a so-called *sketch algorithm*. The
+coordinator node then combines compressed summaries into the final result
+rather than reading through the full rows.
+
+A popular sketch algorithm for percentiles uses a compressed data structure
+called *t-digest*, and is available for PostgreSQL in the `tdigest extension
+<https://github.com/tvondra/tdigest>`_. Citus has integrated support for this
+extension.
+
+Here's how to use t-digest in Citus:
+
+1. Download and install the tdigest extension on all PostgreSQL nodes (the
+   coordinator and all the workers).  The `tdigest extension github repository
+   <https://github.com/tvondra/tdigest>`_ has installation instructions.
+
+2. Create the tdigest extension within the database. Run the following command
+   on the coordinator:
+
+  .. code-block:: postgresql
+
+    CREATE EXTENSION tdigest;
+
+  The coordinator will propagate the command to the workers as well.
+
+When any of the aggregates defined in the extension are used in queries, Citus
+will rewrite the queries to push down partial tdigest computation to the
+workers where applicable.
+
+T-digest accuracy can be controlled with the ``compression`` argument passed
+into aggregates.  The trade-off is accuracy vs the amount of data shared
+between workers and the coordinator.  For a full explanation of how to use the
+aggregates in the tdigest extension, have a look at the documentation on the
+official tdigest github repository.
 
 .. _limit_pushdown:
 
