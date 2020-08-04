@@ -179,6 +179,10 @@ footer {
   color: #404040 !important;
 }
 
+footer span.commit code {
+  color: #404040 !important;
+}
+
 /* Cookie consent */
 
 #consentBox {
