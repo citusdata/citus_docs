@@ -497,34 +497,6 @@ The first example deletes all the shards for the github_events table since no de
                                3
     (1 row)
 
-master_modify_multiple_shards
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-The master_modify_multiple_shards() function is used to run data modification statements which could span multiple shards. Depending on the value of citus.multi_shard_commit_protocol, the commit can be done in one- or two-phases.
-
-Limitations:
-
-* It cannot be called inside a transaction block
-* It must be called with simple operator expressions only
-
-Arguments
-**********
-
-**modify_query:** A simple DELETE or UPDATE query as a string.
-
-Return Value
-************
-
-N/A
-
-Example
-********
-
-.. code-block:: postgresql
-
-  SELECT master_modify_multiple_shards(
-    'DELETE FROM customer_delete_protocol WHERE c_custkey > 500 AND c_custkey < 500');
-
 Metadata / Configuration Information
 ------------------------------------------------------------------------
 

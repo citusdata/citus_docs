@@ -18,7 +18,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | citext             | 1.6     | public     | data type for case-insensitive character strings                   |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| citus              | 9.2-2   | pg_catalog | Citus distributed database                                         |
+| citus              | 9.3-2   | pg_catalog | Citus distributed database                                         |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | cube               | 1.4     | public     | data type for multidimensional cubes                               |
 +--------------------+---------+------------+--------------------------------------------------------------------+
@@ -28,7 +28,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | fuzzystrmatch      | 1.1     | public     | determine similarities and distance between strings                |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| hll                | 2.14    | public     | type for storing hyperloglog data                                  |
+| hll                | 2.13    | public     | type for storing hyperloglog data                                  |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | hstore             | 1.6     | public     | data type for storing sets of (key, value) pairs                   |
 +--------------------+---------+------------+--------------------------------------------------------------------+
@@ -42,7 +42,7 @@ Generally there is no need to install extensions, however, because every Cloud c
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | pg_freespacemap    | 1.2     | public     | examine the free space map (FSM)                                   |
 +--------------------+---------+------------+--------------------------------------------------------------------+
-| pg_partman         | 4.2.2   | partman    | Extension to manage partitioned tables by time or ID               |
+| pg_partman         | 4.4.0   | partman    | Extension to manage partitioned tables by time or ID               |
 +--------------------+---------+------------+--------------------------------------------------------------------+
 | pg_prewarm         | 1.2     | public     | prewarm relation data                                              |
 +--------------------+---------+------------+--------------------------------------------------------------------+
