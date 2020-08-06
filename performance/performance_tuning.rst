@@ -309,6 +309,20 @@ There are two configuration parameters which relate to the format in which inter
 
 However, for certain data types like hll or hstore arrays, the cost of serializing and deserializing data is pretty high. In such cases, using binary format for transferring intermediate data can improve query performance due to reduced CPU usage. There are two configuration parameters which can be used to tune this behaviour, citus.binary_master_copy_format and citus.binary_worker_copy_format. Enabling the former uses binary format to transfer intermediate query results from the workers to the coordinator while the latter is useful in queries which require dynamic shuffling of intermediate data between workers.
 
+Binary protocol
+---------------
+
+In some cases a large part of query time is spent in sending the query results
+from the worker to the coordinator. This mostly happens when returning a lot of
+rows big types, such as ``hll`` or ``tdigest`` types (from the postgresql-hll
+and tdigest extensions). It can also happen when a query simply asks for a lot
+of rows, such as ``select * from table``. In those cases it can be benificial
+to set ``citus.enable_binary_protocol`` to ``true``. This will change the
+encoding of the results to binary encoding instead of text encoding. This can
+significantly reduce bandwidth for types that have a more compact binary
+representation, such as ``hll``, ``tdigest``, ``timestamp`` and
+``double precision``.
+
 Adaptive Executor
 -------------------------------
 
