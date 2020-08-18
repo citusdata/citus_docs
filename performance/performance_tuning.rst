@@ -312,16 +312,16 @@ However, for certain data types like hll or hstore arrays, the cost of serializi
 Binary protocol
 ---------------
 
-In some cases a large part of query time is spent in sending the query results
-from the worker to the coordinator. This mostly happens when returning a lot of
-rows big types, such as ``hll`` or ``tdigest`` types (from the postgresql-hll
-and tdigest extensions). It can also happen when a query simply asks for a lot
-of rows, such as ``select * from table``. In those cases it can be benificial
-to set ``citus.enable_binary_protocol`` to ``true``. This will change the
-encoding of the results to binary encoding instead of text encoding. This can
-significantly reduce bandwidth for types that have a more compact binary
-representation, such as ``hll``, ``tdigest``, ``timestamp`` and
-``double precision``.
+In some cases, a large part of query time is spent in sending query results
+from workers to the coordinator. This mostly happens when queries request many
+rows (such as ``select * from table``), or when result columns use big types
+(like ``hll`` or ``tdigest`` from the postgresql-hll and tdigest extensions).
+
+In those cases it can be beneficial to set ``citus.enable_binary_protocol`` to
+``true``, which will change the encoding of the results to binary, rather than
+using text encoding. Binary encoding significantly reduce bandwidth for types
+that have a compact binary representation, such as ``hll``, ``tdigest``,
+``timestamp`` and ``double precision``.
 
 Adaptive Executor
 -------------------------------

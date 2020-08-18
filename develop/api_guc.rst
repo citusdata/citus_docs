@@ -417,16 +417,17 @@ By default, an INSERT INTO … SELECT statement that cannot be pushed down will 
 citus.enable_binary_protocol (boolean)
 **************************************
 
-Receive query results from workers using binary encoding. By default this
-parameter is false. When this is the case all results are encoded and
-transferred in text format. Setting this parameter to true instructs the
-coordinator to use PostgreSQL’s binary serialization format to transfer this
-data (if the types allow it, if not it falls back to text). Setting this
-parameter to true is mostly useful when a lot of data is returned by the
-workers. This can happen when a lot of rows are requested, the rows have a lot
-of columns or they use big types such as ``hll`` from the postgresql-hll
+Setting this parameter to true instructs the coordinator node to use
+PostgreSQL's binary serialization format (when applicable) to transfer data
+with workers. Some column types do not support binary serialization.
+
+Enabling this parameter is mostly useful when the workers must return large
+amounts of data.  Examples are when a lot of rows are requested, the rows have
+many columns, or they use big types such as ``hll`` from the postgresql-hll
 extension.
 
+The default value is false, which means all results are encoded and transferred
+in text format.
 
 Adaptive executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
