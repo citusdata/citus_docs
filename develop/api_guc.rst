@@ -414,6 +414,21 @@ citus.enable_repartitioned_insert_select (boolean)
 
 By default, an INSERT INTO … SELECT statement that cannot be pushed down will attempt to repartition rows from the SELECT statement and transfer them between workers for insertion. However, if the target table has too many shards then repartitioning will probably not perform well. The overhead of processing the shard intervals when determining how to partition the results is too great. Repartitioning can be disabled manually by setting ``citus.enable_repartitioned_insert_select`` to false.
 
+citus.enable_binary_protocol (boolean)
+**************************************
+
+Setting this parameter to true instructs the coordinator node to use
+PostgreSQL's binary serialization format (when applicable) to transfer data
+with workers. Some column types do not support binary serialization.
+
+Enabling this parameter is mostly useful when the workers must return large
+amounts of data.  Examples are when a lot of rows are requested, the rows have
+many columns, or they use big types such as ``hll`` from the postgresql-hll
+extension.
+
+The default value is false, which means all results are encoded and transferred
+in text format.
+
 Adaptive executor configuration
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
