@@ -3,13 +3,6 @@
 Installing Citus Enterprise Edition
 ===================================
 
-.. note::
-
-    Note that configuring high availability is best done at cluster creation
-    time, and the following instructions do not cover it. Please `contact us
-    <https://www.citusdata.com/about/contact_us>`_ if you require high
-    availability with Citus Enterprise.
-
 .. _enterprise_debian:
 
 Ubuntu or Debian with Internet Access
@@ -210,3 +203,65 @@ Fedora, CentOS, or Red Hat
    .. code-block:: bash
 
     sudo -i -u postgres psql -c "ALTER EXTENSION citus UPDATE;"
+
+Setting up High Availability
+============================
+
+The two steps in this section are optional for non-production clusters. The
+goal is to use `pg_auto_failover <https://pg-auto-failover.readthedocs.io>`_ to
+create secondary database nodes and fail over to them if primary nodes become
+unhealthy.
+
+.. _failover_pkg:
+
+Install the pg_auto_failover enterprise package
+-----------------------------------------------
+
+Debian/Ubuntu
+~~~~~~~~~~~~~
+
+IMPORTANT: If upgrading from another Major or Minor pg_auto_failover version,
+first stop the running pg_auto_failover service
+
+.. code:: bash
+
+    sudo apt-get update
+    # Change to postgresql-11-auto-failover-enterprise-1.3 if you want to
+    # install pg_auto_failover for PostgreSQL 11
+    sudo apt-get install -y postgresql-12-auto-failover-enterprise-1.3
+
+Redhat/CentOS
+~~~~~~~~~~~~~
+
+IMPORTANT: If upgrading from another Major or Minor Citus version, first stop
+the running pg_auto_failover service and remove the old package
+
+.. code:: bash
+
+    # Change to pg-auto-failover-enterprise13_12 for PostgreSQL 11
+    sudo yum install -y pg-auto-failover-enterprise13_12
+
+.. _failover_setup:
+
+Run the pg_auto_failover enterprise setup
+-----------------------------------------
+
+.. note::
+
+  This is different from previous pg_auto_failover enterprise installation
+  instructions.
+
+Use ``pg-auto-failover-enterprise-pg-11-setup`` when installing for
+Postgres 11.
+
+.. code:: bash
+
+    sudo pg-auto-failover-enterprise-pg-12-setup
+    # Non-interactive version
+    # IMPORTANT: you accept the license and encryption disclaimer here. The
+    # encryption disclaimer is specific to pg_auto_failover, so be sure to read
+    # and understand it even if you have read the one for Citus already.
+    sudo PGAUTOFAILOVER_ACCEPT_LICENSE=YES \
+         PGAUTOFAILOVER_ACCEPT_ENCRYPTION_DISCLAIMER=YES \
+         PGAUTOFAILOVER_LICENSE_KEY=<INSERT LICENSE KEY HERE> \
+         pg-auto-failover-enterprise-pg-12-setup
