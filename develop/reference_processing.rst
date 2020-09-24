@@ -48,8 +48,8 @@ The adaptive executor is the default. It is well suited for getting fast respons
 
 Furthermore, when the adaptive executor detects simple INSERT, UPDATE or DELETE queries it assigns the incoming query to the worker which has the target shard. The query is then handled by the worker PostgreSQL server and the results are returned back to the user. In case a modification fails on a shard replica, the executor marks the corresponding shard replica as invalid in order to maintain data consistency.
 
-Task Tracker Executor
-~~~~~~~~~~~~~~~~~~~~~~
+Task Tracker Executor (deprecated)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The task tracker executor is well suited for long running, complex data warehousing queries. This executor opens only one connection per worker, and assigns all fragment queries to a task tracker daemon on the worker. The task tracker daemon then regularly schedules new tasks and sees through their completion. The executor on the coordinator regularly checks with these task trackers to see if their tasks completed.
 
