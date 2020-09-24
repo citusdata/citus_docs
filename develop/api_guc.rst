@@ -535,8 +535,8 @@ unless we use the GUC to provide a hint.
 
 The default value is false.
 
-Task tracker executor configuration
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+Task tracker executor configuration (deprecated)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 citus.task_tracker_delay (integer)
 **************************************************
