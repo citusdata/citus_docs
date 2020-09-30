@@ -503,8 +503,7 @@ This view can trace queries to originating tenants in a multi-tenant application
 | query          | text   | anonymized query string                                 |
 +----------------+--------+---------------------------------------------------------+
 | executor       | text   | Citus :ref:`executor <distributed_query_executor>` used:|
-|                |        | adaptive, real-time, task-tracker, router, or           |
-|                |        | insert-select                                           |
+|                |        | adaptive, or insert-select                              |
 +----------------+--------+---------------------------------------------------------+
 | partition_key  | text   | value of distribution column in router-executed queries,|
 |                |        | else NULL                                               |
