@@ -21,9 +21,6 @@ hash-distributed, the function also creates worker shards based on the shard
 count and shard replication factor configuration values. If the table contains
 any rows, they are automatically distributed to worker nodes.
 
-This function replaces usage of master_create_distributed_table() followed by
-master_create_worker_shards().
-
 Arguments
 ************************
 
@@ -322,74 +319,6 @@ Example
     'register_for_event(int, int)', 'p_event_id',
     colocate_with := 'event_responses'
   );
-
-master_create_distributed_table
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-.. _master_create_distributed_table:
-
-.. note::
-   This function is deprecated, and replaced by :ref:`create_distributed_table <create_distributed_table>`.
-
-The master_create_distributed_table() function is used to define a distributed
-table. This function takes in a table name, the distribution column and
-distribution method and inserts appropriate metadata to mark the table as
-distributed.
-
-
-Arguments
-************************
-
-**table_name:** Name of the table which needs to be distributed.
-
-**distribution_column:** The column on which the table is to be distributed.
-
-**distribution_method:** The method according to which the table is to be distributed. Permissible values are append or hash.
-
-Return Value
-********************************
-
-N/A
-
-Example
-*************************
-This example informs the database that the github_events table should be distributed by hash on the repo_id column.
-
-.. code-block:: postgresql
-
-	SELECT master_create_distributed_table('github_events', 'repo_id', 'hash');
-
-
-master_create_worker_shards
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-.. _master_create_worker_shards:
-
-.. note::
-   This function is deprecated, and replaced by :ref:`create_distributed_table <create_distributed_table>`.
-
-The master_create_worker_shards() function creates a specified number of worker shards with the desired replication factor for a *hash* distributed table. While doing so, the function also assigns a portion of the hash token space (which spans between -2 Billion and 2 Billion) to each shard. Once all shards are created, this function saves all distributed metadata on the coordinator.
-
-Arguments
-*****************************
-
-**table_name:** Name of hash distributed table for which shards are to be created.
-
-**shard_count:** Number of shards to create.
-
-**replication_factor:** Desired replication factor for each shard.
-
-Return Value
-**************************
-N/A
-
-Example
-***************************
-
-This example usage would create a total of 16 shards for the github_events table where each shard owns a portion of a hash token space and gets replicated on 2 workers.
-
-.. code-block:: postgresql
-
-	SELECT master_create_worker_shards('github_events', 16, 2);
-
 
 master_create_empty_shard
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
