@@ -126,39 +126,6 @@ The ``node_conninfo`` setting takes effect only on newly opened connections. To 
 
    Citus versions prior to 9.2.4 require a full database restart to force all connections to use the new setting.
 
-.. _override_table_visibility:
-
-citus.override_table_visibility (boolean)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-.. note::
-
-   This GUC has an effect on Citus MX only.
-
-Shards are stored on the worker nodes as regular tables with an identifier appended to their names. Unlike regular Citus, by default Citus MX does not show shards in the list of tables, when for instance a user runs ``\d`` in psql. However the shards can be made visible in MX by updating the GUC:
-
-.. code-block:: psql
-
-   SET citus.override_table_visibility TO FALSE;
-
-::
-
-   \d
-
-   +----------+--------------------+--------+----------+
-   | Schema   | Name               | Type   | Owner    |
-   |----------+--------------------+--------+----------|
-   | public   | test_table         | table  | citus    |
-   | public   | test_table_102041  | table  | citus    |
-   | public   | test_table_102043  | table  | citus    |
-   | public   | test_table_102045  | table  | citus    |
-   | public   | test_table_102047  | table  | citus    |
-   +----------+--------------------+--------+----------+
-
-Now the ``test_table`` shards (``test_table_<n>``) appear in the list.
-
-Another way to see the shards is by querying the :ref:`citus_shards_on_worker <worker_shards>` view.
-
 Query Statistics
 ---------------------------
 
