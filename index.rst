@@ -86,7 +86,6 @@ Welcome to the documentation for Citus 9.4! Citus horizontally scales PostgreSQL
    :hidden:
 
    get_started/concepts.rst
-   arch/mx.rst
 
 .. toctree::
    :caption: Develop

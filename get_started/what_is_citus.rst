@@ -18,7 +18,7 @@ Citus horizontally scales PostgreSQL across multiple machines using sharding and
 How Far Can Citus Scale?
 ------------------------
 
-Citus scales horizontally by adding worker nodes, vertically by upgrading workers/coordinator, and supports switching to :ref:`mx` mode if needed. In practice our customers have achieved the following scale, with room to grow even more:
+Citus scales horizontally by adding worker nodes, and vertically by upgrading workers/coordinator. In practice our customers have achieved the following scale, with room to grow even more:
 
 * `Algolia <https://www.citusdata.com/customers/algolia>`_
 

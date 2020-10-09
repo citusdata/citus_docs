@@ -259,9 +259,8 @@ another table and perform a join:
 You can also perform joins in the INSERT..SELECT command, allowing you
 to create more detailed aggregations, e.g. by language.
 
-Distributed aggregation adds another tool to Citus' broad toolchest
-in dealing with big data problems. With parallel INSERT .. SELECT,
-parallel indexing, parallel querying, scaling write throughput through
-:ref:`Citus MX <mx>`, and many other features, Citus can not only
-horizontally scale your multi-tenant database, but can also unify many
-different parts of your data pipeline into one platform.
+Distributed aggregation adds another tool to Citus' broad toolchest in dealing
+with big data problems. With parallel INSERT .. SELECT, parallel indexing,
+parallel querying, and many other features, Citus can not only horizontally
+scale your multi-tenant database, but can also unify many different parts of
+your data pipeline into one platform.

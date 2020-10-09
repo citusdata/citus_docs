@@ -559,14 +559,13 @@ Results:
 Caveats:
 
 * The stats data is not replicated, and won't survive database crashes or failover
-* It's a coordinator node feature, with no :ref:`Citus MX <mx>` support
 * Tracks a limited number of queries, set by the ``pg_stat_statements.max`` GUC (default 5000)
 * To truncate the table, use the ``citus_stat_statements_reset()`` function
 
 Distributed Query Activity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-With :ref:`mx` users can execute distributed queries from any node. Examining the standard Postgres `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ view on the coordinator won't include those worker-initiated queries. Also queries might get blocked on row-level locks on one of the shards on a worker node. If that happens then those queries would not show up in `pg_locks <https://www.postgresql.org/docs/current/static/view-pg-locks.html>`_ on the Citus coordinator node.
+In some situations, queries might get blocked on row-level locks on one of the shards on a worker node. If that happens then those queries would not show up in `pg_locks <https://www.postgresql.org/docs/current/static/view-pg-locks.html>`_ on the Citus coordinator node.
 
 Citus provides special views to watch queries and locks throughout the cluster, including shard-specific queries used internally to build results for distributed queries.
 
@@ -696,7 +695,7 @@ The ``citus_lock_waits`` view shows the situation.
    waiting_node_port                     | 5432
    blocking_node_port                    | 5432
 
-In this example the queries originated on the coordinator, but the view can also list locks between queries originating on workers (executed with Citus MX for instance).
+In this example the queries originated on the coordinator, but the view can also list locks between queries originating on workers.
 
 Tables on all Nodes
 -------------------
@@ -768,33 +767,3 @@ If pool information is present, Citus will try to use these values instead of se
 
    INSERT INTO pg_dist_poolinfo (nodeid, poolinfo)
         VALUES (1, 'host=127.0.0.1 port=5433');
-
-.. _worker_shards:
-
-Shards and Indices on MX Workers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. note::
-
-   The citus_shards_on_worker and citus_shard_indexes_on_worker views are relevant in Citus MX only. In the non-MX scenario they contain no rows.
-
-Worker nodes store shards as tables that are ordinarily hidden in Citus MX (see :ref:`override_table_visibility`). The easiest way to obtain information about the shards on each worker is to consult that worker's ``citus_shards_on_worker`` view. For instance, here are some shards on a worker for the distributed table ``test_table``:
-
-.. code-block:: postgres
-
-   SELECT * FROM citus_shards_on_worker ORDER BY 2;
-    Schema |        Name        | Type  | Owner
-   --------+--------------------+-------+-------
-    public | test_table_1130000 | table | citus
-    public | test_table_1130002 | table | citus
-
-Indices for shards are also hidden, but discoverable through another view, ``citus_shard_indexes_on_worker``:
-
-.. code-block:: postgres
-
-   SELECT * FROM citus_shard_indexes_on_worker ORDER BY 2;
-    Schema |        Name        | Type  | Owner |       Table
-   --------+--------------------+-------+-------+--------------------
-    public | test_index_1130000 | index | citus | test_table_1130000
-    public | test_index_1130002 | index | citus | test_table_1130002
-
