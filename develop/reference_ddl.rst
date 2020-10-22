@@ -231,6 +231,8 @@ Attempting to do so causes an error:
   LOCATION:  ErrorIfUnsupportedAlterTableStmt, multi_utility.c:2150
   */
 
+However there's a workaround of re-creating the distributed table. See :ref:`change_dist_col`.
+
 Adding/Removing Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
