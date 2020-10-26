@@ -90,6 +90,45 @@ Example
   -- requires that argument is a distributed table
   SELECT truncate_local_data_after_distributing_table('public.github_events');
 
+.. _undistribute_table:
+
+undistribute_table
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The undistribute_table() function undoes the action of
+:ref:`create_distributed_table` or :ref:`create_reference_table`.
+Undistributing moves all data from shards back into a local table on the
+coordinator node (assuming the data can fit), then deletes the shards.
+
+Citus will not undistribute tables that have -- or are referenced by -- foreign
+keys. Before undistributing a table you must drop its foreign key constraints,
+or those in other tables pointing to it.
+
+A common use for this function is to :ref:`change_dist_col`.
+
+Arguments
+************************
+
+**table_name:** Name of the distributed or reference table to undistribute.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+
+This example distributes a ``github_events`` table and then undistributes it.
+
+.. code-block:: postgresql
+
+  -- first distribute the table
+  SELECT create_distributed_table('github_events', 'repo_id');
+
+  -- undo that and make it local again
+  SELECT undistribute_table('github_events');
+
 .. _create_reference_table:
 
 create_reference_table
