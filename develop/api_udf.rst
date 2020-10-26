@@ -119,7 +119,7 @@ N/A
 Example
 *************************
 
-This example informs the database that the github_events table should be distributed by hash on the repo_id column.
+This example distributes a ``github_events`` table and then undistributes it.
 
 .. code-block:: postgresql
 
