@@ -198,7 +198,7 @@ feature is not yet supported in distributed queries:
 
 ::
 
-  ERROR:  could not run distributed query with GROUPING SETS, CUBE, or ROLLUP
+  ERROR:  could not run distributed query with GROUPING
   HINT:  Consider using an equality filter on the distributed table's partition column.
 
 There is a trick, though. We can pull the relevant information to the coordinator as a temporary table:
