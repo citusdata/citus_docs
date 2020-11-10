@@ -44,8 +44,6 @@ Attempting to execute a JOIN between a local table "local" and a distributed tab
   /*
   ERROR:  relation local is not distributed
   STATEMENT:  SELECT * FROM local JOIN dist USING (id);
-  ERROR:  XX000: relation local is not distributed
-  LOCATION:  DistributedTableCacheEntry, metadata_cache.c:711
   */
 
 Although you can't join such tables directly, by wrapping the local table in a subquery or CTE you can make Citus' recursive query planner copy the local table data to worker nodes. By colocating the data this allows the query to proceed.
