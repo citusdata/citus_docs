@@ -227,8 +227,7 @@ Attempting to do so causes an error:
   ALTER COLUMN store_id TYPE text;
 
   /*
-  ERROR:  XX000: cannot execute ALTER TABLE command involving partition column
-  LOCATION:  ErrorIfUnsupportedAlterTableStmt, multi_utility.c:2150
+  ERROR:  cannot execute ALTER TABLE command involving partition column
   */
 
 However there's a workaround of re-creating the distributed table. See :ref:`change_dist_col`.
