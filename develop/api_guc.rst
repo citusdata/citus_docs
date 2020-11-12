@@ -73,15 +73,15 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The ``citus.node_connection_timeout`` GUC sets the maximum duration (in milliseconds) to wait for connection establishment. Citus raises an error if the timeout elapses before at least one worker connection is established. This GUC affects connections from the coordinator to workers, and workers to each other.
 
-* Default: five seconds
+* Default: thirty seconds
 * Minimum: ten milliseconds
 * Maximum: one hour
 
 .. code-block:: postgresql
 
-  -- set to 30 seconds
+  -- set to 60 seconds
   ALTER DATABASE foo
-  SET citus.node_connection_timeout = 30000;
+  SET citus.node_connection_timeout = 60000;
 
 .. _node_conninfo:
 
