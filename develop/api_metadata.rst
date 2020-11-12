@@ -228,6 +228,8 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 +------------------+----------------------+---------------------------------------------------------------------------+
 | nodecluster      |        text          | | The name of the cluster containing this node                            |
 +------------------+----------------------+---------------------------------------------------------------------------+
+| metadatasynced   |        boolean       | | Reserved for internal use.                                              |
++------------------+----------------------+---------------------------------------------------------------------------+
 | shouldhaveshards |        boolean       | | If false, shards will be moved off node (drained) when rebalancing,     |
 |                  |                      | | nor will shards from new distributed tables be placed on the node,      |
 |                  |                      | | unless they are colocated with shards already there                     |
@@ -236,11 +238,11 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 ::
 
     SELECT * from pg_dist_node;
-     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata | isactive | noderole | nodecluster | shouldhaveshards
-    --------+---------+-----------+----------+----------+-------------+----------+----------+-------------+------------------
-          1 |       1 | localhost |    12345 | default  | f           | t        | primary  | default     | t
-          2 |       2 | localhost |    12346 | default  | f           | t        | primary  | default     | t
-          3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default     | t
+     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata | isactive | noderole | nodecluster | metadatasynced | shouldhaveshards
+    --------+---------+-----------+----------+----------+-------------+----------+----------+-------------+----------------+------------------
+          1 |       1 | localhost |    12345 | default  | f           | t        | primary  | default     | f              | t
+          2 |       2 | localhost |    12346 | default  | f           | t        | primary  | default     | f              | t
+          3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default     | f              | t
     (3 rows)
 
 .. _pg_dist_object:
