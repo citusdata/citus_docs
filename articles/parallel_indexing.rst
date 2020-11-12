@@ -7,7 +7,7 @@ Indexes are an essential tool for optimizing database performance and
 are becoming ever more important with big data. However, as the volume
 of data increases, index maintenance often becomes a write bottleneck,
 especially for `advanced index
-types <https://www.postgresql.org/docs/9.6/static/textsearch-indexes.html>`__
+types <https://www.postgresql.org/docs/current/static/textsearch-indexes.html>`__
 which use a lot of CPU time for every row that gets written. Index
 creation may also become prohibitively expensive as it may take hours or
 even days to build a new index on terabytes of data in PostgreSQL. Citus makes creating and maintaining indexes that much faster through parallelization.

@@ -43,7 +43,7 @@ distributed nodes.
 For HA, any data that is written to a primary database called the Writer
 is instantly replicated onto a secondary database called the Reader in
 real-time, through a stream called a
-`WAL <https://www.postgresql.org/docs/9.4/static/wal-intro.html>`__ or
+`WAL <https://www.postgresql.org/docs/current/static/wal-intro.html>`__ or
 Write-Ahead-Log.
 
 To ensure HA is functioning properly, Citus Cloud runs health checks
