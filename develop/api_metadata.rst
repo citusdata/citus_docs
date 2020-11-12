@@ -121,6 +121,8 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
 +================+======================+===========================================================================+
+| placementid    |       bigint         | | Unique auto-generated identifier for each individual placement.         |
++----------------+----------------------+---------------------------------------------------------------------------+
 | shardid        |       bigint         | | Shard identifier associated with this placement. This value references  |
 |                |                      | | the shardid column in the pg_dist_shard catalog table.                  |
 +----------------+----------------------+---------------------------------------------------------------------------+ 
@@ -131,8 +133,6 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 |                |                      | | worker node in bytes.                                                   |
 |                |                      | | For hash distributed tables, zero.                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| placementid    |       bigint         | | Unique auto-generated identifier for each individual placement.         |
-+----------------+----------------------+---------------------------------------------------------------------------+
 | groupid        |         int          | | Identifier used to denote a group of one primary server and zero or more|
 |                |                      | | secondary servers, when the streaming replication model is used.        |
 +----------------+----------------------+---------------------------------------------------------------------------+
@@ -140,15 +140,15 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 ::
 
   SELECT * from pg_dist_placement;
-    shardid | shardstate | shardlength | placementid | groupid
-   ---------+------------+-------------+-------------+---------
-     102008 |          1 |           0 |           1 |       1
-     102008 |          1 |           0 |           2 |       2
-     102009 |          1 |           0 |           3 |       2
-     102009 |          1 |           0 |           4 |       3
-     102010 |          1 |           0 |           5 |       3
-     102010 |          1 |           0 |           6 |       4
-     102011 |          1 |           0 |           7 |       4
+    placementid | shardid | shardstate | shardlength | groupid
+   -------------+---------+------------+-------------+---------
+              1 |  102008 |          1 |           0 |       1
+              2 |  102008 |          1 |           0 |       2
+              3 |  102009 |          1 |           0 |       2
+              4 |  102009 |          1 |           0 |       3
+              5 |  102010 |          1 |           0 |       3
+              6 |  102010 |          1 |           0 |       4
+              7 |  102011 |          1 |           0 |       4
 
 .. note::
 
