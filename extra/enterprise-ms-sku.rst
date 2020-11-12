@@ -141,9 +141,9 @@ Debian/Ubuntu
 .. code:: bash
 
     sudo apt-get update
-    # Change to postgresql-11-citus-enterprise-9.4 if you want to install Citus for
+    # Change to postgresql-11-citus-enterprise-9.5 if you want to install Citus for
     # PostgreSQL 11
-    sudo apt-get install -y postgresql-12-citus-enterprise-9.4
+    sudo apt-get install -y postgresql-12-citus-enterprise-9.5
 
 Redhat/CentOS
 ~~~~~~~~~~~~~
@@ -153,8 +153,8 @@ remove the old package
 
 .. code:: bash
 
-    # Change to citus-enterprise94_11 for PostgreSQL 11)
-    sudo yum install -y citus-enterprise94_12
+    # Change to citus-enterprise95_11 for PostgreSQL 11)
+    sudo yum install -y citus-enterprise95_12
 
 .. _sku_setup:
 

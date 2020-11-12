@@ -447,7 +447,7 @@ Resource Conservation
 Limiting Long-Running Queries
 -----------------------------
 
-Long running queries can hold locks, queue up WAL, or just consume a lot of system resources, so in a production environment it's good to prevent them from running too long. You can set the `statement_timeout <https://www.postgresql.org/docs/10/static/runtime-config-client.html#GUC-STATEMENT-TIMEOUT>`_ parameter on the coordinator and workers to cancel queries that run too long.
+Long running queries can hold locks, queue up WAL, or just consume a lot of system resources, so in a production environment it's good to prevent them from running too long. You can set the `statement_timeout <https://www.postgresql.org/docs/current/static/runtime-config-client.html#GUC-STATEMENT-TIMEOUT>`_ parameter on the coordinator and workers to cancel queries that run too long.
 
 .. code-block:: postgres
 

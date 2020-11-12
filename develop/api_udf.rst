@@ -1457,7 +1457,7 @@ Create a new shard to hold the lineitems for tenant 135:
 citus_create_restore_point
 $$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Temporarily blocks writes to the cluster, and creates a named restore point on all nodes. This function is similar to `pg_create_restore_point <https://www.postgresql.org/docs/10/static/functions-admin.html#FUNCTIONS-ADMIN-BACKUP>`_, but applies to all nodes and makes sure the restore point is consistent across them. This function is well suited to doing point-in-time recovery, and cluster forking.
+Temporarily blocks writes to the cluster, and creates a named restore point on all nodes. This function is similar to `pg_create_restore_point <https://www.postgresql.org/docs/current/static/functions-admin.html#FUNCTIONS-ADMIN-BACKUP>`_, but applies to all nodes and makes sure the restore point is consistent across them. This function is well suited to doing point-in-time recovery, and cluster forking.
 
 Arguments
 *************************
