@@ -99,6 +99,9 @@ The :code:`create_distributed_table` function described earlier works on both em
   CREATE TABLE series AS SELECT i FROM generate_series(1,1000000) i;
   SELECT create_distributed_table('series', 'i');
   NOTICE:  Copying data from local table...
+  NOTICE:  copying the data has completed
+  DETAIL:  The local data in the table is no longer visible, but is still on disk.
+  HINT:  To remove the local data, run: SELECT truncate_local_data_after_distributing_table($$public.series$$)
    create_distributed_table
    --------------------------
 
