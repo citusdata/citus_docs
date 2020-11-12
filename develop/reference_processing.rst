@@ -57,7 +57,7 @@ For example, having subqueries in a WHERE clause sometimes cannot execute inline
   )
   GROUP BY page_id;
 
-The executor would like to run a fragment of this query against each shard by page_id, counting distinct host_ips, and combining the results on the coordinator. However the LIMIT in the subquery means the subquery cannot be executed as part of the fragment. By recursively planning the query Citus can run the subquery separately, push the results to all workers, run the main fragment query, and pull the results back to the coordinator. The "push-pull" design supports a subqueries like the one above.
+The executor would like to run a fragment of this query against each shard by page_id, counting distinct host_ips, and combining the results on the coordinator. However the LIMIT in the subquery means the subquery cannot be executed as part of the fragment. By recursively planning the query Citus can run the subquery separately, push the results to all workers, run the main fragment query, and pull the results back to the coordinator. The "push-pull" design supports subqueries like the one above.
 
 Let's see this in action by reviewing the `EXPLAIN <https://www.postgresql.org/docs/current/static/sql-explain.html>`_ output for this query. It's fairly involved:
 

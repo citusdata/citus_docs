@@ -223,7 +223,7 @@ Attempting to do so causes an error:
 
 .. code-block:: postgres
 
-  -- assumining store_id is the distribution column
+  -- assuming store_id is the distribution column
   -- for products, and that it has type integer
 
   ALTER TABLE products

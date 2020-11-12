@@ -49,7 +49,7 @@ Citus also supports ``INSERT … SELECT`` statements -- which insert rows based 
 
 In Citus there are three ways that inserting from a select statement can happen. The first is if the source tables and destination table are :ref:`colocated <colocation>`, and the select/insert statements both include the distribution column. In this case Citus can push the ``INSERT … SELECT`` statement down for parallel execution on all nodes.
 
-The second way of executing an ``INSERT … SELECT`` statement is by repartioning the results of the result set into chunks, and sending those chunks among workers to matching destination table shards. Each worker node can insert the values into local destination shards.
+The second way of executing an ``INSERT … SELECT`` statement is by repartitioning the results of the result set into chunks, and sending those chunks among workers to matching destination table shards. Each worker node can insert the values into local destination shards.
 
 The repartitioning optimization can happen when the SELECT query doesn't require a merge step on the coordinator. It doesn't work with the following SQL features, which require a merge step:
 
@@ -57,7 +57,7 @@ The repartitioning optimization can happen when the SELECT query doesn't require
 * LIMIT
 * OFFSET
 * GROUP BY when distribution column is not part of the group key
-* Window functions when partition by a non-distribution column in the source table(s)
+* Window functions when partitioning by a non-distribution column in the source table(s)
 * Joins between non-colocated tables (i.e. repartition joins)
 
 When the source and destination tables are not colocated, and the repartition optimization cannot be applied, then Citus uses the third way of executing ``INSERT … SELECT``. It selects the results from worker nodes, and pulls the data up to the coordinator node. The coordinator redirects rows back down to the appropriate shard. Because all the data must pass through a single node, this method is not as efficient.

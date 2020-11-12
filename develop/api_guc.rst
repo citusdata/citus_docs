@@ -165,7 +165,7 @@ Sets the commit protocol to use when performing COPY on a hash distributed table
 
 * **2pc:** (default) The transactions in which COPY is performed on the shard placements are first prepared using PostgreSQL's `two-phase commit <http://www.postgresql.org/docs/current/static/sql-prepare-transaction.html>`_ and then committed. Failed commits can be manually recovered or aborted using COMMIT PREPARED or ROLLBACK PREPARED, respectively. When using 2pc, `max_prepared_transactions <http://www.postgresql.org/docs/current/static/runtime-config-resource.html>`_ should be increased on all the workers, typically to the same value as max_connections.
 
-* **1pc:** The transactions in which COPY is performed on the shard placements is committed in a single round. Data may be lost if a commit fails after COPY succeeds on all placements (rare).
+* **1pc:** The transactions in which COPY is performed on the shard placements are committed in a single round. Data may be lost if a commit fails after COPY succeeds on all placements (rare).
 
 .. _replication_factor:
 
@@ -212,7 +212,7 @@ there are large reference tables.
 
 You can defer reference table replication by setting the
 ``citus.replicate_reference_tables_on_activate`` GUC to 'off'. Reference table
-replication will then happen we create new shards on the node. For instance,
+replication will then happen when we create new shards on the node. For instance,
 when calling :ref:`create_distributed_table`, :ref:`create_reference_table`,
 :ref:`upgrade_to_reference_table`, or when the shard rebalancer moves shards to
 the new node.
@@ -443,7 +443,7 @@ enabled, the executor might choose to use fewer connections to optimize overall
 query execution throughput. Internally, setting this true will end up using one
 connection per task.
 
-Once place where this is useful is in a transaction whose first query is
+One place where this is useful is in a transaction whose first query is
 lightweight and requires few connections, while a subsequent query would
 benefit from more connections. Citus decides how many connections to use in a
 transaction based on the first statement, which can throttle other queries

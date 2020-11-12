@@ -180,7 +180,7 @@ In our :ref:`real-time analytics tutorial <real_time_analytics_tutorial>` we
 created a table called :code:`github_events`, distributed by the column
 :code:`user_id`. Let's query it and find the earliest events for a preselected
 set of repos, grouped by combinations of event type and event publicity. A
-convenient way to do this is with gouping sets. However, as mentioned, this
+convenient way to do this is with grouping sets. However, as mentioned, this
 feature is not yet supported in distributed queries:
 
 .. code-block:: sql
