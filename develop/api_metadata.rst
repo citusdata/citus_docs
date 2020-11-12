@@ -334,25 +334,28 @@ Co-location group table
 
 The pg_dist_colocation table contains information about which tables' shards should be placed together, or :ref:`co-located <colocation>`. When two tables are in the same co-location group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard co-location is inferred when the shard counts, replication factors, and partition column types all match between two tables; however, a custom co-location group may be specified when creating a distributed table, if so desired.
 
-+------------------------+----------------------+---------------------------------------------------------------------------+
-|      Name              |         Type         |       Description                                                         |
-+========================+======================+===========================================================================+
-| colocationid           |         int          | | Unique identifier for the co-location group this row corresponds to.    |
-+------------------------+----------------------+---------------------------------------------------------------------------+
-| shardcount             |         int          | | Shard count for all tables in this co-location group                    |
-+------------------------+----------------------+---------------------------------------------------------------------------+
-| replicationfactor      |         int          | | Replication factor for all tables in this co-location group.            |
-+------------------------+----------------------+---------------------------------------------------------------------------+
-| distributioncolumntype |         oid          | | The type of the distribution column for all tables in this              |
-|                        |                      | | co-location group.                                                      |
-+------------------------+----------------------+---------------------------------------------------------------------------+
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+|      Name                   |         Type         |       Description                                                         |
++=============================+======================+===========================================================================+
+| colocationid                |         int          | | Unique identifier for the co-location group this row corresponds to.    |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+| shardcount                  |         int          | | Shard count for all tables in this co-location group                    |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+| replicationfactor           |         int          | | Replication factor for all tables in this co-location group.            |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+| distributioncolumntype      |         oid          | | The type of the distribution column for all tables in this              |
+|                             |                      | | co-location group.                                                      |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+| distributioncolumncollation |         oid          | | The collation of the distribution column for all tables in this         |
+|                             |                      | | co-location group.                                                      |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
     SELECT * from pg_dist_colocation;
-      colocationid | shardcount | replicationfactor | distributioncolumntype 
-     --------------+------------+-------------------+------------------------
-                 2 |         32 |                 2 |                     20
+      colocationid | shardcount | replicationfactor | distributioncolumntype | distributioncolumncollation
+     --------------+------------+-------------------+------------------------+-----------------------------
+                 2 |         32 |                 2 |                     20 |                           0
       (1 row)
 
 .. _pg_dist_rebalance_strategy:
