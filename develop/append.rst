@@ -229,7 +229,7 @@ COPY creates new shards every time it is used, which allows many files to be ing
 
     -- Prepare a staging table
     CREATE TABLE stage_1 (LIKE events);
-    \COPY stage_1 FROM 'path-to-csv-file WITH CSV
+    \COPY stage_1 FROM 'path-to-csv-file' WITH CSV
 
     -- In a separate transaction, append the staging table
     SELECT master_append_table_to_shard(select_events_shard(), 'stage_1', 'coordinator-host', 5432);

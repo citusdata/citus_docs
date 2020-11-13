@@ -44,8 +44,6 @@ Attempting to execute a JOIN between a local table "local" and a distributed tab
   /*
   ERROR:  relation local is not distributed
   STATEMENT:  SELECT * FROM local JOIN dist USING (id);
-  ERROR:  XX000: relation local is not distributed
-  LOCATION:  DistributedTableCacheEntry, metadata_cache.c:711
   */
 
 Although you can't join such tables directly, by wrapping the local table in a subquery or CTE you can make Citus' recursive query planner copy the local table data to worker nodes. By colocating the data this allows the query to proceed.
@@ -182,7 +180,7 @@ In our :ref:`real-time analytics tutorial <real_time_analytics_tutorial>` we
 created a table called :code:`github_events`, distributed by the column
 :code:`user_id`. Let's query it and find the earliest events for a preselected
 set of repos, grouped by combinations of event type and event publicity. A
-convenient way to do this is with gouping sets. However, as mentioned, this
+convenient way to do this is with grouping sets. However, as mentioned, this
 feature is not yet supported in distributed queries:
 
 .. code-block:: sql
@@ -198,7 +196,7 @@ feature is not yet supported in distributed queries:
 
 ::
 
-  ERROR:  could not run distributed query with GROUPING SETS, CUBE, or ROLLUP
+  ERROR:  could not run distributed query with GROUPING
   HINT:  Consider using an equality filter on the distributed table's partition column.
 
 There is a trick, though. We can pull the relevant information to the coordinator as a temporary table:

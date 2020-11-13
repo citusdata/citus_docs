@@ -57,7 +57,7 @@ The tricky thing with this pattern is that in order to find all tasks for an acc
 1. Introducing the tenant column to models belonging to an account
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**1.1 Introducting the column to models belonging to an account**
+**1.1 Introducing the column to models belonging to an account**
 
 In order to scale out a multi-tenant model, it’s essential for queries to quickly
 locate all records that belong to an account. Consider an ORM call such as:
@@ -265,7 +265,7 @@ Then generate the migration with:
 
   python manage.py makemigrations
 
-Some ``UNIQUE`` constraints are created by the ORM and you will need to explicitily drop them.
+Some ``UNIQUE`` constraints are created by the ORM and you will need to explicitly drop them.
 This is the case for ``OneToOneField`` and ``ManyToMany`` fields.
 
 For these cases you will need to:
@@ -329,7 +329,7 @@ In requirements.txt for your Django application, add
 
 Run ``pip install -r requirements.txt``.
 
-In settings.py, change the database engine to the customized engine provied by django-multitenant:
+In settings.py, change the database engine to the customized engine provided by django-multitenant:
 
 .. code-block:: python
 
@@ -493,7 +493,7 @@ At this point the Django application models are ready to work with a Citus backe
 Updating the Django Application to scope queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The django-multitenant library discussed in the previous section is not only useful for migrations, but for simplifying application queries. The library allows application code to easily scope queries to a single tenant. It automatically adds the correct SQL filters to all statements, including fetching objects through relations.
+The django-multitenant library discussed in the previous section is not only useful for migrations, but also for simplifying application queries. The library allows application code to easily scope queries to a single tenant. It automatically adds the correct SQL filters to all statements, including fetching objects through relations.
 
 For instance, in a view simply ``set_current_tenant`` and all the queries or joins afterward will include a filter to scope results to a single tenant.
 
@@ -506,7 +506,7 @@ For instance, in a view simply ``set_current_tenant`` and all the queries or joi
   # now this count query applies only to Project for that account
   Project.objects.count()
 
-  # Find tasks for very import projects in the current account
+  # Find tasks for very important projects in the current account
   Task.objects.filter(project__name='Very important project')
 
 In the context of an application view, the current tenant object can be stored as a SESSION variable when a user logs in, and view actions can :code:`set_current_tenant` to this value. See the README in django-multitenant for more examples.

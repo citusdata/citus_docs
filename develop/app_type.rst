@@ -19,7 +19,7 @@ At a Glance
 +----------------------------------------------------------+-------------------------------------------------------+
 | OLTP workloads for serving web clients                   | High ingest volume of mostly immutable data           |
 +----------------------------------------------------------+-------------------------------------------------------+
-| OLAP workloads that serve per-tenant analytical queries  | Often centering around big table of events            |
+| OLAP workloads that serve per-tenant analytical queries  | Often centering around a big table of events          |
 +----------------------------------------------------------+-------------------------------------------------------+
 
 Examples and Characteristics

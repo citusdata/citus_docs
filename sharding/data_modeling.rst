@@ -7,7 +7,7 @@ Citus uses the distribution column in distributed tables to assign table rows to
 
 If the distribution columns are chosen correctly, then related data will group together on the same physical nodes, making queries fast and adding support for all SQL features. If the columns are chosen incorrectly, the system will run needlessly slowly, and won't be able to support all SQL features across nodes.
 
-This section gives distribution column tips for the two most common Citus scenarios. It concludes by going in depth on "co-location," the desirable grouping of data on nodes.
+This section gives distribution column tips for the two most common Citus scenarios. It concludes by going in-depth on "co-location," the desirable grouping of data on nodes.
 
 .. _distributing_by_tenant_id:
 
@@ -151,7 +151,7 @@ If our data was in a single PostgreSQL node, we could easily express our query u
   GROUP BY page_id;
 
 
-As long as the `working set <https://en.wikipedia.org/wiki/Working_set>`_ for this query fits in memory, this is an appropriate solution for many application since it offers maximum flexibility. However, even if you don’t need to scale yet, it can be useful to consider the implications of scaling out on your data model.
+As long as the `working set <https://en.wikipedia.org/wiki/Working_set>`_ for this query fits in memory, this is an appropriate solution for many applications since it offers maximum flexibility. However, even if you don’t need to scale yet, it can be useful to consider the implications of scaling out on your data model.
 
 Distributing tables by ID
 ^^^^^^^^^^^^^^^^^^^^^^^^^

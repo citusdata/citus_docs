@@ -89,7 +89,7 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
   SELECT create_distributed_table('little_vals', 'key');
   SELECT create_distributed_table('big_vals',    'key');
 
-  -- We want to synchronise them so that every time little_vals
+  -- We want to synchronize them so that every time little_vals
   -- are created, big_vals appear with double the value
   --
   -- First we make a trigger function on each worker, which will
