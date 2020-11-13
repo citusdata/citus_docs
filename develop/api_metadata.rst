@@ -346,8 +346,8 @@ The pg_dist_colocation table contains information about which tables' shards sho
 | distributioncolumntype      |         oid          | | The type of the distribution column for all tables in this              |
 |                             |                      | | co-location group.                                                      |
 +-----------------------------+----------------------+---------------------------------------------------------------------------+
-| distributioncolumncollation |         oid          | | The collation of the distribution column for all tables in this         |
-|                             |                      | | co-location group.                                                      |
+| distributioncolumncollation |         oid          | | The collation of the distribution column for all tables in              |
+|                             |                      | | this co-location group.                                                 |
 +-----------------------------+----------------------+---------------------------------------------------------------------------+
 
 ::
