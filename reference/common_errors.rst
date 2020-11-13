@@ -114,9 +114,8 @@ When all available worker connection slots are in use, further connections will 
 ::
 
   WARNING:  08006: connection error: hostname:5432
-  ERROR:  XX000: could not connect to any active placements
+  ERROR:  could not connect to any active placements
   DETAIL:  FATAL:  sorry, too many clients already
-  LOCATION:  OpenCopyConnections, multi_copy.c:884
 
 Resolution
 ~~~~~~~~~~
