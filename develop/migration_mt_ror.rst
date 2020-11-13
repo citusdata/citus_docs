@@ -236,7 +236,7 @@ Updating the Test Suite
 If the test suite for your Rails application uses the
 ``database_cleaner`` gem to reset the test database between
 runs, be sure to use the "truncation" strategy rather than
-"transaction." We have seen occassional failures during transaction
+"transaction." We have seen occasional failures during transaction
 rollbacks in the tests. The database_cleaner `documentation
 <https://www.rubydoc.info/gems/database_cleaner#How_to_use>`_ has
 instructions for changing the cleaning strategy.

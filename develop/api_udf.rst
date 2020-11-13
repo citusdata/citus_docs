@@ -176,7 +176,7 @@ Failing this, Citus will raise an error. For instance, attempting to colocate ta
 
 ::
 
-  ERROR:  XX000: cannot colocate tables apples and oranges
+  ERROR:  cannot colocate tables apples and oranges
   DETAIL:  Distribution column types don't match for apples and oranges.
 
 Return Value

@@ -121,6 +121,8 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
 +================+======================+===========================================================================+
+| placementid    |       bigint         | | Unique auto-generated identifier for each individual placement.         |
++----------------+----------------------+---------------------------------------------------------------------------+
 | shardid        |       bigint         | | Shard identifier associated with this placement. This value references  |
 |                |                      | | the shardid column in the pg_dist_shard catalog table.                  |
 +----------------+----------------------+---------------------------------------------------------------------------+ 
@@ -131,8 +133,6 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 |                |                      | | worker node in bytes.                                                   |
 |                |                      | | For hash distributed tables, zero.                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| placementid    |       bigint         | | Unique auto-generated identifier for each individual placement.         |
-+----------------+----------------------+---------------------------------------------------------------------------+
 | groupid        |         int          | | Identifier used to denote a group of one primary server and zero or more|
 |                |                      | | secondary servers, when the streaming replication model is used.        |
 +----------------+----------------------+---------------------------------------------------------------------------+
@@ -140,15 +140,15 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 ::
 
   SELECT * from pg_dist_placement;
-    shardid | shardstate | shardlength | placementid | groupid
-   ---------+------------+-------------+-------------+---------
-     102008 |          1 |           0 |           1 |       1
-     102008 |          1 |           0 |           2 |       2
-     102009 |          1 |           0 |           3 |       2
-     102009 |          1 |           0 |           4 |       3
-     102010 |          1 |           0 |           5 |       3
-     102010 |          1 |           0 |           6 |       4
-     102011 |          1 |           0 |           7 |       4
+    placementid | shardid | shardstate | shardlength | groupid
+   -------------+---------+------------+-------------+---------
+              1 |  102008 |          1 |           0 |       1
+              2 |  102008 |          1 |           0 |       2
+              3 |  102009 |          1 |           0 |       2
+              4 |  102009 |          1 |           0 |       3
+              5 |  102010 |          1 |           0 |       3
+              6 |  102010 |          1 |           0 |       4
+              7 |  102011 |          1 |           0 |       4
 
 .. note::
 
@@ -228,6 +228,8 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 +------------------+----------------------+---------------------------------------------------------------------------+
 | nodecluster      |        text          | | The name of the cluster containing this node                            |
 +------------------+----------------------+---------------------------------------------------------------------------+
+| metadatasynced   |        boolean       | | Reserved for internal use.                                              |
++------------------+----------------------+---------------------------------------------------------------------------+
 | shouldhaveshards |        boolean       | | If false, shards will be moved off node (drained) when rebalancing,     |
 |                  |                      | | nor will shards from new distributed tables be placed on the node,      |
 |                  |                      | | unless they are colocated with shards already there                     |
@@ -236,11 +238,11 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 ::
 
     SELECT * from pg_dist_node;
-     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata | isactive | noderole | nodecluster | shouldhaveshards
-    --------+---------+-----------+----------+----------+-------------+----------+----------+-------------+------------------
-          1 |       1 | localhost |    12345 | default  | f           | t        | primary  | default     | t
-          2 |       2 | localhost |    12346 | default  | f           | t        | primary  | default     | t
-          3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default     | t
+     nodeid | groupid | nodename  | nodeport | noderack | hasmetadata | isactive | noderole | nodecluster | metadatasynced | shouldhaveshards
+    --------+---------+-----------+----------+----------+-------------+----------+----------+-------------+----------------+------------------
+          1 |       1 | localhost |    12345 | default  | f           | t        | primary  | default     | f              | t
+          2 |       2 | localhost |    12346 | default  | f           | t        | primary  | default     | f              | t
+          3 |       3 | localhost |    12347 | default  | f           | t        | primary  | default     | f              | t
     (3 rows)
 
 .. _pg_dist_object:
@@ -332,25 +334,28 @@ Co-location group table
 
 The pg_dist_colocation table contains information about which tables' shards should be placed together, or :ref:`co-located <colocation>`. When two tables are in the same co-location group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard co-location is inferred when the shard counts, replication factors, and partition column types all match between two tables; however, a custom co-location group may be specified when creating a distributed table, if so desired.
 
-+------------------------+----------------------+---------------------------------------------------------------------------+
-|      Name              |         Type         |       Description                                                         |
-+========================+======================+===========================================================================+
-| colocationid           |         int          | | Unique identifier for the co-location group this row corresponds to.    |
-+------------------------+----------------------+---------------------------------------------------------------------------+
-| shardcount             |         int          | | Shard count for all tables in this co-location group                    |
-+------------------------+----------------------+---------------------------------------------------------------------------+
-| replicationfactor      |         int          | | Replication factor for all tables in this co-location group.            |
-+------------------------+----------------------+---------------------------------------------------------------------------+
-| distributioncolumntype |         oid          | | The type of the distribution column for all tables in this              |
-|                        |                      | | co-location group.                                                      |
-+------------------------+----------------------+---------------------------------------------------------------------------+
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+|      Name                   |         Type         |       Description                                                         |
++=============================+======================+===========================================================================+
+| colocationid                |         int          | | Unique identifier for the co-location group this row corresponds to.    |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+| shardcount                  |         int          | | Shard count for all tables in this co-location group                    |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+| replicationfactor           |         int          | | Replication factor for all tables in this co-location group.            |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+| distributioncolumntype      |         oid          | | The type of the distribution column for all tables in this              |
+|                             |                      | | co-location group.                                                      |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
+| distributioncolumncollation |         oid          | | The collation of the distribution column for all tables in              |
+|                             |                      | | this co-location group.                                                 |
++-----------------------------+----------------------+---------------------------------------------------------------------------+
 
 ::
 
     SELECT * from pg_dist_colocation;
-      colocationid | shardcount | replicationfactor | distributioncolumntype 
-     --------------+------------+-------------------+------------------------
-                 2 |         32 |                 2 |                     20
+      colocationid | shardcount | replicationfactor | distributioncolumntype | distributioncolumncollation
+     --------------+------------+-------------------+------------------------+-----------------------------
+                 2 |         32 |                 2 |                     20 |                           0
       (1 row)
 
 .. _pg_dist_rebalance_strategy:
@@ -574,7 +579,7 @@ Citus provides special views to watch queries and locks throughout the cluster, 
 * **citus_worker_stat_activity**: shows queries on workers, including fragment queries against individual shards.
 * **citus_lock_waits**: Blocked queries throughout the cluster.
 
-The first two views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the host host/port of the worker that initiated the query and the host/port of the coordinator node of the cluster.
+The first two views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the host/port of the worker that initiated the query and the host/port of the coordinator node of the cluster.
 
 For example, consider counting the rows in a distributed table:
 
