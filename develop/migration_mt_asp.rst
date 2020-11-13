@@ -48,7 +48,7 @@ in the ``tenants`` table. You could also look up tenants by subdomain
 (or any other scheme you want).
 
 Notice how the ``tenant_id`` is also stored in the ``questions``
-table?  This will make it possible to :ref:`colocate <colocation>` the
+table. This will make it possible to :ref:`colocate <colocation>` the
 data. With the tables created, use ``create_distributed table`` to tell
 Citus to shard on the tenant ID:
 

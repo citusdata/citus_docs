@@ -99,6 +99,9 @@ The :code:`create_distributed_table` function described earlier works on both em
   CREATE TABLE series AS SELECT i FROM generate_series(1,1000000) i;
   SELECT create_distributed_table('series', 'i');
   NOTICE:  Copying data from local table...
+  NOTICE:  copying the data has completed
+  DETAIL:  The local data in the table is no longer visible, but is still on disk.
+  HINT:  To remove the local data, run: SELECT truncate_local_data_after_distributing_table($$public.series$$)
    create_distributed_table
    --------------------------
 
@@ -220,15 +223,14 @@ Attempting to do so causes an error:
 
 .. code-block:: postgres
 
-  -- assumining store_id is the distribution column
+  -- assuming store_id is the distribution column
   -- for products, and that it has type integer
 
   ALTER TABLE products
   ALTER COLUMN store_id TYPE text;
 
   /*
-  ERROR:  XX000: cannot execute ALTER TABLE command involving partition column
-  LOCATION:  ErrorIfUnsupportedAlterTableStmt, multi_utility.c:2150
+  ERROR:  cannot execute ALTER TABLE command involving partition column
   */
 
 However there's a workaround of re-creating the distributed table. See :ref:`change_dist_col`.
