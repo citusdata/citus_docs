@@ -7,7 +7,7 @@ Fedora, CentOS, or Red Hat
 
 This section describes the steps needed to set up a single-node Citus cluster on your own Linux machine from RPM packages.
 
-**1. Install PostgreSQL 12 and the Citus extension**
+**1. Install PostgreSQL 13 and the Citus extension**
 
 ::
 
@@ -15,7 +15,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
   curl https://install.citusdata.com/community/rpm.sh | sudo bash
 
   # install Citus extension
-  sudo yum install -y citus95_12
+  sudo yum install -y citus95_13
 
 .. _post_install:
 
@@ -31,7 +31,7 @@ Let's create directories for those nodes to store their data. For convenience in
   sudo su - postgres
 
   # include path to postgres binaries
-  export PATH=$PATH:/usr/pgsql-12/bin
+  export PATH=$PATH:/usr/pgsql-13/bin
 
   cd ~
   mkdir -p citus/coordinator citus/worker1 citus/worker2
