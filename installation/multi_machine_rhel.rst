@@ -26,13 +26,13 @@ Steps to be executed on all nodes
 ::
 
   # install PostgreSQL with Citus extension
-  sudo yum install -y citus95_12
+  sudo yum install -y citus95_13
   # initialize system database (using RHEL 6 vs 7 method as necessary)
-  sudo service postgresql-12 initdb || sudo /usr/pgsql-12/bin/postgresql-12-setup initdb
+  sudo service postgresql-13 initdb || sudo /usr/pgsql-13/bin/postgresql-13-setup initdb
   # preload citus extension
-  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/12/data/postgresql.conf
+  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/13/data/postgresql.conf
 
-PostgreSQL adds version-specific binaries in `/usr/pgsql-12/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
+PostgreSQL adds version-specific binaries in `/usr/pgsql-13/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
 
 .. _post_enterprise_rhel:
 
@@ -42,7 +42,7 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo vi /var/lib/pgsql/12/data/postgresql.conf
+  sudo vi /var/lib/pgsql/13/data/postgresql.conf
 
 ::
 
@@ -51,7 +51,7 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo vi /var/lib/pgsql/12/data/pg_hba.conf
+  sudo vi /var/lib/pgsql/13/data/pg_hba.conf
 
 ::
 
@@ -71,9 +71,9 @@ Before starting the database let's change its access permissions. By default the
 ::
 
   # start the db server
-  sudo service postgresql-12 restart
+  sudo service postgresql-13 restart
   # and make it start automatically when computer does
-  sudo chkconfig postgresql-12 on
+  sudo chkconfig postgresql-13 on
 
 You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
 

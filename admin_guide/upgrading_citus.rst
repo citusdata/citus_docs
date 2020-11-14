@@ -15,22 +15,22 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 9.5 is currently installed on Postgres 12:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 9.5 is currently installed on Postgres 13:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-12-citus-9.5
+  sudo apt-get install --only-upgrade postgresql-13-citus-9.5
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus95_12
-  sudo service postgresql-12 restart
+  sudo yum update citus95_13
+  sudo service postgresql-13 restart
 
 .. _major_minor_upgrade:
 
