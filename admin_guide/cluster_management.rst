@@ -740,32 +740,26 @@ Creating a New Database
 
 Each PostgreSQL server can hold `multiple databases <https://www.postgresql.org/docs/current/static/manage-ag-overview.html>`_. However new databases do not inherit the extensions of any others; all desired extensions must be added afresh. To run Citus on a new database, you'll need to create the database on the coordinator and workers, create the Citus extension within that database, and register the workers in the coordinator database.
 
-On an existing database on the coordinator run:
+Connect to each of the worker nodes and run:
 
 .. code-block:: psql
 
-  -- create the new db on coordinator and workers
+  -- on every worker node
+
   CREATE DATABASE newbie;
-  SELECT run_command_on_workers('CREATE DATABASE newbie;');
-
-  -- review the worker nodes registered in current db
-  SELECT * FROM master_get_active_worker_nodes();
-
-  -- switch to new db on coordinator
   \c newbie
-
-  -- create citus extension in new db
   CREATE EXTENSION citus;
 
-  -- register workers in new db
+Then, on the coordinator:
+
+.. code-block:: psql
+
+  CREATE DATABASE newbie;
+  \c newbie
+  CREATE EXTENSION citus;
+
   SELECT * from master_add_node('node-name', 5432);
   SELECT * from master_add_node('node-name2', 5432);
-  -- ... for each of them
-
-In the new db on every worker, manually run:
-
-.. code-block:: postgresql
-
-  CREATE EXTENSION citus;
+  -- ... for all of them
 
 Now the new database will be operating as another Citus cluster.
