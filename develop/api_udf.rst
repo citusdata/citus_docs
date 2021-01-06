@@ -473,6 +473,10 @@ Metadata / Configuration Information
 master_add_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+.. note::
+
+    This function requires database superuser access to run.
+
 The master_add_node() function registers a new node addition in the cluster in
 the Citus metadata table pg_dist_node. It also copies reference tables to the new node.
 
@@ -510,6 +514,10 @@ Example
 
 master_update_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+    This function requires database superuser access to run.
 
 The master_update_node() function changes the hostname and port for a node registered in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`.
 
@@ -569,6 +577,10 @@ Example
 master_add_inactive_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+.. note::
+
+    This function requires database superuser access to run.
+
 The :code:`master_add_inactive_node` function, similar to :ref:`master_add_node`,
 registers a new node in :code:`pg_dist_node`. However it marks the new
 node as inactive, meaning no shards will be placed there. Also it does
@@ -609,6 +621,10 @@ Example
 master_activate_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+.. note::
+
+    This function requires database superuser access to run.
+
 The :code:`master_activate_node` function marks a node as active in the
 Citus metadata table :code:`pg_dist_node` and copies reference tables to
 the node. Useful for nodes added via :ref:`master_add_inactive_node`.
@@ -638,6 +654,10 @@ Example
 
 master_disable_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+    This function requires database superuser access to run.
 
 The :code:`master_disable_node` function is the opposite of
 :code:`master_activate_node`. It marks a node as inactive in
@@ -669,6 +689,10 @@ Example
 
 master_add_secondary_node
 $$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+    This function requires database superuser access to run.
 
 The master_add_secondary_node() function registers a new secondary
 node in the cluster for an existing primary node. It updates the Citus
@@ -706,6 +730,10 @@ Example
 
 master_remove_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+    This function requires database superuser access to run.
 
 The master_remove_node() function removes the specified node from the
 pg_dist_node metadata table. This function will error out if there
