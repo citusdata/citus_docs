@@ -153,6 +153,8 @@ Welcome to the documentation for Citus 9.5! Citus horizontally scales PostgreSQL
   :width: 0%
 .. image:: images/logo.png
   :width: 0%
+.. image:: images/citus-docs-og-logo.png
+  :width: 0%
 .. image:: images/cloud-bill-credit.png
   :width: 0%
 .. image:: images/cloud-bill-ach.png
