@@ -62,6 +62,9 @@
   {% if pagename in canonical_urls %}
     <link rel="canonical" href="{{ canonical_urls[pagename] }}" />
   {% endif %}
+
+  {# Open Graph metadata #}
+  <meta property="og:image" content="https://docs.citusdata.com/_images/citus-docs-og-logo.png" />
 {% endblock %}
 
 {% block sidebartitle %}
