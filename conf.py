@@ -49,7 +49,7 @@ master_doc = 'index'
 
 from datetime import date
 # General information about the project.
-project = u'Citus Docs'
+project = u'Citus'
 copyright = u'%s, Citus Data, a Microsoft Company' % date.today().year
 author = u'Citus Data'
 
