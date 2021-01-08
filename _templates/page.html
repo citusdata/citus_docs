@@ -64,7 +64,9 @@
   {% endif %}
 
   {# Open Graph metadata #}
-  <meta property="og:image" content="https://docs.citusdata.com/_images/citus-docs-og-logo.png" />
+  <meta property="og:image" content="https://docs.citusdata.com/en/stable/_images/citus-docs-og-logo.png" />
+  <meta property="og:title" content="{{ title }} - {{ docstitle }}" />
+  <meta property="og:description" content="Docs for the Citus extension to Postgres. Citus distributes your data &amp; queries across multiple nodes in a cluster, so your database can scale and your queries are fast." />
 {% endblock %}
 
 {% block sidebartitle %}
