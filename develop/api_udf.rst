@@ -243,7 +243,7 @@ will also be rebalanced. If table B does not have a replica identity, the rebala
 fail. Therefore, this function can be useful breaking the implicit colocation in that case.
 
 Both of the arguments should be a hash distributed table, currently we do not support colocation 
-of APPEND or RANGE distributed tables.
+of APPEND distributed tables.
 
 Note that this function does not move any data around physically.
 
@@ -844,7 +844,7 @@ The example below fetches and displays the table metadata for the github_events 
 get_shard_id_for_distribution_column
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Citus assigns every row of a distributed table to a shard based on the value of the row's distribution column and the table's method of distribution. In most cases the precise mapping is a low-level detail that the database administrator can ignore. However it can be useful to determine a row's shard, either for manual database maintenance tasks or just to satisfy curiosity. The :code:`get_shard_id_for_distribution_column` function provides this info for hash- and range-distributed tables as well as reference tables. It does not work for the append distribution.
+Citus assigns every row of a distributed table to a shard based on the value of the row's distribution column and the table's method of distribution. In most cases the precise mapping is a low-level detail that the database administrator can ignore. However it can be useful to determine a row's shard, either for manual database maintenance tasks or just to satisfy curiosity. The :code:`get_shard_id_for_distribution_column` function provides this info for hash-distributed tables as well as reference tables. It does not work for the append distribution.
 
 Arguments
 ************************
