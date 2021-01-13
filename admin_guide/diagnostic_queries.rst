@@ -300,3 +300,36 @@ Example output:
   │ ec2-13-59-96-221.us-east-2.compute.amazonaws.com  │ 0.88           │
   │ ec2-52-14-226-167.us-east-2.compute.amazonaws.com │ 0.89           │
   └───────────────────────────────────────────────────┴────────────────┘
+
+Cache hit rate
+--------------
+
+Most applications typically access a small fraction of their total data at
+once. Postgres keeps frequently accessed data in memory to avoid slow reads
+from disk. You can see statistics about it in the `pg_statio_user_tables
+<https://www.postgresql.org/docs/current/monitoring-stats.html#MONITORING-PG-STATIO-ALL-TABLES-VIEW>`_
+view.
+
+An important measurement is what percentage of data comes from the memory cache
+vs the disk in your workload:
+
+.. code-block:: postgresql
+
+  SELECT
+    sum(heap_blks_read) AS heap_read,
+    sum(heap_blks_hit)  AS heap_hit,
+    sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)) AS ratio
+  FROM
+    pg_statio_user_tables;
+
+Example output:
+
+::
+
+  .
+   heap_read | heap_hit |         ratio
+  -----------+----------+------------------------
+           1 |      132 | 0.99248120300751879699
+
+If you find yourself with a ratio significantly lower than 99%, then you likely
+want to consider increasing the cache available to your database
