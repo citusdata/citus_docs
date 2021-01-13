@@ -436,9 +436,9 @@ Here are examples of functions that can be used within new shard rebalancer stra
       -- example of node_capacity_function
 
       CREATE FUNCTION v2_node_double_capacity(nodeidarg int)
-          RETURNS boolean AS $$
+          RETURNS real AS $$
           SELECT
-              (CASE WHEN nodename LIKE '%.v2.worker.citusdata.com' THEN 2 ELSE 1 END)
+              (CASE WHEN nodename LIKE '%.v2.worker.citusdata.com' THEN 2.0::float4 ELSE 1.0::float4 END)
           FROM pg_dist_node where nodeid = nodeidarg
           $$ LANGUAGE sql;
   
