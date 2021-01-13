@@ -147,12 +147,12 @@ command is used to copy data from a file to a distributed table while handling
 replication and failures automatically. You can also use the server side `COPY command <http://www.postgresql.org/docs/current/static/sql-copy.html>`_. 
 In the examples, we use the \\copy command from psql, which sends a COPY .. FROM STDIN to the server and reads files on the client side, whereas COPY from a file would read the file on the server.
 
-You can use \\copy both on the coordinator and from any of the workers. When using it from the worker, you need to add the master_host option. Behind the scenes, \\copy first opens a connection to the coordinator using the provided master_host option and uses master_create_empty_shard to create a new shard. Then, the command connects to the workers and copies data into the replicas until the size reaches shard_max_size, at which point another new shard is created. Finally, the command fetches statistics for the shards and updates the metadata.
+You can use \\copy only on the coordinator. Behind the scenes, \\copy uses master_create_empty_shard to create a new shard. Then, the command connects to the workers and copies data into the replicas until the size reaches shard_max_size, at which point another new shard is created. Finally, the command fetches statistics for the shards and updates the metadata.
 
 .. code-block:: psql
 
     SET citus.shard_max_size TO '64MB';
-    \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV, master_host 'coordinator-host')
+    \copy github_events from 'github_events-2015-01-01-0.csv' WITH (format CSV)
 
 Citus assigns a unique shard id to each new shard and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. One can connect to the worker postgres instances to view or run commands on individual shards.
 
@@ -161,10 +161,7 @@ By default, the \\copy command depends on two configuration parameters for its b
 (1) **citus.shard_max_size :-** This parameter determines the maximum size of a shard created using \\copy, and defaults to 1 GB. If the file is larger than this parameter, \\copy will break it up into multiple shards.
 (2) **citus.shard_replication_factor :-** This parameter determines the number of nodes each shard gets replicated to, and defaults to one. Set it to two if you want Citus to replicate data automatically and provide fault tolerance. You may want to increase the factor even higher if you run large clusters and observe node failures on a more frequent basis.
 
-.. note::
-    The configuration setting citus.shard_replication_factor can only be set on the coordinator node.
-
-Please note that you can load several files in parallel through separate database connections or from different nodes. It is also worth noting that \\copy always creates at least one shard and does not append to existing shards. You can use the method described below to append to previously created shards.
+Please note that you can load several files in parallel through separate database connections. It is also worth noting that \\copy always creates at least one shard and does not append to existing shards. You can use the method described below to append to previously created shards.
 
 .. note::
 
@@ -272,14 +269,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 For very high data ingestion rates, data can be staged via the workers. This method scales out horizontally and provides the highest ingestion rates, but can be more complex to use. Hence, we recommend trying this method only if your data ingestion rates cannot be addressed by the previously described methods.
 
-Append distributed tables support COPY via the worker, by specifying the address of the coordinator in a master_host option, and optionally a master_port option (defaults to 5432). COPY via the workers has the same general properties as COPY via the coordinator, except the initial parsing is not bottlenecked on the coordinator.
-
-.. code-block:: psql
-
-    psql -h worker-host-n -c "\COPY events FROM 'data.csv' WITH (FORMAT CSV, MASTER_HOST 'coordinator-host')"
-
-
-An alternative to using COPY is to create a staging table and use standard SQL clients to append it to the distributed table, which is similar to staging data via the coordinator. An example of staging a file via a worker using psql is as follows:
+The technique of staging data via the workers is to create a staging table and use standard SQL clients to append it to the distributed table, which is similar to staging data via the coordinator. An example of staging a file via a worker using psql is as follows:
 
 .. code-block:: bash
 
