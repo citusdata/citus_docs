@@ -234,7 +234,7 @@ Next, download sample data:
 
 And load it:
 
-.. code-block:: postgresql
+.. code-block:: psql
 
   \COPY github_events FROM 'github_events-2015-01-01-1.csv' WITH (format CSV)
   \COPY github_events FROM 'github_events-2015-01-01-2.csv' WITH (format CSV)
@@ -355,6 +355,7 @@ Gotchas
   specific columns.
 * On a partitioned table with a mix of row and column partitions, updates must
   be carefully targeted or filtered to hit only the row partitions.
+
    * If the operation is targeted at a specific row partition (e.g. `UPDATE p2
      SET i = i + 1`), it will succeed; if targeted at a specified columnar
      partition (e.g. `UPDATE p1 SET i = i + 1`), it will fail.
