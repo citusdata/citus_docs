@@ -84,3 +84,301 @@ Citus propagates the ANALYZE command to all worker node placements.
 .. _freemap: https://www.postgresql.org/docs/current/static/storage-fsm.html
 .. _vismap: https://www.postgresql.org/docs/current/static/storage-vm.html
 .. _forks: https://www.postgresql.org/docs/current/static/storage-file-layout.html
+
+Columnar Storage
+################
+
+Citus 10 introduces append-only columnar table storage for analytic and data
+warehousing workloads. When columns (rather than rows) are stored contiguously
+on disk, data becomes more compressible, and queries can request a subset of
+columns more quickly.
+
+To use columnar storage, specify `USING columnar` when creating a table:
+
+.. code-block:: postgresql
+
+  CREATE TABLE contestant (
+      handle TEXT,
+      birthdate DATE,
+      rating INT,
+      percentile FLOAT,
+      country CHAR(3),
+      achievements TEXT[]
+  ) USING columnar;
+
+Citus converts rows to columnar storage in "stripes" during insertion. Each
+stripe holds a transaction's worth of data, or 150000 rows, whichever is less.
+For example, the following statement puts all five rows into the same stripe,
+because all values are inserted in a single transaction:
+
+.. code-block:: postgresql
+
+  -- insert these values into a single columnar stripe
+
+  INSERT INTO contestant VALUES
+    ('a','1990-01-10',2090,97.1,'XA','{a}'),
+    ('b','1990-11-01',2203,98.1,'XA','{a,b}'),
+    ('c','1988-11-01',2907,99.4,'XB','{w,y}'),
+    ('d','1985-05-05',2314,98.3,'XB','{}'),
+    ('e','1995-05-05',2236,98.2,'XC','{a}');
+
+It's best to make large stripes when possible, because Citus compresses
+columnar data separately per stripe. We can see facts about our columnar table
+like compression rate, number of stripes, and average rows per stripe by using
+`VACUUM VERBOSE`:
+
+.. code-block:: postgresql
+
+  VACUUM VERBOSE contestant;
+
+::
+
+  INFO:  statistics for "contestant":
+  storage id: 10000000000
+  total file size: 24576, total data size: 248
+  compression rate: 1.31x
+  total row count: 5, stripe count: 1, average rows per stripe: 5
+  chunk count: 6, containing data for dropped columns: 0, zstd compressed: 6
+
+The output shows that Citus used the zstd compression algorithm to obtain 1.31x
+data compression. The compression rate compares a) the size of inserted data as
+it was staged in memory against b) the size of that data compressed in its
+eventual stripe.
+
+Because of how it's measured, the compression rate may or may not match the
+size difference between row and columnar storage for a table. The only way
+truly find that difference is to construct a row and columnar table that
+contain the same data, and compare:
+
+.. code-block:: postgresql
+
+  CREATE TABLE contestant_row AS
+      SELECT * FROM contestant;
+
+  SELECT pg_total_relation_size('contestant_row') as row_size,
+         pg_total_relation_size('contestant') as columnar_size;
+
+::
+
+  .
+   row_size | columnar_size
+  ----------+---------------
+      16384 |         24576
+
+For our tiny table the columnar storage actually uses more space, but as the
+data grows, compression will win.
+
+Columnar Storage with Mutable Data
+----------------------------------
+
+As mentioned, columnar storage is currently append-only. It does not yet
+support updates or deletes. However, there's a workaround for applications
+whose data splits into a small updatable part and a larger part that's
+"frozen." Examples include logs, clickstreams, or sales records.
+
+PostgreSQL `declarative partitioning
+<https://www.postgresql.org/docs/current/ddl-partitioning.html#DDL-PARTITIONING-DECLARATIVE>`_
+is the best way to model this situation in Citus. Columnar tables can be used
+as partitions, and a partitioned table may be made up of any combination of row
+and columnar partitions.
+
+When range partitioning on a timestamp key, we can make the newest partition a
+row table, and periodically roll the newest partition into a historical column
+table and creating a new newest.
+
+Here's an example:
+
+.. code-block:: postgresql
+
+  CREATE TABLE github_events
+  (
+      event_id bigint,
+      event_type text,
+      event_public boolean,
+      repo_id bigint,
+      payload jsonb,
+      repo jsonb,
+      actor jsonb,
+      org jsonb,
+      created_at timestamp
+  ) PARTITION BY RANGE (created_at);
+
+  -- create partitions to hold two hours of data each
+
+  -- columnar partitions for historical data
+  CREATE TABLE ge0 PARTITION OF github_events
+    FOR VALUES FROM ('2015-01-01 00:00:00') TO ('2015-01-01 02:00:00')
+    USING COLUMNAR;
+  CREATE TABLE ge1 PARTITION OF github_events
+    FOR VALUES FROM ('2015-01-01 02:00:00') TO ('2015-01-01 04:00:00')
+    USING COLUMNAR;
+  CREATE TABLE ge2 PARTITION OF github_events
+    FOR VALUES FROM ('2015-01-01 04:00:00') TO ('2015-01-01 06:00:00')
+    USING COLUMNAR;
+
+  -- row partition for latest data
+  CREATE TABLE ge3 PARTITION OF github_events
+    FOR VALUES FROM ('2015-01-01 06:00:00') TO ('2015-01-01 08:00:00');
+
+Next, download sample data:
+
+.. code-block:: bash
+
+  wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
+  gzip -d github_events-2015-01-01-*.gz
+
+And load it:
+
+.. code-block:: postgresql
+
+  \COPY github_events FROM 'github_events-2015-01-01-1.csv' WITH (format CSV)
+  \COPY github_events FROM 'github_events-2015-01-01-2.csv' WITH (format CSV)
+  \COPY github_events FROM 'github_events-2015-01-01-3.csv' WITH (format CSV)
+  \COPY github_events FROM 'github_events-2015-01-01-4.csv' WITH (format CSV)
+  \COPY github_events FROM 'github_events-2015-01-01-5.csv' WITH (format CSV)
+
+The compression ratio for our three columnar partitions is pretty good:
+
+.. code-block:: postgresql
+
+  VACUUM VERBOSE github_events;
+
+::
+
+  INFO:  statistics for "ge0":
+  storage id: 10000000001
+  total file size: 4448256, total data size: 4409314
+  compression rate: 8.38x
+  total row count: 15129, stripe count: 2, average rows per stripe: 7564
+  chunk count: 18, containing data for dropped columns: 0, zstd compressed: 18
+  
+  INFO:  statistics for "ge1":
+  storage id: 10000000002
+  total file size: 3579904, total data size: 3543869
+  compression rate: 8.27x
+  total row count: 12714, stripe count: 2, average rows per stripe: 6357
+  chunk count: 18, containing data for dropped columns: 0, zstd compressed: 18
+  
+  INFO:  statistics for "ge2":
+  storage id: 10000000003
+  total file size: 2949120, total data size: 2910929
+  compression rate: 8.53x
+  total row count: 11756, stripe count: 2, average rows per stripe: 5878
+  chunk count: 18, containing data for dropped columns: 0, zstd compressed: 18
+
+The power of the partitioned table ``github_events`` is that it can be queried
+in its entirety like a normal table.
+
+.. code-block:: postgresql
+
+  SELECT COUNT(DISTINCT repo_id)
+    FROM github_events;
+  
+::
+
+  .
+   count
+  -------
+   16001
+
+Entries can be updated or deleted, as long as there's a WHERE clause on the
+partition key which filters entirely into row table partitions.
+
+Archiving a Partition to Columnar Storage
+-----------------------------------------
+
+When a row partition has enough data that you consider it full, you can archive
+it to compressed columnar storage. The process is to make a columnar copy of
+the row partition, detach the row partition, perform table renames, and attach
+the columnar copy in thw row partitions place.
+
+In code, here's how to turn ge3 columnar:
+
+.. code-block:: postgresql
+
+  BEGIN;
+  
+  -- uncomment the following statement to avoid deadlock risk
+  -- at the cost of holding the lock during the data conversion:
+  --   LOCK TABLE github_events IN ACCESS EXCLUSIVE MODE;
+  
+  LOCK TABLE ge3 IN EXCLUSIVE MODE;
+  CREATE TABLE ge3_tmp_new(LIKE ge3) USING COLUMNAR;
+  INSERT INTO ge3_tmp_new SELECT * FROM ge3;
+  
+  -- DETACH will take ACCESS EXCLUSIVE LOCK on the partitioned table
+  ALTER TABLE github_events DETACH PARTITION ge3;
+  ALTER TABLE ge3 RENAME TO ge3_tmp_old;
+  ALTER TABLE ge3_tmp_new RENAME TO ge3;
+  ALTER TABLE github_events ATTACH PARTITION ge3
+    FOR VALUES FROM ('2015-01-01 06:00:00') TO ('2015-01-01 08:00:00');
+  DROP TABLE ge3_tmp_old;
+
+  COMMIT;
+
+After doing that, we can create a new row partition to accept the new mutable
+data.
+
+.. code-block:: postgresql
+
+  -- the new row partition
+  CREATE TABLE ge4 PARTITION OF github_events
+    FOR VALUES FROM ('2015-01-01 08:00:00') TO ('2015-01-01 10:00:00');
+
+Gotchas
+-------
+
+* Columnar storage compresses per stripe. Stripes are created per transaction,
+  so inserting one row per transaction will put single rows into their own
+  stripes. Compression and performance of single row stripes will be worse than
+  a row table. Always insert in bulk to a columnar table.
+* If you mess up and columnarize a bunch of tiny stripes, there is no way to
+  repair the table. The only fix is to create a new columnar table and copy
+  data from the original in one transaction:
+
+  .. code-block:: postgresql
+
+    BEGIN;
+    CREATE TABLE foo_compacted (LIKE foo) USING COLUMNAR;
+    INSERT INTO foo_compacted SELECT * FROM foo;
+    DROP TABLE foo;
+    ALTER TABLE foo_compacted RENAME TO foo;
+    COMMIT;
+
+* Fundamentally non-compressible data can be a problem, although it can still
+  be useful to use columnar so that less is loaded into memory when selecting
+  specific columns.
+* On a partitioned table with a mix of row and column partitions, updates must
+  be carefully targeted or filtered to hit only the row partitions.
+   * If the operation is targeted at a specific row partition (e.g. `UPDATE p2
+     SET i = i + 1`), it will succeed; if targeted at a specified columnar
+     partition (e.g. `UPDATE p1 SET i = i + 1`), it will fail.
+   * If the operation is targeted at the partitioned table and has a WHERE
+     clause that excludes all columnar partitions (e.g. `UPDATE parent SET i = i
+     + 1 WHERE timestamp = '2020-03-15'`), it will succeed.
+   * If the operation is targeted at the partitioned table, but does not
+     exclude all columnar partitions, it will fail; even if the actual data to
+     be updated only affects row tables (e.g. `UPDATE parent SET i = i + 1 WHERE
+     n = 300`).
+
+Current Columnar Limitations
+----------------------------
+
+Future versions of Citus will incrementally lift the current limitations:
+
+* Append-only (no UPDATE/DELETE support)
+* No space reclamation (e.g. rolled-back transactions may still consume disk space)
+* No index support, index scans, or bitmap index scans
+* No tidscans
+* No sample scans
+* No TOAST support (large values supported inline)
+* No support for ON CONFLICT statements (except DO NOTHING actions with no target specified).
+* No support for tuple locks (SELECT ... FOR SHARE, SELECT ... FOR UPDATE)
+* No support for serializable isolation level
+* Support for PostgreSQL server versions 12+ only
+* No support for foreign keys, unique constraints, or exclusion constraints
+* No support for logical decoding
+* No support for intra-node parallel scans
+* No support for AFTER ... FOR EACH ROW triggers
+* No UNLOGGED columnar tables
+* No TEMPORARY columnar tables
