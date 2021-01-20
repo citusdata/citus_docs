@@ -85,6 +85,8 @@ Citus propagates the ANALYZE command to all worker node placements.
 .. _vismap: https://www.postgresql.org/docs/current/static/storage-vm.html
 .. _forks: https://www.postgresql.org/docs/current/static/storage-file-layout.html
 
+.. _columnar:
+
 Columnar Storage
 ################
 
