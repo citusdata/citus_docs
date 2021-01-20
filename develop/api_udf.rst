@@ -390,9 +390,23 @@ This example creates an empty shard for the github_events table. The shard id of
 alter_columnar_table_set
 $$$$$$$$$$$$$$$$$$$$$$$$
 
-Changes settings on a :ref:`columnar table <columnar>`. Calling this function
-on a non-columnar table gives an error. All arguments except the table name are
-optional.
+The alter_columnar_table_set() function changes settings on a :ref:`columnar
+table <columnar>`. Calling this function on a non-columnar table gives an
+error. All arguments except the table name are optional.
+
+To view current options for all columnar tables, consult this table:
+
+.. code-block:: postgresql
+
+  SELECT * FROM columnar.options;
+
+The default values for columnar settings for newly-created tables can be
+overridden with these GUCs:
+
+* columnar.compression
+* columnar.compression_level
+* columnar.stripe_row_count
+* columnar.chunk_row_count
 
 Arguments
 ************************
@@ -407,9 +421,10 @@ more rows than this maximum value. The default value is 10000.
 newly-inserted data. Existing stripes of data will not be changed and may have
 more rows than this maximum value. The default value is 150000.
 
-**compression:** (Optional) ``[none|pglz|zstd|lz4|lz4hc]`` The compression
-type for newly-inserted data. Existing data will not be recompressed or
-decompressed. The default value is zstd (if support has been compiled in).
+**compression:** (Optional) ``[none|pglz|zstd|lz4|lz4hc]`` The compression type
+for newly-inserted data. Existing data will not be recompressed or
+decompressed. The default and generally suggested value is zstd (if support has
+been compiled in).
 
 **compression_level:** (Optional) Valid settings are from 1 through 19. If the
 compression method does not support the level chosen, the closest level will be
