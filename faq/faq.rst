@@ -213,7 +213,7 @@ How does cstore_fdw work with Citus?
 ------------------------------------
 
 The cstore_fdw extension is no longer needed on PostgreSQL 12 and above,
-because :ref:`columnar_store` is now implemented directly in Citus. Unlike
+because :ref:`columnar` is now implemented directly in Citus. Unlike
 cstore_fdw, Citus' columnar tables support transactional semantics,
 replication, and pg_upgrade. Citus' query parallelization, seamless sharding,
 and HA benefits combine powerfully with the superior compression and I/O
