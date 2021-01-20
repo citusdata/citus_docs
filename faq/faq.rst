@@ -212,7 +212,12 @@ It turns out that while storing each tenant's information in a separate schema c
 How does cstore_fdw work with Citus?
 ------------------------------------
 
-Citus treats cstore_fdw tables just like regular PostgreSQL tables. When cstore_fdw is used with Citus, each logical shard is created as a foreign cstore_fdw table instead of a regular PostgreSQL table. If your cstore_fdw use case is suitable for the distributed nature of Citus (e.g. large dataset archival and reporting), the two can be used to provide a powerful tool which combines query parallelization, seamless sharding and HA benefits of Citus with superior compression and I/O utilization of cstore_fdw.
+The cstore_fdw extension is no longer needed on PostgreSQL 12 and above,
+because :ref:`columnar_store` is now implemented directly in Citus. Unlike
+cstore_fdw, Citus' columnar tables support transactional semantics,
+replication, and pg_upgrade. Citus' query parallelization, seamless sharding,
+and HA benefits combine powerfully with the superior compression and I/O
+utilization of columnar storage for large dataset archival and reporting.
 
 What happened to pg_shard?
 --------------------------
