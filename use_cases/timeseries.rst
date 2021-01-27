@@ -55,7 +55,8 @@ The first step is to create and partition the table by time as we would in a sin
     event_public boolean,
     repo_id bigint,
     payload jsonb,
-    repo jsonb, actor jsonb,
+    repo jsonb,
+    actor jsonb,
     org jsonb,
     created_at timestamp
   ) PARTITION BY RANGE (created_at);
@@ -159,3 +160,158 @@ Now whenever maintenance runs, partitions older than a month are automatically d
 .. note::
 
   Be aware that native partitioning in Postgres is still quite new and has a few quirks. For example, you cannot directly create an index on a partitioned table. Instead, pg_partman lets you create a template table to define indexes for new partitions. Maintenance operations on partitioned tables will also acquire aggressive locks that can briefly stall queries. There is currently a lot of work going on within the postgres community to resolve these issues, so expect time partitioning in Postgres to only get better.
+
+.. _columnar_example:
+
+Archiving with Columnar Storage
+-------------------------------
+
+Some applications have data logically divides into a small updatable part and a
+larger part that's "frozen." Examples include logs, clickstreams, or sales
+records. In this case we can combine partitioning with :ref:`columnar table
+storage <columnar>` (introduced in Citus 10) to compress historical partitions
+on disk. Citus columnar tables are currently append-only, meaning they do not
+support updates or deletes, but we can use them for the immutable historical
+partitions.
+
+A partitioned table may be made up of any combination of row and columnar
+partitions. When using range partitioning on a timestamp key, we can make the
+newest partition a row table, and periodically roll the newest partition into
+another historical columnar partition.
+
+Let's see an example, using GitHub events again. We'll create a new table
+called ``github.columnar_events`` for disambiguation from the earlier example.
+We'll manage its partitions manually. To focus entirely on the columnar storage
+aspect, we won't distribute this table.
+
+.. code-block:: postgresql
+
+  CREATE TABLE github.columnar_events ( LIKE github.events )
+  PARTITION BY RANGE (created_at);
+
+  -- create partitions to hold two hours of data each
+
+  -- columnar partitions for historical data
+  CREATE TABLE ge0 PARTITION OF github.columnar_events
+    FOR VALUES FROM ('2015-01-01 00:00:00') TO ('2015-01-01 02:00:00')
+    USING COLUMNAR;
+  CREATE TABLE ge1 PARTITION OF github.columnar_events
+    FOR VALUES FROM ('2015-01-01 02:00:00') TO ('2015-01-01 04:00:00')
+    USING COLUMNAR;
+  CREATE TABLE ge2 PARTITION OF github.columnar_events
+    FOR VALUES FROM ('2015-01-01 04:00:00') TO ('2015-01-01 06:00:00')
+    USING COLUMNAR;
+
+  -- row partition for latest data
+  CREATE TABLE ge3 PARTITION OF github.columnar_events
+    FOR VALUES FROM ('2015-01-01 06:00:00') TO ('2015-01-01 08:00:00');
+
+Next, download sample data:
+
+.. code-block:: bash
+
+  wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
+  gzip -d github_events-2015-01-01-*.gz
+
+And load it:
+
+.. code-block:: psql
+
+  \COPY github.columnar_events FROM 'github_events-2015-01-01-1.csv' WITH (format CSV)
+  \COPY github.columnar_events FROM 'github_events-2015-01-01-2.csv' WITH (format CSV)
+  \COPY github.columnar_events FROM 'github_events-2015-01-01-3.csv' WITH (format CSV)
+  \COPY github.columnar_events FROM 'github_events-2015-01-01-4.csv' WITH (format CSV)
+  \COPY github.columnar_events FROM 'github_events-2015-01-01-5.csv' WITH (format CSV)
+
+To see the compression ratio for a columnar table, use ``VACUUM VERBOSE``. The
+compression ratio for our three columnar partitions is pretty good:
+
+.. code-block:: postgresql
+
+  VACUUM VERBOSE github.columnar_events;
+
+::
+
+  INFO:  statistics for "ge0":
+  storage id: 10000000004
+  total file size: 2179072, total data size: 2149126
+  compression rate: 8.50x
+  total row count: 7427, stripe count: 1, average rows per stripe: 7427
+  chunk count: 9, containing data for dropped columns: 0, zstd compressed: 9
+  
+  INFO:  statistics for "ge1":
+  storage id: 10000000005
+  total file size: 3579904, total data size: 3543869
+  compression rate: 8.27x
+  total row count: 12714, stripe count: 2, average rows per stripe: 6357
+  chunk count: 18, containing data for dropped columns: 0, zstd compressed: 18
+  
+  INFO:  statistics for "ge2":
+  storage id: 10000000006
+  total file size: 2949120, total data size: 2910929
+  compression rate: 8.53x
+  total row count: 11756, stripe count: 2, average rows per stripe: 5878
+  chunk count: 18, containing data for dropped columns: 0, zstd compressed: 18
+
+One power of the partitioned table ``github.columnar_events`` is that it can be
+queried in its entirety like a normal table.
+
+.. code-block:: postgresql
+
+  SELECT COUNT(DISTINCT repo_id)
+    FROM github.columnar_events;
+
+::
+
+  .
+   count
+  -------
+   16001
+
+Entries can be updated or deleted, as long as there's a WHERE clause on the
+partition key which filters entirely into row table partitions.
+
+Archiving a Row Partition to Columnar Storage
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a row partition has filled its range, you can archive it to compressed
+columnar storage. The process is:
+
+1. Make a columnar copy of the row partition.
+2. Detach the row partition.
+3. Perform table renames.
+4. Attach the columnar copy in the row partition's stead.
+
+In code, here's how to turn ge3 columnar:
+
+.. code-block:: postgresql
+
+  BEGIN;
+  
+  -- uncomment the following statement to avoid deadlock risk
+  -- at the cost of holding the lock during the data conversion:
+  --   LOCK TABLE github.columnar_events IN ACCESS EXCLUSIVE MODE;
+  
+  LOCK TABLE ge3 IN EXCLUSIVE MODE;
+  CREATE TABLE ge3_tmp_new(LIKE ge3) USING COLUMNAR;
+  INSERT INTO ge3_tmp_new SELECT * FROM ge3;
+  
+  -- DETACH will take ACCESS EXCLUSIVE LOCK on the partitioned table
+  ALTER TABLE github.columnar_events DETACH PARTITION ge3;
+  ALTER TABLE ge3 RENAME TO ge3_tmp_old;
+  ALTER TABLE ge3_tmp_new RENAME TO ge3;
+  ALTER TABLE github.columnar_events ATTACH PARTITION ge3
+    FOR VALUES FROM ('2015-01-01 06:00:00') TO ('2015-01-01 08:00:00');
+  DROP TABLE ge3_tmp_old;
+
+  COMMIT;
+
+After doing that, we can create a row partition to accept the new mutable data.
+
+.. code-block:: postgresql
+
+  -- the new row partition
+  CREATE TABLE ge4 PARTITION OF github.columnar_events
+    FOR VALUES FROM ('2015-01-01 08:00:00') TO ('2015-01-01 10:00:00');
+
+For more information, see :ref:`columnar`.
