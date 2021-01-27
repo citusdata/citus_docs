@@ -177,7 +177,7 @@ partitions.
 A partitioned table may be made up of any combination of row and columnar
 partitions. When using range partitioning on a timestamp key, we can make the
 newest partition a row table, and periodically roll the newest partition into
-another historical columnnar partition.
+another historical columnar partition.
 
 Let's see an example, using GitHub events again. We'll create a new table
 called ``github.columnar_events`` for disambiguation from the earlier example.
@@ -277,10 +277,10 @@ Archiving a Row Partition to Columnar Storage
 When a row partition has filled its range, you can archive it to compressed
 columnar storage. The process is:
 
-1. make a columnar copy of the row partition
-2. detach the row partition
-3. perform table renames
-4. attach the columnar copy in the row partition's stead
+1. Make a columnar copy of the row partition.
+2. Detach the row partition.
+3. Perform table renames.
+4. Attach the columnar copy in the row partition's stead.
 
 In code, here's how to turn ge3 columnar:
 
