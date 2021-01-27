@@ -166,7 +166,7 @@ Now whenever maintenance runs, partitions older than a month are automatically d
 Archiving with Columnar Storage
 -------------------------------
 
-Some applications have data that splits into a small updatable part and a
+Some applications have data logically divides into a small updatable part and a
 larger part that's "frozen." Examples include logs, clickstreams, or sales
 records. In this case we can combine partitioning with :ref:`columnar table
 storage <columnar>` (introduced in Citus 10) to compress historical partitions
@@ -175,11 +175,11 @@ support updates or deletes, but we can use them for the immutable historical
 partitions.
 
 A partitioned table may be made up of any combination of row and columnar
-partitions. When range partitioning on a timestamp key, we can make the newest
-partition a row table, and periodically roll the newest partition into another
-historical column table.
+partitions. When using range partitioning on a timestamp key, we can make the
+newest partition a row table, and periodically roll the newest partition into
+another historical columnnar partition.
 
-Let's see an example, using the GitHub events again. We'll create a new table
+Let's see an example, using GitHub events again. We'll create a new table
 called ``github.columnar_events`` for disambiguation from the earlier example.
 We'll manage its partitions manually. To focus entirely on the columnar storage
 aspect, we won't distribute this table.
@@ -253,7 +253,7 @@ compression ratio for our three columnar partitions is pretty good:
   total row count: 11756, stripe count: 2, average rows per stripe: 5878
   chunk count: 18, containing data for dropped columns: 0, zstd compressed: 18
 
-The power of the partitioned table ``github.columnar_events`` is that it can be
+One power of the partitioned table ``github.columnar_events`` is that it can be
 queried in its entirety like a normal table.
 
 .. code-block:: postgresql
@@ -275,9 +275,12 @@ Archiving a Row Partition to Columnar Storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a row partition has filled its range, you can archive it to compressed
-columnar storage. The process is: make a columnar copy of the row partition,
-detach the row partition, perform table renames, and attach the columnar copy
-in the row partition's stead.
+columnar storage. The process is:
+
+1. make a columnar copy of the row partition
+2. detach the row partition
+3. perform table renames
+4. attach the columnar copy in the row partition's stead
 
 In code, here's how to turn ge3 columnar:
 
@@ -311,4 +314,4 @@ After doing that, we can create a row partition to accept the new mutable data.
   CREATE TABLE ge4 PARTITION OF github.columnar_events
     FOR VALUES FROM ('2015-01-01 08:00:00') TO ('2015-01-01 10:00:00');
 
-For more information about columnar storage, see :ref:`columnar`.
+For more information, see :ref:`columnar`.

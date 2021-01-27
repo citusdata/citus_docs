@@ -95,7 +95,7 @@ warehousing workloads. When columns (rather than rows) are stored contiguously
 on disk, data becomes more compressible, and queries can request a subset of
 columns more quickly.
 
-To use columnar storage, specify `USING columnar` when creating a table:
+To use columnar storage, specify ``USING columnar`` when creating a table:
 
 .. code-block:: postgresql
 
@@ -109,9 +109,9 @@ To use columnar storage, specify `USING columnar` when creating a table:
   ) USING columnar;
 
 Citus converts rows to columnar storage in "stripes" during insertion. Each
-stripe holds a transaction's worth of data, or 150000 rows, whichever is less.
-(The stripe size and other parameters of a columnar table can be changed with
-the :ref:`alter_columnar_table_set` function.)
+stripe holds one transaction's worth of data, or 150000 rows, whichever is
+less.  (The stripe size and other parameters of a columnar table can be changed
+with the :ref:`alter_columnar_table_set` function.)
 
 For example, the following statement puts all five rows into the same stripe,
 because all values are inserted in a single transaction:
@@ -216,8 +216,8 @@ Gotchas
      be updated only affects row tables (e.g. `UPDATE parent SET i = i + 1 WHERE
      n = 300`).
 
-Current Columnar Limitations
-----------------------------
+Limitations
+-----------
 
 Future versions of Citus will incrementally lift the current limitations:
 
