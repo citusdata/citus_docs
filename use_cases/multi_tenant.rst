@@ -432,7 +432,7 @@ Being able to rebalance data in the Citus cluster allows you to grow your data s
 
 Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance.
 
-To scale out your Citus cluster, first add a new worker node to it. On Citus Cloud, you can use the slider present in the "Settings" tab, sliding it to add the required number of nodes. Alternately, if you run your own Citus installation, you can add nodes manually with the :ref:`master_add_node` UDF.
+To scale out your Citus cluster, first add a new worker node to it. On Citus Cloud, you can use the slider present in the "Settings" tab, sliding it to add the required number of nodes. Alternately, if you run your own Citus installation, you can add nodes manually with the :ref:`citus_add_node` UDF.
 
 .. image:: ../images/cloud-nodes-slider.png
     :alt: graphical interface to add nodes and change their size
@@ -505,11 +505,11 @@ Next we move the data across the network to a new dedicated node. Create a new n
   -- other shards created with the CASCADE option)
 
   -- note that you should set wal_level for all nodes to be >= logical
-  -- to use master_move_shard_placement.
+  -- to use citus_move_shard_placement.
   -- you also need to restart your cluster after setting wal_level in
   -- postgresql.conf files.
 
-  SELECT master_move_shard_placement(
+  SELECT citus_move_shard_placement(
     102240,
     'source_host', source_port,
     'dest_host', dest_port);

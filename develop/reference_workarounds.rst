@@ -83,7 +83,7 @@ Ordinarily a copy of every reference table exists on each worker node, but does 
 
 .. code-block:: postgres
 
-  SELECT master_add_node('localhost', 5432, groupid => 0);
+  SELECT citus_add_node('localhost', 5432, groupid => 0);
 
 This adds the coordinator to :ref:`pg_dist_node` with a group ID of 0. Joins between reference and local tables will then be possible.
 

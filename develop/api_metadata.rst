@@ -660,7 +660,7 @@ The ``query`` field shows data being copied out of the shard to be counted.
 
 .. note::
 
-  If a router query (e.g. single-tenant in a multi-tenant application, ``SELECT * FROM table WHERE tenant_id = X``) is executed without a transaction block, then master_query_host_name and master_query_host_port columns will be NULL in citus_worker_stat_activity.
+  If a router query (e.g. single-tenant in a multi-tenant application, ``SELECT * FROM table WHERE tenant_id = X``) is executed without a transaction block, then citus_query_host_name and citus_query_host_port columns will be NULL in citus_worker_stat_activity.
 
 To see how ``citus_lock_waits`` works, we can generate a locking situation manually. First we'll set up a test table from the coordinator:
 

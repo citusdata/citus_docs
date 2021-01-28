@@ -99,8 +99,8 @@ and server ports to the table.
 
 ::
 
-  sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-101', 5432);"
-  sudo -i -u postgres psql -c "SELECT * from master_add_node('worker-102', 5432);"
+  sudo -i -u postgres psql -c "SELECT * from citus_add_node('worker-101', 5432);"
+  sudo -i -u postgres psql -c "SELECT * from citus_add_node('worker-102', 5432);"
 
 **2. Verify that installation has succeeded**
 
@@ -110,7 +110,7 @@ shell should output the worker nodes we added to the pg_dist_node table above.
 
 ::
 
-  sudo -i -u postgres psql -c "SELECT * FROM master_get_active_worker_nodes();"
+  sudo -i -u postgres psql -c "SELECT * FROM citus_get_active_worker_nodes();"
 
 **Ready to use Citus**
 
