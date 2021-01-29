@@ -72,8 +72,8 @@ Finally, the coordinator needs to know where it can find the workers. To tell it
 
 ::
 
-  psql -p 9700 -c "SELECT * from master_add_node('localhost', 9701);"
-  psql -p 9700 -c "SELECT * from master_add_node('localhost', 9702);"
+  psql -p 9700 -c "SELECT * from citus_add_node('localhost', 9701);"
+  psql -p 9700 -c "SELECT * from citus_add_node('localhost', 9702);"
 
 **4. Verify that installation has succeeded**
 
@@ -81,7 +81,7 @@ To verify that the installation has succeeded we check that the coordinator node
 
 ::
 
-  psql -p 9700 -c "select * from master_get_active_worker_nodes();"
+  psql -p 9700 -c "select * from citus_get_active_worker_nodes();"
 
 You should see a row for each worker node including the node name and port.
 

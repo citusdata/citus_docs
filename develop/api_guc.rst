@@ -205,8 +205,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Reference table shards must be placed on all nodes which have distributed
 tables. By default, reference table shards are copied to a node at node
-activation time, that is, when such functions as :ref:`master_add_node` or
-:ref:`master_activate_node` are called. However node activation might be an
+activation time, that is, when such functions as :ref:`citus_add_node` or
+:ref:`citus_activate_node` are called. However node activation might be an
 inconvenient time to copy the placements, because it can take a long time when
 there are large reference tables.
 

@@ -74,7 +74,7 @@ Then run this query:
 
 .. code-block:: postgresql
 
-  SELECT * FROM master_get_active_worker_nodes();
+  SELECT * FROM citus_get_active_worker_nodes();
 
 You should see a row for each worker node including the node name and port.
 

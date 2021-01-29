@@ -526,16 +526,16 @@ The first example deletes all the shards for the github_events table since no de
 Metadata / Configuration Information
 ------------------------------------------------------------------------
 
-.. _master_add_node:
+.. _citus_add_node:
 
-master_add_node
+citus_add_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
     This function requires database superuser access to run.
 
-The master_add_node() function registers a new node addition in the cluster in
+The citus_add_node() function registers a new node addition in the cluster in
 the Citus metadata table pg_dist_node. It also copies reference tables to the new node.
 
 Arguments
@@ -562,22 +562,22 @@ Example
 
 .. code-block:: postgresql
 
-    select * from master_add_node('new-node', 12345);
-     master_add_node
+    select * from citus_add_node('new-node', 12345);
+     citus_add_node
     -----------------
                    7
     (1 row)
 
-.. _master_update_node:
+.. _citus_update_node:
 
-master_update_node
+citus_update_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
     This function requires database superuser access to run.
 
-The master_update_node() function changes the hostname and port for a node registered in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`.
+The citus_update_node() function changes the hostname and port for a node registered in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`.
 
 Arguments
 ************************
@@ -598,14 +598,14 @@ Example
 
 .. code-block:: postgresql
 
-    select * from master_update_node(123, 'new-address', 5432);
+    select * from citus_update_node(123, 'new-address', 5432);
 
-.. _master_set_node_property:
+.. _citus_set_node_property:
 
-master_set_node_property
+citus_set_node_property
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The master_set_node_property() function changes properties in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`. Currently it can change only the ``shouldhaveshards`` property.
+The citus_set_node_property() function changes properties in the Citus metadata table :ref:`pg_dist_node <pg_dist_node>`. Currently it can change only the ``shouldhaveshards`` property.
 
 Arguments
 ************************
@@ -628,18 +628,18 @@ Example
 
 .. code-block:: postgresql
 
-    SELECT * FROM master_set_node_property('localhost', 5433, 'shouldhaveshards', false);
+    SELECT * FROM citus_set_node_property('localhost', 5433, 'shouldhaveshards', false);
 
-.. _master_add_inactive_node:
+.. _citus_add_inactive_node:
 
-master_add_inactive_node
+citus_add_inactive_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
     This function requires database superuser access to run.
 
-The :code:`master_add_inactive_node` function, similar to :ref:`master_add_node`,
+The :code:`citus_add_inactive_node` function, similar to :ref:`citus_add_node`,
 registers a new node in :code:`pg_dist_node`. However it marks the new
 node as inactive, meaning no shards will be placed there. Also it does
 *not* copy reference tables to the new node.
@@ -668,24 +668,24 @@ Example
 
 .. code-block:: postgresql
 
-    select * from master_add_inactive_node('new-node', 12345);
-     master_add_inactive_node
+    select * from citus_add_inactive_node('new-node', 12345);
+     citus_add_inactive_node
     --------------------------
                             7
     (1 row)
 
-.. _master_activate_node:
+.. _citus_activate_node:
 
-master_activate_node
+citus_activate_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
     This function requires database superuser access to run.
 
-The :code:`master_activate_node` function marks a node as active in the
+The :code:`citus_activate_node` function marks a node as active in the
 Citus metadata table :code:`pg_dist_node` and copies reference tables to
-the node. Useful for nodes added via :ref:`master_add_inactive_node`.
+the node. Useful for nodes added via :ref:`citus_add_inactive_node`.
 
 Arguments
 ************************
@@ -704,25 +704,25 @@ Example
 
 .. code-block:: postgresql
 
-    select * from master_activate_node('new-node', 12345);
-     master_activate_node
+    select * from citus_activate_node('new-node', 12345);
+     citus_activate_node
     ----------------------
                         7
     (1 row)
 
-master_disable_node
+citus_disable_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
     This function requires database superuser access to run.
 
-The :code:`master_disable_node` function is the opposite of
-:code:`master_activate_node`. It marks a node as inactive in
+The :code:`citus_disable_node` function is the opposite of
+:code:`citus_activate_node`. It marks a node as inactive in
 the Citus metadata table :code:`pg_dist_node`, removing it from
 the cluster temporarily. The function also deletes all reference table
 placements from the disabled node. To reactivate the node, just run
-:code:`master_activate_node` again.
+:code:`citus_activate_node` again.
 
 Arguments
 ************************
@@ -741,18 +741,18 @@ Example
 
 .. code-block:: postgresql
 
-    select * from master_disable_node('new-node', 12345);
+    select * from citus_disable_node('new-node', 12345);
 
-.. _master_add_secondary_node:
+.. _citus_add_secondary_node:
 
-master_add_secondary_node
+citus_add_secondary_node
 $$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
     This function requires database superuser access to run.
 
-The master_add_secondary_node() function registers a new secondary
+The citus_add_secondary_node() function registers a new secondary
 node in the cluster for an existing primary node. It updates the Citus
 metadata table pg_dist_node.
 
@@ -779,21 +779,21 @@ Example
 
 .. code-block:: postgresql
 
-    select * from master_add_secondary_node('new-node', 12345, 'primary-node', 12345);
-     master_add_secondary_node
+    select * from citus_add_secondary_node('new-node', 12345, 'primary-node', 12345);
+     citus_add_secondary_node
     ---------------------------
                              7
     (1 row)
 
 
-master_remove_node
+citus_remove_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
     This function requires database superuser access to run.
 
-The master_remove_node() function removes the specified node from the
+The citus_remove_node() function removes the specified node from the
 pg_dist_node metadata table. This function will error out if there
 are existing shard placements on this node. Thus, before using this
 function, the shards will need to be moved off that node.
@@ -815,16 +815,16 @@ Example
 
 .. code-block:: postgresql
 
-    select master_remove_node('new-node', 12345);
-     master_remove_node 
+    select citus_remove_node('new-node', 12345);
+     citus_remove_node 
     --------------------
      
     (1 row)
 
-master_get_active_worker_nodes
+citus_get_active_worker_nodes
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The master_get_active_worker_nodes() function returns a list of active worker
+The citus_get_active_worker_nodes() function returns a list of active worker
 host names and port numbers.
 
 Arguments
@@ -846,7 +846,7 @@ Example
 
 .. code-block:: postgresql
 
-    SELECT * from master_get_active_worker_nodes();
+    SELECT * from citus_get_active_worker_nodes();
      node_name | node_port 
     -----------+-----------
      localhost |      9700
@@ -1073,10 +1073,10 @@ None
 Cluster Management And Repair Functions
 ----------------------------------------
 
-master_copy_shard_placement
+citus_copy_shard_placement
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-If a shard placement fails to be updated during a modification command or a DDL operation, then it gets marked as inactive. The master_copy_shard_placement function can then be called to repair an inactive shard placement using data from a healthy placement.
+If a shard placement fails to be updated during a modification command or a DDL operation, then it gets marked as inactive. The citus_copy_shard_placement function can then be called to repair an inactive shard placement using data from a healthy placement.
 
 To repair a shard, the function first drops the unhealthy shard placement and recreates it using the schema on the coordinator. Once the shard placement is created, the function copies data from the healthy placement and updates the metadata to mark the new shard placement as healthy. This function ensures that the shard will be protected from any concurrent modifications during the repair.
 
@@ -1105,14 +1105,14 @@ The example below will repair an inactive shard placement of shard 12345 which i
 
 .. code-block:: postgresql
 
-    SELECT master_copy_shard_placement(12345, 'good_host', 5432, 'bad_host', 5432);
+    SELECT citus_copy_shard_placement(12345, 'good_host', 5432, 'bad_host', 5432);
 
-master_move_shard_placement
+citus_move_shard_placement
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
-  The master_move_shard_placement function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+  The citus_move_shard_placement function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
 This function moves a given shard (and shards co-located with it) from one node to another. It is typically used indirectly during shard rebalancing rather than being called directly by a database administrator.
 
@@ -1149,7 +1149,7 @@ Example
 
 .. code-block:: postgresql
 
-    SELECT master_move_shard_placement(12345, 'from_host', 5432, 'to_host', 5432);
+    SELECT citus_move_shard_placement(12345, 'from_host', 5432, 'to_host', 5432);
 
 .. _rebalance_table_shards:
 
@@ -1397,15 +1397,15 @@ Example
    citus_worker_1 | 5432 | postgres      |                        3
   (1 row)
 
-.. _master_drain_node:
+.. _citus_drain_node:
 
-master_drain_node
+citus_drain_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
-  The master_drain_node function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+  The citus_drain_node function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
-The master_drain_node() function moves shards off the designated node and onto other nodes who have ``shouldhaveshards`` set to true in :ref:`pg_dist_node`. This function is designed to be called prior to removing a node from the cluster, i.e. turning the node's physical server off.
+The citus_drain_node() function moves shards off the designated node and onto other nodes who have ``shouldhaveshards`` set to true in :ref:`pg_dist_node`. This function is designed to be called prior to removing a node from the cluster, i.e. turning the node's physical server off.
 
 Arguments
 **************************
@@ -1436,7 +1436,7 @@ Here are the typical steps to remove a single node (for example '10.0.0.1' on a 
 
    .. code-block:: postgresql
 
-     SELECT * from master_drain_node('10.0.0.1', 5432);
+     SELECT * from citus_drain_node('10.0.0.1', 5432);
 
 2. Wait until the command finishes
 3. Remove the node
@@ -1447,7 +1447,7 @@ When draining multiple nodes it's recommended to use :ref:`rebalance_table_shard
 
    .. code-block:: postgresql
 
-     SELECT * FROM master_set_node_property(node_hostname, node_port, 'shouldhaveshards', false);
+     SELECT * FROM citus_set_node_property(node_hostname, node_port, 'shouldhaveshards', false);
 
 2. Drain them all at once with :ref:`rebalance_table_shards`:
 

@@ -12,7 +12,7 @@ Currently Citus imposes primary key constraint only if the distribution column i
 How do I add nodes to an existing Citus cluster?
 ------------------------------------------------
 
-On Citus Cloud it's as easy as dragging a slider in the user interface. The :ref:`scaling_out` section has instructions. In Citus Community edition you can add nodes manually by calling the :ref:`master_add_node` UDF with the hostname (or IP address) and port number of the new node.
+On Citus Cloud it's as easy as dragging a slider in the user interface. The :ref:`scaling_out` section has instructions. In Citus Community edition you can add nodes manually by calling the :ref:`citus_add_node` UDF with the hostname (or IP address) and port number of the new node.
 
 Either way, after adding a node to an existing cluster it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, Citus Cloud and Enterprise edition provide a shard rebalancer utility. You can find more information in the :ref:`shard_rebalancing` section.
 
@@ -129,7 +129,7 @@ In the future Citus will automatically propagate more kinds of objects. The adva
 What if a worker node's address changes?
 ----------------------------------------
 
-If the hostname or IP address of a worker changes, you need to let the coordinator know using :ref:`master_update_node`:
+If the hostname or IP address of a worker changes, you need to let the coordinator know using :ref:`citus_update_node`:
 
 .. code-block:: sql
 
@@ -137,7 +137,7 @@ If the hostname or IP address of a worker changes, you need to let the coordinat
   -- (remember to replace 'old-address' and 'new-address'
   --  with the actual values for your situation)
 
-  select master_update_node(nodeid, 'new-address', nodeport)
+  select citus_update_node(nodeid, 'new-address', nodeport)
     from pg_dist_node
    where nodename = 'old-address';
 

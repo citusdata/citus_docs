@@ -69,11 +69,11 @@ Add a worker
 
 Citus stores all the data for distributed tables on the worker nodes. Hence, if you want to scale out your cluster by adding more computing power, you can do so by adding a worker.
 
-To add a new node to the cluster, you first need to add the DNS name or IP address of that node and port (on which PostgreSQL is running) in the pg_dist_node catalog table. You can do so using the :ref:`master_add_node` UDF. Example:
+To add a new node to the cluster, you first need to add the DNS name or IP address of that node and port (on which PostgreSQL is running) in the pg_dist_node catalog table. You can do so using the :ref:`citus_add_node` UDF. Example:
 
 .. code-block:: postgresql
 
-   SELECT * from master_add_node('node-name', 5432);
+   SELECT * from citus_add_node('node-name', 5432);
 
 The new node is available for shards of new distributed tables. Existing shards will stay where they are unless redistributed, so adding a new worker may not help performance without further steps.
 
@@ -307,12 +307,12 @@ The new shard(s) are created on the same node as the shard(s) from which the ten
 
   -- move the shard to your choice of worker
   -- (it will also move any shards created with the CASCADE option)
-  SELECT master_move_shard_placement(
+  SELECT citus_move_shard_placement(
     102240,
     'source_host', source_port,
     'dest_host', dest_port);
 
-Note that :code:`master_move_shard_placement` will also move any shards which are co-located with the specified one, to preserve their co-location.
+Note that :code:`citus_move_shard_placement` will also move any shards which are co-located with the specified one, to preserve their co-location.
 
 Viewing Query Statistics
 ========================
@@ -758,8 +758,8 @@ Then, on the coordinator:
   \c newbie
   CREATE EXTENSION citus;
 
-  SELECT * from master_add_node('node-name', 5432);
-  SELECT * from master_add_node('node-name2', 5432);
+  SELECT * from citus_add_node('node-name', 5432);
+  SELECT * from citus_add_node('node-name2', 5432);
   -- ... for all of them
 
 Now the new database will be operating as another Citus cluster.
