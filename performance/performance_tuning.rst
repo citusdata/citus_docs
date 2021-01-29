@@ -303,9 +303,9 @@ The **greedy** policy aims to distribute tasks evenly across the workers. This p
 Intermediate Data Transfer Format
 ------------------------------------------------
 
-There are two configuration parameters which relate to the format in which intermediate data will be transferred across workers or between workers and the coordinator. Citus by default transfers intermediate query data in the text format. This is generally better as text files typically have smaller sizes than the binary representation. Hence, this leads to lower network and disk I/O while writing and transferring intermediate data.
+Citus, by default, transfers intermediate query data between workers in textual format. This is generally best, as text files typically have smaller sizes than the binary representation. A more compact representation leads to lower network and disk I/O while writing and transferring intermediate data.
 
-However, for certain data types like hll or hstore arrays, the cost of serializing and deserializing data is pretty high. In such cases, using binary format for transferring intermediate data can improve query performance due to reduced CPU usage. There are two configuration parameters which can be used to tune this behaviour, citus.binary_master_copy_format and citus.binary_worker_copy_format. Enabling the former uses binary format to transfer intermediate query results from the workers to the coordinator while the latter is useful in queries which require dynamic shuffling of intermediate data between workers.
+However, for certain data types like hll or hstore arrays, the cost of serializing and deserializing data is pretty high. In such cases, using binary format for transferring intermediate data can improve query performance. Enabling the citus.binary_worker_copy_format configuration option uses the binary format.
 
 Binary protocol
 ---------------
