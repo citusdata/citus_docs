@@ -1135,6 +1135,10 @@ Arguments
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
 
+  .. note::
+
+    Citus Community edition supports only the ``block_writes`` mode, and treats ``auto`` as ``block_writes``. Citus Enterprise edition is required for the more sophisticated modes.
+
 Return Value
 ************
 
@@ -1195,6 +1199,10 @@ Arguments
   * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
+
+  .. note::
+
+    Citus Community edition supports only the ``block_writes`` mode, and treats ``auto`` as ``block_writes``. Citus Enterprise edition is required for the more sophisticated modes.
 
 **drain_only:** (Optional) When true, move shards off worker nodes who have ``shouldhaveshards`` set to false in :ref:`pg_dist_node`; move no other shards.
 
@@ -1399,6 +1407,10 @@ Arguments
   * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
+
+  .. note::
+
+    Citus Community edition supports only the ``block_writes`` mode, and treats ``auto`` as ``block_writes``. Citus Enterprise edition is required for the more sophisticated modes.
 
 **rebalance_strategy:** (Optional) the name of a strategy in :ref:`pg_dist_rebalance_strategy`. If this argument is omitted, the function chooses the default strategy, as indicated in the table.
 

@@ -12,9 +12,9 @@ Currently Citus imposes primary key constraint only if the distribution column i
 How do I add nodes to an existing Citus cluster?
 ------------------------------------------------
 
-On Citus Cloud it's as easy as dragging a slider in the user interface. The :ref:`scaling_out` section has instructions. In Citus Community edition you can add nodes manually by calling the :ref:`citus_add_node` UDF with the hostname (or IP address) and port number of the new node.
+On Azure Database for PostgreSQL - Hyperscale (Citus) it's as easy as dragging a slider in the user interface. In Citus Community edition you can add nodes manually by calling the :ref:`citus_add_node` UDF with the hostname (or IP address) and port number of the new node.
 
-Either way, after adding a node to an existing cluster it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, Citus Cloud and Enterprise edition provide a shard rebalancer utility. You can find more information in the :ref:`shard_rebalancing` section.
+Either way, after adding a node to an existing cluster it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, Citus provides a shard rebalancer utility. You can find more information in the :ref:`shard_rebalancing` section.
 
 How does Citus handle failure of a worker node?
 -----------------------------------------------
