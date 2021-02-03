@@ -1110,10 +1110,6 @@ The example below will repair an inactive shard placement of shard 12345 which i
 citus_move_shard_placement
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-.. note::
-
-  The citus_move_shard_placement function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
-
 This function moves a given shard (and shards co-located with it) from one node to another. It is typically used indirectly during shard rebalancing rather than being called directly by a database administrator.
 
 There are two ways to move the data: blocking or nonblocking. The blocking approach means that during the move all modifications to the shard are paused. The second way, which avoids blocking shard writes, relies on Postgres 10 logical replication.
@@ -1139,6 +1135,10 @@ Arguments
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
 
+  .. note::
+
+    Citus Community edition supports only the ``block_writes`` mode, and treats ``auto`` as ``block_writes``. Citus Enterprise edition is required for the more sophisticated modes.
+
 Return Value
 ************
 
@@ -1155,9 +1155,6 @@ Example
 
 rebalance_table_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-.. note::
-  The rebalance_table_shards function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
 The rebalance_table_shards() function moves shards of the given table to make
 them evenly distributed among the workers. The function first calculates the
@@ -1203,6 +1200,10 @@ Arguments
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
 
+  .. note::
+
+    Citus Community edition supports only the ``block_writes`` mode, and treats ``auto`` as ``block_writes``. Citus Enterprise edition is required for the more sophisticated modes.
+
 **drain_only:** (Optional) When true, move shards off worker nodes who have ``shouldhaveshards`` set to false in :ref:`pg_dist_node`; move no other shards.
 
 **rebalance_strategy:** (Optional) the name of a strategy in :ref:`pg_dist_rebalance_strategy`. If this argument is omitted, the function chooses the default strategy, as indicated in the table.
@@ -1231,9 +1232,6 @@ This example usage will attempt to rebalance the github_events table without mov
 
 get_rebalance_table_shards_plan
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-.. note::
-  The get_rebalance_table_shards_plan function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
 Output the planned shard movements of :ref:`rebalance_table_shards` without
 performing them. While it's unlikely, get_rebalance_table_shards_plan can
@@ -1266,10 +1264,6 @@ Tuples containing these columns:
 
 get_rebalance_progress
 $$$$$$$$$$$$$$$$$$$$$$
-
-.. note::
-
-  The get_rebalance_progress() function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
 Once a shard rebalance begins, the ``get_rebalance_progress()`` function lists the progress of every shard involved. It monitors the moves planned and executed by ``rebalance_table_shards()``.
 
@@ -1345,9 +1339,6 @@ N/A
 citus_set_default_rebalance_strategy
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-.. note::
-  The citus_set_default_rebalance_strategy function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
-
 Update the :ref:`pg_dist_rebalance_strategy` table, changing the strategy named
 by its argument to be the default chosen when rebalancing shards.
 
@@ -1402,9 +1393,6 @@ Example
 citus_drain_node
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-.. note::
-  The citus_drain_node function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
-
 The citus_drain_node() function moves shards off the designated node and onto other nodes who have ``shouldhaveshards`` set to true in :ref:`pg_dist_node`. This function is designed to be called prior to removing a node from the cluster, i.e. turning the node's physical server off.
 
 Arguments
@@ -1419,6 +1407,10 @@ Arguments
   * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
   * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
   * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
+
+  .. note::
+
+    Citus Community edition supports only the ``block_writes`` mode, and treats ``auto`` as ``block_writes``. Citus Enterprise edition is required for the more sophisticated modes.
 
 **rebalance_strategy:** (Optional) the name of a strategy in :ref:`pg_dist_rebalance_strategy`. If this argument is omitted, the function chooses the default strategy, as indicated in the table.
 
@@ -1460,9 +1452,6 @@ When draining multiple nodes it's recommended to use :ref:`rebalance_table_shard
 
 replicate_table_shards
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-.. note::
-  The replicate_table_shards function is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
 
 The replicate_table_shards() function replicates the under-replicated shards of the given table. The function first calculates the list of under-replicated shards and locations from which they can be fetched for replication. The function then copies over those shards and updates the corresponding shard metadata to reflect the copy.
 

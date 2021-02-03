@@ -101,7 +101,15 @@ If your cluster has very large reference tables, they can slow down the addition
 Rebalance Shards without Downtime
 ---------------------------------
 
-If you want to move existing shards to a newly added worker, Citus Enterprise provides a :ref:`rebalance_table_shards` function to make it easier. This function will move the shards of a given table to distribute them evenly among the workers.
+.. note::
+
+  Shard rebalancing is available in Citus Community edition, but shards are
+  blocked for write access while being moved. For non-blocking reads *and*
+  writes during rebalancing, try Citus Enterprise edition.
+
+If you want to move existing shards to a newly added worker, Citus provides a
+:ref:`rebalance_table_shards` function to make it easier. This function will
+move the shards of a given table to distribute them evenly among the workers.
 
 The function is configurable to rebalance shards according to a number of
 strategies, to best match your database workload. See the function reference to
@@ -112,12 +120,15 @@ the default strategy:
 
   SELECT rebalance_table_shards();
 
-Many products, like multi-tenant SaaS applications, cannot tolerate downtime, and Citus rebalancing is able to honor this requirement on PostgreSQL 10 or above. This means reads and writes from the application can continue with minimal interruption while data is being moved.
+Many products, like multi-tenant SaaS applications, cannot tolerate downtime,
+and with Citus Enterprise edition rebalancing is able to honor this requirement
+on PostgreSQL 10 or above. This means reads and writes from the application can
+continue with minimal interruption while data is being moved.
 
 How it Works
 ~~~~~~~~~~~~
 
-Citus' shard rebalancing uses PostgreSQL logical replication to move data from the old shard (called the "publisher" in replication terms) to the new (the "subscriber.") Logical replication allows application reads and writes to continue uninterrupted while copying shard data. Citus puts a brief write-lock on a shard only during the time it takes to update metadata to promote the subscriber shard as active.
+Citus Enterprise's shard rebalancing uses PostgreSQL logical replication to move data from the old shard (called the "publisher" in replication terms) to the new (the "subscriber.") Logical replication allows application reads and writes to continue uninterrupted while copying shard data. Citus puts a brief write-lock on a shard only during the time it takes to update metadata to promote the subscriber shard as active.
 
 As the PostgreSQL docs `explain <https://www.postgresql.org/docs/current/static/logical-replication-publication.html>`_, the source needs a *replica identity* configured:
 

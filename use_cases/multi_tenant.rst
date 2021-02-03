@@ -422,20 +422,13 @@ Additionally, PostgreSQL supports `GIN indices <https://www.postgresql.org/docs/
 Scaling Hardware Resources
 --------------------------
 
-.. note::
-
-  This section uses features available only in `Citus Enterprise <https://www.citusdata.com/product/enterprise>`_.
-
 Multi-tenant databases should be designed for future scale as business grows or tenants want to store more data. Citus can scale out easily by adding new machines without having to make any changes or take application downtime.
 
 Being able to rebalance data in the Citus cluster allows you to grow your data size or number of customers and improve performance on demand. Adding new machines allows you to keep data in memory even when it is much larger than what a single machine can store.
 
-Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance.
+Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance. (Tenant isolation is a feature of Citus Enterprise edition.)
 
-To scale out your Citus cluster, first add a new worker node to it. On Citus Cloud, you can use the slider present in the "Settings" tab, sliding it to add the required number of nodes. Alternately, if you run your own Citus installation, you can add nodes manually with the :ref:`citus_add_node` UDF.
-
-.. image:: ../images/cloud-nodes-slider.png
-    :alt: graphical interface to add nodes and change their size
+To scale out your Citus cluster, first add a new worker node to it. On Azure Database for PostgreSQL - Hyperscale (Citus), you can use the Azure Portal to add the required number of nodes. Alternately, if you run your own Citus installation, you can add nodes manually with the :ref:`citus_add_node` UDF.
 
 Once you add the node it will be available in the system. However at this point no tenants are stored on it and Citus will not yet run any queries there. To move your existing data, you can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node.
 
@@ -443,10 +436,9 @@ Once you add the node it will be available in the system. However at this point 
 
   SELECT rebalance_table_shards('companies');
 
-Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the companies table and it will take the hint and rebalance the other tables which are distributed by company_id. Also, applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight.
+Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the companies table and it will take the hint and rebalance the other tables which are distributed by company_id. Also, with Citus Enterprise Edition, applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight. In Citus Community edition, writes to shards are blocked during rebalancing but reads are unaffected.
 
 You can learn more about how shard rebalancing works here: :ref:`scaling_out`.
-
 
 Dealing with Big Tenants
 ------------------------

@@ -363,10 +363,6 @@ The pg_dist_colocation table contains information about which tables' shards sho
 Rebalancer strategy table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. note::
-
-  The pg_dist_rebalance_strategy table is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
-
 This table defines strategies that :ref:`rebalance_table_shards` can use to determine where to move shards.
 
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
