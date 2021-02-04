@@ -152,6 +152,9 @@ Differences in worker execution can be caused by tuning configuration difference
 
   Note that when citus.explain_all_tasks is enabled, EXPLAIN plans are retrieved sequentially, which may take a long time for EXPLAIN ANALYZE.
 
+Citus, by default, sorts tasks by execution time in descending order. If `citus.explain_all_tasks` is disabled, then Citus shows the single longest-running task. Please note that this functionality can be used only with EXPLAIN ANALYZE, since regular EXPLAIN doesn't execute the queries, and therefore doesn't know any execution times.
+To change the sort order, you can use :ref:`explain_analyze_sort_method`.
+
 .. _scaling_out_performance:
 
 Scaling Out Performance
