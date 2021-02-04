@@ -102,7 +102,7 @@ Running ``\d+ github.events`` will now show more partitions:
 ::
 
   \d+ github.events
-                                                  Table "github.events"
+                                          Partitioned table "github.events"
       Column    |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
   --------------+-----------------------------+-----------+----------+---------+----------+--------------+-------------
    event_id     | bigint                      |           |          |         | plain    |              |
@@ -115,18 +115,19 @@ Running ``\d+ github.events`` will now show more partitions:
    org          | jsonb                       |           |          |         | extended |              |
    created_at   | timestamp without time zone |           |          |         | plain    |              |
   Partition key: RANGE (created_at)
-  Partitions: github.events_p2018_01_15_0700 FOR VALUES FROM ('2018-01-15 07:00:00') TO ('2018-01-15 08:00:00'),
-              github.events_p2018_01_15_0800 FOR VALUES FROM ('2018-01-15 08:00:00') TO ('2018-01-15 09:00:00'),
-              github.events_p2018_01_15_0900 FOR VALUES FROM ('2018-01-15 09:00:00') TO ('2018-01-15 10:00:00'),
-              github.events_p2018_01_15_1000 FOR VALUES FROM ('2018-01-15 10:00:00') TO ('2018-01-15 11:00:00'),
-              github.events_p2018_01_15_1100 FOR VALUES FROM ('2018-01-15 11:00:00') TO ('2018-01-15 12:00:00'),
-              github.events_p2018_01_15_1200 FOR VALUES FROM ('2018-01-15 12:00:00') TO ('2018-01-15 13:00:00'),
-              github.events_p2018_01_15_1300 FOR VALUES FROM ('2018-01-15 13:00:00') TO ('2018-01-15 14:00:00'),
-              github.events_p2018_01_15_1400 FOR VALUES FROM ('2018-01-15 14:00:00') TO ('2018-01-15 15:00:00'),
-              github.events_p2018_01_15_1500 FOR VALUES FROM ('2018-01-15 15:00:00') TO ('2018-01-15 16:00:00')
+  Partitions: github.events_p2021_02_03_1300 FOR VALUES FROM ('2021-02-03 13:00:00') TO ('2021-02-03 14:00:00'),
+              github.events_p2021_02_03_1400 FOR VALUES FROM ('2021-02-03 14:00:00') TO ('2021-02-03 15:00:00'),
+              github.events_p2021_02_03_1500 FOR VALUES FROM ('2021-02-03 15:00:00') TO ('2021-02-03 16:00:00'),
+              github.events_p2021_02_03_1600 FOR VALUES FROM ('2021-02-03 16:00:00') TO ('2021-02-03 17:00:00'),
+              github.events_p2021_02_03_1700 FOR VALUES FROM ('2021-02-03 17:00:00') TO ('2021-02-03 18:00:00'),
+              github.events_p2021_02_03_1800 FOR VALUES FROM ('2021-02-03 18:00:00') TO ('2021-02-03 19:00:00'),
+              github.events_p2021_02_03_1900 FOR VALUES FROM ('2021-02-03 19:00:00') TO ('2021-02-03 20:00:00'),
+              github.events_p2021_02_03_2000 FOR VALUES FROM ('2021-02-03 20:00:00') TO ('2021-02-03 21:00:00'),
+              github.events_p2021_02_03_2100 FOR VALUES FROM ('2021-02-03 21:00:00') TO ('2021-02-03 22:00:00'),
+              github.events_default DEFAULT
 
 
-By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
+By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. For PostgreSQL 11 or above, a default partition is automatically created. A "_default" suffix is added onto the current table name. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
 
 As time progresses, pg_partman will need to do some maintenance to create new partitions and drop old ones. Anytime you want to trigger maintenance, call:
 
