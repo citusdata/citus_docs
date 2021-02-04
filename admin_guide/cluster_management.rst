@@ -147,6 +147,9 @@ In other words, if your distributed table has a primary key defined then it's re
   CREATE TABLE test_table (key int not null, value text not null);
   SELECT create_distributed_table('test_table', 'key');
 
+  -- add a new worker node to simulate need for
+  -- shard rebalancing
+  
   -- running shard rebalancer with default behavior
   SELECT rebalance_table_shards('test_table');
 
