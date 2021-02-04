@@ -206,7 +206,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 Reference table shards must be placed on all nodes which have distributed
 tables. By default, reference table shards are copied to a node at node
 activation time, that is, when such functions as :ref:`citus_add_node` or
-:ref:`citus_activate_node` are called. However node activation might be an
+:ref:`citus_activate_node` are called. However, node activation might be an
 inconvenient time to copy the placements, because it can take a long time when
 there are large reference tables.
 
@@ -338,7 +338,7 @@ The supported values are:
 citus.enable_repartition_joins (boolean)
 ****************************************
 
-Ordinarily, attempting to perform :ref:`repartition_joins` with the adaptive executor will fail with an error message. However setting ``citus.enable_repartition_joins`` to true allows Citus to perform the join. The default value is false.
+Ordinarily, attempting to perform :ref:`repartition_joins` with the adaptive executor will fail with an error message. However, setting ``citus.enable_repartition_joins`` to true allows Citus to perform the join. The default value is false.
 
 .. _enable_repartitioned_insert_select:
 

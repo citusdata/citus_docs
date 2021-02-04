@@ -78,7 +78,7 @@ It generates these underlying SQL queries:
   FROM myapp_task
   WHERE project_id IN (1, 2, 3);
 
-However the second query would go faster with an extra filter:
+However, the second query would go faster with an extra filter:
 
 .. code-block:: postgresql
 

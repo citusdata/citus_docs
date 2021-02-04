@@ -167,7 +167,7 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
        102010 |          1 |           0 | localhost |    12345 |           6
        102011 |          1 |           0 | localhost |    12345 |           7
 
-  That information is now available by joining pg_dist_placement with :ref:`pg_dist_node <pg_dist_node>` on the groupid. For compatibility Citus still provides pg_dist_shard_placement as a view. However we recommend using the new, more normalized, tables when possible.
+  That information is now available by joining pg_dist_placement with :ref:`pg_dist_node <pg_dist_node>` on the groupid. For compatibility Citus still provides pg_dist_shard_placement as a view. However, we recommend using the new, more normalized, tables when possible.
 
 
 Shard Placement States

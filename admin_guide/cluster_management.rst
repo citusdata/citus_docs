@@ -32,14 +32,14 @@ Real-Time Analytics Use-Case
 
 In the :ref:`rt_blurb` use-case, shard count should be related to the total number of cores on the workers. To ensure maximum parallelism, you should create enough shards on each node such that there is at least one shard per CPU core. We typically recommend creating a high number of initial shards, e.g. **2x or 4x the number of current CPU cores**. This allows for future scaling if you add more workers and CPU cores.
 
-However keep in mind that for each query Citus opens one database connection per shard, and these connections are limited. Be careful to keep the shard count small enough that distributed queries won't often have to wait for a connection. Put another way, the connections needed, ``(max concurrent queries * shard count)``, should generally not exceed the total connections possible in the system, ``(number of workers * max_connections per worker)``.
+However, keep in mind that for each query Citus opens one database connection per shard, and these connections are limited. Be careful to keep the shard count small enough that distributed queries won't often have to wait for a connection. Put another way, the connections needed, ``(max concurrent queries * shard count)``, should generally not exceed the total connections possible in the system, ``(number of workers * max_connections per worker)``.
 
 .. _prod_size:
 
 Initial Hardware Size
 =====================
 
-The size of a cluster, in terms of number of nodes and their hardware capacity, is easy to change. (:ref:`Scaling <cloud_scaling>` on Citus Cloud is especially easy.) However you still need to choose an initial size for a new cluster. Here are some tips for a reasonable initial cluster size.
+The size of a cluster, in terms of number of nodes and their hardware capacity, is easy to change. (:ref:`Scaling <cloud_scaling>` on Citus Cloud is especially easy.) However, you still need to choose an initial size for a new cluster. Here are some tips for a reasonable initial cluster size.
 
 Multi-Tenant SaaS Use-Case
 --------------------------
@@ -60,7 +60,7 @@ Real-Time Analytics Use-Case
 Scaling the cluster
 ===================
 
-Citus’s logical sharding based architecture allows you to scale out your cluster without any down time. This section describes how you can add more nodes to your Citus cluster in order to improve query performance / scalability.
+Citus’s logical sharding based architecture allows you to scale out your cluster without any downtime. This section describes how you can add more nodes to your Citus cluster in order to improve query performance / scalability.
 
 .. _adding_worker_node:
 
@@ -139,7 +139,7 @@ As the PostgreSQL docs `explain <https://www.postgresql.org/docs/current/static/
   one. Another unique index (with certain additional requirements) can
   also be set to be the replica identity.
 
-In other words, if your distributed table has a primary key defined then it's ready for shard rebalancing with no extra work. However if it doesn't have a primary key or an explicitly defined replica identity, then attempting to rebalance it will cause an error. For instance:
+In other words, if your distributed table has a primary key defined then it's ready for shard rebalancing with no extra work. However, if it doesn't have a primary key or an explicitly defined replica identity, then attempting to rebalance it will cause an error. For instance:
 
 .. code-block:: sql
 
@@ -221,7 +221,7 @@ However, in some write heavy use cases where the coordinator becomes a performan
 Dealing With Node Failures
 ==========================
 
-In this sub-section, we discuss how you can deal with node failures without incurring any downtime on your Citus cluster. We first discuss how Citus handles worker failures automatically by maintaining multiple replicas of the data. We also briefly describe how users can replicate their shards to bring them to the desired replication factor in case a node is down for a long time. Lastly, we discuss how you can setup redundancy and failure handling mechanisms for the coordinator.
+In this subsection, we discuss how you can deal with node failures without incurring any downtime on your Citus cluster. We first discuss how Citus handles worker failures automatically by maintaining multiple replicas of the data. We also briefly describe how users can replicate their shards to bring them to the desired replication factor in case a node is down for a long time. Lastly, we discuss how you can setup redundancy and failure handling mechanisms for the coordinator.
 
 .. _worker_node_failures:
 
@@ -261,7 +261,7 @@ Tenant Isolation
 
 Citus places table rows into worker shards based on the hashed value of the rows' distribution column. Multiple distribution column values often fall into the same shard. In the Citus multi-tenant use case this means that tenants often share shards.
 
-However sharing shards can cause resource contention when tenants differ drastically in size. This is a common situation for systems with a large number of tenants -- we have observed that the size of tenant data tend to follow a Zipfian distribution as the number of tenants increases. This means there are a few very large tenants, and many smaller ones. To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.
+However, sharing shards can cause resource contention when tenants differ drastically in size. This is a common situation for systems with a large number of tenants -- we have observed that the size of tenant data tend to follow a Zipfian distribution as the number of tenants increases. This means there are a few very large tenants, and many smaller ones. To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.
 
 Citus Enterprise Edition provides the tools to isolate a tenant on a specific node. This happens in two phases: 1) isolating the tenant's data to a new dedicated shard, then 2) moving the shard to the desired node. To understand the process it helps to know precisely how rows of data are assigned to shards.
 
@@ -399,7 +399,7 @@ Results:
 
 We can see that Citus uses the adaptive executor most commonly to run queries. This executor fragments the query into constituent queries to run on relevant nodes, and combines the results on the coordinator node. In the case of the second query (filtering by the distribution column ``id = $1``), Citus determined that it needed the data from just one node. Lastly, we can see that the ``insert into foo select…`` statement ran with the insert-select executor which provides flexibility to run these kind of queries.
 
-So far the information in this view doesn't give us anything we couldn't already learn by running the ``EXPLAIN`` command for a given query. However in addition to getting information about individual queries, the ``citus_stat_statements`` view allows us to answer questions such as "what percentage of queries in the cluster are scoped to a single tenant?"
+So far the information in this view doesn't give us anything we couldn't already learn by running the ``EXPLAIN`` command for a given query. However, in addition to getting information about individual queries, the ``citus_stat_statements`` view allows us to answer questions such as "what percentage of queries in the cluster are scoped to a single tenant?"
 
 .. code-block:: postgresql
 
@@ -410,7 +410,6 @@ So far the information in this view doesn't give us anything we couldn't already
 
 ::
 
-  .
    sum | single_tenant
   -----+---------------
      2 | f
@@ -444,13 +443,13 @@ The pg_stat_statements view limits the number of statements it tracks, and the d
 
 There are three ways to help synchronize the views, and all three can be used together.
 
-1. Have the maintenance daemon periodically sync the citus and pg stats. The GUC ``citus.stats_statements_purge_interval`` sets time in seconds for the sync. A value of 0 disables periodic syncs.
-2. Adjust the number of entries in citus_stat_statements. The ``citus.stats_statements_max`` GUC removes old entries when new ones cross the threshold. The default value is 50K, and the highest allowable value is 10M. Note that each entry costs about 140 bytes in shared memory so set the value wisely.
+1. Have the maintenance daemon periodically sync the citus and pg stats. The GUC ``citus.stat_statements_purge_interval`` sets time in seconds for the sync. A value of 0 disables periodic syncs.
+2. Adjust the number of entries in citus_stat_statements. The ``citus.stat_statements_max`` GUC removes old entries when new ones cross the threshold. The default value is 50K, and the highest allowable value is 10M. Note that each entry costs about 140 bytes in shared memory so set the value wisely.
 3. Increase ``pg_stat_statements.max``. Its default value is 5000, and could be increased to 10K, 20K or even 50K without much overhead. This is most beneficial when there is more local (i.e. coordinator) query workload.
 
 .. note::
 
-   Changing ``pg_stat_statements.max`` or ``citus.stat_statements_max`` requires restarting the PostgreSQL service. Changing ``citus.stats_statements_purge_interval``, on the other hand, will come info effect with a call to `pg_reload_conf() <https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADMIN-SIGNAL>`_.
+   Changing ``pg_stat_statements.max`` or ``citus.stat_statements_max`` requires restarting the PostgreSQL service. Changing ``citus.stat_statements_purge_interval``, on the other hand, will come into effect with a call to `pg_reload_conf() <https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADMIN-SIGNAL>`_.
 
 Resource Conservation
 =====================
@@ -509,7 +508,7 @@ To set non-sensitive libpq connection parameters to be used for all node connect
 
 There is a whitelist of parameters that the GUC accepts, see the :ref:`node_conninfo <node_conninfo>` reference for details. As of Citus 8.1, the default value for node_conninfo is ``sslmode=require``, which prevents unencrypted communication between nodes. If your cluster was originally created before Citus 8.1 the value will be ``sslmode=prefer``. After setting up self-signed certificates on all nodes it's recommended to change this setting to ``sslmode=require``.
 
-After changing this setting it is important to reload the postgres configuration. Even though the changed setting might be visible in all sessions, the setting is only consulted by Citus when new connections are established. When a reload signal is received citus marks all existing connections to be closed which causes a reconnect after running transactions have been completed.
+After changing this setting it is important to reload the postgres configuration. Even though the changed setting might be visible in all sessions, the setting is only consulted by Citus when new connections are established. When a reload signal is received, Citus marks all existing connections to be closed which causes a reconnect after running transactions have been completed.
 
 .. code-block:: postgresql
 
@@ -544,7 +543,7 @@ After this INSERT, any query needing to connect to node 123 as the user jdoe wil
 
 This changes the user from using a password to use a certificate and keyfile while connecting to node 123 instead. Make sure the user certificate is signed by a certificate that is trusted by the worker you are connecting to and authentication settings on the worker allow for certificate based authentication. Full documentation on how to use client certificates can be found in `the postgres libpq documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-CLIENTCERT>`_.
 
-Changing ``pg_dist_authinof`` does not force any existing connection to reconnect.
+Changing ``pg_dist_authinfo`` does not force any existing connection to reconnect.
 
 Setup Certificate Authority signed certificates
 -----------------------------------------------
@@ -612,7 +611,7 @@ To verify the connections from the coordinator to the workers are encrypted you 
 Increasing Worker Security
 --------------------------
 
-For your convenience getting started, our multi-node installation instructions direct you to set up the :code:`pg_hba.conf` on the workers with its `authentication method <https://www.postgresql.org/docs/current/static/auth-methods.html>`_ set to "trust" for local network connections. However you might desire more security.
+For your convenience getting started, our multi-node installation instructions direct you to set up the :code:`pg_hba.conf` on the workers with its `authentication method <https://www.postgresql.org/docs/current/static/auth-methods.html>`_ set to "trust" for local network connections. However, you might desire more security.
 
 To require that all connections supply a hashed password, update the PostgreSQL :code:`pg_hba.conf` on every worker node with something like this:
 
@@ -628,7 +627,7 @@ To require that all connections supply a hashed password, update the PostgreSQL 
   hostssl    all             all             127.0.0.1/32            md5
   hostssl    all             all             ::1/128                 md5
 
-The coordinator node needs to know roles' passwords in order to communicate with the workers. In Citus Enterprise the ``pg_dist_authinfo`` table can provide that information, as discussed earlier. However in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
+The coordinator node needs to know roles' passwords in order to communicate with the workers. In Citus Enterprise the ``pg_dist_authinfo`` table can provide that information, as discussed earlier. However, in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
 
 ::
 
@@ -749,7 +748,7 @@ In addition to our core Citus extension, we also maintain several others:
 Creating a New Database
 =======================
 
-Each PostgreSQL server can hold `multiple databases <https://www.postgresql.org/docs/current/static/manage-ag-overview.html>`_. However new databases do not inherit the extensions of any others; all desired extensions must be added afresh. To run Citus on a new database, you'll need to create the database on the coordinator and workers, create the Citus extension within that database, and register the workers in the coordinator database.
+Each PostgreSQL server can hold `multiple databases <https://www.postgresql.org/docs/current/static/manage-ag-overview.html>`_. However, new databases do not inherit the extensions of any others; all desired extensions must be added afresh. To run Citus on a new database, you'll need to create the database on the coordinator and workers, create the Citus extension within that database, and register the workers in the coordinator database.
 
 Connect to each of the worker nodes and run:
 

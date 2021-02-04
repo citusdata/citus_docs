@@ -33,7 +33,7 @@ Resolution
 
 To fix, check that the worker is accepting connections, and that DNS is correctly resolving.
 
-Canceling the transaction since it was involved in a distributed deadlock
+Cancelling the transaction since it was involved in a distributed deadlock
 -------------------------------------------------------------------------
 
 Deadlocks can happen not only in a single-node database, but in a distributed database, caused by queries executing across multiple nodes. Citus has the intelligence to recognize distributed deadlocks and defuse them by aborting one of the queries involved.
@@ -94,7 +94,7 @@ As of Citus 8.1, nodes are required talk to one another using SSL by default. If
 
 However, if a root certificate authority file exists (typically in ``~/.postgresql/root.crt``), then the certificate will be checked unsuccessfully against that CA at connection time. The Postgres documentation about `SSL support <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBQ-SSL-CERTIFICATES>`_ warns:
 
-   For backwards compatibility with earlier versions of PostgreSQL,
+   For backward compatibility with earlier versions of PostgreSQL,
    if a root CA file exists, the behavior of sslmode=require will be
    the same as that of verify-ca, meaning the server certificate is
    validated against the CA. Relying on this behavior is discouraged,

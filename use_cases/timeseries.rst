@@ -27,7 +27,7 @@ Time-based partitioning makes most sense when:
 1. Most queries access a very small subset of the most recent data
 2. Older data is periodically expired (deleted/dropped)
 
-Keep in mind that, in the wrong situation, reading all these partitions can hurt overhead more than it helps. However in the right situations it is quite helpful. For example, when keeping a year of time series data and regularly querying only the most recent week.
+Keep in mind that, in the wrong situation, reading all these partitions can hurt overhead more than it helps. However, in the right situations it is quite helpful. For example, when keeping a year of time series data and regularly querying only the most recent week.
 
 Scaling Timeseries Data on Citus
 --------------------------------
@@ -166,7 +166,7 @@ Now whenever maintenance runs, partitions older than a month are automatically d
 Archiving with Columnar Storage
 -------------------------------
 
-Some applications have data logically divides into a small updatable part and a
+Some applications have data logically divided into a small updatable part and a
 larger part that's "frozen." Examples include logs, clickstreams, or sales
 records. In this case we can combine partitioning with :ref:`columnar table
 storage <columnar>` (introduced in Citus 10) to compress historical partitions
@@ -194,13 +194,13 @@ aspect, we won't distribute this table.
   -- columnar partitions for historical data
   CREATE TABLE ge0 PARTITION OF github.columnar_events
     FOR VALUES FROM ('2015-01-01 00:00:00') TO ('2015-01-01 02:00:00')
-    USING COLUMNAR;
+    USING columnar;
   CREATE TABLE ge1 PARTITION OF github.columnar_events
     FOR VALUES FROM ('2015-01-01 02:00:00') TO ('2015-01-01 04:00:00')
-    USING COLUMNAR;
+    USING columnar;
   CREATE TABLE ge2 PARTITION OF github.columnar_events
     FOR VALUES FROM ('2015-01-01 04:00:00') TO ('2015-01-01 06:00:00')
-    USING COLUMNAR;
+    USING columnar;
 
   -- row partition for latest data
   CREATE TABLE ge3 PARTITION OF github.columnar_events
@@ -293,7 +293,7 @@ In code, here's how to turn ge3 columnar:
   --   LOCK TABLE github.columnar_events IN ACCESS EXCLUSIVE MODE;
   
   LOCK TABLE ge3 IN EXCLUSIVE MODE;
-  CREATE TABLE ge3_tmp_new(LIKE ge3) USING COLUMNAR;
+  CREATE TABLE ge3_tmp_new(LIKE ge3) USING columnar;
   INSERT INTO ge3_tmp_new SELECT * FROM ge3;
   
   -- DETACH will take ACCESS EXCLUSIVE LOCK on the partitioned table
