@@ -539,10 +539,10 @@ After this INSERT, any query needing to connect to node 123 as the user jdoe wil
 
 .. code-block:: postgresql
 
-  -- update user jdoe to use certificate authenticaion
+  -- update user jdoe to use certificate authentication
   UPDATE pg_dist_authinfo
-  WHERE nodeid = 123 AND rolename = 'jdoe'
-  SET authinfo = 'sslcert=/path/to/user.crt sslkey=/path/to/user.key';
+  SET authinfo = 'sslcert=/path/to/user.crt sslkey=/path/to/user.key'
+  WHERE nodeid = 123 AND rolename = 'jdoe';
 
 This changes the user from using a password to use a certificate and keyfile while connecting to node 123 instead. Make sure the user certificate is signed by a certificate that is trusted by the worker you are connecting to and authentication settings on the worker allow for certificate based authentication. Full documentation on how to use client certificates can be found in `the postgres libpq documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-CLIENTCERT>`_.
 
