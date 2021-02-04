@@ -24,9 +24,10 @@ Caused when the the coordinator node is unable to connect to a worker.
 
 ::
 
-  WARNING:  connection error: ec2-52-21-20-100.compute-1.amazonaws.com:5432
-  DETAIL:  no connection to the server
-  ERROR:  could not receive query results
+  ERROR:  connection to the remote node localhost:5432 failed with the following error: could not connect to server: Connection refused
+          Is the server running on host "localhost" (127.0.0.1) and accepting
+          TCP/IP connections on port 5432?
+
 
 Resolution
 ~~~~~~~~~~
@@ -58,8 +59,7 @@ We can see this in action by distributing rows across worker nodes, and then run
 
 ::
 
-  ERROR:  40P01: canceling the transaction since it was involved in a distributed deadlock
-  LOCATION:  ProcessInterrupts, postgres.c:2988
+  ERROR:  canceling the transaction since it was involved in a distributed deadlock
 
 Resolution
 ~~~~~~~~~~
@@ -113,9 +113,8 @@ When all available worker connection slots are in use, further connections will 
 
 ::
 
-  WARNING:  08006: connection error: hostname:5432
+  WARNING:  connection error: hostname:5432
   ERROR:  could not connect to any active placements
-  DETAIL:  FATAL:  sorry, too many clients already
 
 Resolution
 ~~~~~~~~~~
@@ -204,9 +203,7 @@ Trying to make a unique index on a non-distribution column will generate an erro
 
 ::
 
-  ERROR:  0A000: cannot create constraint on "foo"
-  DETAIL:  Distributed relations cannot have UNIQUE, EXCLUDE, or PRIMARY KEY constraints that do not include the partition column (with an equality operator if EXCLUDE).
-  LOCATION:  ErrorIfUnsupportedConstraint, multi_utility.c:2505
+  ERROR:  creating unique indexes on non-partition columns is currently unsupported
 
 Enforcing uniqueness on a non-distribution column would require Citus to check every shard on every INSERT to validate, which defeats the goal of scalability.
 
@@ -225,7 +222,7 @@ Function create_distributed_table does not exist
 
   SELECT create_distributed_table('foo', 'id');
   /*
-  ERROR:  42883: function create_distributed_table(unknown, unknown) does not exist
+  ERROR:  function create_distributed_table(unknown, unknown) does not exist
   LINE 1: SELECT create_distributed_table('foo', 'id');
   HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
   */
@@ -255,7 +252,7 @@ Citus forbids running distributed queries that filter results using stable funct
 
 ::
 
-  ERROR:  0A000: STABLE functions used in UPDATE queries cannot be called with column references
+  ERROR:  STABLE functions used in UPDATE queries cannot be called with column references
 
 In this case the comparison operator ``<`` between timestamp and timestamptz is not immutable.
 
