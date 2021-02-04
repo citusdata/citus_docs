@@ -214,7 +214,7 @@ Next, download sample data:
   wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
   gzip -d github_events-2015-01-01-*.gz
 
-And load it:
+And load it (note that this data requires the database to have UTF8 encoding):
 
 .. code-block:: psql
 
