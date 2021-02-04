@@ -264,10 +264,9 @@ queried in its entirety like a normal table.
 
 ::
 
-  .
    count
   -------
-   16001
+   13306
 
 Entries can be updated or deleted, as long as there's a WHERE clause on the
 partition key which filters entirely into row table partitions.
