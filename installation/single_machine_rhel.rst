@@ -34,20 +34,15 @@ Let's create directories for those nodes to store their data. For convenience in
   export PATH=$PATH:/usr/pgsql-13/bin
 
   cd ~
-  mkdir -p citus/coordinator citus/worker1 citus/worker2
+  mkdir citus
 
-  # create three normal postgres instances
-  initdb -D citus/coordinator
-  initdb -D citus/worker1
-  initdb -D citus/worker2
+  initdb -D citus
 
 Citus is a Postgres extension, to tell Postgres to use this extension you'll need to add it to a configuration variable called ``shared_preload_libraries``:
 
 ::
 
-  echo "shared_preload_libraries = 'citus'" >> citus/coordinator/postgresql.conf
-  echo "shared_preload_libraries = 'citus'" >> citus/worker1/postgresql.conf
-  echo "shared_preload_libraries = 'citus'" >> citus/worker2/postgresql.conf
+  echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
 
 **3. Start the coordinator and workers**
 
@@ -55,25 +50,14 @@ We will start the PostgreSQL instances on ports 9700 (for the coordinator) and 9
 
 Let's start the databases::
 
-  pg_ctl -D citus/coordinator -o "-p 9700" -l coordinator_logfile start
-  pg_ctl -D citus/worker1 -o "-p 9701" -l worker1_logfile start
-  pg_ctl -D citus/worker2 -o "-p 9702" -l worker2_logfile start
+  pg_ctl -D citus -l citus_logfile start
 
 
 Above you added Citus to ``shared_preload_libraries``. That lets it hook into some deep parts of Postgres, swapping out the query planner and executor.  Here, we load the user-facing side of Citus (such as the functions you'll soon call):
 
 ::
 
-  psql -p 9700 -c "CREATE EXTENSION citus;"
-  psql -p 9701 -c "CREATE EXTENSION citus;"
-  psql -p 9702 -c "CREATE EXTENSION citus;"
-
-Finally, the coordinator needs to know where it can find the workers. To tell it you can run:
-
-::
-
-  psql -p 9700 -c "SELECT * from citus_add_node('localhost', 9701);"
-  psql -p 9700 -c "SELECT * from citus_add_node('localhost', 9702);"
+  psql -c "CREATE EXTENSION citus;"
 
 **4. Verify that installation has succeeded**
 
@@ -81,7 +65,7 @@ To verify that the installation has succeeded we check that the coordinator node
 
 ::
 
-  psql -p 9700 -c "select * from citus_get_active_worker_nodes();"
+  psql -c "select * citus_version();"
 
 You should see a row for each worker node including the node name and port.
 
