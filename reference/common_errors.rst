@@ -3,16 +3,6 @@ Common Error Messages
 
 .. _error_failed_execute:
 
-Relation *foo* is not distributed
----------------------------------
-
-This is caused by attempting to join local and distributed tables in the same query.
-
-Resolution
-~~~~~~~~~~
-
-For an example, with workarounds, see :ref:`join_local_dist` and :ref:`join_local_ref`.
-
 Could not receive query results
 -------------------------------
 
@@ -143,10 +133,20 @@ Resolution
 
 Try connecting directly to the server with psql to ensure it is running and accepting connections.
 
+Relation *foo* is not distributed
+---------------------------------
+
+This error no longer occurs in the current version of Citus. It was caused by attempting to join local and distributed tables in the same query.
+
+Resolution
+~~~~~~~~~~
+
+:ref:`Upgrade <upgrading>` to Citus 10.0 or higher.
+
 Unsupported clause type
 -----------------------
 
-This error no longer occurs in the current version of citus. It used to happen when executing a join with an inequality condition:
+This error no longer occurs in the current version of Citus. It used to happen when executing a join with an inequality condition:
 
 .. code-block:: postgresql
 
@@ -169,7 +169,7 @@ Resolution
 Cannot open new connections after the first modification command within a transaction
 -------------------------------------------------------------------------------------
 
-This error no longer occurs in the current version of citus except in certain unusual shard repair scenarios. It used to happen when updating rows in a transaction, and then running another command which would open new coordinator-to-worker connections.
+This error no longer occurs in the current version of Citus except in certain unusual shard repair scenarios. It used to happen when updating rows in a transaction, and then running another command which would open new coordinator-to-worker connections.
 
 .. code-block:: postgresql
 
