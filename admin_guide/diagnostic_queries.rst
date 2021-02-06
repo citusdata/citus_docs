@@ -129,30 +129,27 @@ Example output:
 Querying the size of your shards
 --------------------------------
 
-This query will provide you with the size of every shard of a given distributed table, designated here with the placeholder :code:`my_distributed_table`:
+This query will provide you with the size of every shard of a given distributed table, designated here with the placeholder :code:`my_table`:
 
 .. code-block:: postgresql
 
-  SELECT *
-  FROM run_command_on_shards('my_distributed_table', $cmd$
-    SELECT json_build_object(
-      'shard_name', '%1$s',
-      'size',       pg_size_pretty(pg_table_size('%1$s'))
-    );
-  $cmd$);
+  SELECT shardid, table_name, shard_size
+  FROM citus_shards
+  WHERE table_name = 'my_table';
 
 Example output:
 
 ::
 
-  ┌─────────┬─────────┬───────────────────────────────────────────────────────────────────────┐
-  │ shardid │ success │                                result                                 │
-  ├─────────┼─────────┼───────────────────────────────────────────────────────────────────────┤
-  │  102008 │ t       │ {"shard_name" : "my_distributed_table_102008", "size" : "2416 kB"}    │
-  │  102009 │ t       │ {"shard_name" : "my_distributed_table_102009", "size" : "3960 kB"}    │
-  │  102010 │ t       │ {"shard_name" : "my_distributed_table_102010", "size" : "1624 kB"}    │
-  │  102011 │ t       │ {"shard_name" : "my_distributed_table_102011", "size" : "4792 kB"}    │
-  └─────────┴─────────┴───────────────────────────────────────────────────────────────────────┘
+  .
+   shardid | table_name | shard_size
+  ---------+------------+------------
+    102170 | my_table   | 86 MB
+    102171 | my_table   | 86 MB
+    102172 | my_table   | 87 MB
+    102173 | my_table   | 86 MB
+
+This query uses the :ref:`citus_shards`.
 
 Querying the size of all distributed tables
 -------------------------------------------
