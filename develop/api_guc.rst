@@ -277,6 +277,17 @@ Specifies whether to automatically propagate DDL changes from the coordinator to
 
   For a list of DDL propagation support, see :ref:`ddl_prop_support`.
 
+.. _enable_local_ref_fkeys:
+
+citus.enable_local_reference_table_foreign_keys (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Enables foreign keys between reference tables and local tables when coordinator is added to metadata (see :ref:`citus_add_node`).
+When enabled, Citus supports foreign keys between reference tables and local tables by applying a conversion to local tables (i.e adds local tables to Citus metadata) when defining such foreign keys.
+Likely, Citus would automatically remove such tables from Citus metadata when user removes such foreign keys.
+Note that foreign keys between reference tables and local tables might bring some DDL limitations on related local tables, which are mostly the same limitations that are already applying to reference tables and distributed tables.
+The default value for this GUC is 'true'.
+
 Executor Configuration
 ------------------------------------------------------------
 
