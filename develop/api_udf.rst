@@ -101,8 +101,9 @@ Undistributing moves all data from shards back into a local table on the
 coordinator node (assuming the data can fit), then deletes the shards.
 
 Citus will not undistribute tables that have -- or are referenced by -- foreign
-keys. Before undistributing a table you must drop its foreign key constraints,
-or those in other tables pointing to it.
+keys unless `cascade_via_foreign_keys` option is set to `true`.
+If `cascade_via_foreign_keys` is set to `false` (by default), you must drop its
+foreign key constraints, or those in other tables pointing to it before undistributing.
 
 A common use for this function is to :ref:`change_dist_col`.
 
@@ -110,6 +111,7 @@ Arguments
 ************************
 
 **table_name:** Name of the distributed or reference table to undistribute.
+**cascade_via_foreign_keys:** (Optional) When set to "true," also undistributes other tables that are connected to input table via a foreign key graph.
 
 Return Value
 ********************************
