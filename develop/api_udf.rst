@@ -131,6 +131,25 @@ This example distributes a ``github_events`` table and then undistributes it.
   -- undo that and make it local again
   SELECT undistribute_table('github_events');
 
+
+.. _remove_local_tables_from_metadata:
+
+remove_local_tables_from_metadata
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+remove_local_tables_from_metadata() function removes local tables from Citus metadata
+that are no longer needed to be in metadata (see :ref:`enable_local_ref_fkeys`).
+
+Arguments
+************************
+
+N/A
+
+Return Value
+********************************
+
+N/A
+
 .. _create_reference_table:
 
 create_reference_table
