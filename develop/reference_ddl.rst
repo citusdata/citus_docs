@@ -246,10 +246,14 @@ Foreign keys may be created in these situations:
 
 * between two local (non-distributed) tables,
 * between two reference tables,
+* between reference tables and local tables (enabled by default via :ref:`enable_local_ref_fkeys`),
 * between two :ref:`colocated <colocation>` distributed tables when the key includes the distribution column, or
 * as a distributed table referencing a :ref:`reference table <reference_tables>`
 
 Foreign keys from reference tables to distributed tables are not supported.
+
+For the foreign keys between reference tables and local tables, any `referential actions <https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-FK>` is allowed for foreign keys from local tables to reference tables.
+However, Citus only supports `RESTRICT` action or no action for foreign keys from reference tables to local tables.
 
 .. note::
 

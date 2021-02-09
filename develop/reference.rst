@@ -1,3 +1,5 @@
+.. _sql_reference:
+
 SQL Reference
 #############
 
