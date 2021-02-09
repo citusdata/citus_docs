@@ -361,6 +361,28 @@ Here's an example of how ``create_distributed_function()`` adds entries to the
     distribution_argument_index |
     colocationid                |
 
+.. _citus_tables:
+
+Citus tables view
+~~~~~~~~~~~~~~~~~
+
+The citus_tables view shows all Citus tables, their types, and their sizes in a human readable format. For distributed tables, the view also shows their 
+
+.. code-block:: sql
+
+  SELECT * FROM citus_tables;
+
+::
+
+  ┌──────────┬──────────────────┬─────────────────────┬───────────────┬─────────┬─────────────┬───────┬───────────────┐
+  │   Name   │ Citus Table Type │ Distribution Column │ Colocation ID │  Size   │ Shard Count │ Owner │ Access Method │
+  ├──────────┼──────────────────┼─────────────────────┼───────────────┼─────────┼─────────────┼───────┼───────────────┤
+  │ foo.test │ distributed      │ x                   │             1 │ 0 bytes │          32 │ citus │ heap          │
+  │ ref      │ reference        │ <none>              │             2 │ 24 GB   │           1 │ citus │ heap          │
+  │ test     │ distributed      │ x                   │             1 │ 248 TB  │          32 │ citus │ heap          │
+  └──────────┴──────────────────┴─────────────────────┴───────────────┴─────────┴─────────────┴───────┴───────────────┘
+
+
 .. _colocation_group_table:
 
 Co-location group table

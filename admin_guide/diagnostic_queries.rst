@@ -158,22 +158,15 @@ This query gets a list of the sizes for each distributed table plus the size of 
 
 .. code-block:: postgresql
 
-  SELECT
-    tablename,
-    pg_size_pretty(
-      citus_total_relation_size(tablename::text)
-    ) AS total_size
-  FROM pg_tables pt
-  JOIN pg_dist_partition pp
-    ON pt.tablename = pp.logicalrelid::text
-  WHERE schemaname = 'public';
+  SELECT Name, Size
+    FROM citus_tables;
 
 Example output:
 
 ::
 
   ┌───────────────┬────────────┐
-  │   tablename   │ total_size │
+  │     Name      │    Size    │
   ├───────────────┼────────────┤
   │ github_users  │ 39 MB      │
   │ github_events │ 98 MB      │

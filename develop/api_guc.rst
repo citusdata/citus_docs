@@ -468,6 +468,8 @@ The default value is false.
 Explain output
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+.. _explain_all_tasks:
+
 citus.explain_all_tasks (boolean)
 ************************************************
 
