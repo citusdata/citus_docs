@@ -287,7 +287,7 @@ Enables foreign keys between reference tables and local tables when coordinator 
 When enabled, Citus supports foreign keys between reference tables and local tables by applying a conversion to local tables (i.e adds local tables to Citus metadata) when defining such foreign keys.
 Citus would automatically remove such tables from Citus metadata when user drops such foreign keys.
 
-Note that foreign keys between reference tables and local tables might bring some DDL limitations on related local tables, which are mostly the same limitations that are already applying to reference tables in :ref:`sql_reference`.
+Note that foreign keys between reference tables and local tables might bring some limitations to related local tables, which are mostly the same limitations that are already applying to reference tables (see :ref:`sql_reference`).
 
 The default value for this GUC is 'true'.
 
