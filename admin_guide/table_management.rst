@@ -165,6 +165,7 @@ contain the same data, and compare:
 
 ::
 
+  .
    row_size | columnar_size
   ----------+---------------
       16384 |         24576

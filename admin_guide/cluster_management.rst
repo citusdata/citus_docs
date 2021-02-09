@@ -413,6 +413,7 @@ So far the information in this view doesn't give us anything we couldn't already
 
 ::
 
+  .
    sum | single_tenant
   -----+---------------
      2 | f
@@ -724,7 +725,7 @@ Now roles ``tenant_1`` and ``tenant_2`` get different results for their queries:
 
   INSERT INTO events VALUES (3,3,'surprise');
   /*
-  ERROR:  42501: new row violates row-level security policy for table "events_102055"
+  ERROR:  new row violates row-level security policy for table "events_102055"
   */
 
 .. _sql_extensions:

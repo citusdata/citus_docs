@@ -24,7 +24,7 @@ Resolution
 
 To fix, check that the worker is accepting connections, and that DNS is correctly resolving.
 
-Cancelling the transaction since it was involved in a distributed deadlock
+Canceling the transaction since it was involved in a distributed deadlock
 -------------------------------------------------------------------------
 
 Deadlocks can happen not only in a single-node database, but in a distributed database, caused by queries executing across multiple nodes. Citus has the intelligence to recognize distributed deadlocks and defuse them by aborting one of the queries involved.

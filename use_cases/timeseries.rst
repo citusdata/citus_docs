@@ -167,7 +167,7 @@ Now whenever maintenance runs, partitions older than a month are automatically d
 Archiving with Columnar Storage
 -------------------------------
 
-Some applications have data logically divided into a small updatable part and a
+Some applications have data that logically divides into a small updatable part and a
 larger part that's "frozen." Examples include logs, clickstreams, or sales
 records. In this case we can combine partitioning with :ref:`columnar table
 storage <columnar>` (introduced in Citus 10) to compress historical partitions
@@ -264,6 +264,7 @@ queried in its entirety like a normal table.
 
 ::
 
+  .
    count
   -------
    13306
