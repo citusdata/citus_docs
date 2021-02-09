@@ -288,6 +288,7 @@ When enabled, Citus supports foreign keys between reference tables and local tab
 Citus would automatically remove such tables from Citus metadata when user drops such foreign keys.
 
 Note that foreign keys between reference tables and local tables might bring some limitations to related local tables, which are mostly the same limitations that are already applying to reference tables (see :ref:`sql_reference`).
+But dropping those foreign keys would eliminate such limitations on local tables.
 
 The default value for this GUC is 'true'.
 
