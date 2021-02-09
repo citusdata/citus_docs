@@ -111,6 +111,7 @@ Arguments
 ************************
 
 **table_name:** Name of the distributed or reference table to undistribute.
+
 **cascade_via_foreign_keys:** (Optional) When set to "true," also undistributes other tables that are chained to input table with foreign keys.
 
 Return Value
