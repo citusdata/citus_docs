@@ -172,7 +172,7 @@ Example output:
   │ github_events │ 98 MB      │
   └───────────────┴────────────┘
 
-Note that this query works only when :code:`citus.shard_replication_factor` = 1. Also there are other Citus functions for querying distributed table size, see :ref:`table_size`.
+There are other ways to measure distributed table size, as well. See :ref:`table_size`.
 
 Determining Replication Factor per Table
 ----------------------------------------

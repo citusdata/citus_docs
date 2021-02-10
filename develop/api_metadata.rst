@@ -366,7 +366,17 @@ Here's an example of how ``create_distributed_function()`` adds entries to the
 Citus tables view
 ~~~~~~~~~~~~~~~~~
 
-The citus_tables view shows all Citus tables, their types, and their sizes in a human readable format. For distributed tables, the view also shows their 
+The citus_tables view shows a summary of all tables managed by Citus (distributed and reference tables). The view combines information from Citus metadata tables for an easy, human-readable overview of these table properties:
+
+* :ref:`Table type <table_types>`
+* :ref:`Distribution column <dist_column>`
+* :ref:`Colocation group <colocation_groups>` id
+* Human-readable size
+* Shard count
+* Owner (database user)
+* Access method (heap or :ref:`columnar <columnar>`)
+
+Here's an example:
 
 .. code-block:: sql
 
@@ -377,11 +387,10 @@ The citus_tables view shows all Citus tables, their types, and their sizes in a 
   ┌──────────┬──────────────────┬─────────────────────┬───────────────┬─────────┬─────────────┬───────┬───────────────┐
   │   Name   │ Citus Table Type │ Distribution Column │ Colocation ID │  Size   │ Shard Count │ Owner │ Access Method │
   ├──────────┼──────────────────┼─────────────────────┼───────────────┼─────────┼─────────────┼───────┼───────────────┤
-  │ foo.test │ distributed      │ x                   │             1 │ 0 bytes │          32 │ citus │ heap          │
+  │ foo.test │ distributed      │ test_column         │             1 │ 0 bytes │          32 │ citus │ heap          │
   │ ref      │ reference        │ <none>              │             2 │ 24 GB   │           1 │ citus │ heap          │
-  │ test     │ distributed      │ x                   │             1 │ 248 TB  │          32 │ citus │ heap          │
+  │ test     │ distributed      │ id                  │             1 │ 248 TB  │          32 │ citus │ heap          │
   └──────────┴──────────────────┴─────────────────────┴───────────────┴─────────┴─────────────┴───────┴───────────────┘
-
 
 .. _colocation_group_table:
 
