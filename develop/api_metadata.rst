@@ -130,18 +130,18 @@ This view helps you inspect shards to find, among other things, any size imbalan
 ::
 
   .
-   shardid | table_name | citus_table_type | colocation_id | nodename  | nodeport | shard_size | shard_size_bytes
-  ---------+------------+------------------+---------------+-----------+----------+------------+------------------
-    102170 | dist       | distributed      |            34 | localhost |     9701 | 86 MB      |         90677248
-    102171 | dist       | distributed      |            34 | localhost |     9702 | 86 MB      |         90619904
-    102172 | dist       | distributed      |            34 | localhost |     9701 | 87 MB      |         90701824
-    102173 | dist       | distributed      |            34 | localhost |     9702 | 86 MB      |         90693632
-    102174 | ref        | reference        |             2 | localhost |     9701 | 8192 bytes |             8192
-    102174 | ref        | reference        |             2 | localhost |     9702 | 8192 bytes |             8192
-    102175 | dist2      | distributed      |            34 | localhost |     9701 | 912 kB     |           933888
-    102176 | dist2      | distributed      |            34 | localhost |     9702 | 928 kB     |           950272
-    102177 | dist2      | distributed      |            34 | localhost |     9701 | 920 kB     |           942080
-    102178 | dist2      | distributed      |            34 | localhost |     9702 | 912 kB     |           933888
+   table_name | shardid | shard_name   | citus_table_type | colocation_id | nodename  | nodeport | shard_size
+  ------------+---------+--------------+------------------+---------------+-----------+----------+------------
+   dist       |  102170 | dist_102170  | distributed      |            34 | localhost |     9701 |   90677248
+   dist       |  102171 | dist_102171  | distributed      |            34 | localhost |     9702 |   90619904
+   dist       |  102172 | dist_102172  | distributed      |            34 | localhost |     9701 |   90701824
+   dist       |  102173 | dist_102173  | distributed      |            34 | localhost |     9702 |   90693632
+   ref        |  102174 | ref_102174   | reference        |             2 | localhost |     9701 |       8192
+   ref        |  102174 | ref_102174   | reference        |             2 | localhost |     9702 |       8192
+   dist2      |  102175 | dist2_102175 | distributed      |            34 | localhost |     9701 |     933888
+   dist2      |  102176 | dist2_102176 | distributed      |            34 | localhost |     9702 |     950272
+   dist2      |  102177 | dist2_102177 | distributed      |            34 | localhost |     9701 |     942080
+   dist2      |  102178 | dist2_102178 | distributed      |            34 | localhost |     9702 |     933888
 
 The colocation_id refers to the :ref:`colocation group <colocation_group_table>`. For more info about citus_table_type, see :ref:`table_types`.
 

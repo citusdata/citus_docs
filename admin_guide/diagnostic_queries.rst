@@ -144,10 +144,10 @@ Example output:
   .
    shardid | table_name | shard_size
   ---------+------------+------------
-    102170 | my_table   | 86 MB
-    102171 | my_table   | 86 MB
-    102172 | my_table   | 87 MB
-    102173 | my_table   | 86 MB
+    102170 | my_table   |   90177536
+    102171 | my_table   |   90177536
+    102172 | my_table   |   91226112
+    102173 | my_table   |   90177536
 
 This query uses the :ref:`citus_shards`.
 
