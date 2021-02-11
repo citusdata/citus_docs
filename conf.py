@@ -149,6 +149,9 @@ html_context = {
     'articles/sharding_mt_app': 'https://www.citusdata.com/blog/2016/08/10/sharding-for-a-multi-tenant-app-with-postgres/',
     'articles/semi_structured_data': 'https://www.citusdata.com/blog/2016/07/25/sharding-json-in-postgres-and-performance/',
     'articles/faceted_search': 'https://www.citusdata.com/blog/2016/04/28/scalable-product-search/'
+  },
+  'page_descriptions': {
+    'get_started/what_is_citus': 'The most whizz-bang data machine in existence'
   }
 }
 
