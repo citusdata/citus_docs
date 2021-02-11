@@ -384,13 +384,13 @@ Here's an example:
 
 ::
 
-  ┌──────────┬──────────────────┬─────────────────────┬───────────────┬─────────┬─────────────┬───────┬───────────────┐
-  │   Name   │ Citus Table Type │ Distribution Column │ Colocation ID │  Size   │ Shard Count │ Owner │ Access Method │
-  ├──────────┼──────────────────┼─────────────────────┼───────────────┼─────────┼─────────────┼───────┼───────────────┤
-  │ foo.test │ distributed      │ test_column         │             1 │ 0 bytes │          32 │ citus │ heap          │
-  │ ref      │ reference        │ <none>              │             2 │ 24 GB   │           1 │ citus │ heap          │
-  │ test     │ distributed      │ id                  │             1 │ 248 TB  │          32 │ citus │ heap          │
-  └──────────┴──────────────────┴─────────────────────┴───────────────┴─────────┴─────────────┴───────┴───────────────┘
+  ┌────────────┬──────────────────┬─────────────────────┬───────────────┬────────────┬─────────────┬─────────────┬───────────────┐
+  │ table_name │ citus_table_type │ distribution_column │ colocation_id │ table_size │ shard_count │ table_owner │ access_method │
+  ├────────────┼──────────────────┼─────────────────────┼───────────────┼────────────┼─────────────┼─────────────┼───────────────┤
+  │ foo.test   │ distributed      │ test_column         │             1 │ 0 bytes    │          32 │ citus       │ heap          │
+  │ ref        │ reference        │ <none>              │             2 │ 24 GB      │           1 │ citus       │ heap          │
+  │ test       │ distributed      │ id                  │             1 │ 248 TB     │          32 │ citus       │ heap          │
+  └────────────┴──────────────────┴─────────────────────┴───────────────┴────────────┴─────────────┴─────────────┴───────────────┘
 
 .. _colocation_group_table:
 

@@ -158,7 +158,7 @@ This query gets a list of the sizes for each distributed table plus the size of 
 
 .. code-block:: postgresql
 
-  SELECT Name, Size
+  SELECT table_name, table_size
     FROM citus_tables;
 
 Example output:
@@ -166,7 +166,7 @@ Example output:
 ::
 
   ┌───────────────┬────────────┐
-  │     Name      │    Size    │
+  │  table_name   │ table_size │
   ├───────────────┼────────────┤
   │ github_users  │ 39 MB      │
   │ github_events │ 98 MB      │
