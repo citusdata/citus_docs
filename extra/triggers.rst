@@ -24,7 +24,7 @@ Suppose that for each row in a table we wish to record the user who last updated
   );
   SELECT create_distributed_table('events', 'id');
 
-However this is a distributed table, so a single trigger on the coordinator for the table won't work. We need to create a trigger for each of the table placements.
+However, this is a distributed table, so a single trigger on the coordinator for the table won't work. We need to create a trigger for each of the table placements.
 
 .. code-block:: postgresql
 

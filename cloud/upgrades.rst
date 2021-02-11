@@ -27,4 +27,4 @@ When the new nodes have caught up (and during a maintenance window if one has be
 .. image:: ../images/cloud-upgrade-complete.png
     :alt: message saying that the formation is up to date
 
-If :ref:`high-availability replication <ha>` is enabled, Citus Cloud will automatically create new standby servers. However :ref:`follower replicas <cloud_followers>` will not receive the updates and must be manually destroyed and recreated.
+If :ref:`high-availability replication <ha>` is enabled, Citus Cloud will automatically create new standby servers. However, :ref:`follower replicas <cloud_followers>` will not receive the updates and must be manually destroyed and recreated.

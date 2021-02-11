@@ -217,7 +217,7 @@ Citus propagates most `ALTER TABLE <https://www.postgresql.org/docs/current/stat
 
   ALTER TABLE products ALTER COLUMN price SET DEFAULT 7.77;
 
-Significant changes to an existing column like renaming it or changing its data type are fine too. However the data type of the :ref:`distribution column <distributed_data_modeling>` cannot be altered. This column determines how table data distributes through the Citus cluster, and modifying its data type would require moving the data.
+Significant changes to an existing column like renaming it or changing its data type are fine too. However, the data type of the :ref:`distribution column <distributed_data_modeling>` cannot be altered. This column determines how table data distributes through the Citus cluster, and modifying its data type would require moving the data.
 
 Attempting to do so causes an error:
 
@@ -233,7 +233,7 @@ Attempting to do so causes an error:
   ERROR:  cannot execute ALTER TABLE command involving partition column
   */
 
-However there's a workaround of re-creating the distributed table. See :ref:`change_dist_col`.
+However, there's a workaround of re-creating the distributed table. See :ref:`change_dist_col`.
 
 Adding/Removing Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -327,7 +327,7 @@ In the course of time imagine that a few non-addresses get into the table.
    INSERT INTO users VALUES
       ('foo@example.com'), ('hacker12@aol.com'), ('lol');
 
-We would like to validate the addresses, but PostgreSQL does not ordinarily allow us to add a CHECK constraint that fails for existing rows. However it *does* allow a constraint marked not valid:
+We would like to validate the addresses, but PostgreSQL does not ordinarily allow us to add a CHECK constraint that fails for existing rows. However, it *does* allow a constraint marked not valid:
 
 .. code-block:: postgres
 
@@ -385,4 +385,4 @@ Adding an index takes a write lock, which can be undesirable in a multi-tenant "
 Manual Modification
 ~~~~~~~~~~~~~~~~~~~
 
-Currently other DDL commands are not auto-propagated, however you can propagate the changes manually. See :ref:`manual_prop`.
+Currently other DDL commands are not auto-propagated, however, you can propagate the changes manually. See :ref:`manual_prop`.

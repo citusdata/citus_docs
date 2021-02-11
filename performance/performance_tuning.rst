@@ -63,7 +63,7 @@ This tells you several things. To begin with there are thirty-two shards, and th
 
 ::
 
-  ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+  ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
     Task Count: 32
 
 Next it picks one of the workers and shows you more about how the query behaves there. It indicates the host, port, database, and the query that was sent to the worker so you can connect to the worker directly and try the query if desired:
@@ -191,7 +191,7 @@ For higher INSERT performance, the factor which impacts insert rates the most is
 Subquery/CTE Network Overhead
 =============================
 
-In the best case Citus can execute queries containing subqueries and CTEs in a single step. This is usually because both the main query and subquery filter by tables' distribution column in the same way, and can be pushed down to worker nodes together. However Citus is sometimes forced to execute subqueries *before* executing the main query, copying the intermediate subquery results to other worker nodes for use by the main query. This technique is called :ref:`push_pull_execution`.
+In the best case Citus can execute queries containing subqueries and CTEs in a single step. This is usually because both the main query and subquery filter by tables' distribution column in the same way, and can be pushed down to worker nodes together. However, Citus is sometimes forced to execute subqueries *before* executing the main query, copying the intermediate subquery results to other worker nodes for use by the main query. This technique is called :ref:`push_pull_execution`.
 
 It's important to be aware when subqueries are executed in a separate step, and avoid sending too much data between worker nodes. The network overhead will hurt performance. The EXPLAIN command allows you to discover how queries will be executed, including whether multiple steps are required. For a detailed example see :ref:`push_pull_execution`.
 
@@ -320,7 +320,7 @@ rows (such as ``select * from table``), or when result columns use big types
 
 In those cases it can be beneficial to set ``citus.enable_binary_protocol`` to
 ``true``, which will change the encoding of the results to binary, rather than
-using text encoding. Binary encoding significantly reduce bandwidth for types
+using text encoding. Binary encoding significantly reduces bandwidth for types
 that have a compact binary representation, such as ``hll``, ``tdigest``,
 ``timestamp`` and ``double precision``.
 
@@ -329,7 +329,7 @@ Adaptive Executor
 
 Citus' adaptive executor conserves database connections to help reduce resource usage on worker nodes during multi-shard queries. When running a query, the executor begins by using a single -- usually precached -- connection to a remote node. If the query finishes within the time period specified by citus.executor_slow_start_interval, no more connections are required. Otherwise the executor gradually establishes new connections as directed by citus.executor_slow_start_interval. (See also https://docs.citusdata.com/en/latest/develop/api_guc.html#adaptive-executor-configuration)
 
-With the behavior explained above, the executor aims to open optimal number of connections to remote nodes. For short running multi-shard queries, like an index-only-scan on the shards, the executor may use only a single connection and execute all the queries on the shards over a single connection. For longer running multi-shard queries, the executor will keep opening connections to parallelize the execution on the remote nodes. If the queries on the shards take long (such as > 500ms), the executor converges to using one connection per shard (or up to citus.max_adaptive_executor_pool_size), in order to maximize the parallelism.
+With the behavior explained above, the executor aims to open an optimal number of connections to remote nodes. For short running multi-shard queries, like an index-only-scan on the shards, the executor may use only a single connection and execute all the queries on the shards over a single connection. For longer running multi-shard queries, the executor will keep opening connections to parallelize the execution on the remote nodes. If the queries on the shards take long (such as > 500ms), the executor converges to using one connection per shard (or up to citus.max_adaptive_executor_pool_size), in order to maximize the parallelism.
 
 .. _scaling_data_ingestion:
 
@@ -343,7 +343,7 @@ Real-time Insert and Updates
 
 On the Citus coordinator, you can perform INSERT, INSERT .. ON CONFLICT, UPDATE, and DELETE commands directly on distributed tables. When you issue one of these commands, the changes are immediately visible to the user.
 
-When you run an INSERT (or another ingest command), Citus first finds the right shard placements based on the value in the distribution column. Citus then connects to the worker nodes storing the shard placements, and performs an INSERT on each of them. From the perspective of the user, the INSERT takes several milliseconds to process because of the network latency to worker nodes. The Citus coordinator node however can process concurrent INSERTs to reach high throughputs.
+When you run an INSERT (or another ingest command), Citus first finds the right shard placements based on the value in the distribution column. Citus then connects to the worker nodes storing the shard placements, and performs an INSERT on each of them. From the perspective of the user, the INSERT takes several milliseconds to process because of the network latency to worker nodes. The Citus coordinator node, however, can process concurrent INSERTs to reach high throughputs.
 
 Insert Throughput
 -----------------

@@ -116,7 +116,7 @@ Certain users already store their data as HLL columns. In such cases, they can d
 Estimating Top N Items
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Calculating the first *n* elements in a set by applying count, sort, and limit is simple. However as data sizes increase, this method becomes slow and resource intensive. It's more efficient to use an approximation.
+Calculating the first *n* elements in a set by applying count, sort, and limit is simple. However, as data sizes increase, this method becomes slow and resource intensive. It's more efficient to use an approximation.
 
 The open source `TopN extension <https://github.com/citusdata/postgresql-topn>`_ for Postgres enables fast approximate results to "top-n" queries. The extension materializes the top values into a JSON data type. TopN can incrementally update these top values, or merge them on-demand across different time intervals.
 

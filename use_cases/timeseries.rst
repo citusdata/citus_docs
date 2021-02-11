@@ -27,7 +27,7 @@ Time-based partitioning makes most sense when:
 1. Most queries access a very small subset of the most recent data
 2. Older data is periodically expired (deleted/dropped)
 
-Keep in mind that, in the wrong situation, reading all these partitions can hurt overhead more than it helps. However in the right situations it is quite helpful. For example, when keeping a year of time series data and regularly querying only the most recent week.
+Keep in mind that, in the wrong situation, reading all these partitions can hurt overhead more than it helps. However, in the right situations it is quite helpful. For example, when keeping a year of time series data and regularly querying only the most recent week.
 
 Scaling Timeseries Data on Citus
 --------------------------------
@@ -102,7 +102,7 @@ Running ``\d+ github.events`` will now show more partitions:
 ::
 
   \d+ github.events
-                                                  Table "github.events"
+                                          Partitioned table "github.events"
       Column    |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description
   --------------+-----------------------------+-----------+----------+---------+----------+--------------+-------------
    event_id     | bigint                      |           |          |         | plain    |              |
@@ -115,18 +115,19 @@ Running ``\d+ github.events`` will now show more partitions:
    org          | jsonb                       |           |          |         | extended |              |
    created_at   | timestamp without time zone |           |          |         | plain    |              |
   Partition key: RANGE (created_at)
-  Partitions: github.events_p2018_01_15_0700 FOR VALUES FROM ('2018-01-15 07:00:00') TO ('2018-01-15 08:00:00'),
-              github.events_p2018_01_15_0800 FOR VALUES FROM ('2018-01-15 08:00:00') TO ('2018-01-15 09:00:00'),
-              github.events_p2018_01_15_0900 FOR VALUES FROM ('2018-01-15 09:00:00') TO ('2018-01-15 10:00:00'),
-              github.events_p2018_01_15_1000 FOR VALUES FROM ('2018-01-15 10:00:00') TO ('2018-01-15 11:00:00'),
-              github.events_p2018_01_15_1100 FOR VALUES FROM ('2018-01-15 11:00:00') TO ('2018-01-15 12:00:00'),
-              github.events_p2018_01_15_1200 FOR VALUES FROM ('2018-01-15 12:00:00') TO ('2018-01-15 13:00:00'),
-              github.events_p2018_01_15_1300 FOR VALUES FROM ('2018-01-15 13:00:00') TO ('2018-01-15 14:00:00'),
-              github.events_p2018_01_15_1400 FOR VALUES FROM ('2018-01-15 14:00:00') TO ('2018-01-15 15:00:00'),
-              github.events_p2018_01_15_1500 FOR VALUES FROM ('2018-01-15 15:00:00') TO ('2018-01-15 16:00:00')
+  Partitions: github.events_p2021_02_03_1300 FOR VALUES FROM ('2021-02-03 13:00:00') TO ('2021-02-03 14:00:00'),
+              github.events_p2021_02_03_1400 FOR VALUES FROM ('2021-02-03 14:00:00') TO ('2021-02-03 15:00:00'),
+              github.events_p2021_02_03_1500 FOR VALUES FROM ('2021-02-03 15:00:00') TO ('2021-02-03 16:00:00'),
+              github.events_p2021_02_03_1600 FOR VALUES FROM ('2021-02-03 16:00:00') TO ('2021-02-03 17:00:00'),
+              github.events_p2021_02_03_1700 FOR VALUES FROM ('2021-02-03 17:00:00') TO ('2021-02-03 18:00:00'),
+              github.events_p2021_02_03_1800 FOR VALUES FROM ('2021-02-03 18:00:00') TO ('2021-02-03 19:00:00'),
+              github.events_p2021_02_03_1900 FOR VALUES FROM ('2021-02-03 19:00:00') TO ('2021-02-03 20:00:00'),
+              github.events_p2021_02_03_2000 FOR VALUES FROM ('2021-02-03 20:00:00') TO ('2021-02-03 21:00:00'),
+              github.events_p2021_02_03_2100 FOR VALUES FROM ('2021-02-03 21:00:00') TO ('2021-02-03 22:00:00'),
+              github.events_default DEFAULT
 
 
-By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
+By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. For PostgreSQL 11 or above, a default partition is automatically created. A "_default" suffix is added onto the current table name. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
 
 As time progresses, pg_partman will need to do some maintenance to create new partitions and drop old ones. Anytime you want to trigger maintenance, call:
 
@@ -166,7 +167,7 @@ Now whenever maintenance runs, partitions older than a month are automatically d
 Archiving with Columnar Storage
 -------------------------------
 
-Some applications have data logically divides into a small updatable part and a
+Some applications have data that logically divides into a small updatable part and a
 larger part that's "frozen." Examples include logs, clickstreams, or sales
 records. In this case we can combine partitioning with :ref:`columnar table
 storage <columnar>` (introduced in Citus 10) to compress historical partitions
@@ -194,13 +195,13 @@ aspect, we won't distribute this table.
   -- columnar partitions for historical data
   CREATE TABLE ge0 PARTITION OF github.columnar_events
     FOR VALUES FROM ('2015-01-01 00:00:00') TO ('2015-01-01 02:00:00')
-    USING COLUMNAR;
+    USING columnar;
   CREATE TABLE ge1 PARTITION OF github.columnar_events
     FOR VALUES FROM ('2015-01-01 02:00:00') TO ('2015-01-01 04:00:00')
-    USING COLUMNAR;
+    USING columnar;
   CREATE TABLE ge2 PARTITION OF github.columnar_events
     FOR VALUES FROM ('2015-01-01 04:00:00') TO ('2015-01-01 06:00:00')
-    USING COLUMNAR;
+    USING columnar;
 
   -- row partition for latest data
   CREATE TABLE ge3 PARTITION OF github.columnar_events
@@ -213,7 +214,7 @@ Next, download sample data:
   wget http://examples.citusdata.com/github_archive/github_events-2015-01-01-{0..5}.csv.gz
   gzip -d github_events-2015-01-01-*.gz
 
-And load it:
+And load it (note that this data requires the database to have UTF8 encoding):
 
 .. code-block:: psql
 
@@ -266,7 +267,7 @@ queried in its entirety like a normal table.
   .
    count
   -------
-   16001
+   13306
 
 Entries can be updated or deleted, as long as there's a WHERE clause on the
 partition key which filters entirely into row table partitions.
@@ -293,7 +294,7 @@ In code, here's how to turn ge3 columnar:
   --   LOCK TABLE github.columnar_events IN ACCESS EXCLUSIVE MODE;
   
   LOCK TABLE ge3 IN EXCLUSIVE MODE;
-  CREATE TABLE ge3_tmp_new(LIKE ge3) USING COLUMNAR;
+  CREATE TABLE ge3_tmp_new(LIKE ge3) USING columnar;
   INSERT INTO ge3_tmp_new SELECT * FROM ge3;
   
   -- DETACH will take ACCESS EXCLUSIVE LOCK on the partitioned table

@@ -7,7 +7,7 @@ Scaling
 
 Citus Cloud provides self-service scaling to deal with increased load. The web interface makes it easy to either add new worker nodes or increase existing nodes' memory and CPU capacity.
 
-For most cases either approach to scaling is fine and will improve performance. However there are times you may want to choose one over the other. If the cluster is reaching its disk limit then adding more nodes is the best choice. Alternately, if there is still a lot of headroom on disk but performance is suffering, then scaling node RAM and processing power is the way to go.
+For most cases either approach to scaling is fine and will improve performance. However, there are times you may want to choose one over the other. If the cluster is reaching its disk limit then adding more nodes is the best choice. Alternately, if there is still a lot of headroom on disk but performance is suffering, then scaling node RAM and processing power is the way to go.
 
 Both adjustments are available in the formation configuration panel of the settings tab:
 
@@ -60,7 +60,7 @@ You can go to the "Rebalancer" tab in the Cloud console to see the shard balance
 .. image:: ../images/cloud-rebalance-unnecessary.png
     :alt: gray squares representing evently balanced shards
 
-However if the shards could be placed more evenly, such as after a new node has been added to the cluster, the page will show a "Rebalance recommended."
+However, if the shards could be placed more evenly, such as after a new node has been added to the cluster, the page will show a "Rebalance recommended."
 
 .. image:: ../images/cloud-rebalance-recommended.png
     :alt: squares of different colors representing unbalanced shards
