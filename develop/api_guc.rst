@@ -472,3 +472,17 @@ citus.explain_all_tasks (boolean)
 ************************************************
 
 By default, Citus shows the output of a single, arbitrary task when running `EXPLAIN <http://www.postgresql.org/docs/current/static/sql-explain.html>`_ on a distributed query. In most cases, the explain output will be similar across tasks. Occasionally, some of the tasks will be planned differently or have much higher execution times. In those cases, it can be useful to enable this parameter, after which the EXPLAIN output will include all tasks. This may cause the EXPLAIN to take longer.
+
+.. _explain_analyze_sort_method:
+
+citus.explain_analyze_sort_method (enum)
+************************************************
+
+Determines the sort method of the tasks in the output of EXPLAIN ANALYZE.
+The default value of citus.explain_analyze_sort_method is ``execution-time``.
+
+The supported values are:
+
+* **execution-time:** sort by execution time.
+
+* **taskId:** sort by task id.
