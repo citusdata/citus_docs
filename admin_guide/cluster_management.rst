@@ -307,11 +307,8 @@ The new shard(s) are created on the same node as the shard(s) from which the ten
 
   -- find the node currently holding the new shard
   SELECT nodename, nodeport
-    FROM pg_dist_placement AS placement,
-         pg_dist_node AS node
-   WHERE placement.groupid = node.groupid
-     AND node.noderole = 'primary'
-     AND shardid = 102240;
+    FROM citus_shards
+   WHERE shardid = 102240;
 
   -- list the available worker nodes that could hold the shard
   SELECT * FROM master_get_active_worker_nodes();

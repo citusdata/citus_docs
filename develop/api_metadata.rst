@@ -110,6 +110,40 @@ The shardstorage column in pg_dist_shard indicates the type of storage used for 
 |                |                      | | distributed file_fdw tables)                                              |
 +----------------+----------------------+-----------------------------------------------------------------------------+
 
+.. _citus_shards:
+
+Shard information view
+~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to the low-level shard metadata table described above, Citus provides a ``citus_shards`` view to easily check:
+
+* Where each shard is (node, and port),
+* What kind of table it belongs to, and
+* Its size
+
+This view helps you inspect shards to find, among other things, any size imbalances across nodes.
+
+.. code-block:: sql
+
+  SELECT * FROM citus_shards;
+
+::
+
+  .
+   table_name | shardid | shard_name   | citus_table_type | colocation_id | nodename  | nodeport | shard_size
+  ------------+---------+--------------+------------------+---------------+-----------+----------+------------
+   dist       |  102170 | dist_102170  | distributed      |            34 | localhost |     9701 |   90677248
+   dist       |  102171 | dist_102171  | distributed      |            34 | localhost |     9702 |   90619904
+   dist       |  102172 | dist_102172  | distributed      |            34 | localhost |     9701 |   90701824
+   dist       |  102173 | dist_102173  | distributed      |            34 | localhost |     9702 |   90693632
+   ref        |  102174 | ref_102174   | reference        |             2 | localhost |     9701 |       8192
+   ref        |  102174 | ref_102174   | reference        |             2 | localhost |     9702 |       8192
+   dist2      |  102175 | dist2_102175 | distributed      |            34 | localhost |     9701 |     933888
+   dist2      |  102176 | dist2_102176 | distributed      |            34 | localhost |     9702 |     950272
+   dist2      |  102177 | dist2_102177 | distributed      |            34 | localhost |     9701 |     942080
+   dist2      |  102178 | dist2_102178 | distributed      |            34 | localhost |     9702 |     933888
+
+The colocation_id refers to the :ref:`colocation group <colocation_group_table>`. For more info about citus_table_type, see :ref:`table_types`.
 
 .. _placements:
 
@@ -326,6 +360,37 @@ Here's an example of how ``create_distributed_function()`` adds entries to the
     object_args                 |
     distribution_argument_index |
     colocationid                |
+
+.. _citus_tables:
+
+Citus tables view
+~~~~~~~~~~~~~~~~~
+
+The citus_tables view shows a summary of all tables managed by Citus (distributed and reference tables). The view combines information from Citus metadata tables for an easy, human-readable overview of these table properties:
+
+* :ref:`Table type <table_types>`
+* :ref:`Distribution column <dist_column>`
+* :ref:`Colocation group <colocation_groups>` id
+* Human-readable size
+* Shard count
+* Owner (database user)
+* Access method (heap or :ref:`columnar <columnar>`)
+
+Here's an example:
+
+.. code-block:: sql
+
+  SELECT * FROM citus_tables;
+
+::
+
+  ┌────────────┬──────────────────┬─────────────────────┬───────────────┬────────────┬─────────────┬─────────────┬───────────────┐
+  │ table_name │ citus_table_type │ distribution_column │ colocation_id │ table_size │ shard_count │ table_owner │ access_method │
+  ├────────────┼──────────────────┼─────────────────────┼───────────────┼────────────┼─────────────┼─────────────┼───────────────┤
+  │ foo.test   │ distributed      │ test_column         │             1 │ 0 bytes    │          32 │ citus       │ heap          │
+  │ ref        │ reference        │ <none>              │             2 │ 24 GB      │           1 │ citus       │ heap          │
+  │ test       │ distributed      │ id                  │             1 │ 248 TB     │          32 │ citus       │ heap          │
+  └────────────┴──────────────────┴─────────────────────┴───────────────┴────────────┴─────────────┴─────────────┴───────────────┘
 
 .. _colocation_group_table:
 
