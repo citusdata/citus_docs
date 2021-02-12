@@ -1,6 +1,6 @@
 .. _development:
 
-Single-node Citus
+Single-Node Citus
 -----------------
 
 If you are a developer looking to try Citus out on your machine, the guides below will help you get started quickly.

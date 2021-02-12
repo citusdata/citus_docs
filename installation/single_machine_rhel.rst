@@ -35,7 +35,7 @@ Let's create a new database on disk. For convenience in using PostgreSQL Unix do
   mkdir citus
   initdb -D citus
 
-Citus is a Postgres extension, to tell Postgres to use this extension you'll need to add it to a configuration variable called ``shared_preload_libraries``:
+Citus is a Postgres extension. To tell Postgres to use this extension you'll need to add it to a configuration variable called ``shared_preload_libraries``:
 
 .. code-block:: sh
 
@@ -43,7 +43,7 @@ Citus is a Postgres extension, to tell Postgres to use this extension you'll nee
 
 **3. Start the database server**
 
-Let's start PostgreSQL on the new directory
+Finally, we'll start an instance of PostgreSQL for the new directory:
 
 .. code-block:: sh
 
