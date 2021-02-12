@@ -9,7 +9,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
 
 **1. Install PostgreSQL 13 and the Citus extension**
 
-::
+.. code-block:: sh
 
   # Add Citus repository for package manager
   curl https://install.citusdata.com/community/deb.sh | sudo bash
@@ -22,11 +22,9 @@ This section describes the steps needed to set up a single-node Citus cluster on
 
 **2. Initialize the Cluster**
 
-Citus has two kinds of components, the coordinator and the workers. The coordinator coordinates queries and maintains metadata on where in the cluster each row of data is. The workers hold your data and respond to queries.
+Let's create a new database on disk. For convenience in using PostgreSQL Unix domain socket connections, we'll use the postgres user.
 
-Let's create directories for those nodes to store their data. For convenience in using PostgreSQL Unix domain socket connections we'll use the postgres user.
-
-::
+.. code-block:: sh
 
   # this user has access to sockets in /var/run/postgresql
   sudo su - postgres
@@ -36,37 +34,36 @@ Let's create directories for those nodes to store their data. For convenience in
 
   cd ~
   mkdir citus
-
   initdb -D citus
 
 Citus is a Postgres extension, to tell Postgres to use this extension you'll need to add it to a configuration variable called ``shared_preload_libraries``:
 
-::
+.. code-block:: sh
 
   echo "shared_preload_libraries = 'citus'" >> citus/postgresql.conf
 
-**3. Start the coordinator and workers**
+**3. Start the database server**
 
-We will start the PostgreSQL instances on ports 9700 (for the coordinator) and 9701, 9702 (for the workers). We assume those ports are available on your machine. Feel free to use different ports if they are in use.
+Let's start PostgreSQL on the new directory
 
-Let's start the databases::
+.. code-block:: sh
 
   pg_ctl -D citus -l citus_logfile start
 
 Above you added Citus to ``shared_preload_libraries``. That lets it hook into some deep parts of Postgres, swapping out the query planner and executor.  Here, we load the user-facing side of Citus (such as the functions you'll soon call):
 
-::
+.. code-block:: sh
 
   psql -c "CREATE EXTENSION citus;"
 
 **4. Verify that installation has succeeded**
 
-To verify that the installation has succeeded we check that the coordinator node has picked up the desired worker configuration. First start the psql shell on the coordinator node:
+To verify that the installation has succeeded, and Citus is installed:
 
-::
+.. code-block:: sh
 
   psql -c "select citus_version();"
 
-You should see a row for each worker node including the node name and port.
+You should see details of the Citus extension.
 
 At this step, you have completed the installation process and are ready to use your Citus cluster. To help you get started, we have a :ref:`tutorial<multi_tenant_tutorial>` which has instructions on setting up a Citus cluster with sample data in minutes.
