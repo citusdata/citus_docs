@@ -160,8 +160,8 @@ say you want to delete a campaign and all its associated ads, you could do it at
     COMMIT;
 
 Each statement in a transactions causes roundtrips between the coordinator and
-workers in Citus.  For multi-tenant workloads, it's more efficient to run
-transactions in distributed functions. The efficiency gains become more
+workers in multi-node Citus.  For multi-tenant workloads, it's more efficient
+to run transactions in distributed functions. The efficiency gains become more
 apparent for larger transactions, but we can use the small transaction above as
 an example.
 
@@ -181,10 +181,11 @@ First create a function that does the deletions:
     $fn$;
 
 Next use :ref:`create_distributed_function` to instruct Citus to run the
-function directly on workers rather than on the coordinator. It will run the
-function on whatever worker holds the :ref:`shards` for tables ``ads`` and
-``campaigns`` corresponding to the value ``company_id``. (This feature
-requires the ``citus.replication_model`` change we made earlier.)
+function directly on workers rather than on the coordinator (except on a
+single-node Citus installation, which runs everything on the coordinator). It
+will run the function on whatever worker holds the :ref:`shards` for tables
+``ads`` and ``campaigns`` corresponding to the value ``company_id``. (This
+feature requires the ``citus.replication_model`` change we made earlier.)
 
 .. code-block:: sql
 
