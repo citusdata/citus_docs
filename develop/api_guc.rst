@@ -288,7 +288,7 @@ tables. For the feature to work, the coordinator node must be registered with it
 
 Note that foreign keys between reference tables and local tables come at a slight cost. When
 you create the foreign key, Citus must add plain table to Citus' metadata, and
-track it in :ref:`pg_dist_node`. Local tables that are added to metadata inherit the same
+track it in :ref:`partition_table`. Local tables that are added to metadata inherit the same
 limitations as reference tables (see :ref:`ddl` and :ref:`citus_sql_reference`)..
 
 If you drop the foreign keys, Citus will automatically remove such local tables from metadata
