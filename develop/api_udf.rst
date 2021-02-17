@@ -116,8 +116,6 @@ Arguments
 undistributes all tables that are related to **table_name** through foreign keys. Use caution with
 this parameter, because it can potentially affect many tables.
 
-For this reason, use `cascade_via_foreign_keys` option with caution.
-
 
 Return Value
 ********************************
