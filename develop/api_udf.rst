@@ -34,7 +34,7 @@ to be distributed. Permissible values are append or hash, and defaults to 'hash'
 **colocate_with:** (Optional) include current table in the co-location group of another table. By default tables are co-located when they are distributed by columns of the same type, have the same shard count, and have the same replication factor.
 If you want to break this colocation later, you can use :ref:`update_distributed_table_colocation <update_distributed_table_colocation>`. Possible values for :code:`colocate_with` are :code:`default`, :code:`none` to start a new co-location group, or the name of another table to co-locate with that table.  (See :ref:`colocation_groups`.)
 
-Keep in mind that the default value of ``colocate_with`` does implicit co-location. As :ref:`colocation` explains, this can be a great thing when tables are related or will be joined. However when two tables are unrelated but happen to use the same datatype for their distribution columns, accidentally co-locating them can decrease performance during :ref:`shard rebalancing <shard_rebalancing>`. The table shards will be moved together unnecessarily in a "cascade."
+Keep in mind that the default value of ``colocate_with`` does implicit co-location. As :ref:`colocation` explains, this can be a great thing when tables are related or will be joined. However, when two tables are unrelated but happen to use the same datatype for their distribution columns, accidentally co-locating them can decrease performance during :ref:`shard rebalancing <shard_rebalancing>`. The table shards will be moved together unnecessarily in a "cascade."
 If you want to break this implicit colocation, you can use :ref:`update_distributed_table_colocation <update_distributed_table_colocation>`.
 
 If a new distributed table is not related to other tables, it's best to specify ``colocate_with => 'none'``.
@@ -674,7 +674,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     This function requires database superuser access to run.
 
 The :code:`citus_add_inactive_node` function, similar to :ref:`citus_add_node`,
-registers a new node in :code:`pg_dist_node`. However it marks the new
+registers a new node in :code:`pg_dist_node`. However, it marks the new
 node as inactive, meaning no shards will be placed there. Also it does
 *not* copy reference tables to the new node.
 
@@ -936,7 +936,7 @@ The example below fetches and displays the table metadata for the github_events 
 get_shard_id_for_distribution_column
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Citus assigns every row of a distributed table to a shard based on the value of the row's distribution column and the table's method of distribution. In most cases the precise mapping is a low-level detail that the database administrator can ignore. However it can be useful to determine a row's shard, either for manual database maintenance tasks or just to satisfy curiosity. The :code:`get_shard_id_for_distribution_column` function provides this info for hash-distributed tables as well as reference tables. It does not work for the append distribution.
+Citus assigns every row of a distributed table to a shard based on the value of the row's distribution column and the table's method of distribution. In most cases the precise mapping is a low-level detail that the database administrator can ignore. However, it can be useful to determine a row's shard, either for manual database maintenance tasks or just to satisfy curiosity. The :code:`get_shard_id_for_distribution_column` function provides this info for hash-distributed tables as well as reference tables. It does not work for the append distribution.
 
 Arguments
 ************************

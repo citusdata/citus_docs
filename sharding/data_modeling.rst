@@ -73,7 +73,7 @@ Timeseries Data
 
 In a time-series workload, applications query recent information while archiving old information.
 
-The most common mistake in modeling timeseries information in Citus is using the timestamp itself as a distribution column. A hash distribution based on time will distribute times seemingly at random into different shards rather than keeping ranges of time together in shards. However queries involving time generally reference ranges of time (for example the most recent data), so such a hash distribution would lead to network overhead.
+The most common mistake in modeling timeseries information in Citus is using the timestamp itself as a distribution column. A hash distribution based on time will distribute times seemingly at random into different shards rather than keeping ranges of time together in shards. However, queries involving time generally reference ranges of time (for example the most recent data), so such a hash distribution would lead to network overhead.
 
 Best Practices
 ^^^^^^^^^^^^^^

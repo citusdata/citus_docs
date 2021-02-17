@@ -93,7 +93,7 @@ The new :code:`reports` role starts with no privileges, except "usage" on the pu
 
   GRANT SELECT ON mytable TO reports;
 
-If ``mytable`` is in the public schema this will suffice. However if the table is in another schema, there is one more step. See :ref:`grant_usage` below.
+If ``mytable`` is in the public schema this will suffice. However, if the table is in another schema, there is one more step. See :ref:`grant_usage` below.
 
 You can confirm the privileges by consulting the information schema:
 

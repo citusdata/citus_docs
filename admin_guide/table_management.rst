@@ -56,7 +56,7 @@ In PostgreSQL (and other MVCC databases), an UPDATE or DELETE of a row does not 
 
 It’s not just user queries which scale in a distributed database, vacuuming does too. In PostgreSQL big busy tables have great potential to bloat, both from lower sensitivity to PostgreSQL's vacuum scale factor parameter, and generally because of the extent of their row churn. Splitting a table into distributed shards means both that individual shards are smaller tables and that auto-vacuum workers can parallelize over different parts of the table on different machines. Ordinarily auto-vacuum can only run one worker per table.
 
-Due to the above, auto-vacuum operations on a Citus cluster are probably good enough for most cases. However for tables with particular workloads, or companies with certain "safe" hours to schedule a vacuum, it might make more sense to manually vacuum a table rather than leaving all the work to auto-vacuum.
+Due to the above, auto-vacuum operations on a Citus cluster are probably good enough for most cases. However, for tables with particular workloads, or companies with certain "safe" hours to schedule a vacuum, it might make more sense to manually vacuum a table rather than leaving all the work to auto-vacuum.
 
 To vacuum a table, simply run this on the coordinator node:
 
@@ -193,7 +193,7 @@ Gotchas
   .. code-block:: postgresql
 
     BEGIN;
-    CREATE TABLE foo_compacted (LIKE foo) USING COLUMNAR;
+    CREATE TABLE foo_compacted (LIKE foo) USING columnar;
     INSERT INTO foo_compacted SELECT * FROM foo;
     DROP TABLE foo;
     ALTER TABLE foo_compacted RENAME TO foo;

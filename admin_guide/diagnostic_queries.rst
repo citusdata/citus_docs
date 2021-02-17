@@ -129,30 +129,27 @@ Example output:
 Querying the size of your shards
 --------------------------------
 
-This query will provide you with the size of every shard of a given distributed table, designated here with the placeholder :code:`my_distributed_table`:
+This query will provide you with the size of every shard of a given distributed table, designated here with the placeholder :code:`my_table`:
 
 .. code-block:: postgresql
 
-  SELECT *
-  FROM run_command_on_shards('my_distributed_table', $cmd$
-    SELECT json_build_object(
-      'shard_name', '%1$s',
-      'size',       pg_size_pretty(pg_table_size('%1$s'))
-    );
-  $cmd$);
+  SELECT shardid, table_name, shard_size
+  FROM citus_shards
+  WHERE table_name = 'my_table';
 
 Example output:
 
 ::
 
-  ┌─────────┬─────────┬───────────────────────────────────────────────────────────────────────┐
-  │ shardid │ success │                                result                                 │
-  ├─────────┼─────────┼───────────────────────────────────────────────────────────────────────┤
-  │  102008 │ t       │ {"shard_name" : "my_distributed_table_102008", "size" : "2416 kB"}    │
-  │  102009 │ t       │ {"shard_name" : "my_distributed_table_102009", "size" : "3960 kB"}    │
-  │  102010 │ t       │ {"shard_name" : "my_distributed_table_102010", "size" : "1624 kB"}    │
-  │  102011 │ t       │ {"shard_name" : "my_distributed_table_102011", "size" : "4792 kB"}    │
-  └─────────┴─────────┴───────────────────────────────────────────────────────────────────────┘
+  .
+   shardid | table_name | shard_size
+  ---------+------------+------------
+    102170 | my_table   |   90177536
+    102171 | my_table   |   90177536
+    102172 | my_table   |   91226112
+    102173 | my_table   |   90177536
+
+This query uses the :ref:`citus_shards`.
 
 Querying the size of all distributed tables
 -------------------------------------------
@@ -161,28 +158,21 @@ This query gets a list of the sizes for each distributed table plus the size of 
 
 .. code-block:: postgresql
 
-  SELECT
-    tablename,
-    pg_size_pretty(
-      citus_total_relation_size(tablename::text)
-    ) AS total_size
-  FROM pg_tables pt
-  JOIN pg_dist_partition pp
-    ON pt.tablename = pp.logicalrelid::text
-  WHERE schemaname = 'public';
+  SELECT table_name, table_size
+    FROM citus_tables;
 
 Example output:
 
 ::
 
   ┌───────────────┬────────────┐
-  │   tablename   │ total_size │
+  │  table_name   │ table_size │
   ├───────────────┼────────────┤
   │ github_users  │ 39 MB      │
   │ github_events │ 98 MB      │
   └───────────────┴────────────┘
 
-Note that this query works only when :code:`citus.shard_replication_factor` = 1. Also there are other Citus functions for querying distributed table size, see :ref:`table_size`.
+There are other ways to measure distributed table size, as well. See :ref:`table_size`.
 
 Determining Replication Factor per Table
 ----------------------------------------

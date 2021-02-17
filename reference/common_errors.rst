@@ -3,16 +3,6 @@ Common Error Messages
 
 .. _error_failed_execute:
 
-Relation *foo* is not distributed
----------------------------------
-
-This is caused by attempting to join local and distributed tables in the same query.
-
-Resolution
-~~~~~~~~~~
-
-For an example, with workarounds, see :ref:`join_local_dist` and :ref:`join_local_ref`.
-
 Could not receive query results
 -------------------------------
 
@@ -24,9 +14,10 @@ Caused when the the coordinator node is unable to connect to a worker.
 
 ::
 
-  WARNING:  connection error: ec2-52-21-20-100.compute-1.amazonaws.com:5432
-  DETAIL:  no connection to the server
-  ERROR:  could not receive query results
+  ERROR:  connection to the remote node localhost:5432 failed with the following error: could not connect to server: Connection refused
+          Is the server running on host "localhost" (127.0.0.1) and accepting
+          TCP/IP connections on port 5432?
+
 
 Resolution
 ~~~~~~~~~~
@@ -58,8 +49,7 @@ We can see this in action by distributing rows across worker nodes, and then run
 
 ::
 
-  ERROR:  40P01: canceling the transaction since it was involved in a distributed deadlock
-  LOCATION:  ProcessInterrupts, postgres.c:2988
+  ERROR:  canceling the transaction since it was involved in a distributed deadlock
 
 Resolution
 ~~~~~~~~~~
@@ -94,7 +84,7 @@ As of Citus 8.1, nodes are required talk to one another using SSL by default. If
 
 However, if a root certificate authority file exists (typically in ``~/.postgresql/root.crt``), then the certificate will be checked unsuccessfully against that CA at connection time. The Postgres documentation about `SSL support <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBQ-SSL-CERTIFICATES>`_ warns:
 
-   For backwards compatibility with earlier versions of PostgreSQL,
+   For backward compatibility with earlier versions of PostgreSQL,
    if a root CA file exists, the behavior of sslmode=require will be
    the same as that of verify-ca, meaning the server certificate is
    validated against the CA. Relying on this behavior is discouraged,
@@ -113,9 +103,8 @@ When all available worker connection slots are in use, further connections will 
 
 ::
 
-  WARNING:  08006: connection error: hostname:5432
+  WARNING:  connection error: hostname:5432
   ERROR:  could not connect to any active placements
-  DETAIL:  FATAL:  sorry, too many clients already
 
 Resolution
 ~~~~~~~~~~
@@ -144,10 +133,20 @@ Resolution
 
 Try connecting directly to the server with psql to ensure it is running and accepting connections.
 
+Relation *foo* is not distributed
+---------------------------------
+
+This error no longer occurs in the current version of Citus. It was caused by attempting to join local and distributed tables in the same query.
+
+Resolution
+~~~~~~~~~~
+
+:ref:`Upgrade <upgrading>` to Citus 10.0 or higher.
+
 Unsupported clause type
 -----------------------
 
-This error no longer occurs in the current version of citus. It used to happen when executing a join with an inequality condition:
+This error no longer occurs in the current version of Citus. It used to happen when executing a join with an inequality condition:
 
 .. code-block:: postgresql
 
@@ -170,7 +169,7 @@ Resolution
 Cannot open new connections after the first modification command within a transaction
 -------------------------------------------------------------------------------------
 
-This error no longer occurs in the current version of citus except in certain unusual shard repair scenarios. It used to happen when updating rows in a transaction, and then running another command which would open new coordinator-to-worker connections.
+This error no longer occurs in the current version of Citus except in certain unusual shard repair scenarios. It used to happen when updating rows in a transaction, and then running another command which would open new coordinator-to-worker connections.
 
 .. code-block:: postgresql
 
@@ -204,9 +203,7 @@ Trying to make a unique index on a non-distribution column will generate an erro
 
 ::
 
-  ERROR:  0A000: cannot create constraint on "foo"
-  DETAIL:  Distributed relations cannot have UNIQUE, EXCLUDE, or PRIMARY KEY constraints that do not include the partition column (with an equality operator if EXCLUDE).
-  LOCATION:  ErrorIfUnsupportedConstraint, multi_utility.c:2505
+  ERROR:  creating unique indexes on non-partition columns is currently unsupported
 
 Enforcing uniqueness on a non-distribution column would require Citus to check every shard on every INSERT to validate, which defeats the goal of scalability.
 
@@ -225,7 +222,7 @@ Function create_distributed_table does not exist
 
   SELECT create_distributed_table('foo', 'id');
   /*
-  ERROR:  42883: function create_distributed_table(unknown, unknown) does not exist
+  ERROR:  function create_distributed_table(unknown, unknown) does not exist
   LINE 1: SELECT create_distributed_table('foo', 'id');
   HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
   */
@@ -255,7 +252,7 @@ Citus forbids running distributed queries that filter results using stable funct
 
 ::
 
-  ERROR:  0A000: STABLE functions used in UPDATE queries cannot be called with column references
+  ERROR:  STABLE functions used in UPDATE queries cannot be called with column references
 
 In this case the comparison operator ``<`` between timestamp and timestamptz is not immutable.
 

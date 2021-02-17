@@ -7,7 +7,7 @@ As Citus provides distributed functionality by extending PostgreSQL, it is compa
 
 Citus has 100% SQL coverage for any queries it is able to execute on a single worker node. These kind of queries are common in :ref:`mt_use_case` when accessing information about a single tenant.
 
-Even cross-node queries (used for parallel computations) support most SQL features. However some SQL features are not supported for queries which combine information from multiple nodes.
+Even cross-node queries (used for parallel computations) support most SQL features. However, some SQL features are not supported for queries which combine information from multiple nodes.
 
 **Limitations for Cross-Node SQL Queries:**
 

@@ -156,7 +156,7 @@ The Citus coordinator node metadata tables contain this information. See :ref:`f
 Can I distribute a table by multiple keys?
 ------------------------------------------
 
-No, you must choose a single column per table as the distribution column. A common scenario where people want to distribute by two columns is for timeseries data. However for this case we recommend using a hash distribution on a non-time column, and combining this with PostgreSQL partitioning on the time column, as described in :ref:`distributing_hash_time`.
+No, you must choose a single column per table as the distribution column. A common scenario where people want to distribute by two columns is for timeseries data. However, for this case we recommend using a hash distribution on a non-time column, and combining this with PostgreSQL partitioning on the time column, as described in :ref:`distributing_hash_time`.
 
 Why does pg_relation_size report zero bytes for a distributed table?
 --------------------------------------------------------------------
@@ -195,7 +195,7 @@ At this time Amazon does not support running Citus directly on top of Amazon RDS
 What is the state of Citus on AWS?
 ----------------------------------
 
-Existing customers of :ref:`Citus Cloud <cloud_overview>` can provision a Citus cluster on Amazon Web Services. However we are no longer accepting new signups for Citus Cloud.
+Existing customers of :ref:`Citus Cloud <cloud_overview>` can provision a Citus cluster on Amazon Web Services. However, we are no longer accepting new signups for Citus Cloud.
 
 For a fully managed Citus database-as-a-service, try `Azure Database for PostgreSQL - Hyperscale (Citus) <https://docs.microsoft.com/en-us/azure/postgresql/overview#azure-database-for-postgresql---hyperscale-citus-preview>`_.
 

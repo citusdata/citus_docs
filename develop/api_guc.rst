@@ -206,7 +206,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 Reference table shards must be placed on all nodes which have distributed
 tables. By default, reference table shards are copied to a node at node
 activation time, that is, when such functions as :ref:`citus_add_node` or
-:ref:`citus_activate_node` are called. However node activation might be an
+:ref:`citus_activate_node` are called. However, node activation might be an
 inconvenient time to copy the placements, because it can take a long time when
 there are large reference tables.
 
@@ -355,7 +355,7 @@ The supported values are:
 citus.enable_repartition_joins (boolean)
 ****************************************
 
-Ordinarily, attempting to perform :ref:`repartition_joins` with the adaptive executor will fail with an error message. However setting ``citus.enable_repartition_joins`` to true allows Citus to perform the join. The default value is false.
+Ordinarily, attempting to perform :ref:`repartition_joins` with the adaptive executor will fail with an error message. However, setting ``citus.enable_repartition_joins`` to true allows Citus to perform the join. The default value is false.
 
 .. _enable_repartitioned_insert_select:
 
@@ -489,3 +489,17 @@ citus.explain_all_tasks (boolean)
 ************************************************
 
 By default, Citus shows the output of a single, arbitrary task when running `EXPLAIN <http://www.postgresql.org/docs/current/static/sql-explain.html>`_ on a distributed query. In most cases, the explain output will be similar across tasks. Occasionally, some of the tasks will be planned differently or have much higher execution times. In those cases, it can be useful to enable this parameter, after which the EXPLAIN output will include all tasks. This may cause the EXPLAIN to take longer.
+
+.. _explain_analyze_sort_method:
+
+citus.explain_analyze_sort_method (enum)
+************************************************
+
+Determines the sort method of the tasks in the output of EXPLAIN ANALYZE.
+The default value of citus.explain_analyze_sort_method is ``execution-time``.
+
+The supported values are:
+
+* **execution-time:** sort by execution time.
+
+* **taskId:** sort by task id.

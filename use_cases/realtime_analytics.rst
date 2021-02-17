@@ -209,7 +209,7 @@ The following function wraps the rollup query up for convenience.
 
     * * * * * psql -c 'SELECT rollup_http_request();'
 
-  Alternately, an extension such as `pg_cron <https://github.com/citusdata/pg_cron>`_
+  Alternatively, an extension such as `pg_cron <https://github.com/citusdata/pg_cron>`_
   allows you to schedule recurring queries directly from the database.
 
 The dashboard query from earlier is now a lot nicer:
@@ -252,7 +252,7 @@ Approximate Distinct Counts
 A common question in HTTP analytics deals with :ref:`approximate distinct counts
 <count_distinct>`: How many unique visitors visited your site over the last month?
 Answering this question *exactly* requires storing the list of all previously-seen visitors
-in the rollup tables, a prohibitively large amount of data. However an approximate answer
+in the rollup tables, a prohibitively large amount of data. However, an approximate answer
 is much more manageable.
 
 A datatype called hyperloglog, or HLL, can answer the query
@@ -365,8 +365,8 @@ Next, include it in the rollups by modifying the rollup function:
       site_id,
       minute,
       COUNT(1) as request_count,
-      SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_c
-      SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_cou
+      SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count
+      SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count
       SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
   - FROM http_request
   +   , jsonb_object_agg(request_country, country_count) AS country_counters
