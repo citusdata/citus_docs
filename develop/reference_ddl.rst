@@ -252,8 +252,10 @@ Foreign keys may be created in these situations:
 
 Foreign keys from reference tables to distributed tables are not supported.
 
-Citus supports all `referential actions <https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-FK>`_ on foreign keys from local to reference tables,
-but does not support support ``ON DELETE/UPDATE CASCADE`` in the reverse direction (reference to local).
+Citus supports all `referential actions
+<https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-FK>`_
+on foreign keys from local to reference tables, but does not support support
+``ON DELETE/UPDATE CASCADE`` in the reverse direction (reference to local).
 
 .. note::
 
