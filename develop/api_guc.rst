@@ -277,6 +277,23 @@ Specifies whether to automatically propagate DDL changes from the coordinator to
 
   For a list of DDL propagation support, see :ref:`ddl_prop_support`.
 
+.. _enable_local_ref_fkeys:
+
+citus.enable_local_reference_table_foreign_keys (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This setting, enabled by default, allows foreign keys to be created between reference and local
+tables. For the feature to work, the coordinator node must be registered with itself, using
+:ref:`citus_add_node`.
+
+Note that foreign keys between reference tables and local tables come at a slight cost. When
+you create the foreign key, Citus must add the plain table to Citus' metadata, and
+track it in :ref:`partition_table`. Local tables that are added to metadata inherit the same
+limitations as reference tables (see :ref:`ddl` and :ref:`citus_sql_reference`)..
+
+If you drop the foreign keys, Citus will automatically remove such local tables from metadata,
+which eliminates such limitations on those tables.
+
 Executor Configuration
 ------------------------------------------------------------
 

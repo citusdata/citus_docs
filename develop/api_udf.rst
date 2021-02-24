@@ -101,8 +101,9 @@ Undistributing moves all data from shards back into a local table on the
 coordinator node (assuming the data can fit), then deletes the shards.
 
 Citus will not undistribute tables that have -- or are referenced by -- foreign
-keys. Before undistributing a table you must drop its foreign key constraints,
-or those in other tables pointing to it.
+keys, unless the `cascade_via_foreign_keys` argument is set to true.
+If this argument is false (or omitted), then you must manually drop the offending foreign
+key constraints before undistributing.
 
 A common use for this function is to :ref:`change_dist_col`.
 
@@ -110,6 +111,11 @@ Arguments
 ************************
 
 **table_name:** Name of the distributed or reference table to undistribute.
+
+**cascade_via_foreign_keys:** (Optional) When this argument set to "true," undistribute_table also
+undistributes all tables that are related to **table_name** through foreign keys. Use caution with
+this parameter, because it can potentially affect many tables.
+
 
 Return Value
 ********************************
@@ -128,6 +134,32 @@ This example distributes a ``github_events`` table and then undistributes it.
 
   -- undo that and make it local again
   SELECT undistribute_table('github_events');
+
+
+.. _remove_local_tables_from_metadata:
+
+remove_local_tables_from_metadata
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The remove_local_tables_from_metadata() function removes local tables
+from Citus' metadata that no longer need to be there. (See
+:ref:`enable_local_ref_fkeys`.)
+
+Usually if a local table is in Citus' metadata, there's a reason, such as
+the existence of foreign keys between the table and a reference table.
+However, if ``enable_local_reference_foreign_keys`` is disabled, Citus
+will no longer manage metadata in that situation, and unnecessary
+metadata can persist until manually cleaned.
+
+Arguments
+************************
+
+N/A
+
+Return Value
+********************************
+
+N/A
 
 .. _create_reference_table:
 
