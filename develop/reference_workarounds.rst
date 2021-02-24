@@ -35,10 +35,15 @@ Citus supports all SQL statements in the multi-tenant use-case. Even in the real
 JOIN a local and a distributed table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This error no longer occurs in the current version of Citus unless `citus.local_table_join_policy` GUC is set to `never`.
-By default, Citus follows `auto` policy. See possible options in definition of GUC.
+This error no longer occurs in the current version of Citus unless the GUC
+`citus.local_table_join_policy` is set to `never`.  By default, it is `auto`.
+See the reference section for thie GUC for information about its possible
+values.
 
-When such joins are disabled (by explicitly setting that related GUC to `never`), attempting to execute a JOIN between a local table "local" and a distributed table "dist" causes an error:
+When such joins are disabled (by explicitly setting
+`citus.local_table_join_policy` to `never`), attempting to execute a JOIN
+between a local table "local" and a distributed table "dist" will cause an
+error:
 
 .. code-block:: sql
 
@@ -49,9 +54,14 @@ When such joins are disabled (by explicitly setting that related GUC to `never`)
   STATEMENT:  SELECT * FROM local JOIN dist USING (id);
   */
 
-In that case, you need to set `citus.local_table_join_policy` back to `auto` (or to another option provided) to enable this feature.
+In that case, you need to set `citus.local_table_join_policy` back to `auto`
+(or to another option provided) to enable this feature.
 
-Remember that the coordinator will send the results in the subquery or CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
+Remember that the coordinator will send the results in the subquery or CTE to
+all workers which require it for processing. Thus it's best to either add the
+most specific filters and limits to the inner query as possible, or else
+aggregate the table. That reduces the network overhead which such a query can
+cause. More about this in :ref:`subquery_perf`.
 
 .. _join_local_ref:
 
