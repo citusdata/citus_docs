@@ -401,10 +401,10 @@ the note below). The value -1 disables throttling.
 .. note::
 
   There are certain operations that do not obey citus.max_shared_pool_size,
-  most importantly COPY and repartition joins. That's why it can be prudent to
-  increase the max_connections on the workers a bit higher than max_connections
-  on the coordinator. This gives extra space for connections required for COPY
-  and repartition queries on the workers.
+  most importantly repartition joins. That's why it can be prudent to increase
+  the max_connections on the workers a bit higher than max_connections
+  on the coordinator. This gives extra space for connections required for
+  repartition queries on the workers.
 
 citus.max_adaptive_executor_pool_size (integer)
 ***********************************************
