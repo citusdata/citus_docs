@@ -280,7 +280,7 @@ Specifies whether to automatically propagate DDL changes from the coordinator to
 .. _enable_local_ref_fkeys:
 
 citus.enable_local_reference_table_foreign_keys (boolean)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 This setting, enabled by default, allows foreign keys to be created between reference and local
 tables. For the feature to work, the coordinator node must be registered with itself, using

@@ -139,7 +139,7 @@ This example distributes a ``github_events`` table and then undistributes it.
 .. _remove_local_tables_from_metadata:
 
 remove_local_tables_from_metadata
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The remove_local_tables_from_metadata() function removes local tables
 from Citus' metadata that no longer need to be there. (See
