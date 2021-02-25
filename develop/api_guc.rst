@@ -222,6 +222,55 @@ The default value for this GUC is 'on'.
 Planner Configuration
 ------------------------------------------------
 
+.. _local_table_join_policy:
+
+citus.local_table_join_policy (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This GUC determines how Citus moves data when doing a join between local and distributed tables. Customizing the join policy can help reduce the amount of data sent between worker nodes during the join. 
+
+Citus will send either the local or distributed tables to necessary nodes to support the join and this is referred as a conversion.
+If a local table is converted, then it will be sent to the workers that needs this data to perform the join.
+If a distributed table is converted, then it will be collected in the coordinator to support the join.
+The citus planner will send only the necessary rows while doing a conversion.
+There are four modes available:
+
+* **auto:** (Default) Citus will convert either all local or distributed tables to support local and distributed table joins. If all the distributed tables have a constant filter on a unique index(such as primary key) then distributed tables will be converted. This will ensure less amount of data moving around workers.
+
+* **never:** Citus will not plan local and distributed table joins.
+
+* **prefer-local:** Citus will prefer converting local tables to support local and distributed table joins. The converted table will be sent to necessary nodes as an intermediate result.
+
+* **prefer-distributed:** Citus will prefer converting distributed tables to support local and distributed table joins. The converted table will be sent to necessary nodes as an intermediate result. If distributed tables are huge, using this option might result in moving lots of data around workers.
+
+Assuming `citus_table(x,y)` is a distributed table distributed by the column `x` and `postgres_table` is a local table:
+
+.. code-block:: postgresql
+   CREATE TABLE citus_table(x int primary key, y int);
+   SELECT create_distributed_table('citus_table', 'x');
+
+   CREATE TABLE postgreS_table(x int, y int);
+
+   -- even though the join is on primary key, there isn't a constant filter
+   -- hence postgres_table will be sent to worker nodes to support the join
+   SELECT * FROM citus_table JOIN postgres_table using(x); 
+
+   -- there is a constant filter on a primary key, hence the filtered row
+   -- from the distributed table will be pulled to coordinator to support the join
+   SELECT * FROM citus_table JOIN postgres_table using(x) WHERE citus_table.x = 10;
+
+   SET citus.local_table_join_policy to 'prefer-distributed';
+   -- since we prefer distributed tables, citus_table will be pulled to coordinator
+   -- to support the join. Note that citus_table can be huge.
+   SELECT * FROM citus_table JOIN postgres_table using(x);
+
+   SET citus.local_table_join_policy to 'prefer-local';
+   -- even though there is a constant filter on primary key for citus_table
+   -- postgres_table will be sent to necessary workers because we are using 'prefer-local'.
+   SELECT * FROM citus_table JOIN postgres_table using(x) WHERE citus_table.x = 10;
+
+
+
 citus.limit_clause_row_fetch_count (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
