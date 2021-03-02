@@ -14,6 +14,8 @@ Even cross-node queries (used for parallel computations) support most SQL featur
 * `SELECT … FOR UPDATE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FOR-UPDATE-SHARE>`_ work in single-shard queries only
 * `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_ work in single-shard queries only
 * Correlated subqueries are supported only when the correlation is on the :ref:`dist_column` and the subqueries conform to subquery pushdown rules (e.g., grouping by the distribution column, with no LIMIT or LIMIT OFFSET clause).
+* Outer joins between distributed tables are only supported on the  :ref:`dist_column`
+* Outer joins between distributed tables and reference tables or local tables are only supported if the distributed table is on the outer side
 * `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_ work in single-shard queries only
 * `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`__ work in single-shard queries only
 
@@ -30,146 +32,29 @@ multi-tenant use cases. <when_to_use_citus>`
 
 Citus supports all SQL statements in the multi-tenant use-case. Even in the real-time analytics use-cases, with queries that span across nodes, Citus supports the majority of statements. The few types of unsupported queries are listed in :ref:`unsupported` Many of the unsupported features have workarounds; below are a number of the most useful.
 
-.. _join_local_dist:
+.. _pull_push_workaround:
 
-JOIN a local and a distributed table
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Attempting to execute a JOIN between a local table "local" and a distributed table "dist" causes an error:
-
-.. code-block:: sql
-
-  SELECT * FROM local JOIN dist USING (id);
-
-  /*
-  ERROR:  relation local is not distributed
-  STATEMENT:  SELECT * FROM local JOIN dist USING (id);
-  */
-
-Although you can't join such tables directly, by wrapping the local table in a subquery or CTE you can make Citus' recursive query planner copy the local table data to worker nodes. By colocating the data this allows the query to proceed.
-
-.. code-block:: sql
-
-  -- either
-
-  SELECT *
-    FROM (SELECT * FROM local) AS x
-    JOIN dist USING (id);
-
-  -- or
-
-  WITH x AS (SELECT * FROM local)
-  SELECT * FROM x
-  JOIN dist USING (id);
-
-Remember that the coordinator will send the results in the subquery or CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
-
-.. _join_local_ref:
-
-JOIN a local and a reference table
+Work around limitations using CTEs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Attempting to execute a JOIN between a local table "local" and a reference table "ref" causes an error:
+When a SQL query is unsupported, one way to work around it is using CTEs, which use what we call pull-push execution.
 
 .. code-block:: sql
 
-  SELECT * FROM local JOIN ref USING (id);
+  SELECT * FROM ref LEFT JOIN dist USING (id) WHERE dist.value > 10;
+  /*
+  ERROR:  cannot pushdown the subquery
+  DETAIL:  There exist a reference table in the outer part of the outer join
+  */
 
-::
+To work around this limitation, you can turn the query into a router query by wrapping the distributed part in a CTE
 
-  ERROR:  relation local is not distributed
+.. code-block:: sql
 
-Ordinarily a copy of every reference table exists on each worker node, but does not exist on the coordinator. Thus a reference table's data is not placed for efficient joins with tables local to the coordinator. To allow these kind of joins we can request that Citus place a copy of every reference table on the coordinator as well:
+  WITH x AS (SELECT * FROM dist WHERE dist.value > 10)
+  SELECT * FROM ref LEFT JOIN x USING (id);
 
-.. code-block:: postgres
-
-  SELECT citus_add_node('localhost', 5432, groupid => 0);
-
-This adds the coordinator to :ref:`pg_dist_node` with a group ID of 0. Joins between reference and local tables will then be possible.
-
-If the reference tables are large there is a risk that they might exhaust the coordinator disk space. Use caution.
-
-.. _change_dist_col:
-
-Change a distribution column
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Citus does not allow DDL statements to alter distribution columns. The
-workaround is to recreate the distributed table with an updated or different
-distribution column.
-
-There are two ways to recreate a distributed table:
-
-1. "Undistribute" back to the coordinator, optionally make changes, and call
-   :ref:`create_distributed_table` again.
-2. Create a new distributed table with a different name, optionally make
-   changes, and do a repartitioned insert-select into it. Drop the old table
-   and rename the new one.
-
-The first option is simpler, but works only when the data is small enough to
-fit temporarily on the coordinator node. Also undistributing tables is not
-allowed when they participate in foreign keys.
-
-The second option is more complicated, but more efficient. The data moves
-between worker nodes rather than accumulating on the coordinator node. Here's
-an example of both methods. First create a table with two columns, and
-distribute by the first column.
-
-.. code-block:: postgres
-
-  -- Example table
-  create table items as
-    select i, chr(ascii('a')+i%26) as t
-      from generate_series(0,99) i;
-
-  -- Distribute by 'i' column
-  select create_distributed_table('items', 'i');
-
-Now, using method 1, we'll distribute by the second column instead:
-
-.. code-block:: postgres
-
-  ----- Method 1 ---------------------------------------------------------
-
-  -- Changing distribution column from 'i' to 't'
-
-  -- First, undistribute. We can do this because there are no foreign keys
-  -- from or to this table, and its data can fit on the coordinator node
-  select undistribute_table('items');
-
-  -- Simply distribute again, but by 't'
-  select create_distributed_table('items', 't');
-
-Here's the equivalent operation using method 2:
-
-.. code-block:: postgres
-
-  ----- Method 2 ---------------------------------------------------------
-
-  -- Changing distribution column from 'i' to 't'
-
-  -- Make a temporary table
-  create table items2 (like items including all);
-
-  -- Distribute new table by desired column
-  select create_distributed_table('items2', 't');
-
-  -- Copy data from items to items2, repartitioning across workers
-  insert into items2 select * from items;
-
-  -- Swap copy with original
-  begin;
-  drop table items;
-  alter table items2 rename to items;
-  commit;
-
-Our example didn't involve foreign keys, but they would have to be
-reconstructed after using either method. Method 1 in fact requires dropping the
-foreign keys before undistributing.
-
-Another complication when redistributing is that any uniqueness constraint must
-include the distribution column.  For more about that see
-:ref:`non_distribution_uniqueness`.
+Remember that the coordinator will send the results of the CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
 
 Temp Tables: the Workaround of Last Resort
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
