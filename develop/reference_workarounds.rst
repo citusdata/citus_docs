@@ -13,7 +13,9 @@ Even cross-node queries (used for parallel computations) support most SQL featur
 
 * `SELECT … FOR UPDATE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FOR-UPDATE-SHARE>`_ work in single-shard queries only
 * `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_ work in single-shard queries only
-* Correlated subqueries in multi-shard queries are supported only when the correlation is on the :ref:`dist_column`.
+* Correlated subqueries are supported only when the correlation is on the :ref:`dist_column`.
+* Outer joins between distributed tables are only supported on the  :ref:`dist_column`
+* Outer joins between distributed tables and reference tables or local tables are only supported if the distributed table is on the outer side
 * `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_ work in single-shard queries only
 * `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`__ work in single-shard queries only
 
@@ -30,72 +32,29 @@ multi-tenant use cases. <when_to_use_citus>`
 
 Citus supports all SQL statements in the multi-tenant use-case. Even in the real-time analytics use-cases, with queries that span across nodes, Citus supports the majority of statements. The few types of unsupported queries are listed in :ref:`unsupported` Many of the unsupported features have workarounds; below are a number of the most useful.
 
-.. _join_local_dist:
+.. _pull_push_workaround:
 
-JOIN a local and a distributed table
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Previous versions of Citus were unable to join local and distributed tables,
-but it's now possible, starting with Citus version 10. Note that if
-:ref:`local_table_join_policy` is set to ``never``, then attempting to execute
-a JOIN between a local table "local" and a distributed table "dist" will cause
-an error:
-
-.. code-block:: sql
-
-  SELECT * FROM local JOIN dist USING (id);
-
-  /*
-  ERROR:  direct joins between distributed and local tables are not supported
-  STATEMENT:  SELECT * FROM local JOIN dist USING (id);
-  */
-
-In that case, you need to set `citus.local_table_join_policy` back to ``auto``
-(or to another of its options) to enable this feature.
-
-Remember that the coordinator will send rows of tables in the join to all
-workers which require them for processing. Thus it's best to either add the
-most specific filters and limits to the innermost query, or else aggregate the
-table. That reduces the network overhead which such a query can cause. More
-about this in :ref:`subquery_perf`.
-
-.. _join_local_ref:
-
-JOIN a local and a reference table
+Work around limitations using CTEs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Attempting to execute a JOIN between a local table "local" and a reference table "ref" causes an error:
+When a SQL query is unsupported, one way to work around it is using CTEs, which use what we call pull-push execution.
 
 .. code-block:: sql
 
-  SELECT * FROM local JOIN ref USING (id);
+  SELECT * FROM ref LEFT JOIN dist USING (id) WHERE dist.value > 10;
+  /*
+  ERROR:  cannot pushdown the subquery
+  DETAIL:  There exist a reference table in the outer part of the outer join
+  */
 
-::
+To work around this limitation, you can turn the query into a router query by wrapping the distributed part in a CTE
 
-  ERROR:  relation local is not distributed
+.. code-block:: sql
 
-Ordinarily a copy of every reference table exists on each worker node, but does not exist on the coordinator. Thus a reference table's data is not placed for efficient joins with tables local to the coordinator. To allow these kind of joins we can request that Citus place a copy of every reference table on the coordinator as well:
+  WITH x AS (SELECT * FROM dist WHERE dist.value > 10)
+  SELECT * FROM ref LEFT JOIN x USING (id);
 
-.. code-block:: postgres
-
-  SELECT citus_add_node('localhost', 5432, groupid => 0);
-
-This adds the coordinator to :ref:`pg_dist_node` with a group ID of 0. Joins between reference and local tables will then be possible.
-
-If the reference tables are large there is a risk that they might exhaust the coordinator disk space. Use caution.
-
-.. _change_dist_col:
-
-Change a distribution column
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In previous versions of Citus, changing a distribution column was more
-difficult. However, starting in Citus 10 you can use the
-:ref:`alter_distributed_table` function:
-
-.. code-block:: postgres
-
-  SELECT alter_distributed_table('items', distribution_column:='i');
+Remember that the coordinator will send the results of the CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
 
 Temp Tables: the Workaround of Last Resort
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
