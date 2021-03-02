@@ -108,6 +108,16 @@ To use columnar storage, specify ``USING columnar`` when creating a table:
       achievements TEXT[]
   ) USING columnar;
 
+You can also convert between row-based (heap) and columnar storage.
+
+.. code-block:: postgresql
+
+    -- Convert to row-based (heap) storage
+    SELECT alter_table_set_access_method('contestant', 'heap');
+
+    -- Convert to columnar storage (indexes will be dropped)
+    SELECT alter_table_set_access_method('contestant', 'columnar');
+
 Citus converts rows to columnar storage in "stripes" during insertion. Each
 stripe holds one transaction's worth of data, or 150000 rows, whichever is
 less.  (The stripe size and other parameters of a columnar table can be changed
