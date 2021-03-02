@@ -3,15 +3,30 @@
 What is Citus?
 ==============
 
-Citus is basically `worry-free Postgres <https://www.citusdata.com/product>`_ that is built to scale out. It's an extension to Postgres that :ref:`distributes data <distributed_arch>` and queries in a cluster of multiple machines. As an extension (rather than a fork), Citus supports new PostgreSQL releases, allowing users to benefit from new features while maintaining compatibility with existing PostgreSQL tools.
+Citus is an open source extension to Postgres that distributes data and queries
+across multiple nodes in a cluster. Because Citus is an extension (not a fork)
+to Postgres, when you use Citus, you are also using Postgres.  You can leverage
+the latest Postgres features, tooling, and ecosystem.
 
-Citus horizontally scales PostgreSQL across multiple machines using sharding and replication. Its query engine parallelizes incoming SQL queries across these servers to enable human real-time (less than a second) responses on large datasets.
+Citus transforms Postgres into a distributed database with features like
+sharding, a distributed SQL engine, reference tables, and distributed tables.
+The Citus combination of parallelism, keeping more data in memory, and higher
+I/O bandwidth can lead to significant performance improvements for multi-tenant
+SaaS applications, customer-facing real-time analytics dashboards, and time
+series workloads.
 
-**Available in Three Ways:**
+**Three Ways to Get Citus:**
 
-1. As `open source <https://www.citusdata.com/product/community>`_ to add to existing Postgres servers
-2. On-premise with additional `enterprise grade <https://www.citusdata.com/product/enterprise>`_ security and cluster management tools
-3. In the Cloud, built into `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/>`_ a fully managed database as a service. (Citus Cloud on AWS is also available but is no longer onboarding new users.)
+1. Open source: You can `download Citus <https://www.citusdata.com/download/>`_
+   open source, or visit the `Citus repo <https://github.com/citusdata/citus>`_
+   on GitHub.
+2. Enterprise software: Citus Enterprise is available as a software
+   subscription along with 24x7 support, for those who want to manage Citus
+   manually.
+3. Managed database service: Citus is available on Azure as `Hyperscale (Citus)
+   <https://docs.microsoft.com/en-us/azure/postgresql/hyperscale/>`_, a
+   built-in deployment option in the Azure Database for PostgreSQL managed
+   service.
 
 .. _how_big:
 

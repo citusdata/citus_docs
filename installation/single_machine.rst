@@ -3,7 +3,10 @@
 Single-Node Citus
 -----------------
 
-If you are a developer looking to try Citus out on your machine, the guides below will help you get started quickly.
+To install Citus open source packages on a single node, the installation
+instructions below will help you get started quickly. Single-node Citus is
+useful for initial development and testing, as well as a way to start small in
+production and get ready for future scale and growth.
 
 .. toctree::
 

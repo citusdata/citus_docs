@@ -1,7 +1,16 @@
 Citus Documentation
 ===================
 
-Welcome to the documentation for Citus 9.5! Citus horizontally scales PostgreSQL across commodity servers using sharding and replication. Its query engine parallelizes incoming SQL queries across these servers to enable real-time responses on large datasets.
+Welcome to the documentation for Citus 10! Citus is an open source extension to
+PostgreSQL that transforms Postgres into a distributed database. To scale out
+Postgres horizontally, Citus employs distributed tables, reference tables, and
+a distributed SQL query engine. The query engine parallelizes SQL queries
+across multiple servers in a database cluster to deliver dramatically improved
+query response times, even for data-intensive applications.
+
+As of version 10, Citus includes new ways to grow and scale your database, with
+the introduction of a new columnar storage feature and the ability to run on a
+single-node.
 
 .. raw:: html
 
