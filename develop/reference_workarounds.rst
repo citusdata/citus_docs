@@ -35,34 +35,29 @@ Citus supports all SQL statements in the multi-tenant use-case. Even in the real
 JOIN a local and a distributed table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Attempting to execute a JOIN between a local table "local" and a distributed table "dist" causes an error:
+Previous versions of Citus were unable to join local and distributed tables,
+but it's now possible, starting with Citus version 10. Note that if
+:ref:`local_table_join_policy` is set to ``never``, then attempting to execute
+a JOIN between a local table "local" and a distributed table "dist" will cause
+an error:
 
 .. code-block:: sql
 
   SELECT * FROM local JOIN dist USING (id);
 
   /*
-  ERROR:  relation local is not distributed
+  ERROR:  direct joins between distributed and local tables are not supported
   STATEMENT:  SELECT * FROM local JOIN dist USING (id);
   */
 
-Although you can't join such tables directly, by wrapping the local table in a subquery or CTE you can make Citus' recursive query planner copy the local table data to worker nodes. By colocating the data this allows the query to proceed.
+In that case, you need to set `citus.local_table_join_policy` back to ``auto``
+(or to another of its options) to enable this feature.
 
-.. code-block:: sql
-
-  -- either
-
-  SELECT *
-    FROM (SELECT * FROM local) AS x
-    JOIN dist USING (id);
-
-  -- or
-
-  WITH x AS (SELECT * FROM local)
-  SELECT * FROM x
-  JOIN dist USING (id);
-
-Remember that the coordinator will send the results in the subquery or CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
+Remember that the coordinator will send rows of tables in the join to all
+workers which require them for processing. Thus it's best to either add the
+most specific filters and limits to the innermost query, or else aggregate the
+table. That reduces the network overhead which such a query can cause. More
+about this in :ref:`subquery_perf`.
 
 .. _join_local_ref:
 
