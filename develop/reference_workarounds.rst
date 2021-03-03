@@ -13,7 +13,7 @@ Even cross-node queries (used for parallel computations) support most SQL featur
 
 * `SELECT … FOR UPDATE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FOR-UPDATE-SHARE>`_ work in single-shard queries only
 * `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_ work in single-shard queries only
-* Correlated subqueries in multi-shard queries are supported only when the correlation is on the :ref:`dist_column`).
+* Correlated subqueries in multi-shard queries are supported only when the correlation is on the :ref:`dist_column`.
 * `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_ work in single-shard queries only
 * `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`__ work in single-shard queries only
 
