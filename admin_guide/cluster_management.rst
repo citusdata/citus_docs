@@ -20,7 +20,7 @@ This section explores configuration settings for running a cluster in production
 Shard Count
 -----------
 
-Choosing the shard count for each distributed table is a balance between the flexibility of having more shards, and the overhead for query planning and execution across them. If you decide to change the shard count of a table after distributing, you can use :ref:`alter_distributed_table` function.
+Choosing the shard count for each distributed table is a balance between the flexibility of having more shards, and the overhead for query planning and execution across them. If you decide to change the shard count of a table after distributing, you can use the :ref:`alter_distributed_table` function.
 
 Multi-Tenant SaaS Use-Case
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

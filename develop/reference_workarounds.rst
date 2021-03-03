@@ -94,8 +94,9 @@ If the reference tables are large there is a risk that they might exhaust the co
 Change a distribution column
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Citus has a function called :ref:`alter_distributed_table` that can change the distribution column
-of a distributed table.
+In previous versions of Citus, changing a distribution column was more
+difficult. However, starting in Citus 10 you can use the
+:ref:`alter_distributed_table` function:
 
 .. code-block:: postgres
 

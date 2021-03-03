@@ -139,9 +139,8 @@ This example distributes a ``github_events`` table and then undistributes it.
 alter_distributed_table
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The alter_distributed_table() function can be used to change distribution column, shard count or
-colocation properties of a distributed table.
-
+The alter_distributed_table() function can be used to change the distribution
+column, shard count or colocation properties of a distributed table.
 
 Arguments
 ************************
@@ -152,13 +151,15 @@ Arguments
 
 **shard_count:** (Optional) The new shard count.
 
-**colocate_with:** (Optional) The table that the current distributed table will be colocated with.
-Possible values are ``default``, ``none`` to start a new co-location group, or the name of another table
-to co-locate with.
+**colocate_with:** (Optional) The table that the current distributed table will
+be colocated with.  Possible values are ``default``, ``none`` to start a new
+colocation group, or the name of another table with which to colocate.
 
-**cascade_to_colocated:** (Optional) When this argument is set to "true", ``shard_count`` and ``colocate_with``
-changes will also be applied to all of the tables that were previously colocated with the table and
-the colocation will be preserved. If it is "false" the current colocation of this table will be broken.
+**cascade_to_colocated:** (Optional) When this argument is set to "true",
+``shard_count`` and ``colocate_with`` changes will also be applied to all of
+the tables that were previously colocated with the table, and the colocation
+will be preserved. If it is "false", the current colocation of this table will
+be broken.
 
 Return Value
 ********************************
