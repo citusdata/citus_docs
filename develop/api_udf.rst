@@ -186,8 +186,8 @@ Example
 alter_table_set_access_method
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The alter_table_set_access_method() function changes access method of a table.
-
+The alter_table_set_access_method() function changes access method of a table
+(e.g. heap or :ref:`columnar <columnar>`).
 
 Arguments
 ************************
@@ -207,7 +207,6 @@ Example
 .. code-block:: postgresql
 
   SELECT alter_table_set_access_method('github_events', 'columnar');
-
 
 .. _remove_local_tables_from_metadata:
 
