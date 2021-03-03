@@ -89,82 +89,13 @@ If the reference tables are large there is a risk that they might exhaust the co
 Change a distribution column
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Citus does not allow DDL statements to alter distribution columns. The
-workaround is to recreate the distributed table with an updated or different
-distribution column.
-
-There are two ways to recreate a distributed table:
-
-1. "Undistribute" back to the coordinator, optionally make changes, and call
-   :ref:`create_distributed_table` again.
-2. Create a new distributed table with a different name, optionally make
-   changes, and do a repartitioned insert-select into it. Drop the old table
-   and rename the new one.
-
-The first option is simpler, but works only when the data is small enough to
-fit temporarily on the coordinator node. Also undistributing tables is not
-allowed when they participate in foreign keys.
-
-The second option is more complicated, but more efficient. The data moves
-between worker nodes rather than accumulating on the coordinator node. Here's
-an example of both methods. First create a table with two columns, and
-distribute by the first column.
+In previous versions of Citus, changing a distribution column was more
+difficult. However, starting in Citus 10 you can use the
+:ref:`alter_distributed_table` function:
 
 .. code-block:: postgres
 
-  -- Example table
-  create table items as
-    select i, chr(ascii('a')+i%26) as t
-      from generate_series(0,99) i;
-
-  -- Distribute by 'i' column
-  select create_distributed_table('items', 'i');
-
-Now, using method 1, we'll distribute by the second column instead:
-
-.. code-block:: postgres
-
-  ----- Method 1 ---------------------------------------------------------
-
-  -- Changing distribution column from 'i' to 't'
-
-  -- First, undistribute. We can do this because there are no foreign keys
-  -- from or to this table, and its data can fit on the coordinator node
-  select undistribute_table('items');
-
-  -- Simply distribute again, but by 't'
-  select create_distributed_table('items', 't');
-
-Here's the equivalent operation using method 2:
-
-.. code-block:: postgres
-
-  ----- Method 2 ---------------------------------------------------------
-
-  -- Changing distribution column from 'i' to 't'
-
-  -- Make a temporary table
-  create table items2 (like items including all);
-
-  -- Distribute new table by desired column
-  select create_distributed_table('items2', 't');
-
-  -- Copy data from items to items2, repartitioning across workers
-  insert into items2 select * from items;
-
-  -- Swap copy with original
-  begin;
-  drop table items;
-  alter table items2 rename to items;
-  commit;
-
-Our example didn't involve foreign keys, but they would have to be
-reconstructed after using either method. Method 1 in fact requires dropping the
-foreign keys before undistributing.
-
-Another complication when redistributing is that any uniqueness constraint must
-include the distribution column.  For more about that see
-:ref:`non_distribution_uniqueness`.
+  SELECT alter_distributed_table('items', distribution_column:='i');
 
 Temp Tables: the Workaround of Last Resort
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

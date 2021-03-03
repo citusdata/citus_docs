@@ -87,7 +87,8 @@ For more guidance on this topic, see :ref:`production_sizing`.
 How do I change the shard count for a hash partitioned table?
 -------------------------------------------------------------
 
-Note that it is not straightforward to change the shard count of an already distributed table. If you need to do so, please `Contact Us <https://www.citusdata.com/about/contact_us>`_. It's good to think about shard count carefully at distribution time, see :ref:`faq_choose_shard_count`.
+Citus has a function called :ref:`alter_distributed_table` that can change the shard count
+of a distributed table.
 
 How does citus support count(distinct) queries?
 -----------------------------------------------

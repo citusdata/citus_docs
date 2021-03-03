@@ -105,8 +105,6 @@ keys, unless the `cascade_via_foreign_keys` argument is set to true.
 If this argument is false (or omitted), then you must manually drop the offending foreign
 key constraints before undistributing.
 
-A common use for this function is to :ref:`change_dist_col`.
-
 Arguments
 ************************
 
@@ -135,6 +133,80 @@ This example distributes a ``github_events`` table and then undistributes it.
   -- undo that and make it local again
   SELECT undistribute_table('github_events');
 
+
+.. _alter_distributed_table:
+
+alter_distributed_table
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The alter_distributed_table() function can be used to change the distribution
+column, shard count or colocation properties of a distributed table.
+
+Arguments
+************************
+
+**table_name:** Name of the distributed table that will be altered.
+
+**distribution_column:** (Optional) Name of the new distribution column.
+
+**shard_count:** (Optional) The new shard count.
+
+**colocate_with:** (Optional) The table that the current distributed table will
+be colocated with.  Possible values are ``default``, ``none`` to start a new
+colocation group, or the name of another table with which to colocate.
+
+**cascade_to_colocated:** (Optional) When this argument is set to "true",
+``shard_count`` and ``colocate_with`` changes will also be applied to all of
+the tables that were previously colocated with the table, and the colocation
+will be preserved. If it is "false", the current colocation of this table will
+be broken.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+
+.. code-block:: postgresql
+
+  -- change distribution column
+  SELECT alter_distributed_table('github_events', distribution_column:='event_id');
+
+  -- change shard count of all tables in colocation group
+  SELECT alter_distributed_table('github_events', shard_count:=6, cascade_to_colocated:=true);
+
+  -- change colocation
+  SELECT alter_distributed_table('github_events', colocate_with:='another_table');
+
+
+.. _alter_table_set_access_method:
+
+alter_table_set_access_method
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The alter_table_set_access_method() function changes access method of a table
+(e.g. heap or :ref:`columnar <columnar>`).
+
+Arguments
+************************
+
+**table_name:** Name of the table whose access method will change.
+
+**access_method:** Name of the new access method.
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+
+.. code-block:: postgresql
+
+  SELECT alter_table_set_access_method('github_events', 'columnar');
 
 .. _remove_local_tables_from_metadata:
 
