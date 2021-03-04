@@ -15,21 +15,21 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 9.5 is currently installed on Postgres 13:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 10.0 is currently installed on Postgres 13:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-13-citus-9.5
+  sudo apt-get install --only-upgrade postgresql-13-citus-10.0
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus95_13
+  sudo yum update citus10_13
   sudo service postgresql-13 restart
 
 .. _major_minor_upgrade:
@@ -48,14 +48,14 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 8.3 to 9.5
+If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 9.5 to 10.0
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-11-citus-9.5
+  sudo apt-get install postgresql-12-citus-10.0
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -63,8 +63,8 @@ If upgrading both Citus and Postgres, always be sure to upgrade the Citus extens
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus83_11 citus95_11
-  sudo service postgresql-11 restart
+  sudo yum swap citus95_12 citus10_12
+  sudo service postgresql-12 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -94,7 +94,7 @@ After installing the new package and restarting the database, run the extension 
 
 .. _upgrading_postgres:
 
-Upgrading PostgreSQL version from 11 to 12
+Upgrading PostgreSQL version from 12 to 13
 ##########################################
 
 .. note::
@@ -104,16 +104,16 @@ Upgrading PostgreSQL version from 11 to 12
 Record the following paths before you start (your actual paths may be different than those below):
 
 Existing data directory (e.g. /opt/pgsql/10/data)
-  :code:`export OLD_PG_DATA=/opt/pgsql/11/data`
+  :code:`export OLD_PG_DATA=/opt/pgsql/12/data`
 
 Existing PostgreSQL installation path (e.g. /usr/pgsql-10)
-  :code:`export OLD_PG_PATH=/usr/pgsql-11`
+  :code:`export OLD_PG_PATH=/usr/pgsql-12`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/12/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/13/data`
 
 New PostgreSQL installation path
-  :code:`export NEW_PG_PATH=/usr/pgsql-12`
+  :code:`export NEW_PG_PATH=/usr/pgsql-13`
 
 For Every Node
 --------------
