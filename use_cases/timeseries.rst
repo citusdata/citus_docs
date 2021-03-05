@@ -95,8 +95,13 @@ First clone, build, and install the pg_partman extension. Then tell partman we w
 
   -- Partition the table into hourly ranges of "created_at"
   SELECT partman.create_parent('github.events', 'created_at', 'native', 'hourly');
-  UPDATE partman.part_config SET infinite_time_partitions = true;
+  
+  -- Do not use the default partition, since it causes additional locking
+  DROP TABLE github.events_default;
 
+  -- Create new partitions when running maintenance
+  UPDATE partman.part_config SET infinite_time_partitions = true;
+  
 Running ``\d+ github.events`` will now show more partitions:
 
 ::
@@ -123,26 +128,23 @@ Running ``\d+ github.events`` will now show more partitions:
               github.events_p2021_02_03_1800 FOR VALUES FROM ('2021-02-03 18:00:00') TO ('2021-02-03 19:00:00'),
               github.events_p2021_02_03_1900 FOR VALUES FROM ('2021-02-03 19:00:00') TO ('2021-02-03 20:00:00'),
               github.events_p2021_02_03_2000 FOR VALUES FROM ('2021-02-03 20:00:00') TO ('2021-02-03 21:00:00'),
-              github.events_p2021_02_03_2100 FOR VALUES FROM ('2021-02-03 21:00:00') TO ('2021-02-03 22:00:00'),
-              github.events_default DEFAULT
+              github.events_p2021_02_03_2100 FOR VALUES FROM ('2021-02-03 21:00:00') TO ('2021-02-03 22:00:00')
 
 
-By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. For PostgreSQL 11 or above, a default partition is automatically created. A "_default" suffix is added onto the current table name. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
+By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. A default partition is automatically created for rows that do not match any of the partitions, but we prefer to drop it because the default partition cause maintenance operations to take additional locks. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
 
 As time progresses, pg_partman will need to do some maintenance to create new partitions and drop old ones. Anytime you want to trigger maintenance, call:
 
 .. code-block:: postgresql
 
-  -- disabling analyze is recommended for native partitioning
-  -- due to aggressive locks
-  SELECT partman.run_maintenance(p_analyze := false);
+  CALL partman.run_maintenance_proc();
 
 It's best to set up a periodic job to run the maintenance function. Pg_partman can be built with support for a background worker process to do this. Or we can use another extension like `pg_cron <https://github.com/citusdata/pg_cron>`_:
 
 .. code-block:: postgresql
 
   SELECT cron.schedule('@hourly', $$
-    SELECT partman.run_maintenance(p_analyze := false);
+    CALL partman.run_maintenance_proc();
   $$);
 
 Once periodic maintenance is set up, you no longer have to think about the partitions, they just work.
@@ -160,7 +162,7 @@ Now whenever maintenance runs, partitions older than a month are automatically d
 
 .. note::
 
-  Be aware that native partitioning in Postgres is still quite new and has a few quirks. For example, you cannot directly create an index on a partitioned table. Instead, pg_partman lets you create a template table to define indexes for new partitions. Maintenance operations on partitioned tables will also acquire aggressive locks that can briefly stall queries. There is currently a lot of work going on within the postgres community to resolve these issues, so expect time partitioning in Postgres to only get better.
+  Be aware that native partitioning in Postgres is still quite new and has a few quirks. Maintenance operations on partitioned tables will acquire aggressive locks that can briefly stall queries. There is currently a lot of work going on within the postgres community to resolve these issues, so expect time partitioning in Postgres to only get better.
 
 .. _columnar_example:
 
@@ -276,43 +278,16 @@ Archiving a Row Partition to Columnar Storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a row partition has filled its range, you can archive it to compressed
-columnar storage. The process is:
-
-1. Make a columnar copy of the row partition.
-2. Detach the row partition.
-3. Perform table renames.
-4. Attach the columnar copy in the row partition's stead.
-
-In code, here's how to turn ge3 columnar:
+columnar storage.
 
 .. code-block:: postgresql
 
-  BEGIN;
+  SELECT alter_table_set_access_method('ge3', 'columnar');
   
-  -- uncomment the following statement to avoid deadlock risk
-  -- at the cost of holding the lock during the data conversion:
-  --   LOCK TABLE github.columnar_events IN ACCESS EXCLUSIVE MODE;
-  
-  LOCK TABLE ge3 IN EXCLUSIVE MODE;
-  CREATE TABLE ge3_tmp_new(LIKE ge3) USING columnar;
-  INSERT INTO ge3_tmp_new SELECT * FROM ge3;
-  
-  -- DETACH will take ACCESS EXCLUSIVE LOCK on the partitioned table
-  ALTER TABLE github.columnar_events DETACH PARTITION ge3;
-  ALTER TABLE ge3 RENAME TO ge3_tmp_old;
-  ALTER TABLE ge3_tmp_new RENAME TO ge3;
-  ALTER TABLE github.columnar_events ATTACH PARTITION ge3
-    FOR VALUES FROM ('2015-01-01 06:00:00') TO ('2015-01-01 08:00:00');
-  DROP TABLE ge3_tmp_old;
-
-  COMMIT;
-
-After doing that, we can create a row partition to accept the new mutable data.
+You can also compress all partitions older than a given date in one go.
 
 .. code-block:: postgresql
 
-  -- the new row partition
-  CREATE TABLE ge4 PARTITION OF github.columnar_events
-    FOR VALUES FROM ('2015-01-01 08:00:00') TO ('2015-01-01 10:00:00');
+  CALL alter_old_partitions_set_access_method('github.columnar_events', now() - interval '7 days', 'columnar');
 
 For more information, see :ref:`columnar`.
