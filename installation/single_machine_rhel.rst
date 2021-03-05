@@ -15,7 +15,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
   curl https://install.citusdata.com/community/rpm.sh | sudo bash
 
   # install Citus extension
-  sudo yum install -y citus10_13
+  sudo yum install -y citus100_13
 
 .. _post_install:
 
@@ -47,13 +47,13 @@ Finally, we'll start an instance of PostgreSQL for the new directory:
 
 .. code-block:: sh
 
-  pg_ctl -D citus -l citus_logfile start
+  pg_ctl -D citus -o "-p 9700" -l citus_logfile start
 
 Above you added Citus to ``shared_preload_libraries``. That lets it hook into some deep parts of Postgres, swapping out the query planner and executor.  Here, we load the user-facing side of Citus (such as the functions you'll soon call):
 
 .. code-block:: sh
 
-  psql -c "CREATE EXTENSION citus;"
+  psql -p 9700 -c "CREATE EXTENSION citus;"
 
 **4. Verify that installation has succeeded**
 
@@ -61,7 +61,7 @@ To verify that the installation has succeeded, and Citus is installed:
 
 .. code-block:: sh
 
-  psql -c "select citus_version();"
+  psql -p 9700 -c "select citus_version();"
 
 You should see details of the Citus extension.
 
