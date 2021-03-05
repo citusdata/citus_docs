@@ -223,7 +223,7 @@ The next step is loading sample data into the cluster from the command line.
   .. code-block:: bash
 
     for dataset in companies campaigns ads clicks impressions geo_ips; do
-      docker cp ${dataset}.csv citus_master:.
+      docker cp ${dataset}.csv citus:.
     done
 
 Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location. Back inside psql run this:
