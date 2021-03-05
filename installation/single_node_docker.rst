@@ -1,4 +1,4 @@
-.. _single_machine_docker:
+.. _single_node_docker:
 
 Docker (Mac or Linux)
 =====================

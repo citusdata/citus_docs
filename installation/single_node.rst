@@ -10,6 +10,6 @@ production and get ready for future scale and growth.
 
 .. toctree::
 
-   single_machine_docker.rst
-   single_machine_debian.rst
-   single_machine_rhel.rst
+   single_node_docker.rst
+   single_node_debian.rst
+   single_node_rhel.rst

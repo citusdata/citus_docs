@@ -1,22 +1,21 @@
 .. highlight:: bash
 
-.. _single_machine_deb:
+.. _single_node_rhel:
 
-Ubuntu or Debian
-================
+Fedora, CentOS, or Red Hat
+==========================
 
-This section describes the steps needed to set up a single-node Citus cluster on your own Linux machine from deb packages.
+This section describes the steps needed to set up a single-node Citus cluster on your own Linux machine from RPM packages.
 
 **1. Install PostgreSQL 13 and the Citus extension**
 
 .. code-block:: sh
 
   # Add Citus repository for package manager
-  curl https://install.citusdata.com/community/deb.sh | sudo bash
+  curl https://install.citusdata.com/community/rpm.sh | sudo bash
 
-  # install the server and initialize db
-  sudo apt-get -y install postgresql-13-citus-10.0
-
+  # install Citus extension
+  sudo yum install -y citus100_13
 
 .. _post_install:
 
@@ -30,7 +29,7 @@ Let's create a new database on disk. For convenience in using PostgreSQL Unix do
   sudo su - postgres
 
   # include path to postgres binaries
-  export PATH=$PATH:/usr/lib/postgresql/13/bin
+  export PATH=$PATH:/usr/pgsql-13/bin
 
   cd ~
   mkdir citus

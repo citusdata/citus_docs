@@ -78,8 +78,8 @@ single-node.
    :caption: Install
    :hidden:
 
-   installation/single_machine.rst
-   installation/multi_machine.rst
+   installation/single_node.rst
+   installation/multi_node.rst
    installation/citus_cloud.rst
 
 .. toctree::

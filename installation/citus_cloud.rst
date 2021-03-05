@@ -1,4 +1,4 @@
-.. _multi_machine_cloud:
+.. _multi_node_cloud:
 
 Managed Deployment
 ==================
