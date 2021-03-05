@@ -25,7 +25,7 @@ Ubuntu or Debian with Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # install the server and initialize db
-    sudo apt-get install -y postgresql-12-citus-enterprise-9.5
+    sudo apt-get install -y postgresql-12-citus-enterprise-10.0
 
     # preload citus extension
     sudo pg_conftool 12 main set shared_preload_libraries citus
@@ -46,7 +46,7 @@ Ubuntu or Debian without Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     sudo apt-get clean
-    sudo apt-get install -y --download-only postgresql-12-citus-enterprise-9.5
+    sudo apt-get install -y --download-only postgresql-12-citus-enterprise-10.0
 
     # go to package downloads
     cd /var/cache/apt
@@ -88,7 +88,7 @@ Fedora, CentOS, or Red Hat with Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # install PostgreSQL with Citus extension
-    sudo yum install -y citus-enterprise95_12
+    sudo yum install -y citus-enterprise10_12
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
     sudo service postgresql-12 initdb || \
@@ -113,7 +113,7 @@ Fedora, CentOS, or Red Hat without Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # get package
-    sudo yum install --downloadonly --downloaddir=. citus-enterprise95_12
+    sudo yum install --downloadonly --downloaddir=. citus-enterprise10_12
 
     # put them into a tarball
     tar czf ~/citus-enterprise.tar.gz *.rpm

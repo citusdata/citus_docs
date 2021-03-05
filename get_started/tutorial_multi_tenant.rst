@@ -31,9 +31,9 @@ We will use three Postgres tables to represent this data. To get started, you wi
 
 .. code-block:: bash
 
-    docker cp companies.csv citus_master:.
-    docker cp campaigns.csv citus_master:.
-    docker cp ads.csv citus_master:.
+    docker cp companies.csv citus:.
+    docker cp campaigns.csv citus:.
+    docker cp ads.csv citus:.
 
 Creating tables
 ---------------

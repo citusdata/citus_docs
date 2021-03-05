@@ -9,5 +9,5 @@ use the guide below.
 
 .. toctree::
 
-   multi_machine_debian.rst
-   multi_machine_rhel.rst
+   multi_node_debian.rst
+   multi_node_rhel.rst

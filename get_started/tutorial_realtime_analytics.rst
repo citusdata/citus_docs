@@ -27,8 +27,8 @@ We will use two Postgres tables to represent this data. To get started, you will
 
 .. code-block:: bash
 
-    docker cp users.csv citus_master:.
-    docker cp events.csv citus_master:.
+    docker cp users.csv citus:.
+    docker cp events.csv citus:.
 
 Creating tables
 ---------------

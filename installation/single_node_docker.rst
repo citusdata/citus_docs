@@ -1,4 +1,4 @@
-.. _single_machine_docker:
+.. _single_node_docker:
 
 Docker (Mac or Linux)
 =====================
@@ -13,10 +13,10 @@ You can start Citus in Docker with one command:
 .. code-block:: bash
 
   # start the image
-  docker run -d --name citus -p 5432:5432 -e POSTGRES_PASSWORD=foo citusdata/citus
+  docker run -d --name citus -p 5432:5432 -e POSTGRES_PASSWORD=mypass citusdata/citus
 
   # verify it's running, and that Citus is installed:
-  psql -U postgres -d postgres -c "SELECT * FROM citus_version();"
+  psql -U postgres -h localhost -d postgres -c "SELECT * FROM citus_version();"
 
 You should see the latest version of Citus.
 

@@ -1,22 +1,21 @@
 .. highlight:: bash
 
-.. _single_machine_deb:
+.. _single_node_rhel:
 
-Ubuntu or Debian
-================
+Fedora, CentOS, or Red Hat
+==========================
 
-This section describes the steps needed to set up a single-node Citus cluster on your own Linux machine from deb packages.
+This section describes the steps needed to set up a single-node Citus cluster on your own Linux machine from RPM packages.
 
 **1. Install PostgreSQL 13 and the Citus extension**
 
 .. code-block:: sh
 
   # Add Citus repository for package manager
-  curl https://install.citusdata.com/community/deb.sh | sudo bash
+  curl https://install.citusdata.com/community/rpm.sh | sudo bash
 
-  # install the server and initialize db
-  sudo apt-get -y install postgresql-13-citus-9.5
-
+  # install Citus extension
+  sudo yum install -y citus100_13
 
 .. _post_install:
 
@@ -30,7 +29,7 @@ Let's create a new database on disk. For convenience in using PostgreSQL Unix do
   sudo su - postgres
 
   # include path to postgres binaries
-  export PATH=$PATH:/usr/lib/postgresql/13/bin
+  export PATH=$PATH:/usr/pgsql-13/bin
 
   cd ~
   mkdir citus
@@ -48,13 +47,13 @@ Finally, we'll start an instance of PostgreSQL for the new directory:
 
 .. code-block:: sh
 
-  pg_ctl -D citus -l citus_logfile start
+  pg_ctl -D citus -o "-p 9700" -l citus_logfile start
 
 Above you added Citus to ``shared_preload_libraries``. That lets it hook into some deep parts of Postgres, swapping out the query planner and executor.  Here, we load the user-facing side of Citus (such as the functions you'll soon call):
 
 .. code-block:: sh
 
-  psql -c "CREATE EXTENSION citus;"
+  psql -p 9700 -c "CREATE EXTENSION citus;"
 
 **4. Verify that installation has succeeded**
 
@@ -62,7 +61,7 @@ To verify that the installation has succeeded, and Citus is installed:
 
 .. code-block:: sh
 
-  psql -c "select citus_version();"
+  psql -p 9700 -c "select citus_version();"
 
 You should see details of the Citus extension.
 

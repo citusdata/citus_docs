@@ -1,13 +1,13 @@
 .. highlight:: bash
 
-.. _production_rhel:
+.. _production_deb:
 
-Fedora, CentOS, or Red Hat
-==========================
+Ubuntu or Debian
+================
 
-This section describes the steps needed to set up a multi-node Citus cluster on your own Linux machines from RPM packages.
+This section describes the steps needed to set up a multi-node Citus cluster on your own Linux machines using deb packages.
 
-.. _production_rhel_all_nodes:
+.. _production_deb_all_nodes:
 
 Steps to be executed on all nodes
 ---------------------------------
@@ -17,7 +17,7 @@ Steps to be executed on all nodes
 ::
 
   # Add Citus repository for package manager
-  curl https://install.citusdata.com/community/rpm.sh | sudo bash
+  curl https://install.citusdata.com/community/deb.sh | sudo bash
 
 .. _post_install:
 
@@ -25,16 +25,15 @@ Steps to be executed on all nodes
 
 ::
 
-  # install PostgreSQL with Citus extension
-  sudo yum install -y citus95_13
-  # initialize system database (using RHEL 6 vs 7 method as necessary)
-  sudo service postgresql-13 initdb || sudo /usr/pgsql-13/bin/postgresql-13-setup initdb
+  # install the server and initialize db
+  sudo apt-get -y install postgresql-13-citus-10.0
+
   # preload citus extension
-  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/13/data/postgresql.conf
+  sudo pg_conftool 13 main set shared_preload_libraries citus
 
-PostgreSQL adds version-specific binaries in `/usr/pgsql-13/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
+This installs centralized configuration in `/etc/postgresql/13/main`, and creates a database in `/var/lib/postgresql/13/main`.
 
-.. _post_enterprise_rhel:
+.. _post_enterprise_deb:
 
 **3. Configure connection and authentication**
 
@@ -42,16 +41,11 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo vi /var/lib/pgsql/13/data/postgresql.conf
+  sudo pg_conftool 13 main set listen_addresses '*'
 
 ::
 
-  # Uncomment listen_addresses for the changes to take effect
-  listen_addresses = '*'
-
-::
-
-  sudo vi /var/lib/pgsql/13/data/pg_hba.conf
+  sudo vi /etc/postgresql/13/main/pg_hba.conf
 
 ::
 
@@ -71,17 +65,18 @@ Before starting the database let's change its access permissions. By default the
 ::
 
   # start the db server
-  sudo service postgresql-13 restart
+  sudo service postgresql restart
   # and make it start automatically when computer does
-  sudo chkconfig postgresql-13 on
+  sudo update-rc.d postgresql enable
 
 You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
 
 ::
 
+  # add the citus extension
   sudo -i -u postgres psql -c "CREATE EXTENSION citus;"
 
-.. _production_rhel_coordinator_node:
+.. _production_deb_coordinator_node:
 
 Steps to be executed on the coordinator node
 --------------------------------------------
@@ -92,10 +87,9 @@ The steps listed below must be executed **only** on the coordinator node after t
 
 We need to inform the coordinator about its workers. To add this information,
 we call a UDF which adds the node information to the pg_dist_node
-catalog table, which the coordinator uses to get the list of worker
-nodes. For our example, we assume that there are two workers (named
-worker-101, worker-102). Add the workers' DNS names (or IP addresses)
-and server ports to the table.
+catalog table. For our example, we assume that there are two workers
+(named worker-101, worker-102). Add the workers' DNS names (or IP
+addresses) and server ports to the table.
 
 ::
 
