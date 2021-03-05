@@ -128,11 +128,10 @@ Running ``\d+ github.events`` will now show more partitions:
               github.events_p2021_02_03_1800 FOR VALUES FROM ('2021-02-03 18:00:00') TO ('2021-02-03 19:00:00'),
               github.events_p2021_02_03_1900 FOR VALUES FROM ('2021-02-03 19:00:00') TO ('2021-02-03 20:00:00'),
               github.events_p2021_02_03_2000 FOR VALUES FROM ('2021-02-03 20:00:00') TO ('2021-02-03 21:00:00'),
-              github.events_p2021_02_03_2100 FOR VALUES FROM ('2021-02-03 21:00:00') TO ('2021-02-03 22:00:00'),
-              github.events_default DEFAULT
+              github.events_p2021_02_03_2100 FOR VALUES FROM ('2021-02-03 21:00:00') TO ('2021-02-03 22:00:00')
 
 
-By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. For PostgreSQL 11 or above, a default partition is automatically created. A "_default" suffix is added onto the current table name. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
+By default ``create_parent`` creates four partitions in the past, four in the future, and one for the present, all based on system time. If you need to backfill older data, you can specify a ``p_start_partition`` parameter in the call to ``create_parent``, or ``p_premake`` to make partitions for the future. A default partition is automatically created for rows that do not match any of the partitions, but we prefer to drop it because the default partition cause maintenance operations to take additional locks. See the `pg_partman documentation <https://github.com/keithf4/pg_partman/blob/master/doc/pg_partman.md>`_ for details.
 
 As time progresses, pg_partman will need to do some maintenance to create new partitions and drop old ones. Anytime you want to trigger maintenance, call:
 
@@ -160,6 +159,10 @@ Finally, to configure pg_partman to drop old partitions, you can update the ``pa
    WHERE parent_table = 'github.events';
 
 Now whenever maintenance runs, partitions older than a month are automatically dropped.
+
+.. note::
+
+  Be aware that native partitioning in Postgres is still quite new and has a few quirks. Maintenance operations on partitioned tables will acquire aggressive locks that can briefly stall queries. There is currently a lot of work going on within the postgres community to resolve these issues, so expect time partitioning in Postgres to only get better.
 
 .. _columnar_example:
 
@@ -279,7 +282,7 @@ columnar storage.
 
 .. code-block:: postgresql
 
-  SELECT alter_table_set_access_method('ge0', 'columnar');
+  SELECT alter_table_set_access_method('ge3', 'columnar');
   
 You can also compress all partitions older than a given date in one go.
 
