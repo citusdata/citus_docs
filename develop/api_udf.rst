@@ -645,16 +645,16 @@ the Citus metadata table pg_dist_node. It also copies reference tables to the ne
 Arguments
 ************************
 
-**node_name:** DNS name or IP address of the new node to be added.
+**nodename:** DNS name or IP address of the new node to be added.
 
-**node_port:** The port on which PostgreSQL is listening on the worker node.
+**nodeport:** The port on which PostgreSQL is listening on the worker node.
 
-**group_id:** A group of one primary server and zero or more secondary
+**groupid:** A group of one primary server and zero or more secondary
 servers, relevant only for streaming replication.  Default -1
 
-**node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
+**noderole:** Whether it is 'primary' or 'secondary'. Default 'primary'
 
-**node_cluster:** The cluster name. Default 'default'
+**nodecluster:** The cluster name. Default 'default'
 
 Return Value
 ******************************
@@ -751,16 +751,16 @@ node as inactive, meaning no shards will be placed there. Also it does
 Arguments
 ************************
 
-**node_name:** DNS name or IP address of the new node to be added.
+**nodename:** DNS name or IP address of the new node to be added.
 
-**node_port:** The port on which PostgreSQL is listening on the worker node.
+**nodeport:** The port on which PostgreSQL is listening on the worker node.
 
-**group_id:** A group of one primary server and zero or more secondary
+**groupid:** A group of one primary server and zero or more secondary
 servers, relevant only for streaming replication.  Default -1
 
-**node_role:** Whether it is 'primary' or 'secondary'. Default 'primary'
+**noderole:** Whether it is 'primary' or 'secondary'. Default 'primary'
 
-**node_cluster:** The cluster name. Default 'default'
+**nodecluster:** The cluster name. Default 'default'
 
 Return Value
 ******************************
@@ -794,9 +794,9 @@ the node. Useful for nodes added via :ref:`citus_add_inactive_node`.
 Arguments
 ************************
 
-**node_name:** DNS name or IP address of the new node to be added.
+**nodename:** DNS name or IP address of the new node to be added.
 
-**node_port:** The port on which PostgreSQL is listening on the worker node.
+**nodeport:** The port on which PostgreSQL is listening on the worker node.
 
 Return Value
 ******************************
@@ -831,9 +831,9 @@ placements from the disabled node. To reactivate the node, just run
 Arguments
 ************************
 
-**node_name:** DNS name or IP address of the node to be disabled.
+**nodename:** DNS name or IP address of the node to be disabled.
 
-**node_port:** The port on which PostgreSQL is listening on the worker node.
+**nodeport:** The port on which PostgreSQL is listening on the worker node.
 
 Return Value
 ******************************
@@ -863,15 +863,15 @@ metadata table pg_dist_node.
 Arguments
 ************************
 
-**node_name:** DNS name or IP address of the new node to be added.
+**nodename:** DNS name or IP address of the new node to be added.
 
-**node_port:** The port on which PostgreSQL is listening on the worker node.
+**nodeport:** The port on which PostgreSQL is listening on the worker node.
 
-**primary_name:** DNS name or IP address of the primary node for this secondary.
+**primaryname:** DNS name or IP address of the primary node for this secondary.
 
-**primary_port:** The port on which PostgreSQL is listening on the primary node.
+**primaryport:** The port on which PostgreSQL is listening on the primary node.
 
-**node_cluster:** The cluster name. Default 'default'
+**nodecluster:** The cluster name. Default 'default'
 
 Return Value
 ******************************
@@ -905,9 +905,9 @@ function, the shards will need to be moved off that node.
 Arguments
 ************************
 
-**node_name:** DNS name of the node to be removed.
+**nodename:** DNS name of the node to be removed.
 
-**node_port:** The port on which PostgreSQL is listening on the worker node.
+**nodeport:** The port on which PostgreSQL is listening on the worker node.
 
 Return Value
 ******************************
