@@ -30,16 +30,6 @@ How does Citus handle failover of the coordinator node?
 
 As the Citus coordinator node is similar to a standard PostgreSQL server, regular PostgreSQL synchronous replication and failover can be used to provide higher availability of the coordinator node. Many of our customers use synchronous replication in this way to add resilience against coordinator node failure. You can find more information about handling :ref:`coordinator_node_failures`.
 
-How do I ingest the results of a query into a distributed table?
-----------------------------------------------------------------
-
-Citus supports the `INSERT / SELECT <https://www.postgresql.org/docs/current/static/sql-insert.html>`_ syntax for copying the results of a query on a distributed table into a distributed table, when the tables are :ref:`co-located <colocation>`.
-
-If your tables are not co-located, or you are using append distribution, there
-are workarounds you can use (for eg. using COPY to copy data out and then back
-into the destination table). Please contact us if your use-case demands such
-ingest workflows.
-
 Can I join distributed and non-distributed tables together in the same query?
 -----------------------------------------------------------------------------
 
