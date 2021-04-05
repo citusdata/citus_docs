@@ -55,9 +55,9 @@ Citus scales horizontally by adding worker nodes, and vertically by upgrading wo
   * 2.4TB memory, 1280 cores, and 80TB of data
   * ...with plans to grow to 45 nodes
 
-* `Mixrank <https://www.citusdata.com/customers/mixrank>`_
+* `MixRank <https://www.citusdata.com/customers/mixrank>`_
 
-  * 1.6PB of time series data
+  * 10+ PB of time series data
 
 For more customers and statistics, see our `customer stories <https://www.citusdata.com/customers#customer-index>`_.
 
