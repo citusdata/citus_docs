@@ -131,9 +131,9 @@ html_theme_path = ['_themes',]
 
 # Add our custom CSS
 def setup(app):
-  app.add_stylesheet('css/citus.css')
-  app.add_stylesheet('css/flexboxgrid.min.css')
-  app.add_stylesheet('css/pygments.css')
+  app.add_css_file('css/citus.css')
+  app.add_css_file('css/flexboxgrid.min.css')
+  app.add_css_file('css/pygments.css')
 
 html_context = {
   'canonical_urls': {
