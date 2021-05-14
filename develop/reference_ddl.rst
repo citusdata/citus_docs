@@ -233,7 +233,8 @@ Attempting to do so causes an error:
   ERROR:  cannot execute ALTER TABLE command involving partition column
   */
 
-However, there's a workaround of re-creating the distributed table. See :ref:`change_dist_col`.
+As a workaround, you can consider :ref:`changing the distribution column
+<alter_distributed_table>`, updating it, and changing it back.
 
 Adding/Removing Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

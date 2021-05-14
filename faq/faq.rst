@@ -30,11 +30,6 @@ How does Citus handle failover of the coordinator node?
 
 As the Citus coordinator node is similar to a standard PostgreSQL server, regular PostgreSQL synchronous replication and failover can be used to provide higher availability of the coordinator node. Many of our customers use synchronous replication in this way to add resilience against coordinator node failure. You can find more information about handling :ref:`coordinator_node_failures`.
 
-Can I join distributed and non-distributed tables together in the same query?
------------------------------------------------------------------------------
-
-If you want to do joins between small dimension tables (regular Postgres tables) and large tables (distributed), then wrap the local table in a subquery. Citus' subquery execution logic will allow the join to work. See :ref:`join_local_dist` and :ref:`join_local_ref`.
-
 .. _unsupported:
 
 Are there any PostgreSQL features not supported by Citus?
