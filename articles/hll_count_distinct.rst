@@ -175,7 +175,7 @@ we will only use github\_events table and we will use
 `large\_events.csv <https://examples.citusdata.com/large_events.csv>`__
 data set;
 
-.. code:: sql
+.. code:: psql
 
     CREATE TABLE github_events
     (
@@ -209,12 +209,13 @@ to find out how many unique users created an event;
 
 It should return something like this;
 
-.. code:: sql
+::
 
+    .
      count
     --------
      264227
-     
+    
     (1 row)
 
 It looks like this query does not have anything with HLL. However if you
@@ -238,12 +239,13 @@ can query number of unique users who created a PushEvent;
 
 It would return;
 
-.. code:: sql
+::
 
+    .
      count
     --------
      157471
-
+    
     (1 row)
 
 Similarly exact distinct count for this query is 157154 and our error
