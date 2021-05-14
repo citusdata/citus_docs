@@ -30,8 +30,9 @@ following structure and is sharded on ``server_id``. The primary key is
 several columns wide to both serve as a unique constraint preventing
 duplicate data points and as an index over all the columns we query on.
 
-.. code:: sql
+::
 
+    .
                       Table "public.cw_metrics"
         Column    |           Type           |     Modifiers
     --------------+--------------------------+--------------------
@@ -50,7 +51,7 @@ duplicate data points and as an index over all the columns we query on.
 
 Some sample rows:
 
-.. code:: sql
+::
 
     citus=> select * from cw_metrics order by timestamp desc limit 2;
     -[ RECORD 1 ]+-------------------------------------
@@ -111,8 +112,9 @@ However the exception tracker was not the right place for this. It made
 it harder than necessary to spot real errors, so we moved these events
 to a distributed Citus table which looks like this:
 
-.. code:: sql
+::
 
+    .
                    Table "public.events"
        Column   |           Type           | Modifiers
     ------------+--------------------------+-----------
@@ -135,7 +137,7 @@ keys, and the new brin index type.
 
 Here are some example rows from the events table:
 
-.. code:: sql
+::
 
     citus=> select * from events order by created_at desc limit 2;
     -[ RECORD 1 ]-

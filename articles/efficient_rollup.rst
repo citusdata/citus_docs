@@ -40,7 +40,7 @@ the rest of the events data, if you are trying to conserve space.
 To illustrate the example above, let's create ``github_events`` table
 and load data to the table:
 
-.. code:: sql
+.. code:: psql
 
     CREATE TABLE github_events
     (
@@ -146,7 +146,7 @@ queries on GitHub events data. If you did not create a ``github_events``
 table in the previous example, create and populate it now with the
 `GitHub events data set <https://examples.citusdata.com/events.csv>`__:
 
-.. code:: sql
+.. code:: psql
 
     CREATE TABLE github_events
     (
