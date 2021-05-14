@@ -29,6 +29,10 @@ a.skiplink {
   margin-bottom: 0;
 }
 
+.wy-menu-vertical a:focus {
+  outline: auto !important;
+}
+
 .wy-menu-vertical li.current {
   border-left: 2px solid;
 }
