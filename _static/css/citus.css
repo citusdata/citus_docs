@@ -29,22 +29,40 @@ a.skiplink {
   margin-bottom: 0;
 }
 
-.wy-menu-vertical a:focus {
-  outline: auto !important;
-}
-
 .wy-menu-vertical li.current {
   border-left: 2px solid;
+}
+
+.wy-menu-vertical li.toctree-l1.current {
+  background: #fcfcfc;
 }
 
 .wy-menu-vertical li.current a {
   color: #656565;
 }
 
+.wy-menu-vertical li.current > a,
+.wy-menu-vertical li.on a {
+  background: none !important;
+}
+
+.wy-menu-vertical li.toctree-l2 {
+  background: #c9c9c9;
+}
+
 .wy-menu-vertical li.toctree-l2.current > a,
 .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a {
   color: #555;
-  z-index: 1;
+  background: none !important;
+}
+
+.wy-menu-vertical li.toctree-l3.current {
+  background: #bdbdbd;
+}
+
+.wy-menu-vertical li.toctree-l3.current > a,
+.wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a {
+  background: none !important;
 }
 
 .wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a {
