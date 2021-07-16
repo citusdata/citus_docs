@@ -17,9 +17,6 @@ or go straight to the `Azure Portal
 Postgres server. (And if you don’t yet have an Azure subscription, just `create
 a free Azure account <https://azure.microsoft.com/free/>`_ first.)
 
-And very soon, once Citus 10 is available in Hyperscale (Citus), you’ll be able
-to configure Hyperscale (Citus) on a single node.
-
 .. NOTE::
 
   We are no longer onboarding new users to our previous managed service, Citus
