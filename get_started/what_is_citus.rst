@@ -24,7 +24,7 @@ series workloads.
    subscription along with 24x7 support, for those who want to manage Citus
    manually.
 3. Managed database service: Citus is available on Azure as `Hyperscale (Citus)
-   <https://docs.microsoft.com/en-us/azure/postgresql/hyperscale/>`_, a
+   <https://docs.microsoft.com/azure/postgresql/hyperscale/>`_, a
    built-in deployment option in the Azure Database for PostgreSQL managed
    service.
 

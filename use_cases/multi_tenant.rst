@@ -513,4 +513,4 @@ Where to Go From Here
 
 With this, you now know how to use Citus to power your multi-tenant application for scalability. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`.
 
-To adjust a front-end application, specifically Ruby on Rails or Django, read :ref:`rails_migration` or :ref:`django_migration`. Finally, try `Azure Database for PostgreSQL - Hyperscale (Citus) <https://docs.microsoft.com/en-us/azure/postgresql/quickstart-create-hyperscale-portal>`_, the easiest way to manage a Citus cluster.
+To adjust a front-end application, specifically Ruby on Rails or Django, read :ref:`rails_migration` or :ref:`django_migration`. Finally, try `Azure Database for PostgreSQL - Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/quickstart-create-hyperscale-portal>`_, the easiest way to manage a Citus cluster.
