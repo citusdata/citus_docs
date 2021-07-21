@@ -171,7 +171,7 @@ As the error message suggests, you can (cautiously) increase this limit by alter
 Can I run Citus on Microsoft Azure?
 -----------------------------------
 
-Yes, Citus is a deployment option of `Azure Database for PostgreSQL <https://docs.microsoft.com/azure/postgresql/>`_ called **Hyperscale**. It is a fully managed database-as-a-service.
+Yes, Citus is a deployment option of `Azure Database for PostgreSQL <https://docs.microsoft.com/azure/postgresql/hyperscale/>`_ called **Hyperscale**. It is a fully managed database-as-a-service.
 
 Can I run Citus on Amazon RDS?
 ------------------------------
@@ -183,7 +183,7 @@ What is the state of Citus on AWS?
 
 Existing customers of :ref:`Citus Cloud <cloud_overview>` can provision a Citus cluster on Amazon Web Services. However, we are no longer accepting new signups for Citus Cloud.
 
-For a fully managed Citus database-as-a-service, try `Azure Database for PostgreSQL - Hyperscale (Citus) <https://docs.microsoft.com/en-us/azure/postgresql/overview#azure-database-for-postgresql---hyperscale-citus-preview>`_.
+For a fully managed Citus database-as-a-service, try `Azure Database for PostgreSQL - Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/overview#azure-database-for-postgresql--hyperscale-citus>`_.
 
 Can I create a new DB in a Citus Cloud instance?
 ------------------------------------------------

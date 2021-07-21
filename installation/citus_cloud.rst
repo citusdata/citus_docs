@@ -6,12 +6,12 @@ Managed Deployment
 One of the easiest ways to get started with Citus is to spin up a cluster in
 the cloud on Azure. Citus is available as a built-in deployment option in the
 `Azure Database for PostgreSQL - Hyperscale (Citus)
-<https://docs.microsoft.com/en-us/azure/postgresql/hyperscale/>`_ managed
+<https://docs.microsoft.com/azure/postgresql/hyperscale/>`_ managed
 service.
 
 To get started, you can take advantage of our Hyperscale (Citus) `quickstart
 documentation
-<https://docs.microsoft.com/en-us/azure/postgresql/quickstart-create-hyperscale-portal>`_,
+<https://docs.microsoft.com/azure/postgresql/quickstart-create-hyperscale-portal>`_,
 or go straight to the `Azure Portal
 <https://portal.azure.com/#create/Microsoft.PostgreSQLServer>`_ to provision a
 Postgres server. (And if you don’t yet have an Azure subscription, just `create
