@@ -1,1 +1,3 @@
-Sphinx
+Sphinx < 1.5.0
+docutils < 0.13.1
+sphinx_rtd_theme == 0.5.2
