@@ -39,6 +39,10 @@ If you want to break this implicit colocation, you can use :ref:`update_distribu
 
 If a new distributed table is not related to other tables, it's best to specify ``colocate_with => 'none'``.
 
+**shard_count:** (Optional) the number of shards to create for the new distributed table. When specifying ``shard_count`` you can't specify a value of ``colocate_with`` other than ``none``. To change the shard count of an existing table or colocation group, use the :ref:`alter_distributed_table` function.
+
+Possible values for ``shard_count`` are between 1 and 64000. For guidance on choosing the optimal value, see :ref:`prod_shard_count`.
+
 Return Value
 ********************************
 
