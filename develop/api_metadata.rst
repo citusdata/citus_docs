@@ -168,7 +168,7 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 |                |                      | | For hash distributed tables, zero.                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | groupid        |         int          | | Identifier used to denote a group of one primary server and zero or more|
-|                |                      | | secondary servers, when the streaming replication model is used.        |
+|                |                      | | secondary servers.                                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
@@ -245,8 +245,7 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 | nodeid           |         int          | | Auto-generated identifier for an individual node.                       |
 +------------------+----------------------+---------------------------------------------------------------------------+
 | groupid          |         int          | | Identifier used to denote a group of one primary server and zero or more|
-|                  |                      | | secondary servers, when the streaming replication model is used. By     |
-|                  |                      | | default it is the same as the nodeid.                                   |
+|                  |                      | | secondary servers. By default it is the same as the nodeid.             |
 +------------------+----------------------+---------------------------------------------------------------------------+
 | nodename         |         text         | | Host Name or IP Address of the PostgreSQL worker node.                  |
 +------------------+----------------------+---------------------------------------------------------------------------+
