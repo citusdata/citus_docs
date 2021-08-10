@@ -355,6 +355,8 @@ limitations as reference tables (see :ref:`ddl` and :ref:`citus_sql_reference`).
 If you drop the foreign keys, Citus will automatically remove such local tables from metadata,
 which eliminates such limitations on those tables.
 
+.. _executor_configuration:
+
 Executor Configuration
 ------------------------------------------------------------
 
