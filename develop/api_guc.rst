@@ -155,6 +155,21 @@ The maximum number of rows to store in :ref:`citus_stat_statements <citus_stat_s
 
 Changing this GUC will not take effect until PostgreSQL is restarted.
 
+citus.stat_statements_track (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+   This GUC is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+Recording statistics for :ref:`citus_stat_statements <citus_stat_statements>`
+requires extra CPU resources. When the database is experiencing load, the
+administrator may wish to disable statement tracking. The
+``citus.stat_statements_track`` GUC can turn tracking on and off. 
+
+* **all**: (default) Track all statements.
+* **none**: Disable tracking.
+
 Data Loading
 ---------------------------
 
