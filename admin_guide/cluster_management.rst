@@ -579,7 +579,7 @@ Once all files are in place on the nodes, the following settings need to be conf
    # this will tell citus to verify the certificate of the server it is connecting to 
    citus.node_conninfo = 'sslmode=verify-full sslrootcert=/path/to/ca.crt sslcrl=/path/to/ca.crl'
 
-After changing, either restart the database or reload the configuration to apply these changes. A restart is required if a Citus version below 9.2.4 is used.
+After changing, either restart the database or reload the configuration to apply these changes. A restart is required if a Citus version below 9.2.4 is used. Also, adjusting :ref:`local_hostname` may be required for proper functioning with ``sslmode=verify-full``.
 
 Depending on the policy of the Certificate Authority used you might need or want to change ``sslmode=verify-full`` in ``citus.node_conninfo`` to ``sslmode=verify-ca``. For the difference between the two settings please consult `the official postgres documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_.
 

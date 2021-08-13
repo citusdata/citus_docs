@@ -126,6 +126,24 @@ The ``node_conninfo`` setting takes effect only on newly opened connections. To 
 
    Citus versions prior to 9.2.4 require a full database restart to force all connections to use the new setting.
 
+.. _local_hostname:
+
+citus.local_hostname (text)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Citus nodes need occasionally to connect to themselves for systems operations.
+By default, they use the address ``localhost`` to refer to themselves, but this
+can cause problems. For instance, when a host requires ``sslmode=verify-full``
+for incoming connections, adding ``localhost`` as an alternative hostname on
+the SSL certificate isn't always desirable -- or even feasible.
+
+``citus.local_hostname`` selects the hostname a node uses to connect to itself.
+The default value is ``localhost``.
+
+.. code-block:: postgresql
+
+   ALTER SYSTEM SET citus.local_hostname TO 'mynode.example.com';
+
 Query Statistics
 ---------------------------
 

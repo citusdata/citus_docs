@@ -94,7 +94,7 @@ However, if a root certificate authority file exists (typically in ``~/.postgres
 Resolution
 ~~~~~~~~~~
 
-Possible solutions are to sign the certificate, turn off SSL, or remove the root certificate.
+Possible solutions are to sign the certificate, turn off SSL, or remove the root certificate. Also a node may have trouble connecting to itself without the help of :ref:`local_hostname`.
 
 Could not connect to any active placements
 ------------------------------------------
