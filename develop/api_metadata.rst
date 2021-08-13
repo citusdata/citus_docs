@@ -454,8 +454,10 @@ This table defines strategies that :ref:`rebalance_table_shards` can use to dete
 | minimum_threshold              |         float4       | | A safeguard to prevent the threshold argument of                        |
 |                                |                      | | rebalance_table_shards() from being set too low                         |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
-| improvement_threshold          |         float4       | | Determines when moving a shard is worth it                              |
-|                                |                      | |                                                                         |
+| improvement_threshold          |         float4       | | Determines when moving a shard is worth it during a rebalance.          |
+|                                |                      | | The rebalancer will move a shard when the ratio of the improvement with |
+|                                |                      | | the shard move to the improvement without crosses the threshold. This   |
+|                                |                      | | is most useful with the by_disk_size strategy.                          |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 
 A Citus installation ships with these strategies in the table:
