@@ -126,6 +126,24 @@ The ``node_conninfo`` setting takes effect only on newly opened connections. To 
 
    Citus versions prior to 9.2.4 require a full database restart to force all connections to use the new setting.
 
+.. _local_hostname:
+
+citus.local_hostname (text)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Citus nodes need occasionally to connect to themselves for systems operations.
+By default, they use the address ``localhost`` to refer to themselves, but this
+can cause problems. For instance, when a host requires ``sslmode=verify-full``
+for incoming connections, adding ``localhost`` as an alternative hostname on
+the SSL certificate isn't always desirable -- or even feasible.
+
+``citus.local_hostname`` selects the hostname a node uses to connect to itself.
+The default value is ``localhost``.
+
+.. code-block:: postgresql
+
+   ALTER SYSTEM SET citus.local_hostname TO 'mynode.example.com';
+
 Query Statistics
 ---------------------------
 
@@ -154,6 +172,21 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 The maximum number of rows to store in :ref:`citus_stat_statements <citus_stat_statements>`. Defaults to 50000, and may be changed to any value in the range 1000 - 10000000. Note that each row requires 140 bytes of storage, so setting stat_statements_max to its maximum value of 10M would consume 1.4GB of memory.
 
 Changing this GUC will not take effect until PostgreSQL is restarted.
+
+citus.stat_statements_track (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+   This GUC is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+
+Recording statistics for :ref:`citus_stat_statements <citus_stat_statements>`
+requires extra CPU resources. When the database is experiencing load, the
+administrator may wish to disable statement tracking. The
+``citus.stat_statements_track`` GUC can turn tracking on and off. 
+
+* **all**: (default) Track all statements.
+* **none**: Disable tracking.
 
 Data Loading
 ---------------------------

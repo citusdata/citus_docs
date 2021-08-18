@@ -8,8 +8,6 @@ $$$$$$$$$$$$$$$
 Upgrading Citus Versions
 ########################
 
-Citus adheres to `semantic versioning <http://semver.org/>`_ with patch-, minor-, and major-versions. The upgrade process differs for each, requiring more effort for bigger version jumps.
-
 Upgrading the Citus version requires first obtaining the new Citus extension and then installing it in each of your database instances. Citus uses separate packages for each minor version to ensure that running a default package upgrade will provide bug fixes but never break anything. Let's start by examining patch upgrades, the easiest kind.
 
 Patch Version Upgrade
@@ -37,7 +35,7 @@ To upgrade a Citus version to its latest patch, issue a standard upgrade command
 Major and Minor Version Upgrades
 --------------------------------
 
-Major and minor version upgrades follow the same steps, but be careful: major upgrades can make backward-incompatible changes in the Citus API. It is best to review the Citus `changelog <https://github.com/citusdata/citus/blob/master/CHANGELOG.md>`_ before a major upgrade and look for any changes which may cause problems for your application.
+Major and minor version upgrades follow the same steps, but be careful: they can make backward-incompatible changes in the Citus API. It is best to review the Citus `changelog <https://github.com/citusdata/citus/blob/master/CHANGELOG.md>`_ before an upgrade and look for any changes which may cause problems for your application.
 
 .. note::
 

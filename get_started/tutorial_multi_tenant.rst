@@ -107,9 +107,6 @@ In this case, we will shard all the tables on the :code:`company_id`.
 
 .. code-block:: sql
 
-    -- before distributing tables, enable some extra features
-    SET citus.replication_model = 'streaming';
-
     SELECT create_distributed_table('companies', 'id');
     SELECT create_distributed_table('campaigns', 'company_id');
     SELECT create_distributed_table('ads', 'company_id');
@@ -184,8 +181,7 @@ Next use :ref:`create_distributed_function` to instruct Citus to run the
 function directly on workers rather than on the coordinator (except on a
 single-node Citus installation, which runs everything on the coordinator). It
 will run the function on whatever worker holds the :ref:`shards` for tables
-``ads`` and ``campaigns`` corresponding to the value ``company_id``. (This
-feature requires the ``citus.replication_model`` change we made earlier.)
+``ads`` and ``campaigns`` corresponding to the value ``company_id``.
 
 .. code-block:: sql
 

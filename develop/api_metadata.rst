@@ -168,7 +168,7 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 |                |                      | | For hash distributed tables, zero.                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | groupid        |         int          | | Identifier used to denote a group of one primary server and zero or more|
-|                |                      | | secondary servers, when the streaming replication model is used.        |
+|                |                      | | secondary servers.                                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
@@ -245,8 +245,7 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 | nodeid           |         int          | | Auto-generated identifier for an individual node.                       |
 +------------------+----------------------+---------------------------------------------------------------------------+
 | groupid          |         int          | | Identifier used to denote a group of one primary server and zero or more|
-|                  |                      | | secondary servers, when the streaming replication model is used. By     |
-|                  |                      | | default it is the same as the nodeid.                                   |
+|                  |                      | | secondary servers. By default it is the same as the nodeid.             |
 +------------------+----------------------+---------------------------------------------------------------------------+
 | nodename         |         text         | | Host Name or IP Address of the PostgreSQL worker node.                  |
 +------------------+----------------------+---------------------------------------------------------------------------+
@@ -455,6 +454,11 @@ This table defines strategies that :ref:`rebalance_table_shards` can use to dete
 | minimum_threshold              |         float4       | | A safeguard to prevent the threshold argument of                        |
 |                                |                      | | rebalance_table_shards() from being set too low                         |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
+| improvement_threshold          |         float4       | | Determines when moving a shard is worth it during a rebalance.          |
+|                                |                      | | The rebalancer will move a shard when the ratio of the improvement with |
+|                                |                      | | the shard move to the improvement without crosses the threshold. This   |
+|                                |                      | | is most useful with the by_disk_size strategy.                          |
++--------------------------------+----------------------+---------------------------------------------------------------------------+
 
 A Citus installation ships with these strategies in the table:
 
@@ -464,22 +468,24 @@ A Citus installation ships with these strategies in the table:
 
 ::
 
-    -[ RECORD 1 ]-------------------+-----------------------------------
-    Name                            | by_shard_count
-    default_strategy                | true
-    shard_cost_function             | citus_shard_cost_1
-    node_capacity_function          | citus_node_capacity_1
-    shard_allowed_on_node_function  | citus_shard_allowed_on_node_true
-    default_threshold               | 0
-    minimum_threshold               | 0
-    -[ RECORD 2 ]-------------------+-----------------------------------
-    Name                            | by_disk_size
-    default_strategy                | false
-    shard_cost_function             | citus_shard_cost_by_disk_size
-    node_capacity_function          | citus_node_capacity_1
-    shard_allowed_on_node_function  | citus_shard_allowed_on_node_true
-    default_threshold               | 0.1
-    minimum_threshold               | 0.01
+    -[ RECORD 1 ]------------------+---------------------------------
+    name                           | by_shard_count
+    default_strategy               | t
+    shard_cost_function            | citus_shard_cost_1
+    node_capacity_function         | citus_node_capacity_1
+    shard_allowed_on_node_function | citus_shard_allowed_on_node_true
+    default_threshold              | 0
+    minimum_threshold              | 0
+    improvement_threshold          | 0
+    -[ RECORD 2 ]------------------+---------------------------------
+    name                           | by_disk_size
+    default_strategy               | f
+    shard_cost_function            | citus_shard_cost_by_disk_size
+    node_capacity_function         | citus_node_capacity_1
+    shard_allowed_on_node_function | citus_shard_allowed_on_node_true
+    default_threshold              | 0.1
+    minimum_threshold              | 0.01
+    improvement_threshold          | 0.5
 
 The default strategy, ``by_shard_count``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The other predefined strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
 
