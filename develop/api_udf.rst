@@ -646,6 +646,9 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 The citus_add_node() function registers a new node addition in the cluster in
 the Citus metadata table pg_dist_node. It also copies reference tables to the new node.
 
+If running ``citus_add_node`` on a single-node cluster, be sure to run
+:ref:`set_coordinator_host` first.
+
 Arguments
 ************************
 
@@ -962,6 +965,52 @@ Example
      localhost |      9701
 
     (3 rows)
+
+.. _set_coordinator_host:
+
+citus_set_coordinator_host
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This function is required when adding worker nodes to a Citus cluster which was
+created initially as a :ref:`single-node cluster <development>`. When the
+coordinator registers a new worker, it adds a coordinator hostname from the
+value of :ref:`local_hostname`, which is by default ``localhost``. The worker
+would attempt to connect to ``localhost`` to talk to the coordinator, which is
+obviously wrong.
+
+Thus, the system administrator should call ``citus_set_coordinator_host``
+before calling :ref:`citus_add_node` in a single-node cluster.
+
+Arguments
+************************
+
+**host:** DNS name of the coordinator node.
+
+**port:** (Optional) The port on which the coordinator lists for PostgreSQL
+connections. Defaults to ``current_setting('port')``.
+
+**node_role:** (Optional) Defaults to ``primary``.
+
+**node_cluster:** (Optional) Defaults to ``default``.
+
+
+Return Value
+******************************
+
+N/A
+
+Example
+*************************
+
+.. code-block:: postgresql
+
+   -- assuming we're in a single-node cluster
+
+   -- first establish how workers should reach us
+   SELECT citus_set_coordinator_host('coord.example.com', 5432);
+
+   -- then add a worker
+   SELECT * FROM citus_add_node('worker1.example.com', 5432);
 
 master_get_table_metadata
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
