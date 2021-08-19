@@ -262,33 +262,6 @@ reference table
 
 	SELECT create_reference_table('nation');
 
-.. _upgrade_to_reference_table:
-
-upgrade_to_reference_table
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-The upgrade_to_reference_table() function takes an existing distributed table which has a shard count of one, and upgrades it to be a recognized reference table. After calling this function, the table will be as if it had been created with :ref:`create_reference_table <create_reference_table>`.
-
-Arguments
-************************
-
-**table_name:** Name of the distributed table (having shard count = 1) which will be distributed as a reference table.
-
-Return Value
-********************************
-
-N/A
-
-Example
-*************************
-
-This example informs the database that the nation table should be defined as a
-reference table
-
-.. code-block:: postgresql
-
-	SELECT upgrade_to_reference_table('nation');
-
 .. _mark_tables_colocated:
 
 mark_tables_colocated
