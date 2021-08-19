@@ -247,7 +247,7 @@ You can defer reference table replication by setting the
 ``citus.replicate_reference_tables_on_activate`` GUC to 'off'. Reference table
 replication will then happen when we create new shards on the node. For instance,
 when calling :ref:`create_distributed_table`, :ref:`create_reference_table`,
- or when the shard rebalancer moves shards to the new node.
+or when the shard rebalancer moves shards to the new node.
 
 The default value for this GUC is 'on'.
 
