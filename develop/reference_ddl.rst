@@ -79,6 +79,14 @@ Now queries such as one calculating tax for a shopping cart can join on the :cod
 
 In addition to distributing a table as a single replicated shard, the :code:`create_reference_table` UDF marks it as a reference table in the Citus metadata tables. Citus automatically performs two-phase commits (`2PC <https://en.wikipedia.org/wiki/Two-phase_commit_protocol>`_) for modifications to tables marked this way, which provides strong consistency guarantees.
 
+If you have an existing distributed table, you can change it to
+a reference table by running:
+
+.. code-block:: postgresql
+
+   SELECT undistribute_table('table_name');
+   SELECT create_reference_table('table_name');
+
 For another example of using reference tables in a multi-tenant application, see :ref:`mt_ref_tables`.
 
 Distributing Coordinator Data
