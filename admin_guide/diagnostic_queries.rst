@@ -264,6 +264,48 @@ Exxample output:
   │ ∅      │     1 │
   └────────┴───────┘
 
+Viewing system queries
+----------------------
+
+Active queries
+~~~~~~~~~~~~~~
+
+The ``pg_stat_activity`` view shows which queries are currently executing. You
+can filter to find the actively executing ones, along with the process ID of
+their backend:
+
+.. code-block:: postgresql
+
+  SELECT pid, query, state
+    FROM pg_stat_activity
+   WHERE state != 'idle';
+
+Why are queries waiting
+~~~~~~~~~~~~~~~~~~~~~~~
+
+We can also query to see the most common reasons that non-idle queries that are
+waiting. For an explanation of the reasons, check the `PostgreSQL documentation
+<https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE>`_.
+
+.. code-block:: postgresql
+
+  SELECT wait_event || ':' || wait_event_type AS type, count(*) AS number_of_occurences
+    FROM pg_stat_activity
+   WHERE state != 'idle'
+  GROUP BY wait_event, wait_event_type
+  ORDER BY number_of_occurences DESC;
+
+Example output when running ``pg_sleep`` in a separate query concurrently:
+
+::
+
+  ┌─────────────────┬──────────────────────┐
+  │      type       │ number_of_occurences │
+  ├─────────────────┼──────────────────────┤
+  │ ∅               │                    1 │
+  │ PgSleep:Timeout │                    1 │
+  └─────────────────┴──────────────────────┘
+
 Index hit rate
 --------------
 
@@ -271,25 +313,27 @@ This query will provide you with your index hit rate across all nodes. Index hit
 
 .. code-block:: postgresql
 
+  -- on coordinator
+  SELECT 100 * (sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit) AS index_hit_rate
+    FROM pg_statio_user_indexes;
+
+  -- on workers
   SELECT nodename, result as index_hit_rate
   FROM run_command_on_workers($cmd$
-    SELECT CASE sum(idx_blks_hit)
-      WHEN 0 THEN 'NaN'::numeric
-      ELSE to_char((sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit + idx_blks_read), '99.99')::numeric
-      END AS ratio
-    FROM pg_statio_user_indexes
+    SELECT 100 * (sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit) AS index_hit_rate
+      FROM pg_statio_user_indexes;
   $cmd$);
 
 Example output:
 
 ::
 
-  ┌───────────────────────────────────────────────────┬────────────────┐
-  │                     nodename                      │ index_hit_rate │
-  ├───────────────────────────────────────────────────┼────────────────┤
-  │ ec2-13-59-96-221.us-east-2.compute.amazonaws.com  │ 0.88           │
-  │ ec2-52-14-226-167.us-east-2.compute.amazonaws.com │ 0.89           │
-  └───────────────────────────────────────────────────┴────────────────┘
+  ┌───────────┬────────────────┐
+  │ nodename  │ index_hit_rate │
+  ├───────────┼────────────────┤
+  │ 10.0.0.16 │ 96.0           │
+  │ 10.0.0.20 │ 98.0           │
+  └───────────┴────────────────┘
 
 Cache hit rate
 --------------
@@ -305,21 +349,32 @@ vs the disk in your workload:
 
 .. code-block:: postgresql
 
+  -- on coordinator
   SELECT
     sum(heap_blks_read) AS heap_read,
     sum(heap_blks_hit)  AS heap_hit,
-    sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)) AS ratio
+    100 * sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)) AS cache_hit_rate
   FROM
     pg_statio_user_tables;
+
+  -- on workers
+  SELECT nodename, result as cache_hit_rate
+  FROM run_command_on_workers($cmd$
+    SELECT
+      100 * sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)) AS cache_hit_rate
+    FROM
+      pg_statio_user_tables;
+  $cmd$);
 
 Example output:
 
 ::
 
-  .
-   heap_read | heap_hit |         ratio
-  -----------+----------+------------------------
-           1 |      132 | 0.99248120300751879699
+  ┌───────────┬──────────┬─────────────────────┐
+  │ heap_read │ heap_hit │   cache_hit_rate    │
+  ├───────────┼──────────┼─────────────────────┤
+  │         1 │      132 │ 99.2481203007518796 │
+  └───────────┴──────────┴─────────────────────┘
 
 If you find yourself with a ratio significantly lower than 99%, then you likely
 want to consider increasing the cache available to your database
