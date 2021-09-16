@@ -120,7 +120,7 @@ For Every Node
 
   .. code-block:: postgres
 
-    -- this step for the coordinator node only, not workers
+    -- run this on the coordinator and worker nodes
 
     SELECT citus_prepare_pg_upgrade();
 
@@ -165,6 +165,6 @@ For Every Node
 
   .. code-block:: postgres
 
-    -- this step for the coordinator node only, not workers
+    -- run this on the coordinator and worker nodes
 
     SELECT citus_finish_pg_upgrade();
