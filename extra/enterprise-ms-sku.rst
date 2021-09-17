@@ -141,9 +141,9 @@ Debian/Ubuntu
 .. code:: bash
 
     sudo apt-get update
-    # Change to postgresql-12-citus-enterprise-10.1 if you want to install Citus for
+    # Change to postgresql-12-citus-enterprise-10.2 if you want to install Citus for
     # PostgreSQL 12
-    sudo apt-get install -y postgresql-13-citus-enterprise-10.1
+    sudo apt-get install -y postgresql-13-citus-enterprise-10.2
 
 Redhat/CentOS
 ~~~~~~~~~~~~~
@@ -153,8 +153,8 @@ remove the old package
 
 .. code:: bash
 
-    # Change to citus-enterprise101_12 for PostgreSQL 12)
-    sudo yum install -y citus-enterprise101_13
+    # Change to citus-enterprise102_12 for PostgreSQL 12)
+    sudo yum install -y citus-enterprise102_13
 
 .. _sku_setup:
 

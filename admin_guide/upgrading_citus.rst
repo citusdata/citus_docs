@@ -13,21 +13,21 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 10.1 is currently installed on Postgres 13:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 10.2 is currently installed on Postgres 13:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-13-citus-10.1
+  sudo apt-get install --only-upgrade postgresql-13-citus-10.2
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus101_13
+  sudo yum update citus102_13
   sudo service postgresql-13 restart
 
 .. _major_minor_upgrade:
@@ -46,14 +46,14 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 9.5 to 10.1
+If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 9.5 to 10.2
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-12-citus-10.1
+  sudo apt-get install postgresql-12-citus-10.2
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -61,7 +61,7 @@ If upgrading both Citus and Postgres, always be sure to upgrade the Citus extens
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus95_12 citus101_12
+  sudo yum swap citus95_12 citus102_12
   sudo service postgresql-12 restart
 
 Step 2. Apply Update in DB
@@ -120,7 +120,7 @@ For Every Node
 
   .. code-block:: postgres
 
-    -- this step for the coordinator node only, not workers
+    -- run this on the coordinator and worker nodes
 
     SELECT citus_prepare_pg_upgrade();
 
@@ -165,6 +165,6 @@ For Every Node
 
   .. code-block:: postgres
 
-    -- this step for the coordinator node only, not workers
+    -- run this on the coordinator and worker nodes
 
     SELECT citus_finish_pg_upgrade();
