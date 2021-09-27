@@ -306,9 +306,7 @@ The **greedy** policy aims to distribute tasks evenly across the workers. This p
 Intermediate Data Transfer Format
 ------------------------------------------------
 
-Citus, by default, transfers intermediate query data between workers in textual format. This is generally best, as text files typically have smaller sizes than the binary representation. A more compact representation leads to lower network and disk I/O while writing and transferring intermediate data.
-
-However, for certain data types like hll or hstore arrays, the cost of serializing and deserializing data is pretty high. In such cases, using binary format for transferring intermediate data can improve query performance. Enabling the citus.binary_worker_copy_format configuration option uses the binary format.
+Citus, by default on Postgres 13 and lower, transfers intermediate query data between workers in textual format. For certain data types like hll or hstore arrays, the cost of serializing and deserializing data is pretty high. In such cases, using binary format for transferring intermediate data can improve query performance. Enabling the ``citus.binary_worker_copy_format`` configuration option uses the binary format.
 
 Binary protocol
 ---------------
@@ -323,6 +321,9 @@ In those cases it can be beneficial to set ``citus.enable_binary_protocol`` to
 using text encoding. Binary encoding significantly reduces bandwidth for types
 that have a compact binary representation, such as ``hll``, ``tdigest``,
 ``timestamp`` and ``double precision``.
+
+For Postgres 14 and higher, the default for this setting is already ``true``.
+So explicitly enabling it for those Postgres versions has no effect.
 
 Adaptive Executor
 -----------------
