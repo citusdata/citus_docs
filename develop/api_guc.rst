@@ -99,7 +99,7 @@ The ``citus.node_conninfo`` GUC sets non-sensitive `libpq connection parameters 
   SET citus.node_conninfo =
     'sslrootcert=/path/to/citus.crt sslmode=verify-full';
 
-Citus honors only a whitelisted subset of the options, namely:
+Citus honors only a specific subset of the allowed options, namely:
 
 * application_name
 * connect_timeout
@@ -113,6 +113,7 @@ Citus honors only a whitelisted subset of the options, namely:
 * sslcrl
 * sslmode  (defaults to "require" as of Citus 8.1)
 * sslrootcert
+* tcp_user_timeout
 
 *(† = subject to the runtime presence of optional PostgreSQL features)*
 
