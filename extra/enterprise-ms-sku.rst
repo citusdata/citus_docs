@@ -141,9 +141,9 @@ Debian/Ubuntu
 .. code:: bash
 
     sudo apt-get update
-    # Change to postgresql-12-citus-enterprise-10.2 if you want to install Citus for
-    # PostgreSQL 12
-    sudo apt-get install -y postgresql-13-citus-enterprise-10.2
+    # Change to postgresql-13-citus-enterprise-10.2 if you want to install Citus for
+    # PostgreSQL 13
+    sudo apt-get install -y postgresql-14-citus-enterprise-10.2
 
 Redhat/CentOS
 ~~~~~~~~~~~~~
@@ -153,8 +153,8 @@ remove the old package
 
 .. code:: bash
 
-    # Change to citus-enterprise102_12 for PostgreSQL 12)
-    sudo yum install -y citus-enterprise102_13
+    # Change to citus-enterprise102_13 for PostgreSQL 13)
+    sudo yum install -y citus-enterprise102_14
 
 .. _sku_setup:
 
@@ -165,17 +165,17 @@ Run the Citus Enterprise setup
 
   This is different from previous Citus Enterprise installation instructions.
 
-Use ``citus-enterprise-pg-12-setup`` when installing for Postgres 12
+Use ``citus-enterprise-pg-13-setup`` when installing for Postgres 13
 
 .. code:: bash
 
-    sudo citus-enterprise-pg-13-setup
+    sudo citus-enterprise-pg-14-setup
     # Non-interactive version
     # IMPORTANT: you accept the license and encryption disclaimer here
     sudo CITUS_ACCEPT_LICENSE=YES \
          CITUS_ACCEPT_ENCRYPTION_DISCLAIMER=YES \
          CITUS_LICENSE_KEY=<INSERT LICENSE KEY HERE> \
-         citus-enterprise-pg-13-setup
+         citus-enterprise-pg-14-setup
 
 .. _sku_use:
 
@@ -197,7 +197,7 @@ $$$$$$$$$$$$$
 .. code:: bash
 
     # preload citus extension
-    sudo pg_conftool 13 main set shared_preload_libraries citus
+    sudo pg_conftool 14 main set shared_preload_libraries citus
 
 Continue by following the standard multi-machine Debian/Ubuntu installation.
 Start at step 3: :ref:`Configure connection and authentication
@@ -209,11 +209,11 @@ $$$$$$
 .. code:: bash
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
-    sudo service postgresql-13 initdb || \
-      sudo /usr/pgsql-13/bin/postgresql-13-setup initdb
+    sudo service postgresql-14 initdb || \
+      sudo /usr/pgsql-14/bin/postgresql-14-setup initdb
     # preload citus extension
     echo "shared_preload_libraries = 'citus'" | \
-      sudo tee -a /var/lib/pgsql/13/data/postgresql.conf
+      sudo tee -a /var/lib/pgsql/14/data/postgresql.conf
 
 Continue by following the standard multi-machine Debian/Ubuntu installation.
 Start at step 3: :ref:`Configure connection and authentication
@@ -241,9 +241,9 @@ first stop the running pg_auto_failover service
 .. code:: bash
 
     sudo apt-get update
-    # Change to postgresql-12-auto-failover-enterprise-1.3 if you want to
-    # install pg_auto_failover for PostgreSQL 12
-    sudo apt-get install -y postgresql-13-auto-failover-enterprise-1.3
+    # Change to postgresql-13-auto-failover-enterprise-1.3 if you want to
+    # install pg_auto_failover for PostgreSQL 13
+    sudo apt-get install -y postgresql-14-auto-failover-enterprise-1.3
 
 Redhat/CentOS
 ~~~~~~~~~~~~~
@@ -253,8 +253,8 @@ the running pg_auto_failover service and remove the old package
 
 .. code:: bash
 
-    # Change to pg-auto-failover-enterprise13_12 for PostgreSQL 12
-    sudo yum install -y pg-auto-failover-enterprise13_13
+    # Change to pg-auto-failover-enterprise13_13 for PostgreSQL 13
+    sudo yum install -y pg-auto-failover-enterprise13_14
 
 .. _sku_failover_setup:
 
@@ -266,12 +266,12 @@ Run the pg_auto_failover enterprise setup
   This is different from previous pg_auto_failover enterprise installation
   instructions.
 
-Use ``pg-auto-failover-enterprise-pg-12-setup`` when installing for
-Postgres 12.
+Use ``pg-auto-failover-enterprise-pg-13-setup`` when installing for
+Postgres 13.
 
 .. code:: bash
 
-    sudo pg-auto-failover-enterprise-pg-13-setup
+    sudo pg-auto-failover-enterprise-pg-14-setup
     # Non-interactive version
     # IMPORTANT: you accept the license and encryption disclaimer here. The
     # encryption disclaimer is specific to pg_auto_failover, so be sure to read
@@ -279,6 +279,6 @@ Postgres 12.
     sudo PGAUTOFAILOVER_ACCEPT_LICENSE=YES \
          PGAUTOFAILOVER_ACCEPT_ENCRYPTION_DISCLAIMER=YES \
          PGAUTOFAILOVER_LICENSE_KEY=<INSERT LICENSE KEY HERE> \
-         pg-auto-failover-enterprise-pg-13-setup
+         pg-auto-failover-enterprise-pg-14-setup
 
 .. _pgautofailover_sku_use:
