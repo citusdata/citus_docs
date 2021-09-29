@@ -292,7 +292,8 @@ Future versions of Citus will incrementally lift the current limitations:
 
 * Append-only (no UPDATE/DELETE support)
 * No space reclamation (e.g. rolled-back transactions may still consume disk space)
-* No index support, index scans, or bitmap index scans
+* Support for hash and btree indices only
+* No index scans, or bitmap index scans
 * No tidscans
 * No sample scans
 * No TOAST support (large values supported inline)
