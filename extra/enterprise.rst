@@ -25,10 +25,10 @@ Ubuntu or Debian with Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # install the server and initialize db
-    sudo apt-get install -y postgresql-13-citus-enterprise-10.2
+    sudo apt-get install -y postgresql-14-citus-enterprise-10.2
 
     # preload citus extension
-    sudo pg_conftool 13 main set shared_preload_libraries citus
+    sudo pg_conftool 14 main set shared_preload_libraries citus
 
 3. Continue by following the standard :ref:`multi-machine debian <post_enterprise_deb>` installation steps, **starting at step 3.**
 
@@ -46,7 +46,7 @@ Ubuntu or Debian without Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     sudo apt-get clean
-    sudo apt-get install -y --download-only postgresql-13-citus-enterprise-10.2
+    sudo apt-get install -y --download-only postgresql-14-citus-enterprise-10.2
 
     # go to package downloads
     cd /var/cache/apt
@@ -68,7 +68,7 @@ Ubuntu or Debian without Internet Access
     sudo dpkg -i -R /tmp/citus
 
     # preload citus extension
-    sudo pg_conftool 13 main set shared_preload_libraries citus
+    sudo pg_conftool 14 main set shared_preload_libraries citus
 
 5. Continue by following the standard :ref:`multi-machine debian <post_enterprise_deb>` installation steps, **starting at step 3.**
 
@@ -88,14 +88,14 @@ Fedora, CentOS, or Red Hat with Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # install PostgreSQL with Citus extension
-    sudo yum install -y citus-enterprise102_13
+    sudo yum install -y citus-enterprise102_14
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
-    sudo service postgresql-13 initdb || \
-      sudo /usr/pgsql-13/bin/postgresql-13-setup initdb
+    sudo service postgresql-14 initdb || \
+      sudo /usr/pgsql-14/bin/postgresql-14-setup initdb
     # preload citus extension
     echo "shared_preload_libraries = 'citus'" | \
-      sudo tee -a /var/lib/pgsql/13/data/postgresql.conf
+      sudo tee -a /var/lib/pgsql/14/data/postgresql.conf
 
 3. Continue by following the standard :ref:`multi-machine rhel <post_enterprise_rhel>` installation steps, **starting at step 3.**
 
@@ -113,7 +113,7 @@ Fedora, CentOS, or Red Hat without Internet Access
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # get package
-    sudo yum install --downloadonly --downloaddir=. citus-enterprise102_13
+    sudo yum install --downloadonly --downloaddir=. citus-enterprise102_14
 
     # put them into a tarball
     tar czf ~/citus-enterprise.tar.gz *.rpm
@@ -132,11 +132,11 @@ Fedora, CentOS, or Red Hat without Internet Access
     sudo rpm -ivh /tmp/citus/*.rpm
 
     # initialize system database (using RHEL 6 vs 7 method as necessary)
-    sudo service postgresql-13 initdb || \
-      sudo /usr/pgsql-13/bin/postgresql-13-setup initdb
+    sudo service postgresql-14 initdb || \
+      sudo /usr/pgsql-14/bin/postgresql-14-setup initdb
     # preload citus extension
     echo "shared_preload_libraries = 'citus'" | \
-      sudo tee -a /var/lib/pgsql/13/data/postgresql.conf
+      sudo tee -a /var/lib/pgsql/14/data/postgresql.conf
 
 5. Continue by following the standard :ref:`multi-machine rhel <post_enterprise_rhel>` installation steps, **starting at step 3.**
 
@@ -159,7 +159,7 @@ Ubuntu or Debian
       sudo CITUS_REPO_TOKEN=XYZ bash
 
     # Install enterprise packages, which will remove community packages
-    sudo apt-get install -y postgresql-13-citus-enterprise-X.Y
+    sudo apt-get install -y postgresql-14-citus-enterprise-X.Y
 
     # substitute X.Y with the version currently installed ^^^^^
 
@@ -192,17 +192,17 @@ Fedora, CentOS, or Red Hat
 
     # remove community packages
     # substitute XY with the version currently installed
-    sudo yum remove -y citusXY_13
+    sudo yum remove -y citusXY_14
 
     # Install enterprise packages
     # substitute XY with the version previously installed
-    sudo yum install -y citus-enterpriseXY_13
+    sudo yum install -y citus-enterpriseXY_14
 
 4. Restart the database.
 
   .. code-block:: bash
 
-    sudo service postgresql-13 restart
+    sudo service postgresql-14 restart
 
 5. Update the Citus extension
 

@@ -20,15 +20,15 @@ To upgrade a Citus version to its latest patch, issue a standard upgrade command
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-13-citus-10.2
+  sudo apt-get install --only-upgrade postgresql-14-citus-10.2
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus102_13
-  sudo service postgresql-13 restart
+  sudo yum update citus102_14
+  sudo service postgresql-14 restart
 
 .. _major_minor_upgrade:
 
@@ -92,7 +92,7 @@ After installing the new package and restarting the database, run the extension 
 
 .. _upgrading_postgres:
 
-Upgrading PostgreSQL version from 12 to 13
+Upgrading PostgreSQL version from 13 to 14
 ##########################################
 
 .. note::
@@ -102,16 +102,16 @@ Upgrading PostgreSQL version from 12 to 13
 Record the following paths before you start (your actual paths may be different than those below):
 
 Existing data directory (e.g. /opt/pgsql/10/data)
-  :code:`export OLD_PG_DATA=/opt/pgsql/12/data`
+  :code:`export OLD_PG_DATA=/opt/pgsql/13/data`
 
 Existing PostgreSQL installation path (e.g. /usr/pgsql-10)
-  :code:`export OLD_PG_PATH=/usr/pgsql-12`
+  :code:`export OLD_PG_PATH=/usr/pgsql-13`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/13/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/14/data`
 
 New PostgreSQL installation path
-  :code:`export NEW_PG_PATH=/usr/pgsql-13`
+  :code:`export NEW_PG_PATH=/usr/pgsql-14`
 
 For Every Node
 --------------

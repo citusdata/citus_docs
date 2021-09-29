@@ -7,7 +7,7 @@ Ubuntu or Debian
 
 This section describes the steps needed to set up a single-node Citus cluster on your own Linux machine from deb packages.
 
-**1. Install PostgreSQL 13 and the Citus extension**
+**1. Install PostgreSQL 14 and the Citus extension**
 
 .. code-block:: sh
 
@@ -15,7 +15,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
   curl https://install.citusdata.com/community/deb.sh | sudo bash
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-13-citus-10.2
+  sudo apt-get -y install postgresql-14-citus-10.2
 
 
 .. _post_install:
@@ -30,7 +30,7 @@ Let's create a new database on disk. For convenience in using PostgreSQL Unix do
   sudo su - postgres
 
   # include path to postgres binaries
-  export PATH=$PATH:/usr/lib/postgresql/13/bin
+  export PATH=$PATH:/usr/lib/postgresql/14/bin
 
   cd ~
   mkdir citus
