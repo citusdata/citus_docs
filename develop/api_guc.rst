@@ -345,11 +345,12 @@ This parameter can be set at run-time and is effective on the coordinator.
 Intermediate Data Transfer
 -------------------------------------------------------------------
 
+.. _binary_worker_copy_format:
+
 citus.binary_worker_copy_format (boolean)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Use the binary copy format to transfer intermediate data between workers. During large table joins, Citus may have to dynamically repartition and shuffle data between different workers. For Postgres 13 and lower the default for this setting is ``false``, which means text encodig is used to transfer this data. For Postgres 14 and higher, the default is ``true``. When this parameter is ``true`` the database is instructed to use PostgreSQL’s binary serialization format to transfer this data. This parameter is effective on the workers and needs to be changed in the postgresql.conf file. After editing the config file, users can send a SIGHUP signal or restart the server for this change to take effect.
-
+Use the binary copy format to transfer intermediate data between workers. During large table joins, Citus may have to dynamically repartition and shuffle data between different workers. For Postgres 13 and lower, the default for this setting is ``false``, which means text encoding is used to transfer this data. For Postgres 14 and higher, the default is ``true``. Setting this parameter is ``true`` instructs the database to use PostgreSQL’s binary serialization format to transfer data. The parameter is effective on the workers and needs to be changed in the postgresql.conf file. After editing the config file, users can send a SIGHUP signal or restart the server for this change to take effect.
 
 citus.max_intermediate_result_size (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
