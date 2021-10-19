@@ -391,6 +391,39 @@ Here's an example:
   │ test       │ distributed      │ id                  │             1 │ 248 TB     │          32 │ citus       │ heap          │
   └────────────┴──────────────────┴─────────────────────┴───────────────┴────────────┴─────────────┴─────────────┴───────────────┘
 
+.. _time_partitions:
+
+Time partitions view
+~~~~~~~~~~~~~~~~~~~~
+
+Citus provides UDFs to manage partitions for the :ref:`timeseries` use case.
+It also maintains a ``time_partitions`` view to inspect the partitions it
+manages.
+
+Columns:
+
+* **parent_table** the table which is partitioned
+* **partition_column** the column on which the parent table is partitioned
+* **partition** the name of a partition table
+* **from_value** lower bound in time for rows in this partition
+* **to_value** upper bound in time for rows in this partition
+* **access_method** ``heap`` for row-based storage, and ``columnar`` for columnar storage
+
+.. code-block:: postgresql
+
+   SELECT * FROM time_partitions;
+
+::
+
+   ┌────────────────────────┬──────────────────┬─────────────────────────────────────────┬─────────────────────┬─────────────────────┬───────────────┐
+   │      parent_table      │ partition_column │                partition                │     from_value      │      to_value       │ access_method │
+   ├────────────────────────┼──────────────────┼─────────────────────────────────────────┼─────────────────────┼─────────────────────┼───────────────┤
+   │ github_columnar_events │ created_at       │ github_columnar_events_p2015_01_01_0000 │ 2015-01-01 00:00:00 │ 2015-01-01 02:00:00 │ columnar      │
+   │ github_columnar_events │ created_at       │ github_columnar_events_p2015_01_01_0200 │ 2015-01-01 02:00:00 │ 2015-01-01 04:00:00 │ columnar      │
+   │ github_columnar_events │ created_at       │ github_columnar_events_p2015_01_01_0400 │ 2015-01-01 04:00:00 │ 2015-01-01 06:00:00 │ columnar      │
+   │ github_columnar_events │ created_at       │ github_columnar_events_p2015_01_01_0600 │ 2015-01-01 06:00:00 │ 2015-01-01 08:00:00 │ heap          │
+   └────────────────────────┴──────────────────┴─────────────────────────────────────────┴─────────────────────┴─────────────────────┴───────────────┘
+
 .. _colocation_group_table:
 
 Co-location group table

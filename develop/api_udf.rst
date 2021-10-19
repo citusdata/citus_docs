@@ -526,6 +526,117 @@ Example
     compression => 'none',
     stripe_row_count => 10000);
 
+.. _create_time_partitions:
+
+create_time_partitions
+$$$$$$$$$$$$$$$$$$$$$$
+
+The create_time_partitions() function creates partitions of a given interval to
+cover a given range of time.
+
+Arguments
+*********
+
+**table_name:** (regclass) table for which to create new partitions. The table
+must be partitioned on one column, of type date, timestamp, or timestamptz.
+
+**partition_interval:** an interval of time, such as ``'2 hours'``, or ``'1
+month'``, to use when setting ranges on new partitions.
+
+**end_at:** (timestamptz) create partitions up to this time. The last partition
+will contain the point end_at, and no later partitions will be created.
+
+**start_from:** (timestamptz, optional) pick the first partition so that it
+contains the point start_from. The default value is ``now()``.
+
+Return Value
+************
+
+True if it needed to create new partitions, false if they all existed already.
+
+Example
+*******
+
+.. code-block:: postgresql
+
+   -- create a year's worth of monthly partitions
+   -- in table foo, starting from the current time
+
+   SELECT create_time_partitions(
+     table_name         := 'foo',
+     partition_interval := '1 month',
+     end_at             := now() + '12 months'
+   );
+
+.. _drop_old_time_partitions:
+
+drop_old_time_partitions
+$$$$$$$$$$$$$$$$$$$$$$$$
+
+The drop_old_time_partitions() function removes all partitions whose intervals
+fall before a given timestamp. In addition to using this function, you might
+consider :ref:`alter_old_partitions_set_access_method` to compress the old
+partitions with columnar storage.
+
+Arguments
+*********
+
+**table_name:** (regclass) table for which to remove partitions. The table
+must be partitioned on one column, of type date, timestamp, or timestamptz.
+
+**older_than:** (timestamptz) drop partitions whose upper range is less than
+or equal to older_than.
+
+Return Value
+************
+
+N/A
+
+Example
+*******
+
+.. code-block:: postgresql
+
+   -- drop partitions that are over a year old
+
+   CALL drop_old_partitions('foo', now() - interval '12 months');
+
+.. _alter_old_partitions_set_access_method:
+
+alter_old_partitions_set_access_method
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+In a :ref:`timeseries` use case, tables are often partitioned by time, and old
+partitions are compressed into read-only columnar storage.
+
+Arguments
+*********
+
+**parent_table_name:** (regclass) table for which to change partitions. The
+table must be partitioned on one column, of type date, timestamp, or
+timestamptz.
+
+**older_than:** (timestamptz) change partitions whose upper range is less than
+or equal to older_than.
+
+**new_access_method:** (name) either `'heap'` for row-based storage, or
+`'columnar'` for columnar storage.
+
+Return Value
+************
+
+N/A
+
+Example
+*******
+
+.. code-block:: postgresql
+
+  CALL alter_old_partitions_set_access_method(
+    'foo', now() - interval '6 months',
+    'columnar'
+  );
+
 Table and Shard DML
 -------------------
 

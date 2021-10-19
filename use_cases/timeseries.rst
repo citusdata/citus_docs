@@ -82,12 +82,11 @@ of monthly partitions using ``create_time_partitions()``:
   SELECT create_time_partitions(
     table_name         := 'github_events',
     partition_interval := '1 month',
-    start_from         := now(),
     end_at             := now() + '12 months'
   );
  
-Citus also includes a view, ``time_partitions``, for an easy way to investigate
-the partitions it has created.
+Citus also includes a view, :ref:`time_partitions <time_partitions>`, for an
+easy way to investigate the partitions it has created.
 
 ::
 
@@ -125,7 +124,6 @@ As time progresses, you will need to do some maintenance to create new partition
     SELECT create_time_partitions(
         table_name         := 'github_events',
         partition_interval := '1 month',
-        start_from         := now(),
         end_at             := now() + '12 months'
     )
   $$);
