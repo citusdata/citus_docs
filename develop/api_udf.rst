@@ -599,7 +599,7 @@ Example
 
    -- drop partitions that are over a year old
 
-   CALL drop_old_partitions('foo', now() - interval '12 months');
+   CALL drop_old_time_partitions('foo', now() - interval '12 months');
 
 .. _alter_old_partitions_set_access_method:
 
