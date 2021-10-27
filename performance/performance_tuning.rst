@@ -325,13 +325,6 @@ that have a compact binary representation, such as ``hll``, ``tdigest``,
 For Postgres 14 and higher, the default for this setting is already ``true``.
 So explicitly enabling it for those Postgres versions has no effect.
 
-Adaptive Executor
------------------
-
-Citus' adaptive executor conserves database connections to help reduce resource usage on worker nodes during multi-shard queries. When running a query, the executor begins by using a single -- usually precached -- connection to a remote node. If the query finishes within the time period specified by citus.executor_slow_start_interval, no more connections are required. Otherwise the executor gradually establishes new connections as directed by citus.executor_slow_start_interval. (See also :ref:`executor_configuration`).
-
-With the behavior explained above, the executor aims to open an optimal number of connections to remote nodes. For short running multi-shard queries, like an index-only-scan on the shards, the executor may use only a single connection and execute all the queries on the shards over a single connection. For longer running multi-shard queries, the executor will keep opening connections to parallelize the execution on the remote nodes. If the queries on the shards take long (such as > 500ms), the executor converges to using one connection per shard (or up to citus.max_adaptive_executor_pool_size), in order to maximize the parallelism.
-
 .. _scaling_data_ingestion:
 
 Scaling Out Data Ingestion

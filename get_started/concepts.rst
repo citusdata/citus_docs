@@ -136,3 +136,51 @@ Spreading queries across multiple machines allows more queries to run at once, a
 Queries reading or affecting shards spread evenly across many nodes are able to run at "real-time" speed. Note that the results of the query still need to pass back through the coordinator node, so the speedup is most apparent when the final results are compact, such as aggregate functions like counting and descriptive statistics.
 
 :ref:`citus_query_processing` explains more about how queries are broken into fragments and how their execution is managed.
+
+.. _query_execution:
+
+Query Execution
+===============
+
+When executing multi-shard queries, Citus must balance the gains from
+parallelism with the overhead from database connections: network latency and
+worker node resource usage. To configure Citus' query execution for best
+results with your database workload, it helps to understand how Citus manages
+and conserves database connections between the coordinator node and worker
+nodes.
+
+Citus transforms each incoming multi-shard query into per-shard queries called
+tasks. It queues the tasks, and runs them once it's able to obtain connections
+to the relevant worker nodes. For queries on distributed tables ``foo`` and
+``bar``, here's a diagram of the connection management:
+
+.. image:: ../images/executor-overview.png
+    :alt: tasks connecting to worker pools
+
+The coordinator node holds one connection pool for each worker. Each pool can
+contain at most :ref:`max_shared_pool_size` connections, to limit the total
+connections to the worker between all tasks. Furthermore, each session (such as
+``SELECT * FROM foo;`` in the diagram) is limited to opening at most
+:ref:`max_adaptive_executor_pool_size` connections for its tasks in total
+across all worker pools. That setting is configurable at the session level as
+well, for priority management.
+
+old stuff:
+
+Citus' adaptive executor conserves database connections to help reduce resource
+usage on worker nodes during multi-shard queries. When running a query, the
+executor begins by using a single -- usually precached -- connection to a
+remote node. If the query finishes within the time period specified by
+citus.executor_slow_start_interval, no more connections are required. Otherwise
+the executor gradually establishes new connections as directed by
+citus.executor_slow_start_interval. (See also :ref:`executor_configuration`).
+
+With the behavior explained above, the executor aims to open an optimal number
+of connections to remote nodes. For short running multi-shard queries, like an
+index-only-scan on the shards, the executor may use only a single connection
+and execute all the queries on the shards over a single connection. For longer
+running multi-shard queries, the executor will keep opening connections to
+parallelize the execution on the remote nodes. If the queries on the shards
+take long (such as > 500ms), the executor converges to using one connection per
+shard (or up to citus.max_adaptive_executor_pool_size), in order to maximize
+the parallelism.
