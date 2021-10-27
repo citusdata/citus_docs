@@ -504,6 +504,8 @@ the note below). The value -1 disables throttling.
   on the coordinator. This gives extra space for connections required for
   repartition queries on the workers.
 
+.. _max_adaptive_executor_pool_size:
+
 citus.max_adaptive_executor_pool_size (integer)
 ***********************************************
 
@@ -517,6 +519,8 @@ just the *current* session. This GUC is useful for:
   values
 
 The default value is 16.
+
+.. _executor_slow_start_interval:
 
 citus.executor_slow_start_interval (integer)
 ********************************************
@@ -534,6 +538,8 @@ time.
 For long queries (those taking >500ms), slow start might add latency, but for
 short queries it's faster. The default value is 10ms.
 
+.. _max_cached_conns_per_worker:
+
 citus.max_cached_conns_per_worker (integer)
 *******************************************
 
@@ -545,6 +551,8 @@ multi-shard queries, but will also increase overhead on the workers.
 The default value is 1. A larger value such as 2 might be helpful for clusters
 that use a small number of concurrent sessions, but it's not wise to go much
 further (e.g. 16 would be too high).
+
+.. _force_max_query_parallelization:
 
 citus.force_max_query_parallelization (boolean)
 ***********************************************
