@@ -189,7 +189,7 @@ For higher INSERT performance, the factor which impacts insert rates the most is
 .. _subquery_perf:
 
 Subquery/CTE Network Overhead
-=============================
+-----------------------------
 
 In the best case Citus can execute queries containing subqueries and CTEs in a single step. This is usually because both the main query and subquery filter by tables' distribution column in the same way, and can be pushed down to worker nodes together. However, Citus is sometimes forced to execute subqueries *before* executing the main query, copying the intermediate subquery results to other worker nodes for use by the main query. This technique is called :ref:`push_pull_execution`.
 
@@ -295,6 +295,25 @@ Advanced
 ========
 
 In this section, we discuss advanced performance tuning parameters. These parameters are applicable to specific use cases and may not be required for all deployments.
+
+Connection Management
+---------------------
+
+When executing multi-shard queries, Citus must balance the gains from
+parallelism with the overhead from database connections. The
+:ref:`query_execution` section explains the steps of turning queries into
+worker tasks and obtaining database connections to the workers.
+
+1. Set max_shared_pool_size to the largest number of active connections each
+   worker can handle, based on the the expected resources of most intensive
+   queries in your workload.
+1. Set max_adaptive_executor_pool_size to 1 when many many clients will be
+   using the coordinator node, or to the number of cores per worker if few
+   clients.
+1. Set executor_slow_start_interval to a long value for workloads comprised of
+   short queries that are bound on network latency rather than parallelism.
+   Set it to a short value for a workload bound on parallelism.
+1. Set max_cached_conns_per_worker to the entire pool size.
 
 Task Assignment Policy
 -------------------------------------
