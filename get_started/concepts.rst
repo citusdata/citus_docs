@@ -161,9 +161,9 @@ The coordinator node has a connection pool for each worker. Each pool can
 contain at most :ref:`max_shared_pool_size` connections, to limit the total
 connections to the worker between all tasks. Furthermore, each query (such as
 ``SELECT * FROM foo`` in the diagram) is limited to opening at most
-:ref:`max_adaptive_executor_pool_size` connections for its tasks in total
-across all worker pools. That setting is configurable at the session level, for
-priority management.
+:ref:`max_adaptive_executor_pool_size` simultaneous connections for its tasks
+per worker.  That setting is configurable at the session level, for priority
+management.
 
 It can be faster to execute short tasks sequentially over the same connection
 rather than establishing new connections for them in parallel. Long running
@@ -172,10 +172,10 @@ tasks, on the other hand, benefit from more immediate parallelism.
 To balance the needs of short and long tasks, Citus uses
 :ref:`executor_slow_start_interval`. That setting specifies a delay between
 connection attempts for the tasks in a multi-shard query. When a query first
-queues tasks, the tasks can acquire just one connection. At the end of the each
-interval, Citus increases the number of simultaneous connections it will open.
-The slow start behavior can be disabled entirely with
-:ref:`force_max_query_parallelization`.
+queues tasks, the tasks can acquire just one connection. At the end of each
+interval where there are pending connections, Citus increases the number of
+simultaneous connections it will open.  The slow start behavior can be disabled
+entirely with :ref:`force_max_query_parallelization`.
 
 When a task finishes using a connection, the worker pool will hold the
 connection open for later. Caching the connection avoids the overhead of
