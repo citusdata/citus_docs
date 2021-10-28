@@ -304,16 +304,16 @@ parallelism with the overhead from database connections. The
 :ref:`query_execution` section explains the steps of turning queries into
 worker tasks and obtaining database connections to the workers.
 
-1. Set max_shared_pool_size to the largest number of active connections each
-   worker can handle, based on the the expected resources of most intensive
-   queries in your workload.
-1. Set max_adaptive_executor_pool_size to 1 when many many clients will be
-   using the coordinator node, or to the number of cores per worker if few
-   clients.
-1. Set executor_slow_start_interval to a long value for workloads comprised of
-   short queries that are bound on network latency rather than parallelism.
-   Set it to a short value for a workload bound on parallelism.
-1. Set max_cached_conns_per_worker to the entire pool size.
+* Set ``citus.max_shared_pool_size`` to the largest number of active
+  connections each worker can handle, based on the the expected resources of
+  most intensive queries in your workload.
+* Set ``citus.max_adaptive_executor_pool_size`` to 1 when many many clients
+  will be using the coordinator node, or to the number of cores per worker if
+  few clients.
+* Set `citus.executor_slow_start_interval`` to a long value for workloads
+  comprised of short queries that are bound on network latency rather than
+  parallelism.  Set it to a short value for a workload bound on parallelism.
+* Set `citus.max_cached_conns_per_worker`` to the entire pool size.
 
 Task Assignment Policy
 -------------------------------------
