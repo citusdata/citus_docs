@@ -149,18 +149,16 @@ results with your database workload, it helps to understand how Citus manages
 and conserves database connections between the coordinator node and worker
 nodes.
 
-Citus transforms each incoming multi-shard query into per-shard queries called
-tasks. It queues the tasks, and runs them once it's able to obtain connections
-to the relevant worker nodes. For queries on distributed tables ``foo`` and
-``bar``, here's a diagram of the connection management:
+Citus transforms each incoming multi-shard query session into per-shard queries
+called tasks. It queues the tasks, and runs them once it's able to obtain
+connections to the relevant worker nodes. For queries on distributed tables
+``foo`` and ``bar``, here's a diagram of the connection management:
 
 .. image:: ../images/executor-overview.png
     :alt: tasks connecting to worker pools
 
-The coordinator node has a connection pool for each worker. Each pool can
-contain at most :ref:`max_shared_pool_size` connections, to limit the total
-connections to the worker between all tasks. Furthermore, each query (such as
-``SELECT * FROM foo`` in the diagram) is limited to opening at most
+The coordinator node has a connection pool for each session. Each query (such
+as ``SELECT * FROM foo`` in the diagram) is limited to opening at most
 :ref:`max_adaptive_executor_pool_size` simultaneous connections for its tasks
 per worker.  That setting is configurable at the session level, for priority
 management.
@@ -177,8 +175,14 @@ interval where there are pending connections, Citus increases the number of
 simultaneous connections it will open.  The slow start behavior can be disabled
 entirely with :ref:`force_max_query_parallelization`.
 
-When a task finishes using a connection, the worker pool will hold the
+When a task finishes using a connection, the session pool will hold the
 connection open for later. Caching the connection avoids the overhead of
 connection reestablishment between coordinator and worker. However, each pool
 will hold no more than :ref:`max_cached_conns_per_worker` idle connections open
 at once, to limit idle connection resource usage in the worker.
+
+Finally, the setting :ref:`max_shared_pool_size` acts as a fail-safe. It
+limits the total connections per worker between all tasks.
+
+For recommendations about tuning these parameters to match your workload, see
+:ref:`connection_management`.

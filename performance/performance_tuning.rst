@@ -296,6 +296,8 @@ Advanced
 
 In this section, we discuss advanced performance tuning parameters. These parameters are applicable to specific use cases and may not be required for all deployments.
 
+.. _connection_management:
+
 Connection Management
 ---------------------
 
@@ -304,16 +306,22 @@ parallelism with the overhead from database connections. The
 :ref:`query_execution` section explains the steps of turning queries into
 worker tasks and obtaining database connections to the workers.
 
-* Set ``citus.max_shared_pool_size`` to the largest number of active
-  connections each worker can handle, based on the the expected resources of
-  most intensive queries in your workload.
-* Set ``citus.max_adaptive_executor_pool_size`` to 1 when many many clients
-  will be using the coordinator node, or to the number of cores per worker if
-  few clients.
-* Set `citus.executor_slow_start_interval`` to a long value for workloads
+* The default value of 1 for :ref:`max_cached_conns_per_worker` is
+  reasonable.  A larger value such as 2 might be helpful for clusters that use
+  a small number of concurrent sessions, but it’s not wise to go much further
+  (e.g. 16 would be too high). If set too high, sessions will hold idle
+  connections and use worker resources unnecessarily.
+* Set :ref:`max_adaptive_executor_pool_size` to match
+  max_cached_conns_per_worker in a high-concurrency workload. In a
+  low-concurrency workload, you can set it to the number of shards per worker
+  per distributed table (e.g. if a distributed table has 32 shards across 4
+  workers, then there are 8 shards per worker.)
+* Set :ref:`executor_slow_start_interval` to a high value for workloads
   comprised of short queries that are bound on network latency rather than
   parallelism.  Set it to a short value for a workload bound on parallelism.
-* Set `citus.max_cached_conns_per_worker`` to the entire pool size.
+* Set :ref:`citus.max_shared_pool_size` to the `max_connections
+  <https://www.postgresql.org/docs/current/runtime-config-connection.html#RUNTIME-CONFIG-CONNECTION-SETTINGS>`_
+  setting of your *worker* nodes. This setting is mainly a fail-safe.
 
 Task Assignment Policy
 -------------------------------------
