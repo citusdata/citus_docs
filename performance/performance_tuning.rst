@@ -189,7 +189,7 @@ For higher INSERT performance, the factor which impacts insert rates the most is
 .. _subquery_perf:
 
 Subquery/CTE Network Overhead
-=============================
+-----------------------------
 
 In the best case Citus can execute queries containing subqueries and CTEs in a single step. This is usually because both the main query and subquery filter by tables' distribution column in the same way, and can be pushed down to worker nodes together. However, Citus is sometimes forced to execute subqueries *before* executing the main query, copying the intermediate subquery results to other worker nodes for use by the main query. This technique is called :ref:`push_pull_execution`.
 
@@ -296,6 +296,33 @@ Advanced
 
 In this section, we discuss advanced performance tuning parameters. These parameters are applicable to specific use cases and may not be required for all deployments.
 
+.. _connection_management:
+
+Connection Management
+---------------------
+
+When executing multi-shard queries, Citus must balance the gains from
+parallelism with the overhead from database connections. The
+:ref:`query_execution` section explains the steps of turning queries into
+worker tasks and obtaining database connections to the workers.
+
+* Set :ref:`max_adaptive_executor_pool_size` to a low value like 1 or 2 for
+  transactional workloads with short queries (e.g. < 20ms of latency). For
+  analytical workloads where parallelism is critical, leave this setting at its
+  default value of 16.
+* Set :ref:`executor_slow_start_interval` to a high value like 100ms for
+  transactional workloads comprised of short queries that are bound on network
+  latency rather than parallelism.  For analytical workloads, leave this
+  setting at its default value of 10ms.
+* The default value of 1 for :ref:`max_cached_conns_per_worker` is
+  reasonable.  A larger value such as 2 might be helpful for clusters that use
+  a small number of concurrent sessions, but it’s not wise to go much further
+  (e.g. 16 would be too high). If set too high, sessions will hold idle
+  connections and use worker resources unnecessarily.
+* Set :ref:`citus.max_shared_pool_size` to match the `max_connections
+  <https://www.postgresql.org/docs/current/runtime-config-connection.html#RUNTIME-CONFIG-CONNECTION-SETTINGS>`_
+  setting of your *worker* nodes. This setting is mainly a fail-safe.
+
 Task Assignment Policy
 -------------------------------------
 
@@ -324,13 +351,6 @@ that have a compact binary representation, such as ``hll``, ``tdigest``,
 
 For Postgres 14 and higher, the default for this setting is already ``true``.
 So explicitly enabling it for those Postgres versions has no effect.
-
-Adaptive Executor
------------------
-
-Citus' adaptive executor conserves database connections to help reduce resource usage on worker nodes during multi-shard queries. When running a query, the executor begins by using a single -- usually precached -- connection to a remote node. If the query finishes within the time period specified by citus.executor_slow_start_interval, no more connections are required. Otherwise the executor gradually establishes new connections as directed by citus.executor_slow_start_interval. (See also :ref:`executor_configuration`).
-
-With the behavior explained above, the executor aims to open an optimal number of connections to remote nodes. For short running multi-shard queries, like an index-only-scan on the shards, the executor may use only a single connection and execute all the queries on the shards over a single connection. For longer running multi-shard queries, the executor will keep opening connections to parallelize the execution on the remote nodes. If the queries on the shards take long (such as > 500ms), the executor converges to using one connection per shard (or up to citus.max_adaptive_executor_pool_size), in order to maximize the parallelism.
 
 .. _scaling_data_ingestion:
 
