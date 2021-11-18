@@ -306,20 +306,20 @@ parallelism with the overhead from database connections. The
 :ref:`query_execution` section explains the steps of turning queries into
 worker tasks and obtaining database connections to the workers.
 
+* Set :ref:`max_adaptive_executor_pool_size` to a low value like 1 or 2 for
+  transactional workloads with short queries (e.g. < 20ms of latency). For
+  analytical workloads where parallelism is critical, leave this setting at its
+  default value of 16.
+* Set :ref:`executor_slow_start_interval` to a high value like 100ms for
+  transactional workloads comprised of short queries that are bound on network
+  latency rather than parallelism.  For analytical workloads, leave this
+  setting at its default value of 10ms.
 * The default value of 1 for :ref:`max_cached_conns_per_worker` is
   reasonable.  A larger value such as 2 might be helpful for clusters that use
   a small number of concurrent sessions, but it’s not wise to go much further
   (e.g. 16 would be too high). If set too high, sessions will hold idle
   connections and use worker resources unnecessarily.
-* Set :ref:`max_adaptive_executor_pool_size` to match
-  max_cached_conns_per_worker in a high-concurrency workload. In a
-  low-concurrency workload, you can set it to the number of shards per worker
-  per distributed table (e.g. if a distributed table has 32 shards across 4
-  workers, then there are 8 shards per worker.)
-* Set :ref:`executor_slow_start_interval` to a high value for workloads
-  comprised of short queries that are bound on network latency rather than
-  parallelism.  Set it to a short value for a workload bound on parallelism.
-* Set :ref:`citus.max_shared_pool_size` to the `max_connections
+* Set :ref:`citus.max_shared_pool_size` to match the `max_connections
   <https://www.postgresql.org/docs/current/runtime-config-connection.html#RUNTIME-CONFIG-CONNECTION-SETTINGS>`_
   setting of your *worker* nodes. This setting is mainly a fail-safe.
 
