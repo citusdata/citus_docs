@@ -173,7 +173,7 @@ connection attempts for the tasks in a multi-shard query. When a query first
 queues tasks, the tasks can acquire just one connection. At the end of each
 interval where there are pending connections, Citus increases the number of
 simultaneous connections it will open.  The slow start behavior can be disabled
-entirely with :ref:`force_max_query_parallelization`.
+entirely by setting the GUC to 0.
 
 When a task finishes using a connection, the session pool will hold the
 connection open for later. Caching the connection avoids the overhead of
