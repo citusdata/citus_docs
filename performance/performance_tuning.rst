@@ -319,7 +319,7 @@ worker tasks and obtaining database connections to the workers.
   a small number of concurrent sessions, but it’s not wise to go much further
   (e.g. 16 would be too high). If set too high, sessions will hold idle
   connections and use worker resources unnecessarily.
-* Set :ref:`citus.max_shared_pool_size` to match the `max_connections
+* Set :ref:`max_shared_pool_size` to match the `max_connections
   <https://www.postgresql.org/docs/current/runtime-config-connection.html#RUNTIME-CONFIG-CONNECTION-SETTINGS>`_
   setting of your *worker* nodes. This setting is mainly a fail-safe.
 
