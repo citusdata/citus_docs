@@ -50,8 +50,7 @@ a.skiplink {
   background: #c9c9c9;
 }
 
-.wy-menu-vertical li.toctree-l2.current > a,
-.wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a {
+.wy-menu-vertical li.toctree-l2 a {
   color: #555;
   background: none !important;
 }
