@@ -99,6 +99,9 @@ Upgrading PostgreSQL version from 12 to 13
 
    Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, upgrade Citus first.
 
+   Also, if you're running Citus 10.0 or 10.1, don't upgrade your Postgres version. Upgrade to at least Citus 10.2 and
+   then perform the Postgres upgrade.
+
 Record the following paths before you start (your actual paths may be different than those below):
 
 Existing data directory (e.g. /opt/pgsql/10/data)
