@@ -740,8 +740,9 @@ Arguments
 
 **nodeport:** The port on which PostgreSQL is listening on the worker node.
 
-**groupid:** A group of one primary server and zero or more secondary
-servers, relevant only for streaming replication.  Default -1
+**groupid:** A group of one primary server and zero or more secondary servers,
+relevant only for streaming replication. Be sure to use a value greater than
+zero, since zero is reserved for the coordinator node. The default is -1.
 
 **noderole:** Whether it is 'primary' or 'secondary'. Default 'primary'
 
