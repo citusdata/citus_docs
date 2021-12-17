@@ -8,6 +8,10 @@ h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
   background: #FFC;
 }
 
+:focus {
+  outline: 1px dashed;
+}
+
 .btn-fat {
   padding: 1em !important;
 }
@@ -70,6 +74,14 @@ a.skiplink {
 
 .wy-menu-vertical li button.toctree-expand {
   color: #b3b3b3;
+}
+
+.wy-menu-vertical li.toctree-l2 button.toctree-expand {
+  color: #656565;
+}
+
+.wy-menu-vertical :focus {
+  outline-offset: -1px;
 }
 
 .wy-table-odd a, .wy-table-striped tr:nth-child(2n-1) a, .rst-content table.docutils:not(.field-list) tr:nth-child(2n-1) a {
@@ -299,3 +311,5 @@ footer span.commit code {
 #consentBox .consent-text a:hover, #consentBox .consent-text a:focus { color: #2cc95c; }
 #consentBox .consent-text a:visited { color: #239f49; }
 #consentBox .consent-text p { font-size: inherit; line-height: inherit; }
+
+
