@@ -145,6 +145,9 @@
         // "slideDown" means "show," it's not a direction of movement
         $("#consentBox").slideDown("linear");
       }
+
+      // move keyboard focus to selected menu item
+      $('li.toctree-l1 a.current').focus();
     });
   </script>
 {% endblock %}
