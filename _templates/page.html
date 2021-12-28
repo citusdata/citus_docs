@@ -149,6 +149,11 @@
         titleText = $(this).parent().clone().children('.headerlink').remove().end().text();
         $(this).attr('title', 'Permalink to ' + titleText);
       });
+      $('.search-summary').attr({
+        role: 'alert',
+        'aria-atomic': 'true',
+        'aria-live': 'assertive'
+      });
     });
   </script>
 {% endblock %}

@@ -113,6 +113,9 @@ div.admonition.note a {
 .rst-other-versions a {
   color: #fcfcfc !important;
 }
+.rst-other-versions a:hover {
+  text-decoration: underline;
+}
 
 /* code blocks */
 
