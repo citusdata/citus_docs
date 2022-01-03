@@ -149,11 +149,89 @@
         titleText = $(this).parent().clone().children('.headerlink').remove().end().text();
         $(this).attr('title', 'Permalink to ' + titleText);
       });
-      $('.search-summary').attr({
-        role: 'alert',
-        'aria-atomic': 'true',
-        'aria-live': 'assertive'
+      const trapButton = document.querySelector('.rst-versions:not(.shift-up) .rst-current-version');
+      const trapArea = document.querySelector('.rst-versions');
+      const killTrap = document.querySelector('.rst-versions.shift-up .rst-current-version');
+
+      trapButton.addEventListener('click', ()=>{
+        trapKeyboard(trapArea);
+      });
+
+      killTrap.addEventListener('click', (e)=>{
+        let thisTrap = e.target.closest('.trap-active');
+        thisTrap.classList.remove('trap-active');
+
+        let senders = thisTrap.querySelectorAll('.send-focus');
+        for ( let i = 0; i< senders.length; i++) {
+          senders[i].remove();
+        }
       });
     });
+    // simple keyboard trap
+    const trapKeyboard = (el) => {
+      el.classList.add('trap-active');
+    	var focusableElements = el.querySelectorAll(`
+    		a:not(.send-focus),
+    		input[type="text"]:not([name="hp"]),
+    		input[type="email"],
+    		input[type="number"],
+    		input[type="checkbox"],
+    		button,
+    		select,
+    		textarea
+    	`);
+
+
+      if ( !el.querySelectorAll('.send-focus--last').length ) {
+        var hiddenFirst = document.createElement('button');
+        // using a button instead of anchor makes this focusable by tab in safari
+        hiddenFirst.classList.add('send-focus');
+        hiddenFirst.classList.add('send-focus--last');
+        hiddenFirst.setAttribute('aria-hidden', 'true');
+        el.prepend(hiddenFirst);
+      }
+    	if ( !el.querySelectorAll('.send-focus--first').length ) {
+    		var hiddenLast = document.createElement('button');
+    		hiddenLast.classList.add('send-focus');
+    		hiddenLast.classList.add('send-focus--first');
+    		hiddenLast.setAttribute('aria-hidden', 'true');
+        el.append(hiddenLast);
+    	}
+
+    	var firstFocus = focusableElements[0];
+    	firstFocus.focus();
+
+      const sendFocusToLast = () => {
+    // set focus on last focusable element
+    // loop through elements to ensure focus is set
+     // else set on prev element
+
+    			for(var c = focusableElements.length - 1; c  >= 0; c --){
+    				focusableElements[c].focus();
+    				if ( document.activeElement == focusableElements[c] ) {
+    				 	break;
+    				}
+    				if (c == 0 ) {
+    					el.focus();
+    				}
+    			}
+      };
+
+      const sendFocusToFirst = () => {
+        for (var i = 0; i < focusableElements.length; i++) {
+    			focusableElements[i].focus();
+    			if ( document.activeElement == focusableElements[i] ) {
+    				 break;
+    			 }
+    			 if ( i == focusableElements.length-1 )	{
+    				el.focus();
+    			 }
+    		}
+      };
+
+    	el.querySelector('.send-focus--first').addEventListener("focus", sendFocusToFirst, true);
+
+    	el.querySelector('.send-focus--last').addEventListener("focus", sendFocusToLast, true);
+    }
   </script>
 {% endblock %}
