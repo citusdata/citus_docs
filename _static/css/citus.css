@@ -117,7 +117,7 @@ div.admonition.note a {
   text-decoration: underline;
 }
 .rst-versions.shift-up {
-  overflow-y: auto;
+  overflow-y: auto!important;
 }
 
 /* code blocks */
