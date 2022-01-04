@@ -116,6 +116,9 @@ div.admonition.note a {
 .rst-other-versions a:hover {
   text-decoration: underline;
 }
+.rst-versions.shift-up {
+  overflow-y: auto;
+}
 
 /* code blocks */
 
