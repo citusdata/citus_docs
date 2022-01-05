@@ -157,7 +157,7 @@
       $(vPicker).focusout(function() {
       	isFocused = false;
         setTimeout(function() {
-          if (!isFocused && $(vPicker).hasClass("shift-up")) {
+          if (!isFocused && $(vPicker).hasClass("shift-up") && ($(this).has(document.activeElement).length == 0)) {
             $(vPicker).removeClass("shift-up");
             $(".rst-current-version").attr("aria-expanded", "false");
           }
