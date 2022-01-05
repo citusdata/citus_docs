@@ -154,14 +154,17 @@
         isFocused = true;
       });
 
-      $(vPicker).blur(function() {
-      	isFocused = false;
-        setTimeout(function() {
-          if (!isFocused && $(vPicker).hasClass("shift-up")) {
-            $(vPicker).removeClass("shift-up");
-            $(".rst-current-version").attr("aria-expanded", "false");
-          }
-        }, 100);
+      $(vPicker).focusout(function() {
+        const leavingParent = !vPicker.contains(e.relatedTarget);
+        if (leavingParent) {
+          isFocused = false;
+          setTimeout(function() {
+            if (!isFocused && $(vPicker).hasClass("shift-up")) {
+              $(vPicker).removeClass("shift-up");
+              $(".rst-current-version").attr("aria-expanded", "false");
+            }
+          }, 100);
+        }
       });
     });
   </script>
