@@ -156,7 +156,7 @@
 
       $(vPicker).focusout(function() {
         var $elem = $(this);
-        if ($elem.find(':focus').length == 0) {
+        if (!$elem.contains(document.activeElement)) {
           isFocused = false;
         }
         setTimeout(function() {
