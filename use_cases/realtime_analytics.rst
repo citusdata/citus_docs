@@ -299,7 +299,7 @@ to the query in our rollup function:
   +   , distinct_ip_addresses
     ) SELECT
       site_id,
-      minute,
+      date_trunc('minute', ingest_time),
       COUNT(1) as request_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count,
@@ -363,7 +363,7 @@ Next, include it in the rollups by modifying the rollup function:
   +   , country_counters
     ) SELECT
       site_id,
-      minute,
+      date_trunc('minute', ingest_time),
       COUNT(1) as request_count,
       SUM(CASE WHEN (status_code between 200 and 299) THEN 1 ELSE 0 END) as success_count
       SUM(CASE WHEN (status_code between 200 and 299) THEN 0 ELSE 1 END) as error_count
