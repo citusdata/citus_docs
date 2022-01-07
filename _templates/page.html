@@ -149,6 +149,7 @@
         titleText = $(this).parent().clone().children('.headerlink').remove().end().text();
         $(this).attr('title', 'Permalink to ' + titleText);
       });
+      $('.rst-other-versions').attr('tabindex', '-1');
       const vPicker = $(".rst-versions");
       $(vPicker).focusin(function() {
         isFocused = true;
