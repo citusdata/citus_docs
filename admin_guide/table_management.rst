@@ -255,9 +255,8 @@ Gotchas
   so inserting one row per transaction will put single rows into their own
   stripes. Compression and performance of single row stripes will be worse than
   a row table. Always insert in bulk to a columnar table.
-* If you mess up and columnarize a bunch of tiny stripes, there is no way to
-  repair the table. The only fix is to create a new columnar table and copy
-  data from the original in one transaction:
+* If you mess up and columnarize a bunch of tiny stripes, you can use VACUUM command to be able to
+  reorganize columnar stripes
 
   .. code-block:: postgresql
 
