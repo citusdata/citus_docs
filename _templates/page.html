@@ -145,26 +145,6 @@
         // "slideDown" means "show," it's not a direction of movement
         $("#consentBox").slideDown("linear");
       };
-      $('.headerlink').each(function() {
-        titleText = $(this).parent().clone().children('.headerlink').remove().end().text();
-        $(this).attr('title', 'Permalink to ' + titleText);
-      });
-      $('.rst-other-versions').attr('tabindex', '-1');
-      const vPicker = $(".rst-versions");
-      $(vPicker).focusin(function() {
-        isFocused = true;
-      });
-
-      $(vPicker).focusout(function() {
-        //var elem = $(this);
-        isFocused = false;
-        setTimeout(function() {
-          if (!isFocused && $(vPicker).hasClass("shift-up")) {
-            $(vPicker).removeClass("shift-up");
-            $(".rst-current-version").attr("aria-expanded", "false");
-          }
-        }, 100);
-      });
     });
   </script>
 {% endblock %}
