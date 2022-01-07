@@ -3,6 +3,10 @@
 h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
   font-family: "Lato", "proxima-nova", "Helvetica Neue", Arial, sans-serif !important;
 }
+h4 {
+  font-size: 108%;
+  font-weight: 900;
+}
 
 .rst-content span.highlighted {
   background: #FFC;
