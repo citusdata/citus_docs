@@ -155,10 +155,8 @@
       });
 
       $(vPicker).focusout(function() {
-        var elem = $(this);
-        if (!elem.contains(document.activeElement)) {
-          isFocused = false;
-        }
+        //var elem = $(this);
+        isFocused = false;
         setTimeout(function() {
           if (!isFocused && $(vPicker).hasClass("shift-up")) {
             $(vPicker).removeClass("shift-up");
