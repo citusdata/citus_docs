@@ -290,20 +290,4 @@ Limitations
 
 Future versions of Citus will incrementally lift the current limitations:
 
-* Append-only (no UPDATE/DELETE support)
-* No space reclamation (e.g. rolled-back transactions may still consume disk space)
-* Support for hash and btree indices only
-* No index scans, or bitmap index scans
-* No tidscans
-* No sample scans
-* No TOAST support (large values supported inline)
-* No support for ON CONFLICT statements (except DO NOTHING actions with no target specified).
-* No support for tuple locks (SELECT ... FOR SHARE, SELECT ... FOR UPDATE)
-* No support for serializable isolation level
-* Support for PostgreSQL server versions 12+ only
-* No support for foreign keys, unique constraints, or exclusion constraints
-* No support for logical decoding
-* No support for intra-node parallel scans
-* No support for AFTER ... FOR EACH ROW triggers
-* No UNLOGGED columnar tables
-* No TEMPORARY columnar tables
+https://github.com/citusdata/citus/blob/release-10.2/src/backend/columnar/README.md#limitations
