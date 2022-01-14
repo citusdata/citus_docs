@@ -6,6 +6,7 @@ Multi-tenant Applications
 =========================
 
 .. contents::
+   :backlinks: none
 
 *Estimated read time: 30 minutes*
 

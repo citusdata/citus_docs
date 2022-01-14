@@ -56,7 +56,9 @@
   <meta name="google-site-verification" content="v8MtCUC2nV2dO-4CSGb5flD1MyPKJvw7wBDOYRwBadw" />
 
   {# fonts for cookie consent box #}
-  <link href="https://fonts.googleapis.com/css?family=Lato:300,300i,400,400i,700,700i" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
 
   {# Last in <head> to override any canonical link that sphinx adds #}
   {% if pagename in canonical_urls %}
@@ -144,7 +146,7 @@
       if ($.cookie(window.g_cookieConsentId) != consentValue) {
         // "slideDown" means "show," it's not a direction of movement
         $("#consentBox").slideDown("linear");
-      }
+      };
     });
   </script>
 {% endblock %}
