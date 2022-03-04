@@ -226,6 +226,13 @@ footer span.commit code {
   color: #404040 !important;
 }
 
+footer a:not(:hover), footer a:not(:focus) {
+  color: #1e873d!important;
+}
+footer a:hover, footer a:focus {
+  color: #2cc95c!important;
+}
+
 /* Cookie consent */
 
 #consentBox {
