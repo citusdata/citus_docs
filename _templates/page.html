@@ -112,9 +112,16 @@
           loadHeap();
         }
         else {
-          var mngLink = document.createElement('span');
+          var mngLink = document.createElement('span'),
+              userConsent = siteConsent.getConsent();
           mngLink.innerHTML = '<a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener">Privacy</a> | <a href="javascript:void(0)" id="mng-cookies">Manage Cookies</a><br><br>';
           document.querySelector("footer div[role=contentinfo]").prepend(mngLink);
+          if (userConsent.Analytics == true) {
+            loadHeap();
+          }
+          if (userConsent.Advertising) {
+            ga('set', 'allowAdFeatures', true);
+          }
           var clickMng = document.querySelector('#mng-cookies');
           clickMng.addEventListener('click', function (event) {
           	manageConsent();
