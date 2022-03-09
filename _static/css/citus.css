@@ -226,10 +226,10 @@ footer span.commit code {
   color: #404040 !important;
 }
 
-footer a:not(:hover), footer a:not(:focus) {
+footer a:not(:hover, :focus, .btn) {
   color: #1e873d!important;
 }
-footer a:hover, footer a:focus {
+footer a:hover:not(.btn), footer a:focus:not(.btn) {
   color: #2cc95c!important;
 }
 
