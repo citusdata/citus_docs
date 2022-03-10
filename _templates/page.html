@@ -110,6 +110,10 @@
         console.log(siteConsent);
         if (_siteConsent.isConsentRequired == false) {
           loadHeap();
+          var mngLink = document.createElement('span'),
+              userConsent = siteConsent.getConsent();
+          mngLink.innerHTML = '<a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener">Privacy Statement</a><br><br>';
+          document.querySelector("footer div[role=contentinfo]").prepend(mngLink);
         }
         else {
           var mngLink = document.createElement('span'),
