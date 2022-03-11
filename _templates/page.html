@@ -120,9 +120,6 @@
           if (userConsent.Analytics == true) {
             loadHeap();
           }
-          if (userConsent.Advertising == true) {
-            ga('set', 'allowAdFeatures', true);
-          }
           var clickMng = document.querySelector('#mng-cookies');
           clickMng.addEventListener('click', function (event) {
           	manageConsent();
