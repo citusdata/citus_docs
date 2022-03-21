@@ -1051,6 +1051,59 @@ Example
 
     (3 rows)
 
+.. _check_cluster_node_health:
+
+citus_check_cluster_node_health (beta)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+   This function is part of Citus 11-beta.
+
+Check connectivity between all nodes. If there are N nodes, this function
+checks all N\ :sup:`2` connections between them.
+
+Arguments
+************************
+
+N/A
+
+Return Value
+******************************
+
+List of tuples where each tuple contains the following information:
+
+**from_nodename:** DNS name of the source worker node
+
+**from_nodeport:** Port on the source worker node on which the database server is listening
+
+**to_nodename:** DNS name of the destination worker node
+
+**to_nodeport:** Port on the destination worker node on which the database server is listening
+
+**result:** Whether a connection could be established
+
+Example
+***********************
+
+.. code-block:: postgresql
+
+    SELECT * FROM citus_check_cluster_node_health();
+
+     from_nodename │ from_nodeport │ to_nodename │ to_nodeport │ result
+    ---------------+---------------+-------------+-------------+--------
+     localhost     |          1400 | localhost   |        1400 | t
+     localhost     |          1400 | localhost   |        1401 | t
+     localhost     |          1400 | localhost   |        1402 | t
+     localhost     |          1401 | localhost   |        1400 | t
+     localhost     |          1401 | localhost   |        1401 | t
+     localhost     |          1401 | localhost   |        1402 | t
+     localhost     |          1402 | localhost   |        1400 | t
+     localhost     |          1402 | localhost   |        1401 | t
+     localhost     |          1402 | localhost   |        1402 | t
+
+    (9 rows)
+
 .. _set_coordinator_host:
 
 citus_set_coordinator_host
