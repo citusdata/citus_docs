@@ -820,17 +820,13 @@ The ``citus_lock_waits`` view shows the situation.
 
    SELECT * FROM citus_lock_waits;
 
-   -[ RECORD 1 ]-------------------------+----------------------------------------
-   waiting_pid                           | 88624
-   blocking_pid                          | 88615
+   -[ RECORD 1 ]-------------------------+--------------------------------------
+   waiting_gpid                          | 10000011981
+   blocking_gpid                         | 10000011979
    blocked_statement                     | UPDATE numbers SET j = 3 WHERE i = 1;
    current_statement_in_blocking_process | UPDATE numbers SET j = 2 WHERE i = 1;
-   waiting_node_id                       | 0
-   blocking_node_id                      | 0
-   waiting_node_name                     | coordinator_host
-   blocking_node_name                    | coordinator_host
-   waiting_node_port                     | 5432
-   blocking_node_port                    | 5432
+   waiting_nodeid                        | 1
+   blocking_nodeid                       | 1
 
 In this example the queries originated on the coordinator, but the view can also list locks between queries originating on workers.
 
