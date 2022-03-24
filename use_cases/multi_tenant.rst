@@ -193,7 +193,7 @@ Try it Yourself
 
   You'll run the SQL commands using psql and connect to the Coordinator node:
 
-  * **Docker**: :code:`docker exec -it citus_master psql -U postgres`
+  * **Docker**: :code:`docker exec -it citus psql -U postgres`
 
 At this point feel free to follow along in your own Citus cluster by `downloading <https://examples.citusdata.com/mt_ref_arch/schema.sql>`_ and executing the SQL to create the schema. Once the schema is ready, we can tell Citus to create shards on the workers. From the coordinator node, run:
 
