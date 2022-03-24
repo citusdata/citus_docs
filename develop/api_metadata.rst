@@ -674,125 +674,146 @@ In some situations, queries might get blocked on row-level locks on one of the s
 
 Citus provides special views to watch queries and locks throughout the cluster, including shard-specific queries used internally to build results for distributed queries.
 
-* **citus_dist_stat_activity**: shows the distributed queries that are executing on all nodes. A superset of ``pg_stat_activity``, usable wherever the latter is.
-* **citus_worker_stat_activity**: shows queries on workers, including fragment queries against individual shards.
+* **citus_stat_activity**: shows the distributed queries that are executing on all nodes. A superset of ``pg_stat_activity``, usable wherever the latter is.
+* **citus_dist_stat_activity**: the same as ``citus_stat_activity`` but restricted to distributed queries only, and excluding Citus fragment queries.
 * **citus_lock_waits**: Blocked queries throughout the cluster.
 
-The first two views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the host/port of the worker that initiated the query and the host/port of the coordinator node of the cluster.
+The first two views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the global PID of the worker that initiated the query.
 
 For example, consider counting the rows in a distributed table:
 
 .. code-block:: postgres
 
-   -- run from worker on localhost:9701
+   -- run in one session
+   -- (with a pg_sleep so we can see it)
 
-   SELECT count(*) FROM users_table;
+   SELECT count(*), pg_sleep(3) FROM users_table;
 
 We can see the query appear in ``citus_dist_stat_activity``:
 
 .. code-block:: postgres
 
+   -- run in another session
+
    SELECT * FROM citus_dist_stat_activity;
 
-   -[ RECORD 1 ]----------+----------------------------------
-   query_hostname         | localhost
-   query_hostport         | 9701
-   master_query_host_name | localhost
-   master_query_host_port | 9701
-   transaction_number     | 1
-   transaction_stamp      | 2018-10-05 13:27:20.691907+03
-   datid                  | 12630
-   datname                | postgres
-   pid                    | 23723
-   usesysid               | 10
-   usename                | citus
-   application_name       | psql
-   client_addr            | 
-   client_hostname        | 
-   client_port            | -1
-   backend_start          | 2018-10-05 13:27:14.419905+03
-   xact_start             | 2018-10-05 13:27:16.362887+03
-   query_start            | 2018-10-05 13:27:20.682452+03
-   state_change           | 2018-10-05 13:27:20.896546+03
-   wait_event_type        | Client
-   wait_event             | ClientRead
-   state                  | idle in transaction
-   backend_xid            | 
-   backend_xmin           | 
-   query                  | SELECT count(*) FROM users_table;
-   backend_type           | client backend
+   -[ RECORD 1 ]----+-------------------------------------------
+   global_pid       | 10000012199
+   nodeid           | 1
+   is_worker_query  | f
+   datid            | 13724
+   datname          | postgres
+   pid              | 12199
+   leader_pid       |
+   usesysid         | 10
+   usename          | postgres
+   application_name | psql
+   client_addr      |
+   client_hostname  |
+   client_port      | -1
+   backend_start    | 2022-03-23 11:30:00.533991-05
+   xact_start       | 2022-03-23 19:35:28.095546-05
+   query_start      | 2022-03-23 19:35:28.095546-05
+   state_change     | 2022-03-23 19:35:28.09564-05
+   wait_event_type  | Timeout
+   wait_event       | PgSleep
+   state            | active
+   backend_xid      |
+   backend_xmin     | 777
+   query_id         |
+   query            | SELECT count(*), pg_sleep(3) FROM users_table;
+   backend_type     | client backend
 
-This query requires information from all shards. Some of the information is in shard ``users_table_102038`` which happens to be stored in localhost:9700. We can see a query accessing the shard by looking at the ``citus_worker_stat_activity`` view:
+The ``citus_dist_stat_activity`` view hides internal Citus fragment queries. To
+see those, we can use the more detailed ``citus_stat_activity`` view. For
+instance, the previous ``count(*)`` query requires information from all shards.
+Some of the information is in shard ``users_table_102039``, which is visible in
+the query below.
 
 .. code-block:: postgres
 
-   SELECT * FROM citus_worker_stat_activity;
+   SELECT * FROM citus_stat_activity;
 
-   -[ RECORD 1 ]----------+-----------------------------------------------------------------------------------------
-   query_hostname         | localhost
-   query_hostport         | 9700
-   master_query_host_name | localhost
-   master_query_host_port | 9701
-   transaction_number     | 1
-   transaction_stamp      | 2018-10-05 13:27:20.691907+03
-   datid                  | 12630
-   datname                | postgres
-   pid                    | 23781
-   usesysid               | 10
-   usename                | citus
-   application_name       | citus
-   client_addr            | ::1
-   client_hostname        | 
-   client_port            | 51773
-   backend_start          | 2018-10-05 13:27:20.75839+03
-   xact_start             | 2018-10-05 13:27:20.84112+03
-   query_start            | 2018-10-05 13:27:20.867446+03
-   state_change           | 2018-10-05 13:27:20.869889+03
-   wait_event_type        | Client
-   wait_event             | ClientRead
-   state                  | idle in transaction
-   backend_xid            | 
-   backend_xmin           | 
-   query                  | COPY (SELECT count(*) AS count FROM users_table_102038 users_table WHERE true) TO STDOUT
-   backend_type           | client backend
+   -[ RECORD 1 ]----+-----------------------------------------------------------------------
+   global_pid       | 10000012199
+   nodeid           | 1
+   is_worker_query  | f
+   datid            | 13724
+   datname          | postgres
+   pid              | 12199
+   leader_pid       |
+   usesysid         | 10
+   usename          | postgres
+   application_name | psql
+   client_addr      |
+   client_hostname  |
+   client_port      | -1
+   backend_start    | 2022-03-23 11:30:00.533991-05
+   xact_start       | 2022-03-23 19:32:18.260803-05
+   query_start      | 2022-03-23 19:32:18.260803-05
+   state_change     | 2022-03-23 19:32:18.260821-05
+   wait_event_type  | Timeout
+   wait_event       | PgSleep
+   state            | active
+   backend_xid      |
+   backend_xmin     | 777
+   query_id         |
+   query            | SELECT count(*), pg_sleep(3) FROM users_table;
+   backend_type     | client backend
+   -[ RECORD 2 ]----------+-----------------------------------------------------------------------------------------
+   global_pid       | 10000012199
+   nodeid           | 1
+   is_worker_query  | t
+   datid            | 13724
+   datname          | postgres
+   pid              | 12725
+   leader_pid       |
+   usesysid         | 10
+   usename          | postgres
+   application_name | citus_internal gpid=10000012199
+   client_addr      | 127.0.0.1
+   client_hostname  |
+   client_port      | 44106
+   backend_start    | 2022-03-23 19:29:53.377573-05
+   xact_start       |
+   query_start      | 2022-03-23 19:32:18.278121-05
+   state_change     | 2022-03-23 19:32:18.278281-05
+   wait_event_type  | Client
+   wait_event       | ClientRead
+   state            | idle
+   backend_xid      |
+   backend_xmin     |
+   query_id         |
+   query            | SELECT count(*) AS count FROM public.users_table_102039 users WHERE true
+   backend_type     | client backend
 
-The ``query`` field shows data being copied out of the shard to be counted.
-
-.. note::
-
-  If a router query (e.g. single-tenant in a multi-tenant application, ``SELECT * FROM table WHERE tenant_id = X``) is executed without a transaction block, then citus_query_host_name and citus_query_host_port columns will be NULL in citus_worker_stat_activity.
+The ``query`` field shows rows being counted in shard 102039.
 
 Here are examples of useful queries you can build using
-``citus_worker_stat_activity``:
+``citus_stat_activity``:
 
 .. code-block:: postgres
 
-  -- active queries' wait events on a certain node
+  -- active queries' wait events
 
   SELECT query, wait_event_type, wait_event
-    FROM citus_worker_stat_activity
-   WHERE query_hostname = 'xxxx' and state='active';
+    FROM citus_stat_activity
+   WHERE state='active';
 
   -- active queries' top wait events
 
   SELECT wait_event, wait_event_type, count(*)
-    FROM citus_worker_stat_activity
+    FROM citus_stat_activity
    WHERE state='active'
    GROUP BY wait_event, wait_event_type
    ORDER BY count(*) desc;
 
   -- total internal connections generated per node by Citus
 
-  SELECT query_hostname, count(*)
-    FROM citus_worker_stat_activity
-   GROUP BY query_hostname;
-
-  -- total internal active connections generated per node by Citus
-
-  SELECT query_hostname, count(*)
-    FROM citus_worker_stat_activity
-   WHERE state='active'
-   GROUP BY query_hostname;
+  SELECT nodeid, count(*)
+    FROM citus_stat_activity
+   WHERE is_worker_query
+   GROUP BY nodeid;
 
 The next view is ``citus_lock_waits``. To see how it works, we can generate a locking situation manually. First we'll set up a test table from the coordinator:
 
