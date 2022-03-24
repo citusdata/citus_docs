@@ -1090,6 +1090,8 @@ Example
 
     SELECT * FROM citus_check_cluster_node_health();
 
+::
+
      from_nodename │ from_nodeport │ to_nodename │ to_nodeport │ result
     ---------------+---------------+-------------+-------------+--------
      localhost     |          1400 | localhost   |        1400 | t
