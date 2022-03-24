@@ -80,11 +80,11 @@ After installing the new package and restarting the database, run the extension 
 .. note::
 
   If upgrading to Citus 11.x from an earlier major version, run this
-  extra command on the **coordinator node** only:
+  extra command:
 
   .. code-block:: bash
 
-    -- only on the coordinator
+    -- only on the coordinator node
     SELECT citus_finalize_upgrade_to_citus11();
 
   The upgrade function will make sure that all worker nodes have the right
