@@ -50,7 +50,7 @@ To start, you can first connect to the Citus coordinator using psql.
 
 .. code-block:: bash
 
-    docker exec -it citus_master psql -U postgres
+    docker exec -it citus psql -U postgres
 
 Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE` commands.
 

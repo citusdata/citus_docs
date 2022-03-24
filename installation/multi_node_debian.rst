@@ -26,7 +26,7 @@ Steps to be executed on all nodes
 ::
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-14-citus-10.2
+  sudo apt-get -y install postgresql-14-citus-beta-11.0
 
   # preload citus extension
   sudo pg_conftool 14 main set shared_preload_libraries citus
@@ -92,6 +92,20 @@ catalog table. For our example, we assume that there are two workers
 addresses) and server ports to the table.
 
 ::
+
+  # Register the hostname that future workers will use to connect
+  # to the coordinator node.
+  #
+  # You'll need to change the example, 'coord.example.com',
+  # to match the actual hostname
+
+  sudo -i -u postgres psql -c \
+    "SELECT citus_set_coordinator_host('coord.example.com', 5432);
+
+  # Add the worker nodes.
+  #
+  # Similarly, you'll need to change 'worker-101' and 'worker-102' to the
+  # actual hostnames
 
   sudo -i -u postgres psql -c "SELECT * from citus_add_node('worker-101', 5432);"
   sudo -i -u postgres psql -c "SELECT * from citus_add_node('worker-102', 5432);"

@@ -26,7 +26,7 @@ Steps to be executed on all nodes
 ::
 
   # install PostgreSQL with Citus extension
-  sudo yum install -y citus102_14
+  sudo yum install -y citus110_beta_14
   # initialize system database (using RHEL 6 vs 7 method as necessary)
   sudo service postgresql-14 initdb || sudo /usr/pgsql-14/bin/postgresql-14-setup initdb
   # preload citus extension
@@ -98,6 +98,20 @@ worker-101, worker-102). Add the workers' DNS names (or IP addresses)
 and server ports to the table.
 
 ::
+
+  # Register the hostname that future workers will use to connect
+  # to the coordinator node.
+  #
+  # You'll need to change the example, 'coord.example.com',
+  # to match the actual hostname
+
+  sudo -i -u postgres psql -c \
+    "SELECT citus_set_coordinator_host('coord.example.com', 5432);
+
+  # Add the worker nodes.
+  #
+  # Similarly, you'll need to change 'worker-101' and 'worker-102' to the
+  # actual hostnames
 
   sudo -i -u postgres psql -c "SELECT * from citus_add_node('worker-101', 5432);"
   sudo -i -u postgres psql -c "SELECT * from citus_add_node('worker-102', 5432);"

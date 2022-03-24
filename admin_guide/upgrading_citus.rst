@@ -13,21 +13,21 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 10.2 is currently installed on Postgres 13:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 11.0 is currently installed on Postgres 14:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-14-citus-10.2
+  sudo apt-get install --only-upgrade postgresql-14-citus-beta-11.0
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus102_14
+  sudo yum update citus110_beta_14
   sudo service postgresql-14 restart
 
 .. _major_minor_upgrade:
@@ -46,14 +46,14 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 9.5 to 10.2
+If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 10.2 to 11.0 on Postgres 13:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-12-citus-10.2
+  sudo apt-get install postgresql-13-citus-beta-11.0
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -61,8 +61,8 @@ If upgrading both Citus and Postgres, always be sure to upgrade the Citus extens
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus95_12 citus102_12
-  sudo service postgresql-12 restart
+  sudo yum swap citus102_13 citus110_beta_13
+  sudo service postgresql-13 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,6 +77,19 @@ After installing the new package and restarting the database, run the extension 
   # you should see the newer Citus version in the list
   psql -c '\dx'
 
+.. note::
+
+  If upgrading to Citus 11.x from an earlier major version, run this
+  extra command:
+
+  .. code-block:: bash
+
+    -- only on the coordinator node
+    SELECT citus_finalize_upgrade_to_citus11();
+
+  The upgrade function will make sure that all worker nodes have the right
+  schema and metadata. It may take several minutes to run, depending on how
+  much metadata needs to be synced.
 
 .. note::
 
