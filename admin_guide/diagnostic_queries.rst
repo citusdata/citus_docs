@@ -80,51 +80,9 @@ This query will run across all worker nodes and identify locks, how long they've
 
 .. code-block:: postgresql
 
-  SELECT run_command_on_workers($cmd$
-    SELECT array_agg(
-      blocked_statement || ' $ ' || cur_stmt_blocking_proc
-      || ' $ ' || cnt::text || ' $ ' || age
-    )
-    FROM (
-      SELECT blocked_activity.query    AS blocked_statement,
-             blocking_activity.query   AS cur_stmt_blocking_proc,
-             count(*)                  AS cnt,
-             age(now(), min(blocked_activity.query_start)) AS "age"
-      FROM pg_catalog.pg_locks         blocked_locks
-      JOIN pg_catalog.pg_stat_activity blocked_activity
-        ON blocked_activity.pid = blocked_locks.pid
-      JOIN pg_catalog.pg_locks         blocking_locks
-        ON blocking_locks.locktype = blocked_locks.locktype
-       AND blocking_locks.DATABASE IS NOT DISTINCT FROM blocked_locks.DATABASE
-       AND blocking_locks.relation IS NOT DISTINCT FROM blocked_locks.relation
-       AND blocking_locks.page IS NOT DISTINCT FROM blocked_locks.page
-       AND blocking_locks.tuple IS NOT DISTINCT FROM blocked_locks.tuple
-       AND blocking_locks.virtualxid IS NOT DISTINCT FROM blocked_locks.virtualxid
-       AND blocking_locks.transactionid IS NOT DISTINCT FROM blocked_locks.transactionid
-       AND blocking_locks.classid IS NOT DISTINCT FROM blocked_locks.classid
-       AND blocking_locks.objid IS NOT DISTINCT FROM blocked_locks.objid
-       AND blocking_locks.objsubid IS NOT DISTINCT FROM blocked_locks.objsubid
-       AND blocking_locks.pid != blocked_locks.pid
-      JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
-      WHERE NOT blocked_locks.GRANTED
-       AND blocking_locks.GRANTED
-      GROUP BY blocked_activity.query,
-               blocking_activity.query
-      ORDER BY 4
-    ) a
-  $cmd$);
+  SELECT * FROM citus_lock_waits;
 
-Example output:
-
-::
-
-  ┌───────────────────────────────────────────────────────────────────────────────────┐
-  │                               run_command_on_workers                              │
-  ├───────────────────────────────────────────────────────────────────────────────────┤
-  │ (localhost,5433,t,"")                                                             │
-  │ (localhost,5434,t,"{""update ads_102277 set name = 'new name' where id = 1; $ sel…│
-  │…ect * from ads_102277 where id = 1 for update; $ 1 $ 00:00:03.729519""}")         │
-  └───────────────────────────────────────────────────────────────────────────────────┘
+For more information, see :ref:`dist_query_activity`.
 
 Querying the size of your shards
 --------------------------------
@@ -270,14 +228,14 @@ Viewing system queries
 Active queries
 ~~~~~~~~~~~~~~
 
-The ``pg_stat_activity`` view shows which queries are currently executing. You
+The ``citus_stat_activity`` view shows which queries are currently executing. You
 can filter to find the actively executing ones, along with the process ID of
 their backend:
 
 .. code-block:: postgresql
 
-  SELECT pid, query, state
-    FROM pg_stat_activity
+  SELECT global_pid, query, state
+    FROM citus_stat_activity
    WHERE state != 'idle';
 
 Why are queries waiting

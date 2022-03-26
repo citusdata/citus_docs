@@ -667,6 +667,8 @@ Caveats:
 * Tracks a limited number of queries, set by the ``pg_stat_statements.max`` GUC (default 5000)
 * To truncate the table, use the ``citus_stat_statements_reset()`` function
 
+.. _dist_query_activity:
+
 Distributed Query Activity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

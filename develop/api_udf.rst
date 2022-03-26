@@ -1051,6 +1051,46 @@ Example
 
     (3 rows)
 
+.. _backend_pid:
+
+citus_backend_gpid
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The citus_backend_gpid() function returns the global process identifier (GPID)
+for the PostgreSQL backend serving the current session. A GPID encodes both a
+node in the Citus cluster, and the operating system process ID of PostgreSQL on
+that node.
+
+Citus extends the PostgreSQL `server signaling functions
+<https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADMIN-SIGNAL-TABLE)>`_
+``pg_cancel_backend()`` and ``pg_terminate_backend()`` so that they accept
+GPIDs. In Citus, calling these functions on one node can affect a backend
+running on another node.
+
+Arguments
+************************
+
+N/A
+
+Return Value
+******************************
+
+An integer GPID, of the form (NodeId * 10,000,000,000) + ProcessId.
+
+Example
+***********************
+
+.. code-block:: postgresql
+
+    SELECT citus_backend_gpid();
+
+::
+
+     citus_backend_gpid
+    --------------------
+            10000002055
+
+
 .. _check_cluster_node_health:
 
 citus_check_cluster_node_health (beta)
