@@ -83,21 +83,6 @@ higher when sorting by relevance.
              setweight(to_tsvector(description),'B');
     $function$;
 
-To use the product\_text\_search function in queries and
-indexes, it also needs to be created on the workers. We'll use
-``run_command_on_workers`` to do this (see :ref:`worker_propagation` for
-more info).
-
-.. code:: postgresql
-
-    SELECT run_command_on_workers($cmd$
-      CREATE FUNCTION product_text_search(name text, description text)
-      RETURNS tsvector LANGUAGE sql IMMUTABLE AS $function$
-        SELECT setweight(to_tsvector(name),'A') ||
-               setweight(to_tsvector(description),'B');
-      $function$;
-    $cmd$);
-
 After setting up the function, we define a GIN index on it, which speeds
 up text searches on the product table.
 
