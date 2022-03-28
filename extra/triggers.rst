@@ -29,16 +29,13 @@ However, this is a distributed table, so a single trigger on the coordinator for
 .. code-block:: postgresql
 
   -- First create a function that all these triggers will use.
-  -- The function needs to be present on all workers.
 
-  SELECT run_command_on_workers($cmd$
-    CREATE OR REPLACE FUNCTION set_author() RETURNS TRIGGER AS $$
-      BEGIN
-        NEW.author := current_user;
-        RETURN NEW;
-      END;
-    $$ LANGUAGE plpgsql;
-  $cmd$);
+  CREATE OR REPLACE FUNCTION set_author() RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.author := current_user;
+      RETURN NEW;
+    END;
+  $$ LANGUAGE plpgsql;
 
   -- Now create a trigger for every placement
 
@@ -83,19 +80,17 @@ Suppose that for every value inserted into ``little_vals`` we want to insert one
 
   -- This trigger function takes the destination placement as an argument
 
-  SELECT run_command_on_workers($cmd$
-    CREATE OR REPLACE FUNCTION embiggen() RETURNS TRIGGER AS $$
-      BEGIN
-        IF (TG_OP = 'INSERT') THEN
-          EXECUTE format(
-            'INSERT INTO %s (key, val) SELECT ($1).key, ($1).val*2;',
-            TG_ARGV[0]
-          ) USING NEW;
-        END IF;
-        RETURN NULL;
-      END;
-    $$ LANGUAGE plpgsql;
-  $cmd$);
+  CREATE OR REPLACE FUNCTION embiggen() RETURNS TRIGGER AS $$
+    BEGIN
+      IF (TG_OP = 'INSERT') THEN
+        EXECUTE format(
+          'INSERT INTO %s (key, val) SELECT ($1).key, ($1).val*2;',
+          TG_ARGV[0]
+        ) USING NEW;
+      END IF;
+      RETURN NULL;
+    END;
+  $$ LANGUAGE plpgsql;
 
   -- Next we relate the co-located tables by the trigger function
   -- on each co-located placement

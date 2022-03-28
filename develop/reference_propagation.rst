@@ -23,13 +23,10 @@ databases.
   -- List the work_mem setting of each worker database
   SELECT run_command_on_workers($cmd$ SHOW work_mem; $cmd$);
 
-Although this command can also be used to create database objects on the
-workers, doing so will make it harder to add worker nodes in an automated
-fashion. To create functions on the workers, it's best to use
-:ref:`create_distributed_function` on the coordinator node for that.
-Registering functions on the coordinator tracks them in the
-:ref:`pg_dist_object` metadata table, so Citus will know to automatically
-create a copy of the function in any future nodes added to the cluster.
+.. note::
+
+  This command shouldn't be used to create database objects on the workers, as
+  doing so will make it harder to add worker nodes in an automated fashion.
 
 .. note::
 
@@ -92,21 +89,19 @@ A useful companion to :code:`run_command_on_placements` is :code:`run_command_on
   -- We want to synchronize them so that every time little_vals
   -- are created, big_vals appear with double the value
   --
-  -- First we make a trigger function on each worker, which will
+  -- First we make a trigger function, which will
   -- take the destination table placement as an argument
-  SELECT run_command_on_workers($cmd$
-    CREATE OR REPLACE FUNCTION embiggen() RETURNS TRIGGER AS $$
-      BEGIN
-        IF (TG_OP = 'INSERT') THEN
-          EXECUTE format(
-            'INSERT INTO %s (key, val) SELECT ($1).key, ($1).val*2;',
-            TG_ARGV[0]
-          ) USING NEW;
-        END IF;
-        RETURN NULL;
-      END;
-    $$ LANGUAGE plpgsql;
-  $cmd$);
+  CREATE OR REPLACE FUNCTION embiggen() RETURNS TRIGGER AS $$
+    BEGIN
+      IF (TG_OP = 'INSERT') THEN
+        EXECUTE format(
+          'INSERT INTO %s (key, val) SELECT ($1).key, ($1).val*2;',
+          TG_ARGV[0]
+        ) USING NEW;
+      END IF;
+      RETURN NULL;
+    END;
+  $$ LANGUAGE plpgsql;
 
   -- Next we relate the co-located tables by the trigger function
   -- on each co-located placement

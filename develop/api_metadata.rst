@@ -217,14 +217,6 @@ Citus manages shard health on a per-placement basis and automatically marks a pl
 |                |                      | | in this state are considered up-to-date and are used in query   	    |
 |                |                      | | planning and execution.                                                 |
 +----------------+----------------------+---------------------------------------------------------------------------+   
-|  INACTIVE      |            3         | | Shard placements in this state are considered inactive due to           |
-|                |                      | | being out-of-sync with other replicas of the same shard. This           |
-|                |                      | | can occur when an append, modification (INSERT, UPDATE or               |
-|                |                      | | DELETE ) or a DDL operation fails for this placement. The query         |
-|                |                      | | planner will ignore placements in this state during planning and        |
-|                |                      | | execution. Users can synchronize the data in these shards with          |
-|                |                      | | a finalized replica as a background activity.                           |
-+----------------+----------------------+---------------------------------------------------------------------------+
 |   TO_DELETE    |            4         | | If Citus attempts to drop a shard placement in response to a            |
 |                |                      | | master_apply_delete_command call and fails, the placement is            |
 |                |                      | | moved to this state. Users can then delete these shards as a            |
