@@ -1,7 +1,7 @@
 .. _ddl:
 
-Creating and Modifying Distributed Tables (DDL)
-===============================================
+Creating and Modifying Distributed Objects (DDL)
+================================================
 
 Creating And Distributing Tables
 --------------------------------
@@ -410,7 +410,7 @@ created over a single connection but not yet committed.
 Consider a transaction block that creates a type, a table, loads data, and
 distributes the table:
 
-.. code-block:: postgres
+::
 
    BEGIN;
 
@@ -437,7 +437,7 @@ downside: if object propagation happens after a parallel command in the same
 transaction, then the transaction can no longer be completed, as highlighted by
 the ERROR in the code block below:
 
-.. code-block:: postgres
+::
 
    BEGIN;
    CREATE TABLE items (key text, value text);
@@ -445,8 +445,6 @@ the ERROR in the code block below:
    SELECT create_distributed_table(‘items’, ‘key’);
    \COPY items FROM ‘items.csv’
    CREATE TYPE coordinates AS (x int, y int);
-
-::
 
    ERROR:  cannot run type command because there was a parallel operation on a distributed table in the transaction
 
@@ -459,7 +457,7 @@ If you run into this issue, there are two simple workarounds:
    per-node parallelism. Data load in the same transaction might be slower.
 
 Manual Modification
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 Most DDL commands are auto-propagated. For any others, you can propagate the
 changes manually. See :ref:`manual_prop`.
