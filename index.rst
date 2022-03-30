@@ -126,15 +126,6 @@ query response times, even for data-intensive applications.
    faq/faq.rst
 
 .. toctree::
-   :caption: Citus Cloud
-   :hidden:
-
-   cloud/getting_started.rst
-   cloud/manage.rst
-   cloud/additional.rst
-   cloud/support.rst
-
-.. toctree::
    :caption: Articles
    :hidden:
 

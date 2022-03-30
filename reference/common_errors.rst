@@ -121,7 +121,7 @@ Resolution
 
 The `max_connections <https://www.postgresql.org/docs/current/static/runtime-config-connection.html#GUC-MAX-CONNECTIONS>`_ GUC adjusts the limit, with a typical default of 100 connections. Note that each connection consumes resources, so adjust sensibly. When increasing ``max_connections`` it's usually a good idea to increase `memory limits <https://www.postgresql.org/docs/current/static/runtime-config-resource.html#RUNTIME-CONFIG-RESOURCE-MEMORY>`_ too.
 
-Using `PgBouncer <https://pgbouncer.github.io/>`_ can also help by queueing connection requests which exceed the connection limit. Citus Cloud has a built-in PgBouncer instance, see :ref:`cloud_pgbouncer` to learn how to connect through it.
+Using `PgBouncer <https://pgbouncer.github.io/>`_ can also help by queueing connection requests which exceed the connection limit. (Our :ref:`cloud_topic` has a built-in PgBouncer instance.)
 
 PgBouncer cannot connect to server
 ----------------------------------
