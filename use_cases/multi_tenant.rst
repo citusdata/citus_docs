@@ -439,8 +439,6 @@ Once you add the node it will be available in the system. However, at this point
 
 Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the companies table and it will take the hint and rebalance the other tables which are distributed by company_id. Also, with Citus Enterprise Edition, applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight. In Citus Community edition, writes to shards are blocked during rebalancing but reads are unaffected.
 
-You can learn more about how shard rebalancing works here: :ref:`scaling_out`.
-
 Dealing with Big Tenants
 ------------------------
 

@@ -39,7 +39,7 @@ However, keep in mind that for each query Citus opens one database connection pe
 Initial Hardware Size
 =====================
 
-The size of a cluster, in terms of number of nodes and their hardware capacity, is easy to change. (:ref:`Scaling <cloud_scaling>` on Citus Cloud is especially easy.) However, you still need to choose an initial size for a new cluster. Here are some tips for a reasonable initial cluster size.
+The size of a cluster, in terms of number of nodes and their hardware capacity, is easy to change. (Scaling on our :ref:`cloud_topic` is especially easy.) However, you still need to choose an initial size for a new cluster. Here are some tips for a reasonable initial cluster size.
 
 Multi-Tenant SaaS Use-Case
 --------------------------
@@ -233,7 +233,7 @@ Worker Node Failures
 
 Citus supports two modes of replication, allowing it to tolerate worker-node failures. In the first model, we use PostgreSQL's streaming replication to replicate the entire worker-node as-is. In the second model, Citus can replicate data modification statements, thus replicating shards across different worker nodes. They have different advantages depending on the workload and use-case as discussed below:
 
-1. **PostgreSQL streaming replication.** This option is best for heavy OLTP workloads. It replicates entire worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_ or use :ref:`Citus Cloud <cloud_overview>` which is pre-configured for replication and high-availability.
+1. **PostgreSQL streaming replication.** This option is best for heavy OLTP workloads. It replicates entire worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_ or use our :ref:`cloud_topic` which is pre-configured for replication and high-availability.
 
 2. **Citus shard replication.** This option is best suited for an append-only workload. Citus replicates shards across different nodes by automatically replicating DML statements and managing consistency. If a node goes down, the coordinator node will continue to serve queries by routing the work to the replicas seamlessly. To enable shard replication simply set :code:`SET citus.shard_replication_factor = 2;` (or higher) before distributing data to the cluster.
 
@@ -649,7 +649,7 @@ PostgreSQL `row-level security <https://www.postgresql.org/docs/current/static/d
 
 We can implement the separation of tenant data by using a naming convention for database roles that ties into table row-level security policies. We'll assign each tenant a database role in a numbered sequence: ``tenant_1``, ``tenant_2``, etc. Tenants will connect to Citus using these separate roles. Row-level security policies can compare the role name to values in the ``tenant_id`` distribution column to decide whether to allow access.
 
-Here is how to apply the approach on a simplified events table distributed by ``tenant_id``. First create the roles ``tenant_1`` and ``tenant_2`` (it's easy on Citus Cloud, see :ref:`cloud_roles`). Then run the following as an administrator:
+Here is how to apply the approach on a simplified events table distributed by ``tenant_id``. First create the roles ``tenant_1`` and ``tenant_2``. Then run the following as an administrator:
 
 .. code-block:: sql
 
