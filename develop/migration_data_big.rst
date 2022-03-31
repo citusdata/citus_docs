@@ -1,15 +1,16 @@
 Big Database Migration
 ======================
 
-Larger environments can use PostgreSQL logical replication. You to stream changes from a PostgreSQL source database into a Citus cluster as they happen. It's as if the application automatically writes to two databases rather than one, except with perfect transactional logic.
+Larger environments can use tools like `Citus Warp <https://www.citusdata.com/blog/2017/12/08/citus-warp-pain-free-migrations/>`_, `Debezium <https://debezium.io/>`_, `Striim <https://www.striim.com/partners/striim-for-microsoft-azure/>`_ or `HVR <https://www.hvr-software.com/platforms/postgresql/>`_ for online replication. These tools allow you to stream changes from a PostgreSQL source database into our :ref:`cloud_topic` on Microsoft Azure. It's as if the application automatically writes to two databases rather than one, except with perfect transactional logic.
 
-Here are the steps you need to perform before starting the logical replication
-process:
+For this process we strongly recommend contacting us by `opening a support reauest <https://portal.azure.com/#blade/Microsoft_Azure_Support/HelpAndSupportBlade/newsupportrequest>`_. To do the replication, we connect the coordinator node of a Citus cluster to an existing database through VPC peering or IP white-listing, and begin replication.
+
+Here are the steps you need to perform before starting the replication process:
 
 1. Duplicate the structure of the schema on a destination Citus cluster
 2. Enable logical replication in the source database
 3. Allow a network connection from Citus coordinator node to source
-4. Begin the replication
+4. Contact us to begin the replication
 
 Duplicate schema
 ----------------
@@ -58,15 +59,17 @@ This white-lists the IP address of the Citus coordinator node to make an inbound
 Begin Replication
 -----------------
 
+Contact us by opening a `support ticket <https://portal.azure.com/#blade/Microsoft_Azure_Support/HelpAndSupportBlade/newsupportrequest>`_ in the Azure portal. An engineer will connect to your database to perform an intial database dump, open a replication slot, and begin the replication. We can include/exclude your choice of tables in the migration.
+
 During the first stage of replication, the Postgres write-ahead log (WAL) may grow substantially if the database is under write load. Make sure you have sufficient disk space on the source database before starting this process. We recommend 100GB free or 20% of total disk space, whichever is greater. Once the initial dump/restore is complete and replication begins, then the database will be able to archive unused WAL files again.
 
-As the replication proceeds, **pay attention to disk usage on the source database.** If there is a data-type mismatch between the source and destination, or other unexpected schema change, the replication can stall. The replication slot can grow indefinitely on the source during a prolonged stall, leading to potential crashes.
+As the replication proceeds, **pay attention to disk usage on the source database.** If there is a data-type mismatch between the source and destination, or other unexpe cted schema change, the replication can stall. The replication slot can grow indefini tely on the source during a prolonged stall, leading to potential crashes.
 
-Because of the potential for replication stalls, we strongly recommend minimizing schema changes while doing replication. If an invasive schema change is required, you will need to stop and try again.
+Because of the potential for replication stalls, we strongly recommend minimizing sc hema changes while doing replication. If an invasive schema change is required, you will need to stop and try again.
 
 Steps to make an invasive schema change:
 
-1. Stop the replication.
+1. Ask a support engineer to stop the replication.
 2. Change the schema on the source database.
 3. Change the schema on the destination database.
 4. Begin again.
@@ -78,4 +81,4 @@ When the replication has caught up with the current state of the source database
 
 Once this is all complete, the application is ready to connect to the new database. We do not recommend writing to both the source and destination database at the same time.
 
-When the application has cut over to the new database and no further changes are happening on the source database, remove the replication slot. The migration is complete.
+When the application has cut over to the new database and no further changes are happening on the source database, contact us again to remove the replication slot. The migration is complete.
