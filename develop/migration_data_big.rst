@@ -1,11 +1,11 @@
 Big Database Migration
 ======================
 
-Larger environments can use Citus Warp for online replication. Citus Warp allows you to stream changes from a PostgreSQL source database into a :ref:`Citus Cloud <cloud_overview>` cluster as they happen. It's as if the application automatically writes to two databases rather than one, except with perfect transactional logic. Citus Warp works with Postgres versions 9.4 and above which have the `logical_decoding` plugin enabled (this is supported on Amazon RDS as long as you're at version 9.4 or higher).
+Larger environments can use tools like `Citus Warp <https://www.citusdata.com/blog/2017/12/08/citus-warp-pain-free-migrations/>`_, `Debezium <https://debezium.io/>`_, `Striim <https://www.striim.com/partners/striim-for-microsoft-azure/>`_ or `HVR <https://www.hvr-software.com/platforms/postgresql/>`_ for online replication. These tools allow you to stream changes from a PostgreSQL source database into our :ref:`cloud_topic` on Microsoft Azure. It's as if the application automatically writes to two databases rather than one, except with perfect transactional logic.
 
-For this process we strongly recommend contacting us by opening a ticket, contacting one of our solutions engineers on Slack, or whatever method works for you. To do a warp, we connect the coordinator node of a Citus cluster to an existing database through VPC peering or IP white-listing, and begin replication.
+For this process we strongly recommend contacting us by `opening a support reauest <https://portal.azure.com/#blade/Microsoft_Azure_Support/HelpAndSupportBlade/newsupportrequest>`_. To do the replication, we connect the coordinator node of a Citus cluster to an existing database through VPC peering or IP white-listing, and begin replication.
 
-Here are the steps you need to perform before starting the Citus Warp process:
+Here are the steps you need to perform before starting the replication process:
 
 1. Duplicate the structure of the schema on a destination Citus cluster
 2. Enable logical replication in the source database
@@ -39,7 +39,7 @@ A database restart is required for the changes to take effect.
 Open access for network connection
 ----------------------------------
 
-In the Cloud console, identify the hostname (it ends in ``db.citusdata.com``). Dig the hostname to find its IP address:
+Identify the IP address for the destination coordinator node. Dig the hostname to find its IP address:
 
 .. code-block:: bash
 
@@ -59,20 +59,20 @@ This white-lists the IP address of the Citus coordinator node to make an inbound
 Begin Replication
 -----------------
 
-Contact us by opening a support ticket in the Citus Cloud console. A Cloud engineer will connect to your database with Citus Warp to perform an intial database dump, open a replication slot, and begin the replication. We can include/exclude your choice of tables in the migration.
+Contact us by opening a `support ticket <https://portal.azure.com/#blade/Microsoft_Azure_Support/HelpAndSupportBlade/newsupportrequest>`_ in the Azure portal. An engineer will connect to your database to perform an intial database dump, open a replication slot, and begin the replication. We can include/exclude your choice of tables in the migration.
 
 During the first stage of replication, the Postgres write-ahead log (WAL) may grow substantially if the database is under write load. Make sure you have sufficient disk space on the source database before starting this process. We recommend 100GB free or 20% of total disk space, whichever is greater. Once the initial dump/restore is complete and replication begins, then the database will be able to archive unused WAL files again.
 
-As the Warp proceeds, **pay attention to disk usage on the source database.** If there is a data-type mismatch between the source and destination, or other unexpected schema change, the replication can stall. The replication slot can grow indefinitely on the source during a prolonged stall, leading to potential crashes.
+As the replication proceeds, **pay attention to disk usage on the source database.** If there is a data-type mismatch between the source and destination, or other unexpe cted schema change, the replication can stall. The replication slot can grow indefini tely on the source during a prolonged stall, leading to potential crashes.
 
-Because of the potential for replication stalls, we strongly recommend minimizing schema changes while doing a Citus warp. If an invasive schema change is required, you will need to stop the warp and try again.
+Because of the potential for replication stalls, we strongly recommend minimizing sc hema changes while doing replication. If an invasive schema change is required, you will need to stop and try again.
 
 Steps to make an invasive schema change:
 
-1. Ask a Citus Cloud engineer to stop the warp.
+1. Ask a support engineer to stop the replication.
 2. Change the schema on the source database.
 3. Change the schema on the destination database.
-4. Begin the warp again.
+4. Begin again.
 
 Switch over to Citus and stop all connections to old database
 -------------------------------------------------------------

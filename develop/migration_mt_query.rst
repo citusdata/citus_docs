@@ -145,7 +145,7 @@ Finally, when joining tables make sure to filter by tenant id too. For instance 
 Enable Secure Connections
 -------------------------
 
-Clients should connect to Citus with SSL to protect information and prevent man-in-the-middle attacks. Citus Cloud, in fact, rejects unencrypted connections. To learn how to make an SSL connection see :ref:`cloud_ssl`.
+Clients should connect to Citus with SSL to protect information and prevent man-in-the-middle attacks.
 
 Check for cross-node traffic
 ----------------------------
