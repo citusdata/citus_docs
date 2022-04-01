@@ -135,7 +135,7 @@ Caveats
 -------
 
 * At the time of this writing, kafka-sink-pg-json requires Kafka version 0.9 or earlier.
-* The kafka-sink-pg-json connector config file does not provide a way to connect with SSL support, so this tool will not work with Citus Cloud which requires secure connections.
+* The kafka-sink-pg-json connector config file does not provide a way to connect with SSL support, so this tool will not work with our :ref:`cloud_topic`, which requires secure connections.
 * A malformed JSON string in the Kafka topic will cause the tool to become stuck. Manual intervention in the topic is required to process more events.
 
 Ingesting Data from Spark
@@ -330,7 +330,7 @@ You can now interact with Tableau using the following steps.
 
   .. image:: ../images/tableau-add-connection.png
     :alt: postgres option selected in menu
-* Enter the connection details for the coordinator node of your Citus cluster. (Note if you're connecting to Citus Cloud you must select "Require SSL.")
+* Enter the connection details for the coordinator node of your Citus cluster. (Note if you're connecting to our :ref:`cloud_topic` you must select "Require SSL.")
 
   .. image:: ../images/tableau-connection-details.png
     :alt: postgres connection details form
