@@ -175,7 +175,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
-   This GUC is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+   This GUC is a part of our :ref:`cloud_topic` only.
 
 Sets the frequency at which the maintenance daemon removes records from :ref:`citus_stat_statements <citus_stat_statements>` that are unmatched in ``pg_stat_statements``. This configuration value sets the time interval between purges in seconds, with a default value of 10. A value of 0 disables the purges.
 
@@ -190,7 +190,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
-   This GUC is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+   This GUC is a part of our :ref:`cloud_topic` only.
 
 The maximum number of rows to store in :ref:`citus_stat_statements <citus_stat_statements>`. Defaults to 50000, and may be changed to any value in the range 1000 - 10000000. Note that each row requires 140 bytes of storage, so setting stat_statements_max to its maximum value of 10M would consume 1.4GB of memory.
 
@@ -201,7 +201,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
-   This GUC is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+   This GUC is a part of our :ref:`cloud_topic` only.
 
 Recording statistics for :ref:`citus_stat_statements <citus_stat_statements>`
 requires extra CPU resources. When the database is experiencing load, the

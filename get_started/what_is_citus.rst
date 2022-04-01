@@ -15,15 +15,12 @@ I/O bandwidth can lead to significant performance improvements for multi-tenant
 SaaS applications, customer-facing real-time analytics dashboards, and time
 series workloads.
 
-**Three Ways to Get Citus:**
+**Two Ways to Get Citus:**
 
 1. Open source: You can `download Citus <https://www.citusdata.com/download/>`_
    open source, or visit the `Citus repo <https://github.com/citusdata/citus>`_
    on GitHub.
-2. Enterprise software: Citus Enterprise is available as a software
-   subscription along with 24x7 support, for those who want to manage Citus
-   manually.
-3. Managed database service: Citus is available on Azure as `Hyperscale (Citus)
+2. Managed database service: Citus is available on Azure as `Hyperscale (Citus)
    <https://docs.microsoft.com/azure/postgresql/hyperscale/>`_, a
    built-in deployment option in the Azure Database for PostgreSQL managed
    service.
