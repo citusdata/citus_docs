@@ -172,16 +172,6 @@ Can I run Citus on Microsoft Azure?
 
 Yes, Citus is a deployment option of `Azure Database for PostgreSQL <https://docs.microsoft.com/azure/postgresql/hyperscale/>`_ called **Hyperscale**. It is a fully managed database-as-a-service.
 
-Can I run Citus on Amazon RDS?
-------------------------------
-
-At this time Amazon does not support running Citus directly on top of Amazon RDS.
-
-Can I create a new DB in a Citus Cloud instance?
-------------------------------------------------
-
-No, but you can use database `schemas <https://www.postgresql.org/docs/current/ddl-schemas.html>`_ to separate and group related sets of tables.
-
 Can I shard by schema on Citus for multi-tenant applications?
 -------------------------------------------------------------
 
