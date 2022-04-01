@@ -161,8 +161,4 @@ right choice. You gain more parallelism for analytics and trade
 off simplicity in querying a single store.  Either choice of
 picking a multi-tenant data model or adopt a more :ref:`distributed
 document model <semi_structured_sharding>` can be made to scale,
-but each comes with its own trade-offs. If you have the need
-today to scale out your multi-tenant app then give `Citus Cloud
-<https://console.citusdata.com>`__ a try or if you have any questions on
-which might work best for your situation please don’t hesitate to `reach
-out to us <https://www.citusdata.com/about/contact_us>`__. We can help.
+but each comes with its own trade-offs.

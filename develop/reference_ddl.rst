@@ -122,7 +122,7 @@ If it's not possible to distribute in the correct order then drop the foreign ke
 
 After the tables are distributed, use the :ref:`truncate_local_data_after_distributing_table` function to remove local data. Leftover local data in distributed tables is inaccessible to Citus queries, and can cause irrelevant constraint violations on the coordinator.
 
-When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table. Copying into distributed tables avoids running out of space on the coordinator node.
+When migrating data from an external database, such as from Amazon RDS to our :ref:`cloud_topic`, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table. Copying into distributed tables avoids running out of space on the coordinator node.
 
 .. _colocation_groups:
 

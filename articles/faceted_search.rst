@@ -3,6 +3,16 @@ Scalable Real-time Product Search using PostgreSQL with Citus
 
 (Copy of `original publication <https://www.citusdata.com/blog/2016/04/28/scalable-product-search/>`__)
 
+.. NOTE::
+
+   This article mentions the Citus Cloud service.  We are no longer onboarding
+   new users to Citus Cloud on AWS. If you’re new to Citus, the good news is,
+   Citus is still available to you: as open source, and in the cloud on
+   Microsoft Azure, as a fully-integrated deployment option in Azure Database
+   for PostgreSQL.
+
+   See :ref:`cloud_topic`.
+
 Product search is a common, yet sometimes challenging use-case for
 online retailers and marketplaces. It typically involves a combination
 of full-text search and filtering by attributes which differ for every

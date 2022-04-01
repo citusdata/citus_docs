@@ -146,6 +146,16 @@ anything extra once you configured it.
 Hands on with HLL
 -----------------
 
+.. NOTE::
+
+   This section mentions the Citus Cloud service.  We are no longer onboarding
+   new users to Citus Cloud on AWS. If you’re new to Citus, the good news is,
+   Citus is still available to you: as open source, and in the cloud on
+   Microsoft Azure, as a fully-integrated deployment option in Azure Database
+   for PostgreSQL.
+
+   See :ref:`cloud_topic`.
+
 Setup
 ~~~~~
 
