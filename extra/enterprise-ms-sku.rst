@@ -56,6 +56,13 @@ $$$$$$$$$$$$$$$$$$$
 
     echo "deb [arch=amd64] https://packages.microsoft.com/repos/citus-ubuntu bionic main" | sudo tee /etc/apt/sources.list.d/citus-enterprise-microsoft.list
 
+Ubuntu 20.04 focal
+$$$$$$$$$$$$$$$$$$$
+
+.. code:: bash
+
+    echo "deb [arch=amd64] https://packages.microsoft.com/repos/citus-ubuntu focal main" | sudo tee /etc/apt/sources.list.d/citus-enterprise-microsoft.list
+
 Debian 8 Jessie
 $$$$$$$$$$$$$$$
 
