@@ -231,7 +231,7 @@ Selecting the rows for update puts a write lock on them to prevent other process
 
   COMMIT;
 
-This feature is supported for hash distributed and reference tables only, and only those that have a :ref:`replication_factor <replication_factor>` of 1.
+This feature is supported for hash distributed and reference tables only.
 
 Maximizing Write Performance
 ----------------------------

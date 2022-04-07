@@ -224,18 +224,14 @@ However, in some write heavy use cases where the coordinator becomes a performan
 Dealing With Node Failures
 ==========================
 
-In this subsection, we discuss how you can deal with node failures without incurring any downtime on your Citus cluster. We first discuss how Citus handles worker failures automatically by maintaining multiple replicas of the data. We also briefly describe how users can replicate their shards to bring them to the desired replication factor in case a node is down for a long time. Lastly, we discuss how you can setup redundancy and failure handling mechanisms for the coordinator.
+In this subsection, we discuss how you can deal with node failures without incurring any downtime on your Citus cluster.
 
 .. _worker_node_failures:
 
 Worker Node Failures
 --------------------
 
-Citus supports two modes of replication, allowing it to tolerate worker-node failures. In the first model, we use PostgreSQL's streaming replication to replicate the entire worker-node as-is. In the second model, Citus can replicate data modification statements, thus replicating shards across different worker nodes. They have different advantages depending on the workload and use-case as discussed below:
-
-1. **PostgreSQL streaming replication.** This option is best for heavy OLTP workloads. It replicates entire worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_ or use our :ref:`cloud_topic` which is pre-configured for replication and high-availability.
-
-2. **Citus shard replication.** This option is best suited for an append-only workload. Citus replicates shards across different nodes by automatically replicating DML statements and managing consistency. If a node goes down, the coordinator node will continue to serve queries by routing the work to the replicas seamlessly. To enable shard replication simply set :code:`SET citus.shard_replication_factor = 2;` (or higher) before distributing data to the cluster.
+Citus uses PostgreSQL streaming replication, allowing it to tolerate worker-node failures. This option  replicates entire worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_ or use our :ref:`cloud_topic` which is pre-configured for replication and high-availability.
 
 .. _coordinator_node_failures:
 
@@ -245,13 +241,17 @@ Coordinator Node Failures
 The Citus coordinator maintains metadata tables to track all of the cluster nodes and the locations of the database shards on those nodes. The metadata tables are small (typically a few MBs in size) and do not change very often. This means that they can be replicated and quickly restored if the node ever experiences a failure. There are several options on how users can deal with coordinator failures.
 
 1. **Use PostgreSQL streaming replication:** You can use PostgreSQL's streaming
-replication feature to create a hot standby of the coordinator. Then, if the primary
-coordinator node fails, the standby can be promoted to the primary automatically to
-serve queries to your cluster. For details on setting this up, please refer to the `PostgreSQL wiki <https://wiki.postgresql.org/wiki/Streaming_Replication>`_.
+   replication feature to create a hot standby of the coordinator. Then, if the
+   primary coordinator node fails, the standby can be promoted to the primary
+   automatically to serve queries to your cluster. For details on setting this
+   up, please refer to the `PostgreSQL wiki
+   <https://wiki.postgresql.org/wiki/Streaming_Replication>`_.
 
-2. Since the metadata tables are small, users can use EBS volumes, or `PostgreSQL
-backup tools <https://www.postgresql.org/docs/current/static/backup.html>`_ to backup the metadata. Then, they can easily
-copy over that metadata to new nodes to resume operation.
+2. **Use backup tools:** Since the metadata tables are small, users can use EBS
+   volumes, or `PostgreSQL backup tools
+   <https://www.postgresql.org/docs/current/static/backup.html>`_ to backup the
+   metadata. Then, they can easily copy over that metadata to new nodes to
+   resume operation.
 
 .. _tenant_isolation:
 

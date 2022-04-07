@@ -32,17 +32,13 @@ distribution column and create the worker shards.
 
 This function informs Citus that the github_events table should be distributed
 on the repo_id column (by hashing the column value). The function also creates
-shards on the worker nodes using the citus.shard_count and
-citus.shard_replication_factor configuration values.
+shards on the worker nodes using the citus.shard_count configuration value.
 
-This example would create a total of citus.shard_count number of shards where each
-shard owns a portion of a hash token space and gets replicated based on the
-default citus.shard_replication_factor configuration value. The shard replicas
-created on the worker have the same table schema, index, and constraint
-definitions as the table on the coordinator. Once the replicas are created, this
-function saves all distributed metadata on the coordinator.
+This example would create a total of citus.shard_count number of shards where
+each shard owns a portion of a hash token space. Once the shards are created,
+this function saves all distributed metadata on the coordinator.
 
-Each created shard is assigned a unique shard id and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. You can connect to the worker postgres instances to view or run commands on individual shards.
+Each created shard is assigned a unique shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. You can connect to the worker postgres instances to view or run commands on individual shards.
 
 You are now ready to insert data into the distributed table and run queries on it. You can also learn more about the UDF used in this section in the :ref:`user_defined_functions` of our documentation.
 
@@ -131,7 +127,7 @@ Co-Locating Tables
 
 Co-location is the practice of dividing data tactically, keeping related information on the same machines to enable efficient relational operations, while taking advantage of the horizontal scalability for the whole dataset. For more information and examples see :ref:`colocation`.
 
-Tables are co-located in groups. To manually control a table's co-location group assignment use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. If you don't care about a table's co-location then omit this parameter. It defaults to the value :code:`'default'`, which groups the table with any other default co-location table having the same distribution column type, shard count, and replication factor. 
+Tables are co-located in groups. To manually control a table's co-location group assignment use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. If you don't care about a table's co-location then omit this parameter. It defaults to the value :code:`'default'`, which groups the table with any other default co-location table having the same distribution column type, and shard count. 
 If you want to break or update this implicit colocation, you can use ``update_distributed_table_colocation()``.
 
 .. code-block:: postgresql
@@ -184,7 +180,7 @@ Since Citus uses co-location metadata information for query optimization and pus
   -- Put products and line_items into store's co-location group
   SELECT mark_tables_colocated('stores', ARRAY['products', 'line_items']);
 
-This function requires the tables to be distributed with the same method, column type, number of shards, and replication method. It doesn't re-shard or physically move data, it merely updates Citus metadata.
+This function requires the tables to be distributed with the same method, column type, and number of shards. It doesn't re-shard or physically move data, it merely updates Citus metadata.
 
 Dropping Tables
 ---------------

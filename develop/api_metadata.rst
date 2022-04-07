@@ -37,7 +37,6 @@ The pg_dist_partition table stores metadata about which tables in the database a
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   repmodel     |         char         | | The method used for data replication. The values of this column         |
 |                |                      | | corresponding to different replication methods are :-                   |
-|                |                      | | * citus statement-based replication: 'c'                                |
 |                |                      | | * postgresql streaming replication:  's'                                |
 |                |                      | | * two-phase commit (for reference tables): 't'                          |
 +----------------+----------------------+---------------------------------------------------------------------------+
@@ -47,7 +46,7 @@ The pg_dist_partition table stores metadata about which tables in the database a
     SELECT * from pg_dist_partition;
      logicalrelid  | partmethod |                                                        partkey                                                         | colocationid | repmodel 
     ---------------+------------+------------------------------------------------------------------------------------------------------------------------+--------------+----------
-     github_events | h          | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location -1} |            2 | c
+     github_events | h          | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location -1} |            2 | s
      (1 row)
 
 .. _pg_dist_shard:
@@ -150,7 +149,7 @@ The colocation_id refers to the :ref:`colocation group <colocation_group_table>`
 Shard placement table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The pg_dist_placement table tracks the location of shard replicas on worker nodes. Each replica of a shard assigned to a specific node is called a shard placement. This table stores information about the health and location of each shard placement.
+The pg_dist_placement table tracks the location of shards on worker nodes. Each shard assigned to a specific node is called a shard placement. This table stores information about the health and location of each shard placement.
 
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
@@ -421,7 +420,7 @@ Columns:
 Co-location group table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The pg_dist_colocation table contains information about which tables' shards should be placed together, or :ref:`co-located <colocation>`. When two tables are in the same co-location group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard co-location is inferred when the shard counts, replication factors, and partition column types all match between two tables; however, a custom co-location group may be specified when creating a distributed table, if so desired.
+The pg_dist_colocation table contains information about which tables' shards should be placed together, or :ref:`co-located <colocation>`. When two tables are in the same co-location group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard co-location is inferred when the shard counts, and partition column types all match between two tables; however, a custom co-location group may be specified when creating a distributed table, if so desired.
 
 +-----------------------------+----------------------+---------------------------------------------------------------------------+
 |      Name                   |         Type         |       Description                                                         |
@@ -431,6 +430,7 @@ The pg_dist_colocation table contains information about which tables' shards sho
 | shardcount                  |         int          | | Shard count for all tables in this co-location group                    |
 +-----------------------------+----------------------+---------------------------------------------------------------------------+
 | replicationfactor           |         int          | | Replication factor for all tables in this co-location group.            |
+|                             |                      | | (Deprecated)                                                            |
 +-----------------------------+----------------------+---------------------------------------------------------------------------+
 | distributioncolumntype      |         oid          | | The type of the distribution column for all tables in this              |
 |                             |                      | | co-location group.                                                      |
@@ -444,7 +444,7 @@ The pg_dist_colocation table contains information about which tables' shards sho
     SELECT * from pg_dist_colocation;
       colocationid | shardcount | replicationfactor | distributioncolumntype | distributioncolumncollation
      --------------+------------+-------------------+------------------------+-----------------------------
-                 2 |         32 |                 2 |                     20 |                           0
+                 2 |         32 |                 1 |                     20 |                           0
       (1 row)
 
 .. _pg_dist_rebalance_strategy:
