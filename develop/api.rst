@@ -7,4 +7,3 @@ Citus API
   api_udf.rst
   api_metadata.rst
   api_guc.rst
-  append.rst

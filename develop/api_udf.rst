@@ -28,9 +28,6 @@ Arguments
 
 **distribution_column:** The column on which the table is to be distributed.
 
-**distribution_type:** (Optional) The method according to which the table is
-to be distributed. Permissible values are append or hash, and defaults to 'hash'.
-
 **colocate_with:** (Optional) include current table in the co-location group of another table. By default tables are co-located when they are distributed by columns of the same type with the same shard count.
 If you want to break this colocation later, you can use :ref:`update_distributed_table_colocation <update_distributed_table_colocation>`. Possible values for :code:`colocate_with` are :code:`default`, :code:`none` to start a new co-location group, or the name of another table to co-locate with that table.  (See :ref:`colocation_groups`.)
 
@@ -322,9 +319,6 @@ do some joins. If table A and B are colocated, and table A gets rebalanced, tabl
 will also be rebalanced. If table B does not have a replica identity, the rebalance will 
 fail. Therefore, this function can be useful breaking the implicit colocation in that case.
 
-Both of the arguments should be a hash distributed table, currently we do not support colocation 
-of APPEND distributed tables.
-
 Note that this function does not move any data around physically.
 
 Arguments
@@ -436,34 +430,6 @@ Example
     'register_for_event(int, int)', 'p_event_id',
     colocate_with := 'event_responses'
   );
-
-master_create_empty_shard
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-The master_create_empty_shard() function can be used to create an empty shard for an *append* distributed table. Behind the covers, the function first selects shard_replication_factor workers to create the shard on. Then, it connects to the workers and creates empty placements for the shard on the selected workers. Finally, the metadata is updated for these placements on the coordinator to make these shards visible to future queries. The function errors out if it is unable to create the desired number of shard placements.
-
-Arguments
-*********************
-
-**table_name:** Name of the append distributed table for which the new shard is to be created.
-
-Return Value
-****************************
-
-**shard_id:** The function returns the unique id assigned to the newly created shard.
-
-Example
-**************************
-
-This example creates an empty shard for the github_events table. The shard id of the created shard is 102089.
-
-.. code-block:: postgresql
-
-    SELECT * from master_create_empty_shard('github_events');
-     master_create_empty_shard
-    ---------------------------
-                    102089
-    (1 row)
 
 .. _alter_columnar_table_set:
 
@@ -1132,7 +1098,7 @@ A tuple containing the following information:
 
 **part_storage_type:** Type of storage used for the table. May be 't' (standard table), 'f' (foreign table) or 'c' (columnar table).
 
-**part_method:** Distribution method used for the table. May be 'a' (append), or 'h' (hash).
+**part_method:** Distribution method used for the table. Must be 'h' (hash).
 
 **part_key:** Distribution column for the table.
 
@@ -1160,7 +1126,7 @@ The example below fetches and displays the table metadata for the github_events 
 get_shard_id_for_distribution_column
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Citus assigns every row of a distributed table to a shard based on the value of the row's distribution column and the table's method of distribution. In most cases the precise mapping is a low-level detail that the database administrator can ignore. However, it can be useful to determine a row's shard, either for manual database maintenance tasks or just to satisfy curiosity. The :code:`get_shard_id_for_distribution_column` function provides this info for hash-distributed tables as well as reference tables. It does not work for the append distribution.
+Citus assigns every row of a distributed table to a shard based on the value of the row's distribution column and the table's method of distribution. In most cases the precise mapping is a low-level detail that the database administrator can ignore. However, it can be useful to determine a row's shard, either for manual database maintenance tasks or just to satisfy curiosity. The :code:`get_shard_id_for_distribution_column` function provides this info for hash-distributed tables as well as reference tables.
 
 Arguments
 ************************
