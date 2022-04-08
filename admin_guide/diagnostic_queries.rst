@@ -132,32 +132,6 @@ Example output:
 
 There are other ways to measure distributed table size, as well. See :ref:`table_size`.
 
-Determining Replication Factor per Table
-----------------------------------------
-
-When using Citus replication rather than PostgreSQL streaming replication, each table can have a customized "replication factor." This controls the number of redundant copies Citus keeps of each of the table's shards. (See :ref:`worker_node_failures`.)
-
-To see an overview of this setting for all tables, run:
-
-.. code-block:: postgresql
-
-  SELECT logicalrelid AS tablename,
-         count(*)/count(DISTINCT ps.shardid) AS replication_factor
-  FROM pg_dist_shard_placement ps
-  JOIN pg_dist_shard p ON ps.shardid=p.shardid
-  GROUP BY logicalrelid;
-
-Example output:
-
-::
-
-  ┌───────────────┬────────────────────┐
-  │   tablename   │ replication_factor │
-  ├───────────────┼────────────────────┤
-  │ github_events │                  1 │
-  │ github_users  │                  1 │
-  └───────────────┴────────────────────┘
-
 Identifying unused indices
 --------------------------
 

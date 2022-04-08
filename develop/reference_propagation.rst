@@ -5,7 +5,7 @@ Manual Query Propagation
 
 When the user issues a query, the Citus coordinator partitions it into smaller query fragments where each query fragment can be run independently on a worker shard. This allows Citus to distribute each query across the cluster.
 
-However, the way queries are partitioned into fragments (and which queries are propagated at all) varies by the type of query. In some advanced situations it is useful to manually control this behavior. Citus provides utility functions to propagate SQL to workers, shards, or placements.
+However, the way queries are partitioned into fragments (and which queries are propagated at all) varies by the type of query. In some advanced situations it is useful to manually control this behavior. Citus provides utility functions to propagate SQL to workers, shards, or colocated placements.
 
 Manual query propagation bypasses coordinator logic, locking, and any other consistency checks. These functions are available as a last resort to allow statements which Citus otherwise does not run natively. Use them carefully to avoid data inconsistency and deadlocks.
 
@@ -56,27 +56,7 @@ The :code:`run_command_on_shards` function applies a SQL command to each shard, 
     );
 
 
-Running on all Placements
--------------------------
-
-The most granular level of execution is running a command across all shards and their replicas (aka :ref:`placements <placements>`). It can be useful for running data modification commands, which must apply to every replica to ensure consistency.
-
-For example, suppose a distributed table has an :code:`updated_at` field, and we want to "touch" all rows so that they are marked as updated at a certain time. An ordinary UPDATE statement on the coordinator requires a filter by the distribution column, but we can manually propagate the update across all shards and replicas:
-
-.. code-block:: postgresql
-
-  -- note we're using a hard-coded date rather than
-  -- a function such as "now()" because the query will
-  -- run at slightly different times on each replica
-
-  SELECT run_command_on_placements(
-    'my_distributed_table',
-    $cmd$
-      UPDATE %s SET updated_at = '2017-01-01';
-    $cmd$
-  );
-
-A useful companion to :code:`run_command_on_placements` is :code:`run_command_on_colocated_placements`. It interpolates the names of *two* placements of :ref:`co-located <colocation>` distributed tables into a query. The placement pairs are always chosen to be local to the same worker where full SQL coverage is available. Thus we can use advanced SQL features like triggers to relate the tables:
+A useful companion to :code:`run_command_on_shards` is :code:`run_command_on_colocated_placements`. It interpolates the names of *two* placements of :ref:`co-located <colocation>` distributed tables into a query. The placement pairs are always chosen to be local to the same worker where full SQL coverage is available. Thus we can use advanced SQL features like triggers to relate the tables:
 
 .. code-block:: postgresql
 

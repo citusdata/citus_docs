@@ -199,8 +199,6 @@ PL/pgSQL function:
       SELECT last_update INTO start_time FROM aggregations WHERE name = 'daily_page_views'::regclass;
       UPDATE aggregations SET last_update = end_time WHERE name = 'daily_page_views'::regclass;
 
-      SET LOCAL citus.all_modifications_commutative TO on; -- for on-premises, replication factor >1 only
-
       EXECUTE $$
         INSERT INTO daily_page_views (tenant_id, day, page_id, view_count)
           SELECT tenant_id, view_time::date AS day, page_id, count(*) AS view_count
@@ -218,17 +216,10 @@ After creating the function, we can periodically call
 aggregation with 1-2 minutes delay. More advanced approaches can bring
 down this delay to a few seconds.
 
-A few caveats to note:
-
--  In this example, we used a single, database-generated time column,
-   but it's generally better to distinguish between the time at which
-   the event happened at the source and the database-generated ingestion
-   time used to keep track of whether an event was already processed.
--  When running Citus on-premises with built-in replication, we
-   recommend you set citus.all\_modifications\_commutative to on before
-   any INSERT..SELECT command, since Citus otherwise locks the source
-   tables to avoid inconsistencies between replicas. *On Citus Cloud
-   this is a non-issue as we leverage Postgres streaming replication.*
+In this example, we used a single, database-generated time column, but it's
+generally better to distinguish between the time at which the event happened at
+the source and the database-generated ingestion time used to keep track of
+whether an event was already processed.
 
 You might be wondering why we used a page\_id in the examples instead of
 something more meaningful like a URL. Are we trying to dodge the
