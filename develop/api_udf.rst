@@ -1297,40 +1297,6 @@ None
 Cluster Management And Repair Functions
 ----------------------------------------
 
-citus_copy_shard_placement
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-If a shard placement fails to be updated during a modification command or a DDL operation, then it gets marked as inactive. The citus_copy_shard_placement function can then be called to repair an inactive shard placement using data from a healthy placement.
-
-To repair a shard, the function first drops the unhealthy shard placement and recreates it using the schema on the coordinator. Once the shard placement is created, the function copies data from the healthy placement and updates the metadata to mark the new shard placement as healthy. This function ensures that the shard will be protected from any concurrent modifications during the repair.
-
-Arguments
-**********
-
-**shard_id:** Id of the shard to be repaired.
-
-**source_node_name:** DNS name of the node on which the healthy shard placement is present ("source" node).
-
-**source_node_port:** The port on the source worker node on which the database server is listening.
-
-**target_node_name:** DNS name of the node on which the invalid shard placement is present ("target" node).
-
-**target_node_port:** The port on the target worker node on which the database server is listening.
-
-Return Value
-************
-
-N/A
-
-Example
-********
-
-The example below will repair an inactive shard placement of shard 12345 which is present on the database server running on 'bad_host' on port 5432. To repair it, it will use data from a healthy shard placement present on the server running on 'good_host' on port 5432.
-
-.. code-block:: postgresql
-
-    SELECT citus_copy_shard_placement(12345, 'good_host', 5432, 'bad_host', 5432);
-
 citus_move_shard_placement
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
