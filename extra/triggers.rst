@@ -39,7 +39,7 @@ However, this is a distributed table, so a single trigger on the coordinator for
 
   -- Now create a trigger for every placement
 
-  SELECT run_command_on_placements(
+  SELECT run_command_on_shards(
     'events',
     $cmd$
       CREATE TRIGGER events_set_author BEFORE INSERT OR UPDATE ON %s
@@ -144,11 +144,11 @@ Suppose we want to record the author of every change in ``insert_target`` to ``a
   SELECT create_reference_table('insert_target');
   SELECT create_reference_table('audit_table');
 
-To make a trigger on each worker that updates ``audit_table``, we need to know the name of that table's shard. Rather than looking up the name in the metadata tables and using it manually in ``run_command_on_workers``, we can use ``run_command_on_placements``. Reference tables have exactly one placement per worker node, so the following creates what we want.
+To make a trigger on each worker that updates ``audit_table``, we need to know the name of that table's shard. Rather than looking up the name in the metadata tables and using it manually in ``run_command_on_workers``, we can use ``run_command_on_shards``. Reference tables have exactly one placement per worker node, so the following creates what we want.
 
 .. code-block:: postgresql
 
-  SELECT run_command_on_placements(
+  SELECT run_command_on_shards(
     'audit_table',
     $cmd$
       CREATE OR REPLACE FUNCTION process_audit() RETURNS TRIGGER AS $$
@@ -161,7 +161,7 @@ To make a trigger on each worker that updates ``audit_table``, we need to know t
     $cmd$
   );
 
-  SELECT run_command_on_placements(
+  SELECT run_command_on_shards(
     'insert_target',
     $cmd$
       CREATE TRIGGER emp_audit

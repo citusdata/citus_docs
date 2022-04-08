@@ -223,14 +223,6 @@ Sets the commit protocol to use when performing COPY on a hash distributed table
 
 * **1pc:** The transactions in which COPY is performed on the shard placements are committed in a single round. Data may be lost if a commit fails after COPY succeeds on all placements (rare).
 
-.. _replication_factor:
-
-citus.shard_replication_factor (integer)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-Sets the replication factor for shards i.e. the number of nodes on which shards will be placed and defaults to 1. This parameter can be set at run-time and is effective on the coordinator.
-The ideal value for this parameter depends on the size of the cluster and rate of node failure. For example, you may want to increase this replication factor if you run large clusters and observe node failures on a more frequent basis.
-
 citus.shard_count (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -242,17 +234,6 @@ citus.shard_max_size (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Sets the maximum size to which a shard will grow before it gets split and defaults to 1GB. When the source file's size (which is used for staging) for one shard exceeds this configuration value, the database ensures that a new shard gets created. This parameter can be set at run-time and is effective on the coordinator.
-
-.. Comment out this configuration as currently COPY only support random
-   placement policy.
-.. citus.shard_placement_policy (enum)
-   $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-   Sets the policy to use when choosing nodes for placing newly created shards. When using the \\copy command, the coordinator needs to choose the worker nodes on which it will place the new shards. This configuration value is applicable on the coordinator and specifies the policy to use for selecting these nodes. The supported values for this parameter are :-
-
-   * **round-robin:** The round robin policy is the default and aims to distribute shards evenly across the cluster by selecting nodes in a round-robin fashion. This allows you to copy from any node including the coordinator node.
-
-   * **local-node-first:** The local node first policy places the first replica of the shard on the client node from which the \\copy command is being run. As the coordinator node does not store any data, the policy requires that the command be run from a worker node. As the first replica is always placed locally, it provides better shard placement guarantees.
 
 .. _replicate_reference_tables_on_activate:
 
@@ -353,7 +334,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
-   This GUC is applicable only when :ref:`shard_replication_factor <replication_factor>` is greater than one, or for queries against :ref:`reference_tables`.
+   This GUC is applicable for queries against :ref:`reference_tables`.
 
 Sets the policy to use when assigning tasks to workers. The coordinator assigns tasks to workers based on shard locations. This configuration value specifies the policy to use when making these assignments. Currently, there are three possible task assignment policies which can be used.
 

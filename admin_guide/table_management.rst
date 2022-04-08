@@ -25,10 +25,7 @@ The usual way to find table sizes in PostgreSQL, :code:`pg_total_relation_size`,
 |                                          |    * size of indices                                          |
 +------------------------------------------+---------------------------------------------------------------+
 
-These functions are analogous to three of the standard PostgreSQL `object size functions <https://www.postgresql.org/docs/current/static/functions-admin.html#FUNCTIONS-ADMIN-DBSIZE>`_, with the additional note that
-
-* They work only when :code:`citus.shard_replication_factor` = 1.
-* If they can't connect to a node, they error out.
+These functions are analogous to three of the standard PostgreSQL `object size functions <https://www.postgresql.org/docs/current/static/functions-admin.html#FUNCTIONS-ADMIN-DBSIZE>`_, with the additional note that if they can't connect to a node, they error out.
 
 Here is an example of using one of the helper functions to list the sizes of all distributed tables:
 

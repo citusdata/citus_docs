@@ -61,10 +61,6 @@ recommend :ref:`using 2-4x as many shards <faq_choose_shard_count>` as
 CPU cores in your cluster. Using this many shards lets you rebalance
 data across your cluster after adding new worker nodes.
 
-.. NOTE::
-
-  `Azure Database for PostgreSQL — Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/hyperscale/>`_ uses `streaming replication <https://www.postgresql.org/docs/current/static/warm-standby.html>`_ to achieve high availability and thus maintaining shard replicas would be redundant. In any production environment where streaming replication is unavailable, you should set ``citus.shard_replication_factor`` to 2 or higher for fault tolerance.
-
 With this, the system is ready to accept data and serve queries! Keep the following loop running in a ``psql`` console in the background while you continue with the other commands in this article. It generates fake data every second or two.
 
 .. code-block:: postgres
@@ -145,12 +141,12 @@ for each of the last 30 days.
 
   CREATE INDEX http_request_1min_idx ON http_request_1min (site_id, ingest_time);
 
-This looks a lot like the previous code block. Most importantly: It also shards on
-``site_id`` and uses the same default configuration for shard count and
-replication factor. Because all three of those match, there's a 1-to-1
-correspondence between ``http_request`` shards and ``http_request_1min`` shards,
-and Citus will place matching shards on the same worker. This is called
-:ref:`co-location <colocation>`; it makes queries such as joins faster and our rollups possible.
+This looks a lot like the previous code block. Most importantly: It also shards
+on ``site_id`` and uses the same default configuration for shard count.
+Because all three of those match, there's a 1-to-1 correspondence between
+``http_request`` shards and ``http_request_1min`` shards, and Citus will place
+matching shards on the same worker. This is called :ref:`co-location
+<colocation>`; it makes queries such as joins faster and our rollups possible.
 
 .. image:: /images/colocation.png
   :alt: co-location in citus

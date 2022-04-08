@@ -239,7 +239,7 @@ STABLE functions used in UPDATE queries cannot be called with column references
 
 Each PostgreSQL function is marked with a `volatility <https://www.postgresql.org/docs/current/static/xfunc-volatility.html>`_, which indicates whether the function can update the database, and whether the function's return value can vary over time given the same inputs. A ``STABLE`` function is guaranteed to return the same results given the same arguments for all rows within a single statement, while an ``IMMUTABLE`` function is guaranteed to return the same results given the same arguments forever.
 
-Non-immutable functions can be inconvenient in distributed systems because they can introduce subtle changes when run at slightly different times across shard replicas. Differences in database configuration across nodes can also interact harmfully with non-immutable functions.
+Non-immutable functions can be inconvenient in distributed systems because they can introduce subtle changes when run at slightly different times across shards. Differences in database configuration across nodes can also interact harmfully with non-immutable functions.
 
 One of the most common ways this can happen is using the ``timestamp`` type in Postgres, which unlike ``timestamptz`` does not keep a record of time zone. Interpreting a timestamp column makes reference to the database timezone, which can be changed between queries, hence functions operating on timestamps are not immutable.
 
