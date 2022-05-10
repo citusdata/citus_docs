@@ -39,11 +39,7 @@ Citus scales horizontally by adding worker nodes, and vertically by upgrading wo
 * `Heap <https://www.citusdata.com/customers/heap>`_
 
   * 700+ billion events
-  * 1.4PB of data on a 70-node Citus database cluster
-
-* `Chartbeat <https://www.citusdata.com/customers/chartbeat>`_
-
-  * >2.6B rows of data added per month
+  * 1.4PB of data on a 100-node Citus database cluster
 
 * `Pex <https://www.citusdata.com/customers/pex>`_
 
