@@ -270,7 +270,7 @@ In the above EXPLAIN ANALYZE output, you can see the following information about
   Intermediate Data Size: 26 MB
   Result destination: Write locally
 
-It tells us how large the intermediate results where, and where the intermediate results were written to. In this case,
+It tells us how large the intermediate results were, and where the intermediate results were written to. In this case,
 they were written to the node coordinating the query execution, as specified by "Write locally". For some other queries
 it can also be of the following format:
 
