@@ -486,19 +486,19 @@ overridden with these GUCs:
 
 * columnar.compression
 * columnar.compression_level
-* columnar.stripe_row_count
-* columnar.chunk_row_count
+* columnar.stripe_row_limit
+* columnar.chunk_row_limit
 
 Arguments
 ************************
 
 **table_name:** Name of the columnar table.
 
-**chunk_row_count:** (Optional) The maximum number of rows per chunk for
+**chunk_row_limit:** (Optional) The maximum number of rows per chunk for
 newly-inserted data. Existing chunks of data will not be changed and may have
 more rows than this maximum value. The default value is 10000.
 
-**stripe_row_count:** (Optional) The maximum number of rows per stripe for
+**stripe_row_limit:** (Optional) The maximum number of rows per stripe for
 newly-inserted data. Existing stripes of data will not be changed and may have
 more rows than this maximum value. The default value is 150000.
 
@@ -524,7 +524,7 @@ Example
   SELECT alter_columnar_table_set(
     'my_columnar_table',
     compression => 'none',
-    stripe_row_count => 10000);
+    stripe_row_limit => 10000);
 
 .. _create_time_partitions:
 
@@ -1134,7 +1134,7 @@ The example below fetches and displays the table metadata for the github_events 
 .. code-block:: postgresql
 
     SELECT * from master_get_table_metadata('github_events');
-     logical_relid | part_storage_type | part_method | part_key | part_replica_count | part_max_size | part_placement_policy 
+_     logical_relid | part_storage_type | part_method | part_key | part_replica_count | part_max_size | part_placement_policy 
     ---------------+-------------------+-------------+----------+--------------------+---------------+-----------------------
              24180 | t                 | h           | repo_id  |                  2 |    1073741824 |                     2
     (1 row)
