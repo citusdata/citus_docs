@@ -1134,7 +1134,7 @@ The example below fetches and displays the table metadata for the github_events 
 .. code-block:: postgresql
 
     SELECT * from master_get_table_metadata('github_events');
-_     logical_relid | part_storage_type | part_method | part_key | part_replica_count | part_max_size | part_placement_policy 
+    logical_relid | part_storage_type | part_method | part_key | part_replica_count | part_max_size | part_placement_policy 
     ---------------+-------------------+-------------+----------+--------------------+---------------+-----------------------
              24180 | t                 | h           | repo_id  |                  2 |    1073741824 |                     2
     (1 row)
