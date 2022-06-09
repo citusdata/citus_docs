@@ -555,7 +555,8 @@ Query statistics table
 
 .. note::
 
-  The citus_stat_statements view is a part of our :ref:`cloud_topic` only.
+  The citus_stat_statements view is part of Citus Community edition as of
+  version 11.0!
 
 Citus provides ``citus_stat_statements`` for stats about how queries are being executed, and for whom. It's analogous to (and can be joined with) the `pg_stat_statements <https://www.postgresql.org/docs/current/static/pgstatstatements.html>`_ view in PostgreSQL which tracks statistics about query speed.
 
@@ -830,7 +831,8 @@ Connection Credentials Table
 
 .. note::
 
-  This table is a part of our :ref:`cloud_topic` only.
+  This table is part of Citus Community edition as of
+  version 11.0!
 
 The ``pg_dist_authinfo`` table holds authentication parameters used by Citus nodes to connect to one another.
 
@@ -864,7 +866,8 @@ Connection Pooling Credentials
 
 .. note::
 
-  This table is a part of our :ref:`cloud_topic` only.
+  This table is part of Citus Community edition as of
+  version 11.0!
 
 If you want to use a connection pooler to connect to a node, you can specify the pooler options using ``pg_dist_poolinfo``. This metadata table holds the host, port and database name for Citus to use when connecting to a node through a pooler.
 

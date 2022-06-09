@@ -1373,7 +1373,8 @@ Arguments
 
   .. note::
 
-    Citus Community edition supports only the ``block_writes`` mode, and treats ``auto`` as ``block_writes``. Our :ref:`cloud_topic` is required for the more sophisticated modes.
+    Citus Community edition supports all shard transfer modes as of version
+    11.0!
 
 Return Value
 ************
@@ -1438,7 +1439,8 @@ Arguments
 
   .. note::
 
-    Citus Community edition supports only the ``block_writes`` mode, and treats ``auto`` as ``block_writes``. Our :ref:`cloud_topic` is required for the more sophisticated modes.
+    Citus Community edition supports all shard transfer modes as of version
+    11.0!
 
 **drain_only:** (Optional) When true, move shards off worker nodes who have ``shouldhaveshards`` set to false in :ref:`pg_dist_node`; move no other shards.
 
@@ -1648,7 +1650,8 @@ Arguments
 
   .. note::
 
-    Citus Community edition supports only the ``block_writes`` mode, and treats ``auto`` as ``block_writes``. Our :ref:`cloud_topic` is required for the more sophisticated modes.
+    Citus Community edition supports all shard transfer modes as of version
+    11.0!
 
 **rebalance_strategy:** (Optional) the name of a strategy in :ref:`pg_dist_rebalance_strategy`. If this argument is omitted, the function chooses the default strategy, as indicated in the table.
 
@@ -1694,7 +1697,9 @@ isolate_tenant_to_new_shard
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
-  The isolate_tenant_to_new_shard function is a part of our :ref:`cloud_topic` only.
+
+  Citus Community edition includes the isolate_tenant_to_new_shard function as
+  of version 11.0!
 
 This function creates a new shard to hold rows with a specific single value in the distribution column. It is especially handy for the multi-tenant Citus use case, where a large tenant can be placed alone on its own shard and ultimately its own physical node.
 
