@@ -289,7 +289,8 @@ Arguments
 **table_name:** Name of the table on the coordinator which is added to Citus metadata.
 
 **cascade_via_foreign_keys:** (Optional) When this argument set to "true,"
-citus_add_local_table_to_metadata also adds all tables that are related to
+`citus_add_local_table_to_metadata` adds other tables that are in a foreign
+key relationship with given table into metadata automatically.
 **table_name** through foreign keys. Use caution with this parameter,
 because it can potentially affect many tables.
 
