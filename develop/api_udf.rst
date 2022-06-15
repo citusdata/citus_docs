@@ -280,7 +280,7 @@ you add the table, Citus must track it in :ref:`partition_table`. Local tables
 that are added to metadata inherit the same limitations as reference 
 tables (see :ref:`ddl` and :ref:`citus_sql_reference`).
 
-If you drop the foreign keys, Citus will automatically remove such local tables from metadata,
+If you `undistribute_table`, Citus will automatically remove such local tables from metadata,
 which eliminates such limitations on those tables.
 
 Arguments
