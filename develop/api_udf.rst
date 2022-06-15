@@ -263,6 +263,47 @@ reference table
 
 	SELECT create_reference_table('nation');
 
+
+.. _citus_add_local_table_to_metadata:
+
+citus_add_local_table_to_metadata
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The citus_add_local_table_to_metadata() function is used to add a local Postgres table
+into Citus metadata. One of the major use-case for this function is to make local tables
+on the coordinator accessible from any node in the cluster. This is mostly useful when
+query from any node feature is used. The data associated with the table stays on the
+coordinator, only its schema and metadata is send to the workers.  
+
+Note that adding local tables to the metadata come at a slight cost. When
+you add the table, Citus must track it in :ref:`partition_table`. Local tables
+that are added to metadata inherit the same limitations as reference 
+tables (see :ref:`ddl` and :ref:`citus_sql_reference`).
+
+If you drop the foreign keys, Citus will automatically remove such local tables from metadata,
+which eliminates such limitations on those tables.
+
+Arguments
+************************
+
+**table_name:** Name of the table on the coordinator which needs to be accessed from workers.
+
+
+Return Value
+********************************
+
+N/A
+
+Example
+*************************
+This example informs the database that the nation table should be defined as a
+a coordinator local table accessible from any node.
+
+.. code-block:: postgresql
+
+  SELECT citus_add_local_table_to_metadata('nation');
+
+
 .. _mark_tables_colocated:
 
 mark_tables_colocated
