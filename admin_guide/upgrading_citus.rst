@@ -69,27 +69,24 @@ Step 2. Apply Update in DB
 
 After installing the new package and restarting the database, run the extension upgrade script.
 
-.. code-block:: bash
+.. code-block:: postgresql
 
-  # you must restart PostgreSQL before running this
-  psql -c 'ALTER EXTENSION citus UPDATE;'
+  -- you must restart PostgreSQL before running this
+  ALTER EXTENSION citus UPDATE;
 
-  # you should see the newer Citus version in the list
-  psql -c '\dx'
+  -- you should see the upgraded Citus version
+  SELECT * FROM citus_version();
+
+  -- if upgrading to Citus 11.x or later,
+  -- run on the coordinator node
+  CALL citus_finish_citus_upgrade();
 
 .. note::
 
-  If upgrading to Citus 11.x from an earlier major version, run this
-  extra command:
-
-  .. code-block:: bash
-
-    -- only on the coordinator node
-    SELECT citus_finalize_upgrade_to_citus11();
-
-  The upgrade function will make sure that all worker nodes have the right
-  schema and metadata. It may take several minutes to run, depending on how
-  much metadata needs to be synced.
+  If upgrading to Citus 11.x from an earlier major version, the
+  citus_finish_citus_upgrade() procedure will make sure that all worker nodes
+  have the right schema and metadata. It may take several minutes to run,
+  depending on how much metadata needs to be synced.
 
 .. note::
 
