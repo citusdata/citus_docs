@@ -145,27 +145,27 @@ The default value is ``localhost``.
 
    ALTER SYSTEM SET citus.local_hostname TO 'mynode.example.com';
 
-.. _hide_shards_from_app_name_prefixes:
+.. _show_shards_for_app_name_prefixes:
 
-citus.hide_shards_from_app_name_prefixes (text)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+citus.show_shards_for_app_name_prefixes (text)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 By default, Citus hides shards from the list of tables PostgreSQL gives to SQL
 clients. It does this because there are multiple shards per distributed table,
 and the shards can be distracting to the SQL client.
 
-The citus.hide_shards_from_app_name_prefixes GUC allows shards to be displayed
-for selected clients that want to see them. Its default value is ``'*'``.
+The citus.show_shards_for_app_name_prefixes GUC allows shards to be displayed
+for selected clients that want to see them. Its default value is ``''``.
 
 .. code-block:: psql
 
-   -- hide shards from pgAdmin only (show in other clients, like psql)
+   -- show shards to psql only (hide in other clients, like pgAdmin)
 
-   SET citus.hide_shards_from_app_name_prefixes TO 'pgAdmin*';
+   SET citus.show_shards_for_app_name_prefixes TO 'psql';
 
    -- also accepts a comma separated list
 
-   SET citus.hide_shards_from_app_name_prefixes TO 'psql,pg_dump';
+   SET citus.show_shards_for_app_name_prefixes TO 'psql,pg_dump';
 
 Query Statistics
 ---------------------------
