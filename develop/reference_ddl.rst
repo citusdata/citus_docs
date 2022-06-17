@@ -420,14 +420,14 @@ distributes the table:
 
    COMMIT;
 
-Prior to Citus 11.0 beta, Citus would defer creating the type on the worker
+Prior to Citus 11.0, Citus would defer creating the type on the worker
 nodes, and commit it separately when creating the distributed table.  This
 enabled the data copying in ``create_distributed_table()`` to happen in
 parallel.  However, it also meant that the type was not always present on the
 Citus worker nodes -- or if the transaction rolled back, the type would remain
 on the worker nodes.
 
-With Citus 11.0 beta, the default behaviour changes to prioritize schema
+With Citus 11.0, the default behaviour changes to prioritize schema
 consistency between coordinator and worker nodes. The new behavior has a
 downside: if object propagation happens after a parallel command in the same
 transaction, then the transaction can no longer be completed, as highlighted by
