@@ -1026,12 +1026,8 @@ Example
 
 .. _check_cluster_node_health:
 
-citus_check_cluster_node_health (beta)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-.. note::
-
-   This function is part of Citus 11-beta.
+citus_check_cluster_node_health
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Check connectivity between all nodes. If there are N nodes, this function
 checks all N\ :sup:`2` connections between them.
