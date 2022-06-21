@@ -3,7 +3,7 @@ Big Database Migration
 
 Larger environments can use tools like `Citus Warp <https://www.citusdata.com/blog/2017/12/08/citus-warp-pain-free-migrations/>`_, `Debezium <https://debezium.io/>`_, `Striim <https://www.striim.com/partners/striim-for-microsoft-azure/>`_ or `HVR <https://www.hvr-software.com/platforms/postgresql/>`_ for online replication. These tools allow you to stream changes from a PostgreSQL source database into our :ref:`cloud_topic` on Microsoft Azure. It's as if the application automatically writes to two databases rather than one, except with perfect transactional logic.
 
-For this process we strongly recommend contacting us by `opening a support reauest <https://portal.azure.com/#blade/Microsoft_Azure_Support/HelpAndSupportBlade/newsupportrequest>`_. To do the replication, we connect the coordinator node of a Citus cluster to an existing database through VPC peering or IP white-listing, and begin replication.
+For this process we strongly recommend contacting us by `opening a support request <https://portal.azure.com/#blade/Microsoft_Azure_Support/HelpAndSupportBlade/newsupportrequest>`_. To do the replication, we connect the coordinator node of a Citus cluster to an existing database through VPC peering or IP white-listing, and begin replication.
 
 Here are the steps you need to perform before starting the replication process:
 
