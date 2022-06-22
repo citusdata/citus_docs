@@ -69,10 +69,14 @@ Before starting the database let's change its access permissions. By default the
   # and make it start automatically when computer does
   sudo update-rc.d postgresql enable
 
-You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
+You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`. To tell Postgres to use this extension you'll need to add it to a configuration variable called shared_preload_libraries:
 
 ::
 
+  # add shared_preload_libraries
+  sudo echo "shared_preload_libraries='citus'" >> /etc/postgresql/14/main/postgresql.conf
+  # restart postgres
+  sudo service postgresql restart
   # add the citus extension
   sudo -i -u postgres psql -c "CREATE EXTENSION citus;"
 
