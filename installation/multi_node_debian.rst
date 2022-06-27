@@ -59,6 +59,7 @@ Before starting the database let's change its access permissions. By default the
 
 .. note::
   Your DNS settings may differ. Also these settings are too permissive for some environments, see our notes about :ref:`worker_security`. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
+ Based on your DNS you can add another line with your IP address to allow the host unrestricted access, if you do not have an IP address that begins with 10.*.*.*. Otherwise add the line given for IPV4 address space. 
 
 **4. Start database servers, create Citus extension**
 
@@ -66,8 +67,13 @@ Before starting the database let's change its access permissions. By default the
 
   # start the db server
   sudo service postgresql restart
+   or 
+  sudo systemctl restart postgresql@14-main
   # and make it start automatically when computer does
   sudo update-rc.d postgresql enable
+  
+.. note:: 
+Ensure you are starting the right postges version. You can check this by running ``ps -ef | grep Postgres``
 
 You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
 
