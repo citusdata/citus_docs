@@ -13,7 +13,7 @@ h4 {
 }
 
 :focus {
-  outline: 1px dashed;
+  outline: 2px dashed #2cc95c;
 }
 
 .btn-fat {
