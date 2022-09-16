@@ -13,21 +13,21 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 11.0 is currently installed on Postgres 14:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 11.1 is currently installed on Postgres 14:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-14-citus-11.0
+  sudo apt-get install --only-upgrade postgresql-14-citus-11.1
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus110_14
+  sudo yum update citus111_14
   sudo service postgresql-14 restart
 
 .. _major_minor_upgrade:
@@ -46,14 +46,14 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 10.2 to 11.0 on Postgres 13:
+If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 10.2 to 11.1 on Postgres 13:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-13-citus-11.0
+  sudo apt-get install postgresql-13-citus-11.1
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -61,7 +61,7 @@ If upgrading both Citus and Postgres, always be sure to upgrade the Citus extens
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus102_13 citus110_13
+  sudo yum swap citus102_13 citus111_13
   sudo service postgresql-13 restart
 
 Step 2. Apply Update in DB
