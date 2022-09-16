@@ -7,7 +7,7 @@ In this section, we discuss how you can add or remove nodes from your Citus clus
 
 .. note::
 
-  To make moving shards across nodes or re-replicating shards on failed nodes easier, Citus Community edition 11.0 supports fully online shard rebalancing. We discuss briefly the functions provided by the shard rebalancer when relevant in the sections below. You can learn more about these functions, their arguments, and usage, in the :ref:`cluster_management_functions` reference section.
+  To make moving shards across nodes or re-replicating shards on failed nodes easier, Citus Community edition 11.0+ supports fully online shard rebalancing. We discuss briefly the functions provided by the shard rebalancer when relevant in the sections below. You can learn more about these functions, their arguments, and usage, in the :ref:`cluster_management_functions` reference section.
 
 .. _production_sizing:
 
