@@ -106,7 +106,7 @@ and server ports to the table.
   # to match the actual hostname
 
   sudo -i -u postgres psql -c \
-    "SELECT citus_set_coordinator_host('coord.example.com', 5432);
+    "SELECT citus_set_coordinator_host('coord.example.com', 5432);"
 
   # Add the worker nodes.
   #
