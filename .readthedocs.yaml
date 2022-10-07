@@ -4,6 +4,10 @@ version: 2
 sphinx:
   configuration: conf.py
 
+formats:
+  - pdf
+  - epub
+  
 # Explicitly set the version of Python and its requirements
 python:
   version: 3.7
