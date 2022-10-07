@@ -216,6 +216,7 @@ We can also run a join query across multiple tables to see information about run
            sum(impressions_count) as total_impressions, sum(clicks_count) as total_clicks
     FROM ads, campaigns
     WHERE ads.company_id = campaigns.company_id
+    AND ads.campaign_id = campaigns.id
     AND campaigns.company_id = 5
     AND campaigns.state = 'running'
     GROUP BY campaigns.id, campaigns.name, campaigns.monthly_budget
