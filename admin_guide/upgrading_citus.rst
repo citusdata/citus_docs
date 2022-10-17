@@ -13,22 +13,22 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 11.1 is currently installed on Postgres 14:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 11.1 is currently installed on Postgres 15:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-14-citus-11.1
+  sudo apt-get install --only-upgrade postgresql-15-citus-11.1
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus111_14
-  sudo service postgresql-14 restart
+  sudo yum update citus111_15
+  sudo service postgresql-15 restart
 
 .. _major_minor_upgrade:
 
@@ -46,14 +46,14 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 10.2 to 11.1 on Postgres 13:
+If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 10.2 to 11.1 on Postgres 14:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-13-citus-11.1
+  sudo apt-get install postgresql-14-citus-11.1
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -61,8 +61,8 @@ If upgrading both Citus and Postgres, always be sure to upgrade the Citus extens
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus102_13 citus111_13
-  sudo service postgresql-13 restart
+  sudo yum swap citus102_14 citus111_14
+  sudo service postgresql-14 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,7 +102,7 @@ After installing the new package and restarting the database, run the extension 
 
 .. _upgrading_postgres:
 
-Upgrading PostgreSQL version from 13 to 14
+Upgrading PostgreSQL version from 14 to 15
 ##########################################
 
 .. note::
@@ -115,16 +115,16 @@ Upgrading PostgreSQL version from 13 to 14
 Record the following paths before you start (your actual paths may be different than those below):
 
 Existing data directory (e.g. /opt/pgsql/10/data)
-  :code:`export OLD_PG_DATA=/opt/pgsql/13/data`
+  :code:`export OLD_PG_DATA=/opt/pgsql/14/data`
 
 Existing PostgreSQL installation path (e.g. /usr/pgsql-10)
-  :code:`export OLD_PG_PATH=/usr/pgsql-13`
+  :code:`export OLD_PG_PATH=/usr/pgsql-14`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/14/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/15/data`
 
 New PostgreSQL installation path
-  :code:`export NEW_PG_PATH=/usr/pgsql-14`
+  :code:`export NEW_PG_PATH=/usr/pgsql-15`
 
 For Every Node
 --------------
