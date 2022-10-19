@@ -3,10 +3,11 @@
 Single-Node Citus
 -----------------
 
-To install Citus open source packages on a single node, the installation
-instructions below will help you get started quickly. Single-node Citus is
-useful for initial development and testing, as well as a way to start small in
-production and get ready for future scale and growth.
+The installation instructions below will guide you to install Citus open 
+source packages (along with Postgres packages) on a single node. 
+Single-node Citus gives you an easy way to start small in production, while
+being ready for future scale and growth. Single-node Citus is also useful 
+for early development and testing. 
 
 .. toctree::
 

@@ -12,9 +12,9 @@ Currently Citus imposes primary key constraint only if the distribution column i
 How do I add nodes to an existing Citus cluster?
 ------------------------------------------------
 
-On Azure Database for PostgreSQL - Hyperscale (Citus) it's as easy as dragging a slider in the user interface. In Citus Community edition you can add nodes manually by calling the :ref:`citus_add_node` UDF with the hostname (or IP address) and port number of the new node.
+On the Citus managed service with Azure Cosmos DB for PostgreSQL (formerly known as Hyperscale (Citus)), adding nodes is quite easy: all it takes is a few clicks in the Azure portal. With Citus open source, you can add nodes manually by calling the :ref:`citus_add_node` UDF with the hostname (or IP address) and port number of the new node.
 
-Either way, after adding a node to an existing cluster it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, Citus provides a shard rebalancer utility. You can find more information in the :ref:`shard_rebalancing` section.
+Either way, after adding a node to an existing cluster, the new node will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, Citus provides an open source shard rebalancer utility. You can find more information in the :ref:`shard_rebalancing` section.
 
 How does Citus handle failure of a worker node?
 -----------------------------------------------
@@ -166,7 +166,7 @@ As the error message suggests, you can (cautiously) increase this limit by alter
 Can I run Citus on Microsoft Azure?
 -----------------------------------
 
-Yes, Citus is a deployment option of `Azure Database for PostgreSQL <https://docs.microsoft.com/azure/postgresql/hyperscale/>`_ called **Hyperscale**. It is a fully managed database-as-a-service.
+Yes, Citus is available as a managed service with `Azure Cosmos DB for PostgreSQL <https://learn.microsoft.com/azure/cosmos-db/postgresql/introduction/>`_, formerly known as Hyperscale (Citus) in Azure Database for PostgreSQL.
 
 Can I shard by schema on Citus for multi-tenant applications?
 -------------------------------------------------------------
