@@ -429,7 +429,7 @@ Being able to rebalance data in the Citus cluster allows you to grow your data s
 
 Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance.
 
-To scale out your Citus cluster, first add a new worker node to it. On Azure Database for PostgreSQL - Hyperscale (Citus), you can use the Azure Portal to add the required number of nodes. Alternatively, if you run your own Citus installation, you can add nodes manually with the :ref:`citus_add_node` UDF.
+To scale out your Citus cluster, first add a new worker node to it. On Azure Cosmos DB for PostgreSQL (formerly known as Hyperscale (Citus) in Azure Database for PostgreSQL), you can use the Azure Portal to add the required number of nodes. Alternatively, if you run your own Citus installation, you can add nodes manually with the :ref:`citus_add_node` UDF.
 
 Once you add the node it will be available in the system. However, at this point no tenants are stored on it and Citus will not yet run any queries there. To move your existing data, you can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node.
 
@@ -508,4 +508,4 @@ Where to Go From Here
 
 With this, you now know how to use Citus to power your multi-tenant application for scalability. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`.
 
-To adjust a front-end application, specifically Ruby on Rails or Django, read :ref:`rails_migration` or :ref:`django_migration`. Finally, try `Azure Database for PostgreSQL - Hyperscale (Citus) <https://docs.microsoft.com/azure/postgresql/quickstart-create-hyperscale-portal>`_, the easiest way to manage a Citus cluster.
+To adjust a front-end application, specifically Ruby on Rails or Django, read :ref:`rails_migration` or :ref:`django_migration`. Finally, try `Azure Cosmos DB for PostgreSQL <https://learn.microsoft.com/azure/cosmos-db/postgresql/introduction>`_, the easiest way to manage a Citus cluster.
