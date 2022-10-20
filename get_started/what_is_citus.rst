@@ -3,13 +3,12 @@
 What is Citus?
 ==============
 
-Citus is an open source extension to Postgres that distributes data and queries
-across multiple nodes in a cluster. Because Citus is an extension (not a fork)
-to Postgres, when you use Citus, you are also using Postgres.  You can leverage
+The Citus database is an open source extension to Postgres that gives you all the greatness of Postgres, at any scale—from a single node to a large distributed database cluster. Because Citus is an extension (not a fork)
+to Postgres, when you use Citus, you are also using Postgres. You can leverage
 the latest Postgres features, tooling, and ecosystem.
 
-Citus transforms Postgres into a distributed database with features like
-sharding, a distributed SQL engine, reference tables, and distributed tables.
+With Citus you get distributed Postgres features like
+sharding, distributed tables, reference tables, a distributed query engine, columnar storage—and as of Citus 11.0, the ability to query from any node.
 The Citus combination of parallelism, keeping more data in memory, and higher
 I/O bandwidth can lead to significant performance improvements for multi-tenant
 SaaS applications, customer-facing real-time analytics dashboards, and time
@@ -17,20 +16,20 @@ series workloads.
 
 **Two Ways to Get Citus:**
 
-1. Open source: You can `download Citus <https://www.citusdata.com/download/>`_
-   open source, or visit the `Citus repo <https://github.com/citusdata/citus>`_
+1. **Open source**: Citus is 100% open source. You can `download Citus <https://www.citusdata.com/download/>`_
+   open source, or to see the source code and build it yourself, visit the `Citus repo <https://github.com/citusdata/citus>`_
    on GitHub.
-2. Managed database service: Citus is available on Azure as `Hyperscale (Citus)
-   <https://docs.microsoft.com/azure/postgresql/hyperscale/>`_, a
-   built-in deployment option in the Azure Database for PostgreSQL managed
-   service.
+2. **Managed service**: The Citus database is available as a managed service in the cloud with `Azure Cosmos DB for PostgreSQL
+   <https://learn.microsoft.com/azure/cosmos-db/postgresql/introduction/>`_, formerly known as Hyperscale (Citus) in Azure Database for PostgreSQL.
 
 .. _how_big:
 
-How Far Can Citus Scale?
-------------------------
+Citus Gives You Postgres At Any Scale
+-------------------------------------
 
-Citus scales horizontally by adding worker nodes, and vertically by upgrading workers/coordinator. In practice our customers have achieved the following scale, with room to grow even more:
+You can start using Citus on a single node, using a distributed data model from the beginning so you are "scale out ready". When your Postgres workload needs to scale, it's easy to add worker nodes to the Citus database cluster, and/or to scale up the coordinator and worker nodes in your cluster. 
+
+Sometimes people ask "how big can Citus scale?" Here are a few examples of large-scale customers—but please keep in mind that there are many, many 2-node and 3-node Citus clusters in the wild, too.
 
 * `Algolia <https://www.citusdata.com/customers/algolia>`_
 
@@ -44,13 +43,13 @@ Citus scales horizontally by adding worker nodes, and vertically by upgrading wo
 * `Pex <https://www.citusdata.com/customers/pex>`_
 
   * 80B rows updated/day
-  * 20-node Citus database cluster on Google Cloud
+  * 20-node Citus database cluster
   * 2.4TB memory, 1280 cores, and 80TB of data
   * ...with plans to grow to 45 nodes
 
 * `MixRank <https://www.citusdata.com/customers/mixrank>`_
 
-  * 10+ PB of time series data
+  * 10 PB of time series data
 
 For more customers and statistics, see our `customer stories <https://www.citusdata.com/customers#customer-index>`_.
 
@@ -61,8 +60,8 @@ When to Use Citus
 
 .. _mt_blurb:
 
-Multi-Tenant Database
----------------------
+Multi-Tenant SaaS Database
+--------------------------
 
 Most B2B applications already have the notion of a tenant, customer, or account built into their data model. In this model, the database serves many tenants, each of whose data is separate from other tenants.
 
@@ -116,7 +115,7 @@ When Citus is Inappropriate
 
 Some workloads don't need a powerful distributed database, while others require a large flow of information between worker nodes. In the first case Citus is unnecessary, and in the second not generally performant. Here are some examples:
 
-* When single-node Postgres can support your application and you do not expect to grow
+* When you do not expect your workload to ever grow beyond a single Postgres node
 * Offline analytics, without the need for real-time ingest nor real-time queries
 * Analytics apps that do not need to support a large number of concurrent users
 * Queries that return data-heavy ETL results rather than summaries
