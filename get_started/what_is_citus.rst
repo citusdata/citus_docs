@@ -49,7 +49,7 @@ Sometimes people ask "how big can Citus scale?" Here are a few examples of large
 
 * `MixRank <https://www.citusdata.com/customers/mixrank>`_
 
-  * 1.6 PB of time series data
+  * 10 PB of time series data
 
 For more customers and statistics, see our `customer stories <https://www.citusdata.com/customers#customer-index>`_.
 
