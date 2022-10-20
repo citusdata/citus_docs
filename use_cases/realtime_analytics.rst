@@ -273,7 +273,7 @@ to enable it:
 
 .. note::
 
-  This is not necessary on Hyperscale, which has HLL already installed,
+  This is not necessary when using Citus in the cloud with Azure Cosmos DB for PostgreSQL, which has HLL already installed,
   along with other useful extensions.
 
 Now we're ready to track IP addresses in our rollup with HLL. First
