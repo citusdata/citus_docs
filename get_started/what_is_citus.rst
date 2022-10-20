@@ -29,7 +29,7 @@ Citus Gives You Postgres At Any Scale
 
 You can start using Citus on a single node, using a distributed data model from the beginning so you are "scale out ready". When your Postgres workload needs to scale, it's easy to add worker nodes to the Citus database cluster, and/or to scale up the coordinator and worker nodes in your cluster. 
 
-Sometimes people ask "how big can Citus scale"? Here are a few examples of large-scale customers—but please keep in mind that there are many, many 2-node and 3-node Citus clusters in the wild, too.
+Sometimes people ask "how big can Citus scale?" Here are a few examples of large-scale customers—but please keep in mind that there are many, many 2-node and 3-node Citus clusters in the wild, too.
 
 * `Algolia <https://www.citusdata.com/customers/algolia>`_
 
