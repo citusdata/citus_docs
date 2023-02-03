@@ -26,7 +26,7 @@ Steps to be executed on all nodes
 ::
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-15-citus-11.1
+  sudo apt-get -y install postgresql-15-citus-11.2
 
   # preload citus extension
   sudo pg_conftool 15 main set shared_preload_libraries citus
