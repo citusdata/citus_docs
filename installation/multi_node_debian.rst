@@ -49,16 +49,20 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  # Allow unrestricted access to nodes in the local network. The following ranges
-  # correspond to 24, 20, and 16-bit blocks in Private IPv4 address spaces.
-  host    all             all             10.0.0.0/8              trust
+  # Allow access to nodes in the local network
+  host    all             postgres        10.0.0.0/8              scram-sha-256
 
-  # Also allow the host unrestricted access to connect to itself
-  host    all             all             127.0.0.1/32            trust
-  host    all             all             ::1/128                 trust
+The coordinator node needs to know roles' passwords in order to communicate with the workers. Our :ref:`cloud_topic` keeps track of that kind of information for you. However, in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
 
-.. note::
-  Your DNS settings may differ. Also these settings are too permissive for some environments, see our notes about :ref:`worker_security`. The PostgreSQL manual `explains how <http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html>`_ to make them more restrictive.
+::
+
+  hostname:port:database:username:password
+
+Sometimes workers need to connect to one another, such as during :ref:`repartition joins <repartition_joins>`. Thus each worker node requires a copy of the .pgpass file, and the password for the ``postgres`` user must be set on each node as well:
+
+::
+
+  sudo -i -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'your_password';
 
 **4. Start database servers, create Citus extension**
 

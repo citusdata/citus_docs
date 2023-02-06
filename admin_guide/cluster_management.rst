@@ -607,35 +607,6 @@ To verify the connections from the coordinator to the workers are encrypted you 
   └────────────────────────────┘
   (2 rows)
 
-.. _worker_security:
-
-Increasing Worker Security
---------------------------
-
-For your convenience getting started, our multi-node installation instructions direct you to set up the :code:`pg_hba.conf` on the workers with its `authentication method <https://www.postgresql.org/docs/current/static/auth-methods.html>`_ set to "trust" for local network connections. However, you might desire more security.
-
-To require that all connections supply a hashed password, update the PostgreSQL :code:`pg_hba.conf` on every worker node with something like this:
-
-.. code-block:: bash
-
-  # Require password access and a ssl/tls connection to nodes in the local
-  # network. The following ranges correspond to 24, 20, and 16-bit blocks
-  # in Private IPv4 address spaces.
-  hostssl    all             all             10.0.0.0/8              md5
-
-  # Require passwords and ssl/tls connections when the host connects to
-  # itself as well.
-  hostssl    all             all             127.0.0.1/32            md5
-  hostssl    all             all             ::1/128                 md5
-
-The coordinator node needs to know roles' passwords in order to communicate with the workers. Our :ref:`cloud_topic` keeps track of that kind of information for you. However, in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
-
-::
-
-  hostname:port:database:username:password
-
-Sometimes workers need to connect to one another, such as during :ref:`repartition joins <repartition_joins>`. Thus each worker node requires a copy of the .pgpass file as well.
-
 .. _rls:
 
 Row-Level Security
