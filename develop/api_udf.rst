@@ -1467,6 +1467,7 @@ job:
   SELECT * FROM citus_rebalance_status();
 
 ::
+
   .
    job_id |  state   | job_type  |           description           |          started_at           |          finished_at          | details
   --------+----------+-----------+---------------------------------+-------------------------------+-------------------------------+-----------
