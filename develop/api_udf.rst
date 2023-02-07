@@ -1445,6 +1445,98 @@ The example below will attempt to rebalance shards within the default threshold.
     DETAIL:  Rebalance scheduled as background job 1337.
     HINT:  To monitor progress, run: SELECT details FROM citus_rebalance_status();
 
+.. _citus_rebalance_status:
+
+citus_rebalance_status
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The :ref:`citus_rebalance_start` function returns immediately,
+while the rebalance continues as a background job.
+The``citus_rebalance_status()`` function allows you to monitor
+the progress of this rebalance.
+
+Example
+**************************
+
+To get general information about the rebalance, you can select
+all columns from the status. This shows the basic state of the
+job:
+
+.. code-block:: postgresql
+
+  SELECT * FROM citus_rebalance_status();
+
+::
+  .
+   job_id |  state   | job_type  |           description           |          started_at           |          finished_at          | details
+  --------+----------+-----------+---------------------------------+-------------------------------+-------------------------------+-----------
+        4 | running  | rebalance | Rebalance colocation group 1    | 2022-08-09 21:57:27.833055+02 | 2022-08-09 21:57:27.833055+02 | { ... }
+
+Rebalancer specifics live in the ``details`` column, in JSON
+format:
+
+.. code-block:: postgresql
+
+  SELECT details FROM citus_rebalance_status();
+
+.. code-block:: json
+
+  {
+      "phase": "copy",
+      "phase_index": 1,
+      "phase_count": 3,
+      "last_change":"2022-08-09 21:57:27",
+      "colocations": {
+          "1": {
+              "shard_moves": 30,
+              "shard_moved": 29,
+              "last_move":"2022-08-09 21:57:27"
+          },
+          "1337": {
+              "shard_moves": 130,
+              "shard_moved": 0
+          }
+      }
+  }
+
+.. _citus_rebalance_stop:
+
+citus_rebalance_stop
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This function cancels a rebalance in progress, if any.
+
+Arguments
+**************************
+
+N/A
+
+Return value
+**************************
+
+N/A
+
+.. _citus_rebalance_wait:
+
+citus_rebalance_wait
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This function blocks until a running rebalance is complete.  If
+no rebalance is in progress when ``citus_rebalance_wait()`` is
+called, then the function returns immediately.
+
+The function can be useful for scripts or benchmarking.
+
+Arguments
+**************************
+
+N/A
+
+Return value
+**************************
+
+N/A
+
 .. _rebalance_table_shards:
 
 rebalance_table_shards
