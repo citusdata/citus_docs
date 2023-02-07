@@ -425,14 +425,14 @@ The pg_dist_colocation table contains information about which tables' shards sho
 Rebalancer strategy table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This table defines strategies that :ref:`rebalance_table_shards` can use to determine where to move shards.
+This table defines strategies that :ref:`citus_rebalance_start` can use to determine where to move shards.
 
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 |      Name                      |         Type         |       Description                                                         |
 +================================+======================+===========================================================================+
 | name                           |         name         | | Unique name for the strategy                                            |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
-| default_strategy               |         boolean      | | Whether :ref:`rebalance_table_shards` should choose this strategy by    |
+| default_strategy               |         boolean      | | Whether :ref:`citus_rebalance_start` should choose this strategy by     |
 |                                |                      | | default. Use :ref:`citus_set_default_rebalance_strategy` to update      |
 |                                |                      | | this column                                                             |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
@@ -447,10 +447,10 @@ This table defines strategies that :ref:`rebalance_table_shards` can use to dete
 |                                |                      | | node                                                                    |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 | default_threshold              |         float4       | | Threshold for deeming a node too full or too empty, which determines    |
-|                                |                      | | when the rebalance_table_shards should try to move shards               |
+|                                |                      | | when the citus_rebalance_start should try to move shards                |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 | minimum_threshold              |         float4       | | A safeguard to prevent the threshold argument of                        |
-|                                |                      | | rebalance_table_shards() from being set too low                         |
+|                                |                      | | citus_rebalance_start() from being set too low                          |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 | improvement_threshold          |         float4       | | Determines when moving a shard is worth it during a rebalance.          |
 |                                |                      | | The rebalancer will move a shard when the ratio of the improvement with |
