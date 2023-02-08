@@ -1384,17 +1384,19 @@ Example
 
     SELECT citus_move_shard_placement(12345, 'from_host', 5432, 'to_host', 5432);
 
-.. _rebalance_table_shards:
+.. _citus_rebalance_start:
 
-rebalance_table_shards
+citus_rebalance_start
 $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-The rebalance_table_shards() function moves shards of the given table to make
-them evenly distributed among the workers. The function first calculates the
-list of moves it needs to make in order to ensure that the cluster is balanced
-within the given threshold. Then, it moves shard placements one by one from the
-source node to the destination node and updates the corresponding shard
-metadata to reflect the move.
+The citus_rebalance_start() function moves table shards to make them evenly
+distributed among the workers. It begins a background job to do the
+rebalancing, and returns immediately.
+
+The rebalancing process first calculates the list of moves it needs to make in
+order to ensure that the cluster is balanced within the given threshold. Then,
+it moves shard placements one by one from the source node to the destination
+node and updates the corresponding shard metadata to reflect the move.
 
 Every shard is assigned a cost when determining whether shards are "evenly
 distributed." By default each shard has the same cost (a value of 1), so
@@ -1414,29 +1416,12 @@ in a bad plan. In this case you may customize the strategy, using the
 ``rebalance_strategy`` parameter.
 
 It's advisable to call :ref:`get_rebalance_table_shards_plan` before running
-rebalance_table_shards, to see and verify the actions to be performed.
+citus_rebalance_start, to see and verify the actions to be performed.
 
 Arguments
 **************************
 
-**table_name:** (Optional) The name of the table whose shards need to be rebalanced. If NULL, then rebalance all existing colocation groups.
-
 **threshold:** (Optional) A float number between 0.0 and 1.0 which indicates the maximum difference ratio of node utilization from average utilization. For example, specifying 0.1 will cause the shard rebalancer to attempt to balance all nodes to hold the same number of shards ±10%. Specifically, the shard rebalancer will try to converge utilization of all worker nodes to the (1 - threshold) * average_utilization ... (1 + threshold) * average_utilization range.
-
-**max_shard_moves:** (Optional) The maximum number of shards to move.
-
-**excluded_shard_list:** (Optional) Identifiers of shards which shouldn't be moved during the rebalance operation.
-
-**shard_transfer_mode:** (Optional) Specify the method of replication, whether to use PostgreSQL logical replication or a cross-worker COPY command. The possible values are:
-
-  * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour (e.g. for shard repair, PostgreSQL 9.6). This is the default value.
-  * ``force_logical``: Use logical replication even if the table doesn't have a replica identity. Any concurrent update/delete statements to the table will fail during replication.
-  * ``block_writes``: Use COPY (blocking writes) for tables lacking primary key or replica identity.
-
-  .. note::
-
-    Citus Community edition supports all shard transfer modes as of version
-    11.0!
 
 **drain_only:** (Optional) When true, move shards off worker nodes who have ``shouldhaveshards`` set to false in :ref:`pg_dist_node`; move no other shards.
 
@@ -1450,26 +1435,127 @@ N/A
 Example
 **************************
 
-The example below will attempt to rebalance the shards of the github_events table within the default threshold.
+The example below will attempt to rebalance shards within the default threshold.
 
 .. code-block:: postgresql
 
-	SELECT rebalance_table_shards('github_events');
+    SELECT citus_rebalance_start();
+    NOTICE:  Scheduling...
+    NOTICE:  Scheduled as job 1337.
+    DETAIL:  Rebalance scheduled as background job 1337.
+    HINT:  To monitor progress, run: SELECT details FROM citus_rebalance_status();
 
-This example usage will attempt to rebalance the github_events table without moving shards with id 1 and 2.
+.. _citus_rebalance_status:
+
+citus_rebalance_status
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+The :ref:`citus_rebalance_start` function returns immediately,
+while the rebalance continues as a background job.
+The``citus_rebalance_status()`` function allows you to monitor
+the progress of this rebalance.
+
+Example
+**************************
+
+To get general information about the rebalance, you can select
+all columns from the status. This shows the basic state of the
+job:
 
 .. code-block:: postgresql
 
-	SELECT rebalance_table_shards('github_events', excluded_shard_list:='{1,2}');
+  SELECT * FROM citus_rebalance_status();
+
+::
+
+  .
+   job_id |  state   | job_type  |           description           |          started_at           |          finished_at          | details
+  --------+----------+-----------+---------------------------------+-------------------------------+-------------------------------+-----------
+        4 | running  | rebalance | Rebalance colocation group 1    | 2022-08-09 21:57:27.833055+02 | 2022-08-09 21:57:27.833055+02 | { ... }
+
+Rebalancer specifics live in the ``details`` column, in JSON
+format:
+
+.. code-block:: postgresql
+
+  SELECT details FROM citus_rebalance_status();
+
+.. code-block:: json
+
+  {
+      "phase": "copy",
+      "phase_index": 1,
+      "phase_count": 3,
+      "last_change":"2022-08-09 21:57:27",
+      "colocations": {
+          "1": {
+              "shard_moves": 30,
+              "shard_moved": 29,
+              "last_move":"2022-08-09 21:57:27"
+          },
+          "1337": {
+              "shard_moves": 130,
+              "shard_moved": 0
+          }
+      }
+  }
+
+.. _citus_rebalance_stop:
+
+citus_rebalance_stop
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This function cancels a rebalance in progress, if any.
+
+Arguments
+**************************
+
+N/A
+
+Return value
+**************************
+
+N/A
+
+.. _citus_rebalance_wait:
+
+citus_rebalance_wait
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This function blocks until a running rebalance is complete.  If
+no rebalance is in progress when ``citus_rebalance_wait()`` is
+called, then the function returns immediately.
+
+The function can be useful for scripts or benchmarking.
+
+Arguments
+**************************
+
+N/A
+
+Return value
+**************************
+
+N/A
+
+.. _rebalance_table_shards:
+
+rebalance_table_shards
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. warning::
+
+   The ``rebalance_table_shards()`` function is deprecated. As of Citus v11.2,
+   use :ref:`citus_rebalance_start` instead.
 
 .. _get_rebalance_table_shards_plan:
 
 get_rebalance_table_shards_plan
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Output the planned shard movements of :ref:`rebalance_table_shards` without
+Output the planned shard movements of :ref:`citus_rebalance_start` without
 performing them. While it's unlikely, get_rebalance_table_shards_plan can
-output a slightly different plan than what a rebalance_table_shards call with
+output a slightly different plan than what a citus_rebalance_start call with
 the same arguments will do. This could happen because they are not executed at
 the same time, so facts about the cluster -- e.g. disk space -- might differ
 between the calls.
@@ -1477,7 +1563,7 @@ between the calls.
 Arguments
 **************************
 
-The same arguments as rebalance_table_shards: relation, threshold,
+A superset of the arguments for citus_rebalance_start: relation, threshold,
 max_shard_moves, excluded_shard_list, and drain_only. See documentation of that
 function for the arguments' meaning.
 
@@ -1499,7 +1585,12 @@ Tuples containing these columns:
 get_rebalance_progress
 $$$$$$$$$$$$$$$$$$$$$$
 
-Once a shard rebalance begins, the ``get_rebalance_progress()`` function lists the progress of every shard involved. It monitors the moves planned and executed by ``rebalance_table_shards()``.
+.. note::
+
+   Citus v11.2 introduces the :ref:`citus_rebalance_status` function, whose
+   output is easier to understand than that of ``get_rebalance_progress``.
+
+Once a shard rebalance begins, the ``get_rebalance_progress()`` function lists the progress of every shard involved. It monitors the moves planned and executed by ``citus_rebalance_start()``.
 
 Arguments
 **************************
@@ -1563,7 +1654,7 @@ For more about these arguments, see the corresponding column values in :ref:`pg_
 
 **default_threshold:** a floating point threshold that tunes how precisely the cumulative shard cost should be balanced between nodes
 
-**minimum_threshold:** (Optional) a safeguard column that holds the minimum value allowed for the threshold argument of rebalance_table_shards(). Its default value is 0
+**minimum_threshold:** (Optional) a safeguard column that holds the minimum value allowed for the threshold argument of citus_rebalance_start(). Its default value is 0
 
 Return Value
 *********************************
@@ -1670,7 +1761,7 @@ Here are the typical steps to remove a single node (for example '10.0.0.1' on a 
 2. Wait until the command finishes
 3. Remove the node
 
-When draining multiple nodes it's recommended to use :ref:`rebalance_table_shards` instead. Doing so allows Citus to plan ahead and move shards the minimum number of times.
+When draining multiple nodes it's recommended to use :ref:`citus_rebalance_start` instead. Doing so allows Citus to plan ahead and move shards the minimum number of times.
 
 1. Run this for each node that you want to remove:
 
@@ -1678,11 +1769,11 @@ When draining multiple nodes it's recommended to use :ref:`rebalance_table_shard
 
      SELECT * FROM citus_set_node_property(node_hostname, node_port, 'shouldhaveshards', false);
 
-2. Drain them all at once with :ref:`rebalance_table_shards`:
+2. Drain them all at once with :ref:`citus_rebalance_start`:
 
    .. code-block:: postgresql
 
-     SELECT * FROM rebalance_table_shards(drain_only := true);
+     SELECT * FROM citus_rebalance_start(drain_only := true);
 
 3. Wait until the draining rebalance finishes
 4. Remove the nodes

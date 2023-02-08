@@ -435,9 +435,9 @@ Once you add the node it will be available in the system. However, at this point
 
 .. code-block:: postgres
 
-  SELECT rebalance_table_shards('companies');
+  SELECT citus_rebalance_start();
 
-Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the companies table and it will take the hint and rebalance the other tables which are distributed by company_id. Also, with our :ref:`cloud_topic`, or with Community edition 11.0 and above, applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight. In Citus Community edition, writes to shards are blocked during rebalancing but reads are unaffected.
+With our :ref:`cloud_topic`, or with Community edition 11.0 and above, applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight. In Citus Community edition, writes to shards are blocked during rebalancing but reads are unaffected.
 
 Dealing with Big Tenants
 ------------------------
