@@ -32,11 +32,11 @@ one of three methods, in this order of preference:
      avg, min, max, sum, count, array_agg, jsonb_agg, jsonb_object_agg,
      json_agg, json_object_agg, bit_and, bit_or, bool_and, bool_or,
      every, hll_add_agg, hll_union_agg, topn_add_agg, topn_union_agg,
-     any_value, var_pop(float4), var_pop(float8), var_samp(float4),
-     var_samp(float8), variance(float4), variance(float8) stddev_pop(float4),
-     stddev_pop(float8), stddev_samp(float4), stddev_samp(float8)
-     stddev(float4), stddev(float8)
-     tdigest(double precision, int), tdigest_percentile(double precision, int, double precision), tdigest_percentile(double precision, int, double precision[]), tdigest_percentile(tdigest, double precision), tdigest_percentile(tdigest, double precision[]), tdigest_percentile_of(double precision, int, double precision), tdigest_percentile_of(double precision, int, double precision[]), tdigest_percentile_of(tdigest, double precision), tdigest_percentile_of(tdigest, double precision[])
+     any_value, tdigest(double precision, int), tdigest_percentile(double precision, int, double precision),
+     tdigest_percentile(double precision, int, double precision[]), tdigest_percentile(tdigest, double precision),
+     tdigest_percentile(tdigest, double precision[]), tdigest_percentile_of(double precision, int, double precision),
+     tdigest_percentile_of(double precision, int, double precision[]), tdigest_percentile_of(tdigest, double precision),
+     tdigest_percentile_of(tdigest, double precision[])
 
 3. Last resort: pull all rows from the workers and perform the aggregation on
    the coordinator node. When the aggregate is not grouped on a distribution
