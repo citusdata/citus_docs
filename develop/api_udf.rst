@@ -309,49 +309,6 @@ a coordinator-local table, accessible from any node:
 
   SELECT citus_add_local_table_to_metadata('nation');
 
-.. _mark_tables_colocated:
-
-mark_tables_colocated
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-The mark_tables_colocated() function takes a distributed table (the source), and a list of others (the targets), and puts the targets into the same co-location group as the source. If the source is not yet in a group, this function creates one, and assigns the source and targets to it.
-
-Usually colocating tables ought to be done at table distribution time via the ``colocate_with`` parameter of :ref:`create_distributed_table`. But ``mark_tables_colocated`` can take care of it if necessary.
-
-If you want to break colocation of a table, you can use :ref:`update_distributed_table_colocation <update_distributed_table_colocation>`.
-
-Arguments
-************************
-
-**source_table_name:** Name of the distributed table whose co-location group the targets will be assigned to match.
-
-**target_table_names:** Array of names of the distributed target tables, must be non-empty. These distributed tables must match the source table in:
-
-  * distribution method
-  * distribution column type
-  * shard count
-
-Failing this, Citus will raise an error. For instance, attempting to colocate tables ``apples`` and ``oranges`` whose distribution column types differ results in:
-
-::
-
-  ERROR:  cannot colocate tables apples and oranges
-  DETAIL:  Distribution column types don't match for apples and oranges.
-
-Return Value
-********************************
-
-N/A
-
-Example
-*************************
-
-This example puts ``products`` and ``line_items`` in the same co-location group as ``stores``. The example assumes that these tables are all distributed on a column with matching type, most likely a "store id."
-
-.. code-block:: postgresql
-
-  SELECT mark_tables_colocated('stores', ARRAY['products', 'line_items']);
-
 .. _update_distributed_table_colocation:
 
 update_distributed_table_colocation
