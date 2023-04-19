@@ -15,7 +15,6 @@ Even cross-node queries (used for parallel computations) support most SQL featur
 * `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_ work in single-shard queries only
 * Correlated subqueries are supported only when the correlation is on the :ref:`dist_column`.
 * Outer joins between distributed tables are only supported on the  :ref:`dist_column`
-* Outer joins between distributed tables and reference tables or local tables are only supported if the distributed table is on the outer side
 * `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_ work in single-shard queries only
 * `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`__ work in single-shard queries only
 
@@ -41,18 +40,18 @@ When a SQL query is unsupported, one way to work around it is using CTEs, which 
 
 .. code-block:: sql
 
-  SELECT * FROM ref LEFT JOIN dist USING (id) WHERE dist.value > 10;
+  SELECT * FROM dist WHERE EXISTS (SELECT 1 FROM local WHERE local.a = dist.a);
   /*
-  ERROR:  cannot pushdown the subquery
-  DETAIL:  There exist a reference table in the outer part of the outer join
+  ERROR:  direct joins between distributed and local tables are not supported
+  HINT:  Use CTE's or subqueries to select from local tables and use them in joins
   */
 
 To work around this limitation, you can turn the query into a router query by wrapping the distributed part in a CTE
 
 .. code-block:: sql
 
-  WITH x AS (SELECT * FROM dist WHERE dist.value > 10)
-  SELECT * FROM ref LEFT JOIN x USING (id);
+  WITH cte AS (SELECT * FROM dist)
+  SELECT * FROM cte WHERE EXISTS (SELECT 1 FROM local WHERE local.a = cte.a);
 
 Remember that the coordinator will send the results of the CTE to all workers which require it for processing. Thus it's best to either add the most specific filters and limits to the inner query as possible, or else aggregate the table. That reduces the network overhead which such a query can cause. More about this in :ref:`subquery_perf`.
 
