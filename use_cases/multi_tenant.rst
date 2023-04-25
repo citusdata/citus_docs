@@ -258,7 +258,7 @@ Django:
 
 Basically when the resulting SQL executed in the database contains a :code:`WHERE company_id = :value` clause on every table (including tables in JOIN queries), then Citus will recognize that the query should be routed to a single node and execute it there as it is. This makes sure that all SQL functionality is available. The node is an ordinary PostgreSQL server after all.
 
-Also, to make it even simpler, you can use our `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ library for Rails, or `django-multitenant <https://github.com/citusdata/django-multitenant>`_ for Django which will automatically add these filters to all your queries, even the complicated ones. Check out our migration guides for :ref:`rails_migration` and :ref:`django_migration`.
+Also, to make it even simpler, you can use our `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ library for Rails, or `django-multitenant <https://github.com/citusdata/django-multitenant>`_ for Django which will automatically add these filters to all your queries, even the complicated ones. Check out our migration guides for :ref:`rails_migration` and `Django <https://django-multitenant.readthedocs.io/en/latest/migration_mt_django.html>`_.
 
 This guide is framework-agnostic, so we'll point out some Citus features using SQL. Use your imagination for how these statements would be expressed in your language of choice.
 
@@ -508,4 +508,4 @@ Where to Go From Here
 
 With this, you now know how to use Citus to power your multi-tenant application for scalability. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`.
 
-To adjust a front-end application, specifically Ruby on Rails or Django, read :ref:`rails_migration` or :ref:`django_migration`. Finally, try `Azure Cosmos DB for PostgreSQL <https://learn.microsoft.com/azure/cosmos-db/postgresql/introduction>`_, the easiest way to manage a Citus cluster.
+To adjust a front-end application, specifically Ruby on Rails or Django, read :ref:`rails_migration` or `Django migration <https://django-multitenant.readthedocs.io/en/latest/migration_mt_django.html>`_. Finally, try `Azure Cosmos DB for PostgreSQL <https://learn.microsoft.com/azure/cosmos-db/postgresql/introduction>`_, the easiest way to manage a Citus cluster.
