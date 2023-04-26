@@ -17,6 +17,19 @@ Even cross-node queries (used for parallel computations) support most SQL featur
 * Outer joins between distributed tables are only supported on the  :ref:`dist_column`
 * `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_ work in single-shard queries only
 * `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`__ work in single-shard queries only
+* The SQL `MERGE command <https://www.postgresql.org/docs/current/sql-merge.html>`_ is supported in the following combinations of :ref:`table_types`:
+
+  =========== =========== =========== =========================================
+  Target      Source      Support     Comments
+  =========== =========== =========== =========================================
+  Local       Local       Yes          
+  Local       Distributed No           
+  Local       Reference   No           
+  Distributed Local       No           
+  Distributed Distributed Yes         Only co-located tables.
+  Distributed Reference   No          Feature in development.
+  Reference   N/A         No          Reference table as target is not allowed.
+  =========== =========== =========== =========================================
 
 To learn more about PostgreSQL and its features, you can visit the `PostgreSQL documentation <http://www.postgresql.org/docs/current/static/index.html>`_. For a detailed reference of the PostgreSQL SQL command dialect (which can be used as is by Citus users), you can see the `SQL Command Reference <http://www.postgresql.org/docs/current/static/sql-commands.html>`_.
 
