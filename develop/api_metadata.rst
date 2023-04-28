@@ -560,8 +560,6 @@ Query statistics table
 
 Citus provides ``citus_stat_statements`` for stats about how queries are being executed, and for whom. It's analogous to (and can be joined with) the `pg_stat_statements <https://www.postgresql.org/docs/current/static/pgstatstatements.html>`_ view in PostgreSQL which tracks statistics about query speed.
 
-This view can trace queries to originating tenants in a multi-tenant application, which helps for deciding when to do :ref:`tenant_isolation`.
-
 +----------------+--------+---------------------------------------------------------+
 | Name           | Type   | Description                                             |
 +================+========+=========================================================+
@@ -632,6 +630,55 @@ Caveats:
 * The stats data is not replicated, and won't survive database crashes or failover
 * Tracks a limited number of queries, set by the ``pg_stat_statements.max`` GUC (default 5000)
 * To truncate the table, use the ``citus_stat_statements_reset()`` function
+
+.. _citus_stat_tenants:
+
+Tenant-level query statistics view
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``citus_stat_tenants`` view augments the :ref:`citus_stat_statements` with
+information about how many queries each tenant is running. Tracing queries to
+originating tenants helps, among other things, for deciding when to do
+:ref:`tenant_isolation`.
+
+This view counts recent single-tenant queries happening during a configurable
+time period. The tally of read-only and total queries for the period increases
+until the current period ends. After that, the counts are moved to last
+period's statistics, which stays constant until expiration. The period length
+can be set in seconds using ``citus.stats_tenants_period``, and is 24 hours by
+default (60 * 60 * 24).
+
+The view displays up to ``citus.stat_tenants_limit`` rows (by default 100). It
+counts only queries filtered to a single tenant, ignoring queries that apply to
+multiple tenants at once.
+
++----------------------------+--------+---------------------------------------------------------+
+| Name                       | Type   | Description                                             |
++============================+========+=========================================================+
+| nodeid                     | int    | Node ID from :ref:`pg_dist_node`                        |
++----------------------------+--------+---------------------------------------------------------+
+| colocation_id              | int    | ID of :ref:`colocation group <colocation_group_table>`  |
++----------------------------+--------+---------------------------------------------------------+
+| tenant_attribute           | text   | Value in the distribution column identifying tenant     |
++----------------------------+--------+---------------------------------------------------------+
+| read_count_in_this_period  | int    | Number of read (SELECT) queries for tenant in period    |
++----------------------------+--------+---------------------------------------------------------+
+| read_count_in_last_period  | int    | Number of read queries one period of time ago           |
++----------------------------+--------+---------------------------------------------------------+
+| query_count_in_this_period | int    | Number of read/write queries for tenant in time period  |
++----------------------------+--------+---------------------------------------------------------+
+| query_count_in_last_period | int    | Number of read/write queries one period of time ago     |
++----------------------------+--------+---------------------------------------------------------+
+| score                      | bigint | Relative activity level of this tenant vs others        |
++----------------------------+--------+---------------------------------------------------------+
+
+Each tenant's "score" is based on the number of queries it runs, and the
+recency of those queries. Every query increases the score of tenant by a
+constant (``ONE_QUERY_SCORE``, currently 1,000,000,000). After every period
+ends, the scores are halved.
+
+Tracking tenant level statistics adds overhead, and by default is disabled.  To
+enable it, set ``citus.stat_tenants_track`` to ``'all'``.
 
 .. _dist_query_activity:
 
