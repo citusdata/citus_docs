@@ -669,16 +669,41 @@ multiple tenants at once.
 +----------------------------+--------+---------------------------------------------------------+
 | query_count_in_last_period | int    | Number of read/write queries one period of time ago     |
 +----------------------------+--------+---------------------------------------------------------+
-| score                      | bigint | Relative activity level of this tenant vs others        |
+| cpu_usage_in_this_period   | double | Seconds of CPU time spent for this tenant in period     |
 +----------------------------+--------+---------------------------------------------------------+
-
-Each tenant's "score" is based on the number of queries it runs, and the
-recency of those queries. Every query increases the score of tenant by a
-constant (``ONE_QUERY_SCORE``, currently 1,000,000,000). After every period
-ends, the scores are halved.
+| cpu_usage_in_last_period   | double | Seconds of CPU time spent for this tenant last period   |
++----------------------------+--------+---------------------------------------------------------+
 
 Tracking tenant level statistics adds overhead, and by default is disabled.  To
 enable it, set ``citus.stat_tenants_track`` to ``'all'``.
+
+**Example:**
+
+Suppose we have a distributed table called ``dist_table``, with distribution
+column ``tenant_id``. Then we make some queries:
+
+.. code-block:: postgres
+
+  INSERT INTO dist_table(tenant_id) VALUES (1);
+  INSERT INTO dist_table(tenant_id) VALUES (1);
+  INSERT INTO dist_table(tenant_id) VALUES (2);
+  
+  SELECT count(*) FROM dist_table WHERE tenant_id = 1;
+
+The tenant-level statistics will reflect the queries we just made:
+
+.. code-block:: postgres
+
+  SELECT tenant_attribute, read_count_in_this_period,
+         query_count_in_this_period, cpu_usage_in_this_period
+    FROM citus_stat_tenants;
+
+::
+
+   tenant_attribute | read_count_in_this_period | query_count_in_this_period | cpu_usage_in_this_period
+  ------------------+---------------------------+----------------------------+--------------------------
+   1                |                         1 |                          3 |                 0.000883
+   2                |                         0 |                          1 |                 0.000144
 
 .. _dist_query_activity:
 
