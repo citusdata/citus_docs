@@ -560,8 +560,6 @@ Query statistics table
 
 Citus provides ``citus_stat_statements`` for stats about how queries are being executed, and for whom. It's analogous to (and can be joined with) the `pg_stat_statements <https://www.postgresql.org/docs/current/static/pgstatstatements.html>`_ view in PostgreSQL which tracks statistics about query speed.
 
-This view can trace queries to originating tenants in a multi-tenant application, which helps for deciding when to do :ref:`tenant_isolation`.
-
 +----------------+--------+---------------------------------------------------------+
 | Name           | Type   | Description                                             |
 +================+========+=========================================================+
@@ -632,6 +630,80 @@ Caveats:
 * The stats data is not replicated, and won't survive database crashes or failover
 * Tracks a limited number of queries, set by the ``pg_stat_statements.max`` GUC (default 5000)
 * To truncate the table, use the ``citus_stat_statements_reset()`` function
+
+.. _citus_stat_tenants:
+
+Tenant-level query statistics view
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``citus_stat_tenants`` view augments the :ref:`citus_stat_statements` with
+information about how many queries each tenant is running. Tracing queries to
+originating tenants helps, among other things, for deciding when to do
+:ref:`tenant_isolation`.
+
+This view counts recent single-tenant queries happening during a configurable
+time period. The tally of read-only and total queries for the period increases
+until the current period ends. After that, the counts are moved to last
+period's statistics, which stays constant until expiration. The period length
+can be set in seconds using ``citus.stats_tenants_period``, and is 24 hours by
+default (60 * 60 * 24).
+
+The view displays up to ``citus.stat_tenants_limit`` rows (by default 100). It
+counts only queries filtered to a single tenant, ignoring queries that apply to
+multiple tenants at once.
+
++----------------------------+--------+---------------------------------------------------------+
+| Name                       | Type   | Description                                             |
++============================+========+=========================================================+
+| nodeid                     | int    | Node ID from :ref:`pg_dist_node`                        |
++----------------------------+--------+---------------------------------------------------------+
+| colocation_id              | int    | ID of :ref:`colocation group <colocation_group_table>`  |
++----------------------------+--------+---------------------------------------------------------+
+| tenant_attribute           | text   | Value in the distribution column identifying tenant     |
++----------------------------+--------+---------------------------------------------------------+
+| read_count_in_this_period  | int    | Number of read (SELECT) queries for tenant in period    |
++----------------------------+--------+---------------------------------------------------------+
+| read_count_in_last_period  | int    | Number of read queries one period of time ago           |
++----------------------------+--------+---------------------------------------------------------+
+| query_count_in_this_period | int    | Number of read/write queries for tenant in time period  |
++----------------------------+--------+---------------------------------------------------------+
+| query_count_in_last_period | int    | Number of read/write queries one period of time ago     |
++----------------------------+--------+---------------------------------------------------------+
+| cpu_usage_in_this_period   | double | Seconds of CPU time spent for this tenant in period     |
++----------------------------+--------+---------------------------------------------------------+
+| cpu_usage_in_last_period   | double | Seconds of CPU time spent for this tenant last period   |
++----------------------------+--------+---------------------------------------------------------+
+
+Tracking tenant level statistics adds overhead, and by default is disabled.  To
+enable it, set ``citus.stat_tenants_track`` to ``'all'``.
+
+**Example:**
+
+Suppose we have a distributed table called ``dist_table``, with distribution
+column ``tenant_id``. Then we make some queries:
+
+.. code-block:: postgres
+
+  INSERT INTO dist_table(tenant_id) VALUES (1);
+  INSERT INTO dist_table(tenant_id) VALUES (1);
+  INSERT INTO dist_table(tenant_id) VALUES (2);
+  
+  SELECT count(*) FROM dist_table WHERE tenant_id = 1;
+
+The tenant-level statistics will reflect the queries we just made:
+
+.. code-block:: postgres
+
+  SELECT tenant_attribute, read_count_in_this_period,
+         query_count_in_this_period, cpu_usage_in_this_period
+    FROM citus_stat_tenants;
+
+::
+
+   tenant_attribute | read_count_in_this_period | query_count_in_this_period | cpu_usage_in_this_period
+  ------------------+---------------------------+----------------------------+--------------------------
+   1                |                         1 |                          3 |                 0.000883
+   2                |                         0 |                          1 |                 0.000144
 
 .. _dist_query_activity:
 

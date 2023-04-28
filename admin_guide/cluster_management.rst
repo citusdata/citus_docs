@@ -350,6 +350,9 @@ Results:
 
 We can see that Citus uses the adaptive executor most commonly to run queries. This executor fragments the query into constituent queries to run on relevant nodes, and combines the results on the coordinator node. In the case of the second query (filtering by the distribution column ``id = $1``), Citus determined that it needed the data from just one node. Lastly, we can see that the ``insert into foo select…`` statement ran with the insert-select executor which provides flexibility to run these kind of queries.
 
+Tenant-level Statistics
+-----------------------
+
 So far the information in this view doesn't give us anything we couldn't already learn by running the ``EXPLAIN`` command for a given query. However, in addition to getting information about individual queries, the ``citus_stat_statements`` view allows us to answer questions such as "what percentage of queries in the cluster are scoped to a single tenant?"
 
 .. code-block:: postgresql
@@ -369,24 +372,7 @@ So far the information in this view doesn't give us anything we couldn't already
 
 In a multi-tenant database, for instance, we would expect the vast majority of queries to be single tenant. Seeing too many multi-tenant queries may indicate that queries do not have the proper filters to match a tenant, and are using unnecessary resources.
 
-We can also find which partition_ids are the most frequent targets. In a multi-tenant application these would be the busiest tenants.
-
-.. code-block:: sql
-
-  SELECT partition_key, sum(calls) as total_queries
-  FROM citus_stat_statements
-  WHERE coalesce(partition_key, '') <> ''
-  GROUP BY partition_key
-  ORDER BY total_queries desc
-  LIMIT 10;
-
-::
-
-  ┌───────────────┬───────────────┐
-  │ partition_key │ total_queries │
-  ├───────────────┼───────────────┤
-  │ 42            │             1 │
-  └───────────────┴───────────────┘
+To investigate which tenants in particular are most active, you can use the :ref:`citus_stat_tenants`.
 
 Statistics Expiration
 ---------------------
