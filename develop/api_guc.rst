@@ -258,6 +258,51 @@ or when the shard rebalancer moves shards to the new node.
 
 The default value for this GUC is 'on'.
 
+.. _metadata_sync_mode:
+
+citus.metadata_sync_mode (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+   Requires superuser access to change.
+
+This GUC determines how Citus synchronizes :ref:`metadata <metadata_tables>`
+across nodes. By default Citus updates all metadata in a single transaction for
+consistency. However, PostgreSQL has a hard memory limit related to cache
+invalidations, and Citus metadata syncing for a large cluster can fail from
+memory exhaustion.
+
+As a workaround, Citus provides an optional nontransactional sync mode which
+uses a series of smaller transactions. While this mode works in limited memory,
+there's a possibility of transactions failing and leaving metadata in an
+inconsistency state. To help with this potential problem, nontransactional
+metadata sync is designed as an idempotent action, so you can re-run it
+repeatedly if needed.
+
+There are two values for this GUC:
+
+* **transactional:** (Default) Synchronize all metadata in a single transaction.
+
+* **nontransactional:** Synchronize metadata using multiple small transactions.
+
+Examples:
+
+.. code-block:: postgresql
+
+   -- to add a new node and sync nontransactionally
+
+   SET citus.metadata_sync_mode TO 'nontransactional';
+   SELECT citus_add_node(<ip>, <port>);
+
+   -- to manually (re)sync
+
+   SET citus.metadata_sync_mode TO 'nontransactional';
+   SELECT start_metadata_sync_to_all_nodes();
+
+We advise trying transactional mode first, and switching to nontransactional
+only if a memory failure occurs.
+
 Planner Configuration
 ------------------------------------------------
 
