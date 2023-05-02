@@ -78,24 +78,18 @@ To add a new node to the cluster, you first need to add the DNS name or IP addre
 
 The new node is available for shards of new distributed tables. Existing shards will stay where they are unless redistributed, so adding a new worker may not help performance without further steps.
 
-If your cluster has very large reference tables, they can slow down the addition of a node. In this case, consider the :ref:`replicate_reference_tables_on_activate` GUC.
-
 .. note::
 
-   As of Citus 8.1, workers use encrypted communication by default. A new node running version 8.1 or greater will refuse to talk with other workers who do not have SSL enabled. When adding a node to a cluster without encrypted communication, you must reconfigure the new node before creating the Citus extension.
+  If your cluster has very large reference tables, they can slow down the
+  addition of a node. In this case, consider the
+  :ref:`replicate_reference_tables_on_activate` GUC.
 
-   First, from the coordinator node check whether the other workers use SSL:
-
-   .. code-block:: sql
-
-      SELECT run_command_on_workers('show ssl');
-
-   If they do not, then connect to the new node and permit it to communicate over plaintext if necessary:
-
-   .. code-block:: sql
-
-      ALTER SYSTEM SET citus.node_conninfo TO 'sslmode=prefer';
-      SELECT pg_reload_conf();
+  Also, new nodes synchronize Citus' :ref:`metadata <metadata_tables>` upon
+  creation.  By default, the sync happens inside a single transaction for
+  consistency.  However, in a big cluster with large amounts of metadata, the
+  transaction can run out of memory and fail.  If you encounter this situation,
+  you can choose a non-transactional metadata sync mode with the
+  :ref:`metadata_sync_mode` GUC.
 
 .. _shard_rebalancing:
 
