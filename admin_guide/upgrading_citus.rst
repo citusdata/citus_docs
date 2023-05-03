@@ -13,21 +13,21 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 11.2 is currently installed on Postgres 15:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 11.3 is currently installed on Postgres 15:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-15-citus-11.2
+  sudo apt-get install --only-upgrade postgresql-15-citus-11.3
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus112_15
+  sudo yum update citus113_15
   sudo service postgresql-15 restart
 
 .. _major_minor_upgrade:
@@ -46,14 +46,14 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 10.2 to 11.2 on Postgres 14:
+If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 10.2 to 11.3 on Postgres 14:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-14-citus-11.2
+  sudo apt-get install postgresql-14-citus-11.3
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -61,7 +61,7 @@ If upgrading both Citus and Postgres, always be sure to upgrade the Citus extens
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus102_14 citus112_14
+  sudo yum swap citus102_14 citus113_14
   sudo service postgresql-14 restart
 
 Step 2. Apply Update in DB
@@ -114,10 +114,10 @@ Upgrading PostgreSQL version from 14 to 15
 
 Record the following paths before you start (your actual paths may be different than those below):
 
-Existing data directory (e.g. /opt/pgsql/10/data)
+Existing data directory (e.g. /opt/pgsql/14/data)
   :code:`export OLD_PG_DATA=/opt/pgsql/14/data`
 
-Existing PostgreSQL installation path (e.g. /usr/pgsql-10)
+Existing PostgreSQL installation path (e.g. /usr/pgsql-14)
   :code:`export OLD_PG_PATH=/usr/pgsql-14`
 
 New data directory after upgrade
