@@ -138,6 +138,13 @@ The :ref:`max_background_task_executors_per_node` GUC allows tasks such as shard
 rebalancing to operate in parallel. You can increase it from its default value
 (1) as desired to boost parallelism. 
 
+.. code-block:: postgresql
+
+   ALTER SYSTEM SET citus.max_background_task_executors_per_node = 2;
+   SELECT pg_reload_conf();
+   
+   SELECT citus_rebalance_start();
+
 **What are the typical use cases?**
 
 * Scaling out faster when adding new nodes to the cluster
