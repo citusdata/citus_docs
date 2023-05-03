@@ -119,6 +119,37 @@ and on our managed service, rebalancing is able to honor this requirement
 on PostgreSQL 10 or above. This means reads and writes from the application can
 continue with minimal interruption while data is being moved.
 
+Parallel Rebalancing
+~~~~~~~~~~~~~~~~~~~~
+
+This operation carries out multiple shard moves in a sequential order by 
+default. There are some cases where you may prefer to rebalance faster at the
+expense of using more resources such as network bandwidth. In those situations,
+customers are able to configure a rebalance operation to perform a number of 
+shard moves in parallel. 
+
+The :ref:`max_background_task_executors_per_node` GUC allows tasks such as shard
+rebalancing to operate in parallel. You can increase it from its default value
+(1) as desired to boost parallelism. 
+
+.. code-block:: postgresql
+
+   ALTER SYSTEM SET citus.max_background_task_executors_per_node = 2;
+   SELECT pg_reload_conf();
+   
+   SELECT citus_rebalance_start();
+
+**What are the typical use cases?**
+
+* Scaling out faster when adding new nodes to the cluster
+* Rebalancing the cluster faster to even out the utilization of nodes
+
+**Corner Cases and Gotchas**
+
+:code:`citus.max_background_task_executors_per_node` value limits the number of parallel 
+task executors in general. Also, shards in the same colocation group will always move
+sequentially so parallelism may be limited by the number of colocation groups.
+
 How it Works
 ~~~~~~~~~~~~
 
