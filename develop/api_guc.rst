@@ -22,7 +22,11 @@ General configuration
 citus.max_background_task_executors_per_node (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Determines how many background tasks can be executed in parallel at a given time. For instance, these tasks are for shard moves from/to a node. 
+Determines how many background tasks can be executed in parallel at a given
+time. For instance, these tasks are for shard moves from/to a node. When
+increasing this value, you'll often also want to increase
+``citus.max_background_task_executors`` and `max_worker_processes
+<https://www.postgresql.org/docs/current/runtime-config-resource.html#GUC-MAX-WORKER-PROCESSES>`_.
 
 * Default: 1
 * Minimum: 1
