@@ -1,6 +1,57 @@
 External Integrations
 #####################
 
+Change Data Capture (CDC)
+=========================
+
+.. note::
+
+  Logical decoding for distributed tables is a beta feature in Citus v11.3.
+
+PostgreSQL provides :ref:`logical
+decoding <https://www.postgresql.org/docs/current/logicaldecoding.html>` to
+export events of interest from its write-ahead log (WAL) to other programs or
+databases. The WAL keeps track of all committed data transactions; it is the
+authority on all data changes happening on a PostgreSQL instance. By
+subscribing to a logical decoding slot, an application can get real-time push
+notification of the changes.
+
+Consuming change events from Citus rather than single-node PostgreSQL adds two
+groups of challenges:
+
+1. **Client subscription complexity.** Any logical decoding publication must be
+   created in duplicate across all nodes. An interested application must
+   subscribe to all of them. Furthermore, events from each publication are
+   guaranteed to be emitted in the order they happen in the database, but this
+   guarantee does not hold for events arriving from multiple nodes.
+2. **Shard complexity.** (Automatically handled by Citus v11.3+ when the
+   :ref:`enable_change_data_capture` GUC is enabled.) Citus nodes store shards
+   as physical tables. For example, a distributed table called ``foo`` is
+   stored across multiple tables with names such as ``foo_102027``. The
+   underlying shard names should be translated back to the conceptual name of
+   the distributed table for CDC.  Also administrative actions like moving
+   shards between worker nodes generates WAL events, but these spurious events
+   should be hidden from CDC.
+
+If the :ref:`enable_change_data_capture` GUC is enabled, Citus automatically
+handles the issues from group two, normalizing shard names and suppressing
+events from shard creation and movement. Issues in group one, however, are the
+client's responsibility.
+
+Logical replication of distributed tables to PostgreSQL tables
+--------------------------------------------------------------
+
+As an example, let's use a single-node PostgreSQL server to subscribe to
+changes from a Citus cluster and populate a table. Logical decoding forms the
+basis of :ref:`logical replication
+<https://www.postgresql.org/docs/current/logical-replication.html>`, which
+allows you to replicate table changes from one PostgreSQL server to another.
+
+Caveats
+-------
+
+Foo
+
 Ingesting Data from Kafka
 =========================
 
