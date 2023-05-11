@@ -8,9 +8,12 @@ Change Data Capture (CDC)
 
   Logical decoding for distributed tables is a beta feature in Citus v11.3.
 
-PostgreSQL provides :ref:`logical
-decoding <https://www.postgresql.org/docs/current/logicaldecoding.html>` to
-export events of interest from its write-ahead log (WAL) to other programs or
+Differences from single-node PostgreSQL
+---------------------------------------
+
+PostgreSQL provides `logical decoding
+<https://www.postgresql.org/docs/current/logicaldecoding.html>`_ to export
+events of interest from its write-ahead log (WAL) to other programs or
 databases. The WAL keeps track of all committed data transactions; it is the
 authority on all data changes happening on a PostgreSQL instance. By
 subscribing to a logical decoding slot, an application can get real-time push
@@ -21,7 +24,7 @@ groups of challenges:
 
 1. **Client subscription complexity.** Any logical decoding publication must be
    created in duplicate across all nodes. An interested application must
-   subscribe to all of them. Furthermore, events from each publication are
+   subscribe to all of them. Furthermore, events within each publication are
    guaranteed to be emitted in the order they happen in the database, but this
    guarantee does not hold for events arriving from multiple nodes.
 2. **Shard complexity.** (Automatically handled by Citus v11.3+ when the
@@ -41,16 +44,110 @@ client's responsibility.
 Logical replication of distributed tables to PostgreSQL tables
 --------------------------------------------------------------
 
-As an example, let's use a single-node PostgreSQL server to subscribe to
-changes from a Citus cluster and populate a table. Logical decoding forms the
-basis of :ref:`logical replication
-<https://www.postgresql.org/docs/current/logical-replication.html>`, which
+Postgres' CDC with logical decoding forms the basis of `logical
+replication
+<https://www.postgresql.org/docs/current/logical-replication.html>`_, which
 allows you to replicate table changes from one PostgreSQL server to another.
+As an example, let's subscribe to changes from a distributed table in a Citus
+cluster, and populate a regular table in a single-node PostgreSQL server. 
 
-Caveats
--------
+First, enable logical decoding on all Citus nodes. In the postgresql.conf file
+of each of them, configure the WAL and replication slots:
 
-Foo
+.. code-block:: ini
+
+   # add to postgresql.conf on all nodes
+
+   # include enough information in WAL for logical decoding
+
+   wal_level = logical
+
+   # we need at least one replication slot
+
+   max_replication_slots = 1
+
+From the coordinator node, enable Citus' logical replication improvements
+for distributed tables:
+
+.. code-block:: postgresql
+
+   -- run this on the coordinator node
+
+   SELECT * FROM run_command_on_all_nodes($$
+	 ALTER SYSTEM SET citus.enable_change_data_capture TO 'on';
+   $$);
+
+After changing the configuration files, restart the PostgreSQL server in each
+Citus node.
+
+Create a logical replication slot emitting ``pgoutput`` format on each node by
+running the following on the coordinator:
+
+.. code-block:: postgresql
+
+   SELECT * FROM run_command_on_all_nodes($$
+     SELECT pg_create_logical_replication_slot('cdc_slot', 'pgoutput')
+   $$);
+
+Create an example distributed table on the coordinator, and a publication to
+share changes from the table.
+
+.. code-block:: postgresql
+
+   -- example distributed table
+
+   CREATE TABLE items (
+   	 key TEXT PRIMARY KEY,
+   	 value TEXT
+   );
+   
+   SELECT create_distributed_table('items', 'key');
+   
+   -- citus will propagate to workers, creating subscriptions there too
+   
+   CREATE PUBLICATION items_pub FOR TABLE items;
+
+   -- fill with sample data
+
+   INSERT INTO items SELECT generate_series(1,10), 'a value';
+
+Finally, on the single node PostgreSQL server, create the ``items`` table, and
+enable subscriptions to read rows from all Citus nodes.
+
+.. code-block:: postgresql
+
+   -- on the standalone PostgreSQL server
+
+   -- match the table structure we have on Citus
+
+   CREATE TABLE items (
+   	 key TEXT PRIMARY KEY,
+   	 value TEXT
+   );
+
+   -- subscribe to coordinator
+
+   CREATE SUBSCRIPTION subc
+   	  CONNECTION 'host=c.myclyster … '
+   	  PUBLICATION items_pub
+   	  WITH (copy_data=true,create_slot=false,slot_name='cdc_slot');
+   
+   -- subscribe to each worker (assuming there are two workers)
+
+   CREATE SUBSCRIPTION subw0
+   	  CONNECTION 'host=w0.mycluster … '
+   	  PUBLICATION items_pub
+   	  WITH (copy_data=true,create_slot=false,slot_name='cdc_slot');
+   
+   CREATE SUBSCRIPTION subw1
+   	  CONNECTION 'host=w1.mycluster … '
+   	  PUBLICATION items_pub
+   	  WITH (copy_data=true,create_slot=false,slot_name='cdc_slot');
+
+Logical decoding caveats
+------------------------
+
+TODO
 
 Ingesting Data from Kafka
 =========================
