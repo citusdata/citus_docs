@@ -62,9 +62,9 @@ of each of them, configure the WAL and replication slots:
 
    wal_level = logical
 
-   # we need at least one replication slot
+   # we need at least one replication slot, but leave headroom
 
-   max_replication_slots = 1
+   max_replication_slots = 10
 
 From the coordinator node, enable Citus' logical replication improvements
 for distributed tables:
@@ -80,15 +80,6 @@ for distributed tables:
 After changing the configuration files, restart the PostgreSQL server in each
 Citus node.
 
-Create a logical replication slot emitting ``pgoutput`` format on each node by
-running the following on the coordinator:
-
-.. code-block:: postgresql
-
-   SELECT * FROM run_command_on_all_nodes($$
-     SELECT pg_create_logical_replication_slot('cdc_slot', 'pgoutput')
-   $$);
-
 Create an example distributed table on the coordinator, and a publication to
 share changes from the table.
 
@@ -103,7 +94,7 @@ share changes from the table.
    
    SELECT create_distributed_table('items', 'key');
    
-   -- citus will propagate to workers, creating subscriptions there too
+   -- citus will propagate to workers, creating publications there too
    
    CREATE PUBLICATION items_pub FOR TABLE items;
 
@@ -111,8 +102,21 @@ share changes from the table.
 
    INSERT INTO items SELECT generate_series(1,10), 'a value';
 
+Check that the worker nodes have the correct hostname set for the coordinator,
+and adjust with :ref:`citus_set_coordinator_host` if necessary. Then, create
+logical replication slots on all nodes by running the following on the
+coordinator:
+
+.. code-block:: postgresql
+
+   -- create replication slots on all nodes, and choose the pgoutput format
+
+   SELECT * FROM run_command_on_all_nodes($$
+     SELECT pg_create_logical_replication_slot('cdc_slot', 'pgoutput', false)
+   $$);
+
 Finally, on the single node PostgreSQL server, create the ``items`` table, and
-enable subscriptions to read rows from all Citus nodes.
+set up subscriptions to read rows from all Citus nodes.
 
 .. code-block:: postgresql
 
@@ -137,12 +141,19 @@ enable subscriptions to read rows from all Citus nodes.
    CREATE SUBSCRIPTION subw0
    	  CONNECTION 'host=w0.mycluster … '
    	  PUBLICATION items_pub
-   	  WITH (copy_data=true,create_slot=false,slot_name='cdc_slot');
+   	  WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
    
    CREATE SUBSCRIPTION subw1
    	  CONNECTION 'host=w1.mycluster … '
    	  PUBLICATION items_pub
-   	  WITH (copy_data=true,create_slot=false,slot_name='cdc_slot');
+   	  WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
+
+.. note::
+
+   The ``copy_data`` argument should be set to true on the coordinator
+   subscription, to copy any existing data to the CDC client. However,
+   ``copy_data`` should be false for worker subscriptions, otherwise it'll
+   result in duplicate data in the CDC client and cause replication errors.
 
 Logical decoding caveats
 ------------------------
