@@ -56,26 +56,26 @@ of each of them, configure the WAL and replication slots:
 
 .. code-block:: ini
 
-   # add to postgresql.conf on all nodes
+  # add to postgresql.conf on all nodes
 
-   # include enough information in WAL for logical decoding
+  # include enough information in WAL for logical decoding
 
-   wal_level = logical
+  wal_level = logical
 
-   # we need at least one replication slot, but leave headroom
+  # we need at least one replication slot, but leave headroom
 
-   max_replication_slots = 10
+  max_replication_slots = 10
 
 From the coordinator node, enable Citus' logical replication improvements
 for distributed tables:
 
 .. code-block:: postgresql
 
-   -- run this on the coordinator node
+  -- run this on the coordinator node
 
-   SELECT * FROM run_command_on_all_nodes($$
-	 ALTER SYSTEM SET citus.enable_change_data_capture TO 'on';
-   $$);
+  SELECT * FROM run_command_on_all_nodes($$
+    ALTER SYSTEM SET citus.enable_change_data_capture TO 'on';
+  $$);
 
 After changing the configuration files, restart the PostgreSQL server in each
 Citus node.
@@ -85,22 +85,22 @@ share changes from the table.
 
 .. code-block:: postgresql
 
-   -- example distributed table
+  -- example distributed table
 
-   CREATE TABLE items (
-   	 key TEXT PRIMARY KEY,
-   	 value TEXT
-   );
-   
-   SELECT create_distributed_table('items', 'key');
-   
-   -- citus will propagate to workers, creating publications there too
-   
-   CREATE PUBLICATION items_pub FOR TABLE items;
+  CREATE TABLE items (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
 
-   -- fill with sample data
+  SELECT create_distributed_table('items', 'key');
 
-   INSERT INTO items SELECT generate_series(1,10), 'a value';
+  -- citus will propagate to workers, creating publications there too
+
+  CREATE PUBLICATION items_pub FOR TABLE items;
+
+  -- fill with sample data
+
+  INSERT INTO items SELECT generate_series(1,10), 'a value';
 
 Check that the worker nodes have the correct hostname set for the coordinator,
 and adjust with :ref:`citus_set_coordinator_host` if necessary. Then, create
@@ -109,44 +109,44 @@ coordinator:
 
 .. code-block:: postgresql
 
-   -- create replication slots on all nodes, and choose the pgoutput format
+  -- create replication slots on all nodes, and choose the pgoutput format
 
-   SELECT * FROM run_command_on_all_nodes($$
-     SELECT pg_create_logical_replication_slot('cdc_slot', 'pgoutput', false)
-   $$);
+  SELECT * FROM run_command_on_all_nodes($$
+    SELECT pg_create_logical_replication_slot('cdc_slot', 'pgoutput', false)
+  $$);
 
 Finally, on the single node PostgreSQL server, create the ``items`` table, and
 set up subscriptions to read rows from all Citus nodes.
 
 .. code-block:: postgresql
 
-   -- on the standalone PostgreSQL server
+  -- on the standalone PostgreSQL server
 
-   -- match the table structure we have on Citus
+  -- match the table structure we have on Citus
 
-   CREATE TABLE items (
-   	 key TEXT PRIMARY KEY,
-   	 value TEXT
-   );
+  CREATE TABLE items (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
 
-   -- subscribe to coordinator
+  -- subscribe to coordinator
 
-   CREATE SUBSCRIPTION subc
-   	  CONNECTION 'host=c.myclyster … '
-   	  PUBLICATION items_pub
-   	  WITH (copy_data=true,create_slot=false,slot_name='cdc_slot');
-   
-   -- subscribe to each worker (assuming there are two workers)
+  CREATE SUBSCRIPTION subc
+    CONNECTION 'host=c.myclyster … '
+    PUBLICATION items_pub
+    WITH (copy_data=true,create_slot=false,slot_name='cdc_slot');
 
-   CREATE SUBSCRIPTION subw0
-   	  CONNECTION 'host=w0.mycluster … '
-   	  PUBLICATION items_pub
-   	  WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
-   
-   CREATE SUBSCRIPTION subw1
-   	  CONNECTION 'host=w1.mycluster … '
-   	  PUBLICATION items_pub
-   	  WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
+  -- subscribe to each worker (assuming there are two workers)
+
+  CREATE SUBSCRIPTION subw0
+    CONNECTION 'host=w0.mycluster … '
+    PUBLICATION items_pub
+    WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
+
+  CREATE SUBSCRIPTION subw1
+    CONNECTION 'host=w1.mycluster … '
+    PUBLICATION items_pub
+    WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
 
 .. note::
 
