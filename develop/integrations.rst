@@ -158,7 +158,23 @@ set up subscriptions to read rows from all Citus nodes.
 Logical decoding caveats
 ------------------------
 
-TODO
+* **Support for only the pgoutput and wal2json formats, so far.** You can
+  currently use these two decoders (if installed). Other decoders will not have
+  the distributed table name normalizing applied to them
+* **Replication slots need to be created separately on each node.** While the
+  initial creation is easy with :ref:`run_command_on_all_nodes`, there is still
+  extra work when adding a new node. You need to create a replication slot (or
+  subscription) before rebalancing shards.
+* **Cross-node changes arriving out of order.** Changes happening on the same
+  node always arrive in the same order, but since your client will listen to
+  each node separately, there are no guarantees regarding the order of changes
+  happening across different nodes.
+* **Distributed table modification restriction.** Using
+  :ref:`alter_distributed_table` will break the replication stream.
+* **No columnar tables.** logical decoding does not work with :ref:`columnar`.
+* **The need for a consumer.** When doing logical decoding (with or without
+  Citus), be sure there are subscribers consuming publications, or else the WAL
+  data will accumulate and cause problems for the publishing database.
 
 Ingesting Data from Kafka
 =========================
