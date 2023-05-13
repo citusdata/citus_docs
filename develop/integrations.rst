@@ -1,6 +1,8 @@
 External Integrations
 #####################
 
+.. _cdc:
+
 Change Data Capture (CDC)
 =========================
 
@@ -103,9 +105,8 @@ share changes from the table.
   INSERT INTO items SELECT generate_series(1,10), 'a value';
 
 Check that the worker nodes have the correct hostname set for the coordinator,
-and adjust with :ref:`citus_set_coordinator_host` if necessary. Then, create
-logical replication slots on all nodes by running the following on the
-coordinator:
+and adjust with :ref:`set_coordinator_host` if necessary. Then, create logical
+replication slots on all nodes by running the following on the coordinator:
 
 .. code-block:: postgresql
 
@@ -162,9 +163,10 @@ Logical decoding caveats
   currently use these two decoders (if installed). Other decoders will not have
   the distributed table name normalizing applied to them
 * **Replication slots need to be created separately on each node.** While the
-  initial creation is easy with :ref:`run_command_on_all_nodes`, there is still
-  extra work when adding a new node. You need to create a replication slot (or
-  subscription) before rebalancing shards.
+  initial creation is easy with :ref:`run_command_on_all_nodes
+  <worker_propagation>`, there is still extra work when adding a new node. You
+  need to create a replication slot (or subscription) before rebalancing
+  shards.
 * **Cross-node changes arriving out of order.** Changes happening on the same
   node always arrive in the same order, but since your client will listen to
   each node separately, there are no guarantees regarding the order of changes

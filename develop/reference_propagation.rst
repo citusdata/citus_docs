@@ -23,6 +23,9 @@ databases.
   -- List the work_mem setting of each worker database
   SELECT run_command_on_workers($cmd$ SHOW work_mem; $cmd$);
 
+To run on all nodes -- both workers and the coordinator -- use
+``run_command_on_all_nodes()``.
+
 .. note::
 
   This command shouldn't be used to create database objects on the workers, as
