@@ -8,7 +8,7 @@ Change Data Capture (CDC)
 
 .. note::
 
-  Logical decoding for distributed tables is a beta feature in Citus v11.3.
+  Logical decoding for distributed tables is a preview feature in Citus v11.3.
 
 Differences from single-node PostgreSQL
 ---------------------------------------
@@ -18,29 +18,29 @@ PostgreSQL provides `logical decoding
 events of interest from its write-ahead log (WAL) to other programs or
 databases. The WAL keeps track of all committed data transactions; it is the
 authority on all data changes happening on a PostgreSQL instance. By
-subscribing to a logical decoding slot, an application can get real-time push
+subscribing to a logical replication slot, an application can get real-time
 notification of the changes.
 
-Consuming change events from Citus rather than single-node PostgreSQL adds two
-groups of challenges:
+Consuming change events from a Citus cluster rather than single-node PostgreSQL
+adds two sets of challenges:
 
 1. **Client subscription complexity.** Any logical decoding publication must be
    created in duplicate across all nodes. An interested application must
    subscribe to all of them. Furthermore, events within each publication are
-   guaranteed to be emitted in the order they happen in the database, but this
+   guaranteed to be emitted in the order they happen in the node, but this
    guarantee does not hold for events arriving from multiple nodes.
 2. **Shard complexity.** (Automatically handled by Citus v11.3+ when the
    :ref:`enable_change_data_capture` GUC is enabled.) Citus nodes store shards
    as physical tables. For example, a distributed table called ``foo`` is
-   stored across multiple tables with names such as ``foo_102027``. The
-   underlying shard names should be translated back to the conceptual name of
-   the distributed table for CDC.  Also administrative actions like moving
-   shards between worker nodes generates WAL events, but these spurious events
-   should be hidden from CDC.
+   stored across multiple tables with names such as ``foo_102027``,
+   ``foo_102028``, etc. The underlying shard names should be translated back to
+   the conceptual name of the distributed table for CDC.  Also administrative
+   actions like moving shards between worker nodes generates WAL events, but
+   these spurious events should be hidden from CDC.
 
 If the :ref:`enable_change_data_capture` GUC is enabled, Citus automatically
-handles the issues from group two, normalizing shard names and suppressing
-events from shard creation and movement. Issues in group one, however, are the
+handles the first set of issues, normalizing shard names and suppressing events
+from shard creation and movement. The second set of issues, however, are the
 client's responsibility.
 
 Logical replication of distributed tables to PostgreSQL tables
@@ -68,16 +68,9 @@ of each of them, configure the WAL and replication slots:
 
   max_replication_slots = 10
 
-From the coordinator node, enable Citus' logical replication improvements
-for distributed tables:
+  # enable Citus' logical decoding improvements for dist tables
 
-.. code-block:: postgresql
-
-  -- run this on the coordinator node
-
-  SELECT * FROM run_command_on_all_nodes($$
-    ALTER SYSTEM SET citus.enable_change_data_capture TO 'on';
-  $$);
+  citus.enable_change_data_capture = 'on'
 
 After changing the configuration files, restart the PostgreSQL server in each
 Citus node.
@@ -103,6 +96,18 @@ share changes from the table.
   -- fill with sample data
 
   INSERT INTO items SELECT generate_series(1,10), 'a value';
+
+.. note::
+
+  Be careful *not* to create a publication for all tables.
+
+  .. code-block:: postgresql
+
+    -- don't do this!
+    CREATE PUBLICATION FOR ALL TABLES;
+
+  Creating publications for all tables includes Citus' own :ref:`metadata
+  tables <metadata_tables>`, which can cause problems.
 
 Check that the worker nodes have the correct hostname set for the coordinator,
 and adjust with :ref:`set_coordinator_host` if necessary. Then, create logical
@@ -133,19 +138,19 @@ set up subscriptions to read rows from all Citus nodes.
   -- subscribe to coordinator
 
   CREATE SUBSCRIPTION subc
-    CONNECTION 'host=c.myclyster … '
+    CONNECTION 'dbname=<dbname> host=<coordinator host> user=<username> port=<coordinator port>'
     PUBLICATION items_pub
     WITH (copy_data=true,create_slot=false,slot_name='cdc_slot');
 
   -- subscribe to each worker (assuming there are two workers)
 
   CREATE SUBSCRIPTION subw0
-    CONNECTION 'host=w0.mycluster … '
+    CONNECTION 'dbname=<dbname> host=<worker1 host> user=<user> port=<worker1 port>'
     PUBLICATION items_pub
     WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
 
   CREATE SUBSCRIPTION subw1
-    CONNECTION 'host=w1.mycluster … '
+    CONNECTION 'dbname=<dbname> host=<worker2 host> user=<user> port=<worker2 port>'
     PUBLICATION items_pub
     WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
 

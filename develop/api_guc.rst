@@ -463,7 +463,9 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 This setting, disabled by default, causes Citus to alter the ``wal2json`` and
 ``pgoutput`` logical decoders to work with distributed tables. Specifically, it
 rewrites the names of shards (e.g. ``foo_102027``) in decoder output to the
-base names of the distributed tables (e.g. ``foo``).
+base names of the distributed tables (e.g. ``foo``).  It also avoids publishing
+duplicate events during tenant isolation and shard split/move/rebalance
+operations.
 
 For an example of using this GUC, see :ref:`cdc`.
 
