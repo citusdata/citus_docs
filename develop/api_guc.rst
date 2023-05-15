@@ -455,6 +455,20 @@ limitations as reference tables (see :ref:`ddl` and :ref:`citus_sql_reference`).
 If you drop the foreign keys, Citus will automatically remove such local tables from metadata,
 which eliminates such limitations on those tables.
 
+.. _enable_change_data_capture:
+
+citus.enable_change_data_capture (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This setting, disabled by default, causes Citus to alter the ``wal2json`` and
+``pgoutput`` logical decoders to work with distributed tables. Specifically, it
+rewrites the names of shards (e.g. ``foo_102027``) in decoder output to the
+base names of the distributed tables (e.g. ``foo``).  It also avoids publishing
+duplicate events during tenant isolation and shard split/move/rebalance
+operations.
+
+For an example of using this GUC, see :ref:`cdc`.
+
 .. _executor_configuration:
 
 Executor Configuration
