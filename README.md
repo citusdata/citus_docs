@@ -1,4 +1,4 @@
-### Sphinx source files for Citus documentation
+### Sphinx source files for Citus documentation 
 
 This is the repo that generates
 [docs.citusdata.com](https://docs.citusdata.com). It documents the [Citus
