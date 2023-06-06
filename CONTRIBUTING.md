@@ -1,3 +1,17 @@
+# Contributing to Citus
+
+We're happy you want to contribute! You can help us in different ways:
+
+* Open an [issue](https://github.com/citusdata/citus_docs/issues) with
+  suggestions for improvements
+* Fork this repository and submit a pull request
+
+Before accepting any code contributions we ask that contributors
+sign a Contributor License Agreement (CLA). For an explanation of
+why we ask this as well as instructions for how to proceed, see the
+[Microsoft CLA](https://cla.opensource.microsoft.com/).
+
+
 ## Building and previewing the docs locally
 
 To generate an HTML version:
