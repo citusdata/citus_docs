@@ -645,8 +645,8 @@ This view counts recent single-tenant queries happening during a configurable
 time period. The tally of read-only and total queries for the period increases
 until the current period ends. After that, the counts are moved to last
 period's statistics, which stays constant until expiration. The period length
-can be set in seconds using ``citus.stats_tenants_period``, and is 24 hours by
-default (60 * 60 * 24).
+can be set in seconds using ``citus.stats_tenants_period``, and is 60 seconds by
+default.
 
 The view displays up to ``citus.stat_tenants_limit`` rows (by default 100). It
 counts only queries filtered to a single tenant, ignoring queries that apply to
