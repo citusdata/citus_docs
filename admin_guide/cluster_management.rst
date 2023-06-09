@@ -191,8 +191,17 @@ Adding a coordinator
 
 The Citus coordinator only stores metadata about the table shards and does not store any data. This means that all the computation is pushed down to the workers and the coordinator does only final aggregations on the result of the workers. Therefore, it is not very likely that the coordinator becomes a bottleneck for read performance. Also, it is easy to boost up the coordinator by shifting to a more powerful machine.
 
-However, in some write heavy use cases where the coordinator becomes a performance bottleneck, users can add another coordinator. As the metadata tables are small (typically a few MBs in size), it is possible to copy over the metadata onto another node and sync it regularly. Once this is done, users can send their queries to any coordinator and scale out performance. If your setup requires you to use multiple coordinators, please `contact us <https://www.citusdata.com/about/contact_us>`_.
+However, in some write heavy use cases where the coordinator becomes a performance bottleneck, you can add another node as below and load balance the client connections.
 
+.. code-block:: postgresql
+
+  SELECT * FROM citus_add_node(second_coordinator_hostname, second_coordinator_port);
+  SELECT * FROM citus_set_node_property(second_coordinator_hostname, second_coordinator_port, 'shouldhaveshards', false);
+
+.. note::
+  
+  DDL queries can only be run though the first coordinator node.
+  
 .. _dealing_with_node_failures:
 
 Dealing With Node Failures
