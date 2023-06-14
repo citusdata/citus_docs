@@ -193,7 +193,7 @@ Postgres <https://www.citusdata.com/blog/2017/04/04/distributed_count_distinct_w
     SELECT
         date_trunc('minute', created_at) AS created_at,
         event_type,
-        sum(hll_hash_bigint(user_id))
+        hll_add_agg(hll_hash_bigint(user_id))
     FROM github_events
     GROUP BY 1, 2;
 
