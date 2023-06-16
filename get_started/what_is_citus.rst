@@ -103,6 +103,23 @@ Citus' benefits here are its ability to parallelize query execution and scale li
 * Use one database, not a patchwork
 * Rich PostgreSQL data types and extensions
 
+.. _ms_blurb:
+
+Microservices
+-------------
+
+Citus supports schema based sharding, which allows distributing regular database schemas across many machines. This sharding methodology fits nicely with typical Microservices architecture, where storage is fully owned by the service hence can't share the same schema definition with other tenants.
+
+Schema based sharding is an easier model to adopt, create a new schema and just set the `search_path` in your service and you're ready to go.
+
+Advantages of using Citus for microservices:
+
+* Ingest strategic business data from microservices into common distributed tables for analytics
+* Effeciently use hardware by balancing services on multiple machines
+* Isolate noisy services to their own nodes
+* Easy to understand sharding model
+* Quick adoption
+
 Considerations for Use
 ----------------------
 
