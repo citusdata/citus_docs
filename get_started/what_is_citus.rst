@@ -115,7 +115,7 @@ Schema based sharding is an easier model to adopt, create a new schema and just 
 Advantages of using Citus for microservices:
 
 * Ingest strategic business data from microservices into common distributed tables for analytics
-* Effeciently use hardware by balancing services on multiple machines
+* Efficiently use hardware by balancing services on multiple machines
 * Isolate noisy services to their own nodes
 * Easy to understand sharding model
 * Quick adoption
