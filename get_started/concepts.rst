@@ -17,6 +17,49 @@ Every cluster has one special node called the *coordinator* (the others are know
 
 For each query, the coordinator either *routes* it to a single worker node, or *parallelizes* it across several depending on whether the required data lives on a single node or multiple.  The coordinator knows how to do this by consulting its metadata tables. These Citus-specific tables track the DNS names and health of worker nodes, and the distribution of data across nodes. For more information, see our :ref:`metadata_tables`.
 
+.. _sharding_models:
+
+Sharding models
+===============
+
+Sharding is a technique used in database systems and distributed computing to horizontally partition data across multiple servers or nodes. It involves breaking up a large database or dataset into smaller, more manageable parts called :ref:`shards`. Each shard contains a subset of the data, and together, they form the complete dataset.
+
+Citus offers two types of data sharding: row-based and schema-based. Each option comes with its own tradeoffs, allowing you to choose the approach that best aligns with your application's requirements.
+
+Row-based sharding
+------------------
+
+In row-based sharding, tenants co-exist as rows within the same table. The tenant is determined by defining a :ref:`dist_column` which allows splitting up a table horizontally.
+
+This is the most hardware efficient way of sharding. Tenants are densly packed and distributed among the nodes in the cluster. This approach however requires making sure that all tables in the schema have the distribution column and that all queries in the application filter by it. Row-based sharding shines in IoT workloads and for achieving the best margin out of hardware use.
+
+Benefits:
+
+* Best performance
+* Best tenant density per node
+
+Drawbacks:
+
+* Requires schema modifications
+* Requires application query modifications
+* All tenants must share the same schema
+
+Schema-based sharding
+---------------------
+
+With schema-based sharding, the schema becomes the logical shard within the database and also denotes the tenant. Query changes are not required and the application usually only needs a small modification to set the proper `search_path` when switching tenants. Schema-based sharding is an ideal solution for microservices, and for ISVs deploying applications that can't undergo the changes required to onboard row-based sharding.
+
+Benefits:
+
+* Tenants can have heterogeneous schemas
+* No schema modifications required
+* No application query modifications required
+* Less SQL limitations compared to row-based sharding
+
+Drawbacks:
+
+* Less tenants per node compared to row-based sharding
+
 Distributed Data
 ================
 
