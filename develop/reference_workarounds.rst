@@ -22,12 +22,12 @@ Even cross-node queries (used for parallel computations) support most SQL featur
   =========== =========== =========== =========================================
   Target      Source      Support     Comments
   =========== =========== =========== =========================================
-  Local       Local       Yes          
-  Local       Distributed No           
-  Local       Reference   No           
-  Distributed Local       No           
-  Distributed Distributed Yes         Only co-located tables.
-  Distributed Reference   No          Feature in development.
+  Local       Local       Yes
+  Local       Reference   Yes
+  Local       Distributed No          Feature in development.
+  Distributed Local       Yes
+  Distributed Distributed Yes         Including non co-located tables.
+  Distributed Reference   Yes
   Reference   N/A         No          Reference table as target is not allowed.
   =========== =========== =========== =========================================
 
