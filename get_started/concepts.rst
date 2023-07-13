@@ -26,6 +26,8 @@ Sharding is a technique used in database systems and distributed computing to ho
 
 Citus offers two types of data sharding: row-based and schema-based. Each option comes with its own tradeoffs, allowing you to choose the approach that best aligns with your application's requirements.
 
+.. _row_based_sharding:
+
 Row-based sharding
 ------------------
 
@@ -44,6 +46,8 @@ Drawbacks:
 * Requires application query modifications
 * All tenants must share the same schema
 
+.. _schema_based_sharding:
+
 Schema-based sharding
 ---------------------
 
@@ -54,7 +58,7 @@ Benefits:
 * Tenants can have heterogeneous schemas
 * No schema modifications required
 * No application query modifications required
-* Less SQL limitations compared to row-based sharding
+* :ref:`schema_based_sharding_limits` is better compared to row-based sharding
 
 Drawbacks:
 

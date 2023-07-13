@@ -9,14 +9,23 @@ Citus has 100% SQL coverage for any queries it is able to execute on a single wo
 
 Even cross-node queries (used for parallel computations) support most SQL features. However, some SQL features are not supported for queries which combine information from multiple nodes.
 
-**Limitations for Cross-Node SQL Queries:**
+Limitations
+-----------
+
+Cross-Node SQL Queries
+~~~~~~~~~~~~~~~~~~~~~~
 
 * `SELECT … FOR UPDATE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FOR-UPDATE-SHARE>`_ work in single-shard queries only
 * `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_ work in single-shard queries only
-* Correlated subqueries are supported only when the correlation is on the :ref:`dist_column`.
+* Correlated subqueries are supported only when the correlation is on the :ref:`dist_column`
 * Outer joins between distributed tables are only supported on the  :ref:`dist_column`
 * `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_ work in single-shard queries only
 * `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`__ work in single-shard queries only
+* The `rule system <https://www.postgresql.org/docs/current/rules.html>`_ is not supported
+* Only regular, foreign or partitioned tables can be distributed
+* Modifying views when the query contains citus tables is not supported
+* Distributing multi-level partitioned tables is not supported
+* STABLE functions used in UPDATE queries cannot be called with column references
 * The SQL `MERGE command <https://www.postgresql.org/docs/current/sql-merge.html>`_ is supported in the following combinations of :ref:`table_types`:
 
   =========== =========== =========== =========================================
@@ -32,6 +41,38 @@ Even cross-node queries (used for parallel computations) support most SQL featur
   =========== =========== =========== =========================================
 
 To learn more about PostgreSQL and its features, you can visit the `PostgreSQL documentation <http://www.postgresql.org/docs/current/static/index.html>`_. For a detailed reference of the PostgreSQL SQL command dialect (which can be used as is by Citus users), you can see the `SQL Command Reference <http://www.postgresql.org/docs/current/static/sql-commands.html>`_.
+
+.. _schema_based_sharding_limits:
+
+Schema-based Sharding SQL compatibility
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using :ref:`schema_based_sharding` the following features are not available:
+
+* The `rule system <https://www.postgresql.org/docs/current/rules.html>`_ is not supported
+* :ref:`insert_subqueries_workaround` are not supported
+* Tables in a distributed schema cannot inherit or be inherited
+* Distributing multi-level partitioned tables is not supported
+* Functions used in UPDATE queries on distributed tables must not be VOLATILE
+* STABLE functions used in UPDATE queries cannot be called with column references
+* Modifying views when the query contains citus tables is not supported
+
+Citus encodes the node identifier in the sequence generated on every node, this allows every individual node to take inserts directly without having the sequence overlap. This method however doesn't work for sequences that are smaller than BIGINT, which may result in inserts on worker nodes failing, in that case you need to either change the column type or route the inserts via the coordinator.
+
+In addition columns GENERATED ALWAYS AS IDENTITY that are smaller than BIGINT
+
+yes, also identity columns have limitations (query from any node, undistribute_table)
+
+the undistribute_table limitation also causes this bug / regression
+
+Issues · citusdata/citus (github.com) which is an issue when creating reference tables with foreign keys & identity columns (not uncommon in Django)
+
+.. code-block:: sql
+
+  awolk=# UPDATE a.adults SET age = 35 WHERE name = 'Alice';
+  ERROR:  cannot modify views when the query contains citus tables
+
+that one we probably should fix in a patch release
 
 .. _workarounds:
 
@@ -137,3 +178,30 @@ There is a trick, though. We can pull the relevant information to the coordinato
       8514 |                   |              |        3 | 2016-12-01 05:32:54
 
 Creating a temporary table on the coordinator is a last resort. It is limited by the disk size and CPU of the node.
+
+.. _insert_subqueries_workaround:
+
+Subqueries within INSERT queries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Try rewriting your queries with 'INSERT INTO ... SELECT' syntax.
+
+The following SQL:
+
+.. code-block:: sql
+
+  INSERT INTO a.widgets (map_id, widget_name)
+  VALUES (
+      (SELECT mt.map_id FROM a.map_tags mt WHERE mt.map_license = '12345'),
+      'Test'
+  );
+
+
+Would become:
+
+.. code-block:: sql
+
+  INSERT INTO a.widgets (map_id, widget_name)
+  SELECT mt.map_id, 'Test'
+    FROM a.map_tags mt
+   WHERE mt.map_license = '12345';
