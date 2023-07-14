@@ -24,14 +24,14 @@ Sharding models
 
 Sharding is a technique used in database systems and distributed computing to horizontally partition data across multiple servers or nodes. It involves breaking up a large database or dataset into smaller, more manageable parts called :ref:`shards`. Each shard contains a subset of the data, and together, they form the complete dataset.
 
-Citus offers two types of data sharding: row-based and schema-based. Each option comes with its own tradeoffs, allowing you to choose the approach that best aligns with your application's requirements.
+Citus offers two types of data sharding: row-based and schema-based. Each option comes with its own :ref:`sharding_tradeoffs`, allowing you to choose the approach that best aligns with your application's requirements.
 
 .. _row_based_sharding:
 
 Row-based sharding
 ------------------
 
-In row-based sharding, tenants co-exist as rows within the same table. The tenant is determined by defining a :ref:`dist_column` which allows splitting up a table horizontally.
+The traditional way in which Citus shards tables is the single database, shared schema model also known as row-based sharding, tenants co-exist as rows within the same table. The tenant is determined by defining a :ref:`dist_column` which allows splitting up a table horizontally.
 
 This is the most hardware efficient way of sharding. Tenants are densly packed and distributed among the nodes in the cluster. This approach however requires making sure that all tables in the schema have the distribution column and that all queries in the application filter by it. Row-based sharding shines in IoT workloads and for achieving the best margin out of hardware use.
 
@@ -51,7 +51,7 @@ Drawbacks:
 Schema-based sharding
 ---------------------
 
-With schema-based sharding, the schema becomes the logical shard within the database and also denotes the tenant. Query changes are not required and the application usually only needs a small modification to set the proper `search_path` when switching tenants. Schema-based sharding is an ideal solution for microservices, and for ISVs deploying applications that can't undergo the changes required to onboard row-based sharding.
+Available since Citus 12.0, schema-based sharding is the single database, shared database model, the schema becomes the logical shard within the database and also denotes the tenant. Query changes are not required and the application usually only needs a small modification to set the proper `search_path` when switching tenants. Schema-based sharding is an ideal solution for microservices, and for ISVs deploying applications that can't undergo the changes required to onboard row-based sharding.
 
 Benefits:
 
@@ -63,6 +63,40 @@ Benefits:
 Drawbacks:
 
 * Less tenants per node compared to row-based sharding
+
+.. _sharding_tradeoffs:
+
+Sharding tradeoffs
+------------------
+
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                 | Schema-based sharding                              | Row-based sharding                                                                                                                        |
++=================================================+====================================================+===========================================================================================================================================+
+| Multi-tenancy model                             | Schema per tenant                                  | Shared tables with tenant ID columns                                                                                                      |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Description                                     | One database, different schemas                    | One database, shared schemas                                                                                                              |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Citus version                                   | 12.0+                                              | All versions                                                                                                                              |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Additional steps compared to vanilla PostgreSQL | None, only a config change                         | Use create_distributed_table on each table to distribute & co-locate tables by tenant ID                                                  |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Number of tenants                               | 1-10k                                              | 1-1M+                                                                                                                                     |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Data modelling requirement                      | No foreign keys across distributed schemas         | Need to include a tenant ID column (a distribution column, also known as a sharding key) in each table, and in primary keys, foreign keys |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| SQL requirement for single node queries         | Use a single distributed schema per query          | Joins and WHERE clauses should include tenant_id column                                                                                   |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Parallel cross-tenant queries                   | No                                                 | Yes                                                                                                                                       |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Custom table definitions per tenant             | Yes                                                | No                                                                                                                                        |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Access control                                  | Schema permissions                                 | Schema permissions                                                                                                                        |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Data sharing across tenants                     | Yes, using reference tables (in a separate schema) | Yes, using reference tables                                                                                                               |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Tenant to shard isolation                       | Every tenant has its own shard group by definition | Can give specific tenant IDs their own shard group via isolate_tenant_to_new_shard                                                        |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+
 
 Distributed Data
 ================
