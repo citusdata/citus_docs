@@ -26,6 +26,8 @@ These limitations apply to all models of operation.
 * STABLE functions used in UPDATE queries cannot be called with column references
 * Modifying views when the query contains citus tables is not supported
 
+Citus encodes the node identifier in the sequence generated on every node, this allows every individual node to take inserts directly without having the sequence overlap. This method however doesn't work for sequences that are smaller than BIGINT, which may result in inserts on worker nodes failing, in that case you need to drop the column and add a BIGINT based one, or route the inserts via the coordinator.
+
 .. _cross_node_sql_limits:
 
 Cross-Node SQL Queries
@@ -64,8 +66,6 @@ When using :ref:`schema_based_sharding` the following features are not available
 * Foreign keys across distributed schemas are not supported
 * Joins across distributed schemas are subject to :ref:`cross_node_sql_limits` limitations
 * Creating a distributed schema and tables in a single SQL statement is not supported
-
-Citus encodes the node identifier in the sequence generated on every node, this allows every individual node to take inserts directly without having the sequence overlap. This method however doesn't work for sequences that are smaller than BIGINT, which may result in inserts on worker nodes failing, in that case you need to drop the column and add a BIGINT based one, or route the inserts via the coordinator.
 
 .. _workarounds:
 

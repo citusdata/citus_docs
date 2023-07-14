@@ -51,7 +51,7 @@ Drawbacks:
 Schema-based sharding
 ---------------------
 
-Available since Citus 12.0, schema-based sharding is the single database, shared database model, the schema becomes the logical shard within the database and also denotes the tenant. Query changes are not required and the application usually only needs a small modification to set the proper `search_path` when switching tenants. Schema-based sharding is an ideal solution for microservices, and for ISVs deploying applications that can't undergo the changes required to onboard row-based sharding.
+Available since Citus 12.0, schema-based sharding is the shared database, separate schema model, the schema becomes the logical shard within the database and also denotes the tenant. Query changes are not required and the application usually only needs a small modification to set the proper `search_path` when switching tenants. Schema-based sharding is an ideal solution for microservices, and for ISVs deploying applications that can't undergo the changes required to onboard row-based sharding.
 
 Benefits:
 
@@ -72,9 +72,7 @@ Sharding tradeoffs
 +-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                 | Schema-based sharding                              | Row-based sharding                                                                                                                        |
 +=================================================+====================================================+===========================================================================================================================================+
-| Multi-tenancy model                             | Schema per tenant                                  | Shared tables with tenant ID columns                                                                                                      |
-+-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
-| Description                                     | One database, different schemas                    | One database, shared schemas                                                                                                              |
+| Multi-tenancy model                             | Separate schema per tenant                         | Shared tables with tenant ID columns                                                                                                      |
 +-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
 | Citus version                                   | 12.0+                                              | All versions                                                                                                                              |
 +-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
