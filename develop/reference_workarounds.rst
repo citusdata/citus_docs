@@ -9,6 +9,8 @@ Citus has 100% SQL coverage for any queries it is able to execute on a single wo
 
 Even cross-node queries (used for parallel computations) support most SQL features. However, some SQL features are not supported for queries which combine information from multiple nodes.
 
+.. _limits:
+
 Limitations
 -----------
 

@@ -31,13 +31,7 @@ As the Citus coordinator node is similar to a standard PostgreSQL server, regula
 Are there any PostgreSQL features not supported by Citus?
 ---------------------------------------------------------
 
-Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. The vast majority of queries are supported, even when they combine data across the network from multiple database nodes. This includes transactional semantics across nodes. Currently all SQL is supported except:
-
-* Correlated subqueries
-* Recursive CTEs
-* Table sample
-* SELECT … FOR UPDATE
-* Grouping sets
+Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. The vast majority of queries are supported, even when they combine data across the network from multiple database nodes. This includes transactional semantics across nodes. For an up to date list of SQL coverage see :ref:`limits`
 
 What's more, Citus has 100% SQL support for queries which access a single node in the database cluster. These queries are common, for instance, in multi-tenant applications where different nodes store different tenants (see :ref:`when_to_use_citus`).
 
@@ -171,7 +165,7 @@ Yes, Citus is available as a managed service with `Azure Cosmos DB for PostgreSQ
 Can I shard by schema on Citus for multi-tenant applications?
 -------------------------------------------------------------
 
-It turns out that while storing each tenant's information in a separate schema can be an attractive way to start when dealing with tenants, it leads to problems down the road. In Citus we partition by the tenant_id, and a shard can contain data from several tenants. To learn more about the reason for this design, see our article `Lessons learned from PostgreSQL schema sharding <https://www.citusdata.com/blog/2016/12/18/schema-sharding-lessons/>`_.
+Yes, :ref:`schema_based_sharding` is available since Citus 12.0.
 
 How does cstore_fdw work with Citus?
 ------------------------------------
