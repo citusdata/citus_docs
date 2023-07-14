@@ -12,6 +12,20 @@ Even cross-node queries (used for parallel computations) support most SQL featur
 Limitations
 -----------
 
+General
+~~~~~~~
+
+These limitations apply to all models of operation.
+
+* The `rule system <https://www.postgresql.org/docs/current/rules.html>`_ is not supported
+* :ref:`insert_subqueries_workaround` are not supported
+* Distributing multi-level partitioned tables is not supported
+* Functions used in UPDATE queries on distributed tables must not be VOLATILE
+* STABLE functions used in UPDATE queries cannot be called with column references
+* Modifying views when the query contains citus tables is not supported
+
+.. _cross_node_sql_limits:
+
 Cross-Node SQL Queries
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -21,11 +35,7 @@ Cross-Node SQL Queries
 * Outer joins between distributed tables are only supported on the  :ref:`dist_column`
 * `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_ work in single-shard queries only
 * `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`__ work in single-shard queries only
-* The `rule system <https://www.postgresql.org/docs/current/rules.html>`_ is not supported
 * Only regular, foreign or partitioned tables can be distributed
-* Modifying views when the query contains citus tables is not supported
-* Distributing multi-level partitioned tables is not supported
-* STABLE functions used in UPDATE queries cannot be called with column references
 * The SQL `MERGE command <https://www.postgresql.org/docs/current/sql-merge.html>`_ is supported in the following combinations of :ref:`table_types`:
 
   =========== =========== =========== =========================================
@@ -49,30 +59,10 @@ Schema-based Sharding SQL compatibility
 
 When using :ref:`schema_based_sharding` the following features are not available:
 
-* The `rule system <https://www.postgresql.org/docs/current/rules.html>`_ is not supported
-* :ref:`insert_subqueries_workaround` are not supported
-* Tables in a distributed schema cannot inherit or be inherited
-* Distributing multi-level partitioned tables is not supported
-* Functions used in UPDATE queries on distributed tables must not be VOLATILE
-* STABLE functions used in UPDATE queries cannot be called with column references
-* Modifying views when the query contains citus tables is not supported
+* Foreign keys across distributed schemas are not supported
+* Joins across distributed schemas are subject to :ref:`cross_node_sql_limits` limitations
 
-Citus encodes the node identifier in the sequence generated on every node, this allows every individual node to take inserts directly without having the sequence overlap. This method however doesn't work for sequences that are smaller than BIGINT, which may result in inserts on worker nodes failing, in that case you need to either change the column type or route the inserts via the coordinator.
-
-In addition columns GENERATED ALWAYS AS IDENTITY that are smaller than BIGINT
-
-yes, also identity columns have limitations (query from any node, undistribute_table)
-
-the undistribute_table limitation also causes this bug / regression
-
-Issues · citusdata/citus (github.com) which is an issue when creating reference tables with foreign keys & identity columns (not uncommon in Django)
-
-.. code-block:: sql
-
-  awolk=# UPDATE a.adults SET age = 35 WHERE name = 'Alice';
-  ERROR:  cannot modify views when the query contains citus tables
-
-that one we probably should fix in a patch release
+Citus encodes the node identifier in the sequence generated on every node, this allows every individual node to take inserts directly without having the sequence overlap. This method however doesn't work for sequences that are smaller than BIGINT, which may result in inserts on worker nodes failing, in that case you need to drop the column and add a BIGINT based one, or route the inserts via the coordinator.
 
 .. _workarounds:
 
