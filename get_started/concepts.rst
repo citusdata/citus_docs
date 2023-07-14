@@ -147,6 +147,16 @@ When you use Citus, the coordinator node you connect to and interact with is a r
 
 Creating standard PostgreSQL tables is easy because it's the default. It’s what you get when you run CREATE TABLE. In almost every Citus deployment we see standard PostgreSQL tables co-existing with distributed and reference tables. Indeed, Citus itself uses local tables to hold cluster metadata, as mentioned earlier.
 
+Type 4: Local Managed Tables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When :ref:`enable_local_ref_fkeys` is enabled, Citus may automatically add local tables to metadata if a foreign key reference exists between a local table and a reference table. Additionally this tables can be manually created by executing :ref:`citus_add_local_table_to_metadata` function on regular local tables. Tables present in metadata are considered managed tables and can be queried from any node, Citus will know to route to the coordinator to obtain data from the local managed table. Such tables are displayed as `local` in :ref:`citus_tables`.
+
+Type 5: Schema Tables
+~~~~~~~~~~~~~~~~~~~~~
+
+WHen using :ref:`schema_based_sharding` introduced in Citus 12.0, distributed schemas are automatically associated with individual colocation groups such that the tables created in those schemas are automatically converted to colocated distributed tables without a shard key. Such tables are considered schema tables and are displayed as `schema` in :ref:`citus_tables`.
+
 .. _shards:
 
 Shards
