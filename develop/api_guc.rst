@@ -469,6 +469,15 @@ operations.
 
 For an example of using this GUC, see :ref:`cdc`.
 
+.. _enable_schema_based_sharding:
+
+citus.enable_schema_based_sharding (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+With the parameter set to `ON` all created schemas will be distributed by default. Distributed schemas are automatically associated with individual colocation groups such that the tables created in those schemas will be automatically converted to colocated distributed tables without a shard key. This setting can be modified for individual sessions.
+
+For an example of using this GUC, see :ref:`microservices_tutorial`.
+
 .. _executor_configuration:
 
 Executor Configuration
