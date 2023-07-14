@@ -62,7 +62,7 @@ Benefits:
 
 Drawbacks:
 
-* Less tenants per node compared to row-based sharding
+* Fewer tenants per node compared to row-based sharding
 
 .. _sharding_tradeoffs:
 
