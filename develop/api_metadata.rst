@@ -324,6 +324,36 @@ Here's an example of how ``create_distributed_function()`` adds entries to the
     distribution_argument_index |
     colocationid                |
 
+.. _citus_schemas:
+
+Citus schemas view
+~~~~~~~~~~~~~~~~~~
+
+Citus 12.0 intoduced the concept of :ref:`schema_based_sharding` and with it the `citus_schemas` view which shows which schemas have been distributed in the system. The view only lists distributed schemas, local schemas are not displayed.
+
++-----------------------------+--------------+--------------------------------------------------------------+
+| Name                        | Type         | Description                                                  |
++=============================+==============+==============================================================+
+| schema_name                 | regnamespace | Name of the distributed schema                               |
++-----------------------------+--------------+--------------------------------------------------------------+
+| colocation_id               | integer      | Colocation ID of the distributed schema                      |
++-----------------------------+--------------+--------------------------------------------------------------+
+| schema_size                 | text         | Human readable size summary of all objects within the schema |
++-----------------------------+--------------+--------------------------------------------------------------+
+| schema_owner                | name         | Role that owns the schema                                    |
++-----------------------------+--------------+--------------------------------------------------------------+
+
+
+Here's an example:
+
+.. code-block:: sql
+
+   schema_name  | colocation_id | schema_size | schema_owner
+  --------------+---------------+-------------+--------------
+   user_service |             1 | 0 bytes     | user_service
+   time_service |             2 | 0 bytes     | time_service
+   ping_service |             3 | 632 kB      | ping_service
+
 .. _citus_tables:
 
 Citus tables view
