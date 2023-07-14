@@ -3,6 +3,45 @@
 Creating and Modifying Distributed Objects (DDL)
 ================================================
 
+Creating and Distributing Schemas
+---------------------------------
+
+Citus 12.0 introduced :ref:`schema_based_sharding` that allows a schema to be distributed. Distributed schemas are automatically associated with individual colocation groups such that the tables created in those schemas will be automatically converted to colocated distributed tables without a shard key.
+
+There are two ways in which a schema can be distributed in Citus:
+
+Manually by calling :ref:`citus_schema_distribute` function:
+
+.. code-block:: sql
+
+    SELECT citus_schema_distribute('user_service');
+
+This method also allows you to convert existing regular schemas into distributed schemas.
+
+.. note::
+
+    You can only distribute schemas that do not contain distributed and reference tables.
+
+Alternative approach is to enable :ref:`enable_schema_based_sharding` configuration variable:
+
+.. code-block:: sql
+
+    SET citus.enable_schema_based_sharding TO ON;
+
+    CREATE SCHEMA AUTHORIZATION user_service;
+
+The variable can be changed for the current session or permanently in `postgresql.conf`. With the parameter set to `ON` all created schemas will be distributed by default.
+
+The process of distributing the schema will automatically assign and move it to an existing node in the cluster. The background shard rebalancer takes these schemas and all tables within them when rebalancing the cluster, performing the optimal moves and migrating the schemas between the nodes in the cluster.
+
+To convert a schema back into a regular PostgreSQL schema use the :ref:`citus_schema_undistribute` function:
+
+.. code-block:: sql
+
+    SELECT citus_schema_undistribute('user_service');
+
+The tables and data in the `user_service` schema will be moved from the current node back to the coordinator node in the cluster.
+
 Creating And Distributing Tables
 --------------------------------
 
