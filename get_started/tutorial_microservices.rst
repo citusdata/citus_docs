@@ -133,7 +133,7 @@ You now need to connect to the Citus coordinator for every microservice. You can
     CREATE TABLE ping_results (
         id SERIAL PRIMARY KEY,
         host VARCHAR(255) NOT NULL,
-        result TEXT NOT NULL,
+        result TEXT NOT NULL
     );
 
 
