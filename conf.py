@@ -115,12 +115,6 @@ import sphinx_rtd_theme_citus
 html_theme = 'sphinx_rtd_theme_citus'
 html_theme_options = {
 
-  ################################################################
-  ## NOTE: I don't think this tracking code is taking effect.
-  ## The google tracking is happening instead because of a setting
-  ## accessible via the Read The Docs admin GUI. I am leaving this
-  ## line here for now to avoid rocking the boat.
-  'analytics_id': 'UA-32858865-1',
   'sticky_navigation': True,
   'collapse_navigation': False,
 
