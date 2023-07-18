@@ -9,29 +9,63 @@ Citus has 100% SQL coverage for any queries it is able to execute on a single wo
 
 Even cross-node queries (used for parallel computations) support most SQL features. However, some SQL features are not supported for queries which combine information from multiple nodes.
 
-**Limitations for Cross-Node SQL Queries:**
+.. _limits:
+
+Limitations
+-----------
+
+General
+~~~~~~~
+
+These limitations apply to all models of operation.
+
+* The `rule system <https://www.postgresql.org/docs/current/rules.html>`_ is not supported
+* :ref:`insert_subqueries_workaround` are not supported
+* Distributing multi-level partitioned tables is not supported
+* Functions used in UPDATE queries on distributed tables must not be VOLATILE
+* STABLE functions used in UPDATE queries cannot be called with column references
+* Modifying views when the query contains citus tables is not supported
+
+Citus encodes the node identifier in the sequence generated on every node, this allows every individual node to take inserts directly without having the sequence overlap. This method however doesn't work for sequences that are smaller than BIGINT, which may result in inserts on worker nodes failing, in that case you need to drop the column and add a BIGINT based one, or route the inserts via the coordinator.
+
+.. _cross_node_sql_limits:
+
+Cross-Node SQL Queries
+~~~~~~~~~~~~~~~~~~~~~~
 
 * `SELECT … FOR UPDATE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FOR-UPDATE-SHARE>`_ work in single-shard queries only
 * `TABLESAMPLE <https://www.postgresql.org/docs/current/static/sql-select.html#SQL-FROM>`_ work in single-shard queries only
-* Correlated subqueries are supported only when the correlation is on the :ref:`dist_column`.
+* Correlated subqueries are supported only when the correlation is on the :ref:`dist_column`
 * Outer joins between distributed tables are only supported on the  :ref:`dist_column`
 * `Recursive CTEs <https://www.postgresql.org/docs/current/static/queries-with.html#idm46428713247840>`_ work in single-shard queries only
 * `Grouping sets <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-GROUPING-SETS>`__ work in single-shard queries only
+* Only regular, foreign or partitioned tables can be distributed
 * The SQL `MERGE command <https://www.postgresql.org/docs/current/sql-merge.html>`_ is supported in the following combinations of :ref:`table_types`:
 
   =========== =========== =========== =========================================
   Target      Source      Support     Comments
   =========== =========== =========== =========================================
-  Local       Local       Yes          
-  Local       Distributed No           
-  Local       Reference   No           
-  Distributed Local       No           
-  Distributed Distributed Yes         Only co-located tables.
-  Distributed Reference   No          Feature in development.
+  Local       Local       Yes
+  Local       Reference   Yes
+  Local       Distributed No          Feature in development.
+  Distributed Local       Yes
+  Distributed Distributed Yes         Including non co-located tables.
+  Distributed Reference   Yes
   Reference   N/A         No          Reference table as target is not allowed.
   =========== =========== =========== =========================================
 
 To learn more about PostgreSQL and its features, you can visit the `PostgreSQL documentation <http://www.postgresql.org/docs/current/static/index.html>`_. For a detailed reference of the PostgreSQL SQL command dialect (which can be used as is by Citus users), you can see the `SQL Command Reference <http://www.postgresql.org/docs/current/static/sql-commands.html>`_.
+
+.. _schema_based_sharding_limits:
+
+Schema-based Sharding SQL compatibility
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using :ref:`schema_based_sharding` the following features are not available:
+
+* Foreign keys across distributed schemas are not supported
+* Joins across distributed schemas are subject to :ref:`cross_node_sql_limits` limitations
+* Creating a distributed schema and tables in a single SQL statement is not supported
 
 .. _workarounds:
 
@@ -137,3 +171,30 @@ There is a trick, though. We can pull the relevant information to the coordinato
       8514 |                   |              |        3 | 2016-12-01 05:32:54
 
 Creating a temporary table on the coordinator is a last resort. It is limited by the disk size and CPU of the node.
+
+.. _insert_subqueries_workaround:
+
+Subqueries within INSERT queries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Try rewriting your queries with 'INSERT INTO ... SELECT' syntax.
+
+The following SQL:
+
+.. code-block:: sql
+
+  INSERT INTO a.widgets (map_id, widget_name)
+  VALUES (
+      (SELECT mt.map_id FROM a.map_tags mt WHERE mt.map_license = '12345'),
+      'Test'
+  );
+
+
+Would become:
+
+.. code-block:: sql
+
+  INSERT INTO a.widgets (map_id, widget_name)
+  SELECT mt.map_id, 'Test'
+    FROM a.map_tags mt
+   WHERE mt.map_license = '12345';

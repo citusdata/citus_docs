@@ -7,6 +7,66 @@ This section contains reference information for the User Defined Functions provi
 
 Table and Shard DDL
 -------------------
+.. _citus_schema_distribute:
+
+citus_schema_distribute
+$$$$$$$$$$$$$$$$$$$$$$$
+
+This method also allows you to convert existing regular schemas into distributed schemas, which are automatically associated with individual colocation groups such that the tables created in those schemas will be automatically converted to colocated distributed tables without a shard key. The process of distributing the schema will automatically assign and move it to an existing node in the cluster.
+
+Arguments
+************************
+
+**schemaname:** Name of the schema which needs to be distributed.
+
+Return Value
+************
+
+N/A
+
+Example
+*******
+
+Distributing three schemas named: `tenant_a`, `tenant_b` and `tenant_c`.
+
+.. code-block:: sql
+
+    SELECT citus_schema_distribute('tenant_a');
+    SELECT citus_schema_distribute('tenant_b');
+    SELECT citus_schema_distribute('tenant_c');
+
+For more examples, see :ref:`microservices_tutorial`.
+
+.. _citus_schema_undistribute:
+
+citus_schema_undistribute
+$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Converts an existing distributed schema back into a regular schema. The process results in the tables and data being moved from the current node back to the coordinator node in the cluster.
+
+Arguments
+************************
+
+**schemaname:** Name of the schema which needs to be undistributed.
+
+Return Value
+************
+
+N/A
+
+Example
+*******
+
+Converting three different distributed schemas, back into regular schemas.
+
+.. code-block:: sql
+
+    SELECT citus_schema_undistribute('tenant_a');
+    SELECT citus_schema_undistribute('tenant_b');
+    SELECT citus_schema_undistribute('tenant_c');
+
+For more examples, see :ref:`microservices_tutorial`.
+
 .. _create_distributed_table:
 
 create_distributed_table

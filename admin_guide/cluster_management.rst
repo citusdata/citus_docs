@@ -232,6 +232,10 @@ The Citus coordinator maintains metadata tables to track all of the cluster node
 Tenant Isolation
 ================
 
+
+Row-based sharding
+------------------
+
 .. note::
 
   Starting in version 11.0, Citus Community edition includes tenant isolation
@@ -280,6 +284,58 @@ Output:
   └─────────────────────────────┘
 
 The new shard(s) are created on the same node as the shard(s) from which the tenant was removed. For true hardware isolation they can be moved to a separate node in the Citus cluster. As mentioned, the :code:`isolate_tenant_to_new_shard` function returns the newly created shard id, and this id can be used to move the shard:
+
+Now that you have the shard identifier, you can :ref:`move_shard`.
+
+Schema-based sharding
+---------------------
+
+In schema based sharding, the act of isolating a tenant is not required as by definition each tenant already resides in its own schema. The only thing that is needed is obtaining a shard identifier for a schema to perform a move.
+
+First find the colocation ID of the schema you want to move.
+
+
+.. code-block:: sql
+
+  select * from citus_schemas;
+
+
+.. code-block:: text
+
+   schema_name  | colocation_id | schema_size | schema_owner
+  --------------+---------------+-------------+--------------
+   user_service |             1 | 0 bytes     | user_service
+   time_service |             2 | 0 bytes     | time_service
+   ping_service |             3 | 0 bytes     | ping_service
+   a            |             4 | 128 kB      | citus
+   b            |             5 | 32 kB       | citus
+   with_data    |            11 | 6408 kB     | citus
+  (6 rows)
+
+The next step is to query `citus_shards`, we will use colocation identifier 11 from the output above:
+
+.. code-block:: sql
+
+  select * from citus_shards where colocation_id = 11;
+
+.. code-block:: text
+
+     table_name    | shardid |       shard_name       | citus_table_type | colocation_id | nodename  | nodeport | shard_size
+  -----------------+---------+------------------------+------------------+---------------+-----------+----------+------------
+   with_data.test  |  102180 | with_data.test_102180  | schema           |            11 | localhost |     9702 |     647168
+   with_data.test2 |  102183 | with_data.test2_102183 | schema           |            11 | localhost |     9702 |    5914624
+  (2 rows)
+
+You can pick any `shardid` from the output as making the move will also propaget to all colocated tables, which in case of schema based sharding means moving all tables within the schema.
+
+Now that you have the shard identifier, you can :ref:`move_shard`.
+
+.. _move_shard:
+
+Make the move
+-------------
+
+Knowing the shard identifier that denotes the tenant, you can execute the move:
 
 .. code-block:: postgresql
 

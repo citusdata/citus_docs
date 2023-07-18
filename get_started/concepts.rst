@@ -17,6 +17,85 @@ Every cluster has one special node called the *coordinator* (the others are know
 
 For each query, the coordinator either *routes* it to a single worker node, or *parallelizes* it across several depending on whether the required data lives on a single node or multiple.  The coordinator knows how to do this by consulting its metadata tables. These Citus-specific tables track the DNS names and health of worker nodes, and the distribution of data across nodes. For more information, see our :ref:`metadata_tables`.
 
+.. _sharding_models:
+
+Sharding models
+===============
+
+Sharding is a technique used in database systems and distributed computing to horizontally partition data across multiple servers or nodes. It involves breaking up a large database or dataset into smaller, more manageable parts called :ref:`shards`. Each shard contains a subset of the data, and together, they form the complete dataset.
+
+Citus offers two types of data sharding: row-based and schema-based. Each option comes with its own :ref:`sharding_tradeoffs`, allowing you to choose the approach that best aligns with your application's requirements.
+
+.. _row_based_sharding:
+
+Row-based sharding
+------------------
+
+The traditional way in which Citus shards tables is the single database, shared schema model also known as row-based sharding, tenants co-exist as rows within the same table. The tenant is determined by defining a :ref:`dist_column` which allows splitting up a table horizontally.
+
+This is the most hardware efficient way of sharding. Tenants are densely packed and distributed among the nodes in the cluster. This approach however requires making sure that all tables in the schema have the distribution column and that all queries in the application filter by it. Row-based sharding shines in IoT workloads and for achieving the best margin out of hardware use.
+
+Benefits:
+
+* Best performance
+* Best tenant density per node
+
+Drawbacks:
+
+* Requires schema modifications
+* Requires application query modifications
+* All tenants must share the same schema
+
+.. _schema_based_sharding:
+
+Schema-based sharding
+---------------------
+
+Available since Citus 12.0, schema-based sharding is the shared database, separate schema model, the schema becomes the logical shard within the database. Multi-tenant apps can a use a schema per tenant to easily shard along the tenant dimension. Query changes are not required and the application usually only needs a small modification to set the proper `search_path` when switching tenants. Schema-based sharding is an ideal solution for microservices, and for ISVs deploying applications that cannot undergo the changes required to onboard row-based sharding.
+
+Benefits:
+
+* Tenants can have heterogeneous schemas
+* No schema modifications required
+* No application query modifications required
+* :ref:`schema_based_sharding_limits` is better compared to row-based sharding
+
+Drawbacks:
+
+* Fewer tenants per node compared to row-based sharding
+
+.. _sharding_tradeoffs:
+
+Sharding tradeoffs
+------------------
+
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                 | Schema-based sharding                              | Row-based sharding                                                                                                                        |
++=================================================+====================================================+===========================================================================================================================================+
+| Multi-tenancy model                             | Separate schema per tenant                         | Shared tables with tenant ID columns                                                                                                      |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Citus version                                   | 12.0+                                              | All versions                                                                                                                              |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Additional steps compared to vanilla PostgreSQL | None, only a config change                         | Use create_distributed_table on each table to distribute & co-locate tables by tenant ID                                                  |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Number of tenants                               | 1-10k                                              | 1-1M+                                                                                                                                     |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Data modelling requirement                      | No foreign keys across distributed schemas         | Need to include a tenant ID column (a distribution column, also known as a sharding key) in each table, and in primary keys, foreign keys |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| SQL requirement for single node queries         | Use a single distributed schema per query          | Joins and WHERE clauses should include tenant_id column                                                                                   |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Parallel cross-tenant queries                   | No                                                 | Yes                                                                                                                                       |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Custom table definitions per tenant             | Yes                                                | No                                                                                                                                        |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Access control                                  | Schema permissions                                 | Schema permissions                                                                                                                        |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Data sharing across tenants                     | Yes, using reference tables (in a separate schema) | Yes, using reference tables                                                                                                               |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Tenant to shard isolation                       | Every tenant has its own shard group by definition | Can give specific tenant IDs their own shard group via isolate_tenant_to_new_shard                                                        |
++-------------------------------------------------+----------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+
+
 Distributed Data
 ================
 
@@ -65,6 +144,16 @@ Type 3: Local Tables
 When you use Citus, the coordinator node you connect to and interact with is a regular PostgreSQL database with the Citus extension installed. Thus you can create ordinary tables and choose not to shard them. This is useful for small administrative tables that don't participate in join queries. An example would be users table for application login and authentication.
 
 Creating standard PostgreSQL tables is easy because it's the default. It’s what you get when you run CREATE TABLE. In almost every Citus deployment we see standard PostgreSQL tables co-existing with distributed and reference tables. Indeed, Citus itself uses local tables to hold cluster metadata, as mentioned earlier.
+
+Type 4: Local Managed Tables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When :ref:`enable_local_ref_fkeys` is enabled, Citus may automatically add local tables to metadata if a foreign key reference exists between a local table and a reference table. Additionally this tables can be manually created by executing :ref:`citus_add_local_table_to_metadata` function on regular local tables. Tables present in metadata are considered managed tables and can be queried from any node, Citus will know to route to the coordinator to obtain data from the local managed table. Such tables are displayed as `local` in :ref:`citus_tables`.
+
+Type 5: Schema Tables
+~~~~~~~~~~~~~~~~~~~~~
+
+WHen using :ref:`schema_based_sharding` introduced in Citus 12.0, distributed schemas are automatically associated with individual colocation groups such that the tables created in those schemas are automatically converted to colocated distributed tables without a shard key. Such tables are considered schema tables and are displayed as `schema` in :ref:`citus_tables`.
 
 .. _shards:
 
