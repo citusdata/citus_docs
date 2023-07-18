@@ -495,10 +495,10 @@ A Citus installation ships with these strategies in the table:
     SELECT * FROM pg_dist_rebalance_strategy;
 
 ::
-
+  
     -[ RECORD 1 ]------------------+---------------------------------
     name                           | by_shard_count
-    default_strategy               | t
+    default_strategy               | f
     shard_cost_function            | citus_shard_cost_1
     node_capacity_function         | citus_node_capacity_1
     shard_allowed_on_node_function | citus_shard_allowed_on_node_true
@@ -507,7 +507,7 @@ A Citus installation ships with these strategies in the table:
     improvement_threshold          | 0
     -[ RECORD 2 ]------------------+---------------------------------
     name                           | by_disk_size
-    default_strategy               | f
+    default_strategy               | t
     shard_cost_function            | citus_shard_cost_by_disk_size
     node_capacity_function         | citus_node_capacity_1
     shard_allowed_on_node_function | citus_shard_allowed_on_node_true
@@ -515,7 +515,8 @@ A Citus installation ships with these strategies in the table:
     minimum_threshold              | 0.01
     improvement_threshold          | 0.5
 
-The default strategy, ``by_shard_count``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The other predefined strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
+
+The strategy ``by_disk_size``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The default strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
 
 .. _custom_rebalancer_strategies:
 

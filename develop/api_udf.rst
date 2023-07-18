@@ -1421,15 +1421,17 @@ distributing to equalize the cost across workers is the same as equalizing the
 number of shards on each. The constant cost strategy is called "by_shard_count"
 and is the default rebalancing strategy.
 
-The default strategy is appropriate under these circumstances:
+The "by_shard_count" strategy is appropriate under these circumstances:
 
 1. The shards are roughly the same size
 2. The shards get roughly the same amount of traffic
 3. Worker nodes are all the same size/type
 4. Shards haven't been pinned to particular workers
 
-If any of these assumptions don't hold, then the default rebalancing can result
-in a bad plan. In this case you may customize the strategy, using the
+If any of these assumptions don't hold, then rebalancing "by_shard_count" can result
+in a bad plan.
+
+The default rebalancing starategy is "by_disk_size". You can always customize the strategy, using the
 ``rebalance_strategy`` parameter.
 
 It's advisable to call :ref:`get_rebalance_table_shards_plan` before running
