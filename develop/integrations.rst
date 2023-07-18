@@ -8,7 +8,7 @@ Change Data Capture (CDC)
 
 .. note::
 
-  Logical decoding for distributed tables is a preview feature in Citus v11.3.
+  Logical decoding for distributed tables is a preview feature since Citus v11.3.
 
 Differences from single-node PostgreSQL
 ---------------------------------------

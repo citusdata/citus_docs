@@ -1,7 +1,7 @@
 Citus Documentation
 ===================
 
-Welcome to the documentation for Citus 11.3! Citus is an open source extension
+Welcome to the documentation for Citus 12.0! Citus is an open source extension
 to PostgreSQL that transforms Postgres into a distributed database. To scale
 out Postgres horizontally, Citus employs distributed tables, reference tables,
 and a distributed SQL query engine. The query engine parallelizes SQL queries
