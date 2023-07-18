@@ -182,6 +182,20 @@ for selected clients that want to see them. Its default value is ``''``.
 
    SET citus.show_shards_for_app_name_prefixes TO 'psql,pg_dump';
 
+.. _rebalancer_by_disk_size_base_cost:
+
+citus.rebalancer_by_disk_size_base_cost (integer)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+When using the by_disk_size rebalance strategy each shard group 
+will get this cost in bytes added to its actual disk size. This 
+is used to avoid creating a bad balance when there's very little 
+data in some of the shards. The assumption is that even empty 
+shards have some cost, because of parallelism and because empty 
+shard groups will likely grow in the future.
+
+The default value is ``100MB``.
+
 Query Statistics
 ---------------------------
 
@@ -228,6 +242,13 @@ administrator may wish to disable statement tracking. The
 
 * **all**: (default) Track all statements.
 * **none**: Disable tracking.
+
+.. _stat_tenants_untracked_sample_rate:
+
+citus.stat_tenants_untracked_sample_rate (floating point)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Sampling rate for new tenants in citus_stat_tenants. The rate can be of range between ``0.0`` and ``1.0``. Default is ``1.0`` meaning 100% of untracked tenant queries are sampled. Setting it to a lower value means that already tracked tenants have 100% queries sampled, but tenants that are currently untracked are sampled only at the provided rate.
 
 Data Loading
 ---------------------------
@@ -409,6 +430,27 @@ Sets the policy to use when assigning tasks to workers. The coordinator assigns 
 
 This parameter can be set at run-time and is effective on the coordinator.
 
+.. _enable_non_colocated_router_query_pushdown:
+
+enable_non_colocated_router_query_pushdown (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Enables router planner for the queries that reference non-colocated distributed tables.
+
+Normally, router planner planner is only enabled for
+the queries that reference colocated distributed tables 
+because it is not guaranteed to have the target shards 
+always on the same node, e.g., after rebalancing the 
+shards. For this reason, while enabling this flag allows 
+some degree of optimization for the queries that reference 
+non-colocated distributed tables, it is not guaranteed 
+that the same query will work after rebalancing the shards 
+or altering the shard count of one of those distributed 
+tables.
+
+The default is ``off``.
+
+
 Intermediate Data Transfer
 -------------------------------------------------------------------
 
@@ -562,8 +604,7 @@ amounts of data.  Examples are when a lot of rows are requested, the rows have
 many columns, or they use big types such as ``hll`` from the postgresql-hll
 extension.
 
-The default value is ``true`` for Postgres versions 14 and higher. For Postgres
-versions 13 and lower the default is ``false``, which means all results are
+The default value is ``true``. When set to ``false``, all results are
 encoded and transferred in text format.
 
 .. _max_shared_pool_size:
