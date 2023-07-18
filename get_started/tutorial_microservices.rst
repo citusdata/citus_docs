@@ -231,7 +231,7 @@ We can do this easily, by asking Citus to rebalance the cluster by disk size:
 
 .. code-block:: sql
 
-    select citus_rebalance_start(rebalance_strategy := 'by_disk_size');
+    select citus_rebalance_start();
 
 .. code-block:: text
 
