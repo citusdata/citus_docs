@@ -33,7 +33,7 @@ Row-based sharding
 
 The traditional way in which Citus shards tables is the single database, shared schema model also known as row-based sharding, tenants co-exist as rows within the same table. The tenant is determined by defining a :ref:`dist_column` which allows splitting up a table horizontally.
 
-This is the most hardware efficient way of sharding. Tenants are densly packed and distributed among the nodes in the cluster. This approach however requires making sure that all tables in the schema have the distribution column and that all queries in the application filter by it. Row-based sharding shines in IoT workloads and for achieving the best margin out of hardware use.
+This is the most hardware efficient way of sharding. Tenants are densely packed and distributed among the nodes in the cluster. This approach however requires making sure that all tables in the schema have the distribution column and that all queries in the application filter by it. Row-based sharding shines in IoT workloads and for achieving the best margin out of hardware use.
 
 Benefits:
 
