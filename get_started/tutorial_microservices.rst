@@ -190,7 +190,7 @@ Change into every app directory and run them in their own python env.
 
 .. code-block:: shell
 
-    cd use
+    cd user
     pipenv install
     pipenv shell
     python app.py
