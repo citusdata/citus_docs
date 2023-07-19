@@ -137,6 +137,51 @@ You now need to connect to the Citus coordinator for every microservice. You can
     );
 
 
+Configure services
+------------------
+
+For the purpose of this tutorial we will use a very simple set of services. You can obtain them by cloning this public repository:
+
+::
+
+    git clone https://github.com/citusdata/citus-example-microservices.git
+
+The repository contains the ping, time and user service. All of them have an `app.py` that we will run.
+
+::
+
+    $ tree
+    .
+    ├── LICENSE
+    ├── README.md
+    ├── ping
+    │   ├── app.py
+    │   ├── ping.sql
+    │   └── requirements.txt
+    ├── time
+    │   ├── app.py
+    │   ├── requirements.txt
+    │   └── time.sql
+    └── user
+        ├── app.py
+        ├── requirements.txt
+        └── user.sql
+
+Before you run the services however, edit `user/app.py`, `ping/app.py` and `time/app.py` files providing the `connection configuration <https://www.psycopg.org/docs/module.html#psycopg2.connect>`_ for your Citus cluster:
+
+.. code-block:: python
+
+    # Database configuration
+    db_config = {
+        'host': 'localhost',
+        'database': 'citus',
+        'user': 'ping_service',
+        'port': 9700
+    }
+
+
+After making the changes, save all modified files and move on to the next step of running the services.
+
 Running the services
 --------------------
 
@@ -145,7 +190,7 @@ Change into every app directory and run them in their own python env.
 
 .. code-block:: shell
 
-    cd users
+    cd use
     pipenv install
     pipenv shell
     python app.py
