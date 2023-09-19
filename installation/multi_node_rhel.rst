@@ -28,11 +28,11 @@ Steps to be executed on all nodes
   # install PostgreSQL with Citus extension
   sudo yum install -y citus113_15
   # initialize system database (using RHEL 6 vs 7 method as necessary)
-  sudo service postgresql-15 initdb || sudo /usr/pgsql-15/bin/postgresql-15-setup initdb
+  sudo service postgresql-16 initdb || sudo /usr/pgsql-16/bin/postgresql-16-setup initdb
   # preload citus extension
   echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/15/data/postgresql.conf
 
-PostgreSQL adds version-specific binaries in `/usr/pgsql-15/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
+PostgreSQL adds version-specific binaries in `/usr/pgsql-16/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
 
 .. _post_enterprise_rhel:
 
@@ -71,9 +71,9 @@ Before starting the database let's change its access permissions. By default the
 ::
 
   # start the db server
-  sudo service postgresql-15 restart
+  sudo service postgresql-16 restart
   # and make it start automatically when computer does
-  sudo chkconfig postgresql-15 on
+  sudo chkconfig postgresql-16 on
 
 You must add the Citus extension to **every database** you would like to use in a cluster. The following example adds the extension to the default database which is named `postgres`.
 
