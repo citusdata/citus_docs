@@ -13,7 +13,7 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 12.1 is currently installed on Postgres 15:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 12.1 is currently installed on Postgres 16:
 
 **Ubuntu or Debian**
 
@@ -102,7 +102,7 @@ After installing the new package and restarting the database, run the extension 
 
 .. _upgrading_postgres:
 
-Upgrading PostgreSQL version from 14 to 15
+Upgrading PostgreSQL version from 15 to 16
 ##########################################
 
 .. note::
@@ -114,14 +114,14 @@ Upgrading PostgreSQL version from 14 to 15
 
 Record the following paths before you start (your actual paths may be different than those below):
 
-Existing data directory (e.g. /opt/pgsql/14/data)
-  :code:`export OLD_PG_DATA=/opt/pgsql/14/data`
+Existing data directory (e.g. /opt/pgsql/15/data)
+  :code:`export OLD_PG_DATA=/opt/pgsql/15/data`
 
-Existing PostgreSQL installation path (e.g. /usr/pgsql-14)
-  :code:`export OLD_PG_PATH=/usr/pgsql-14`
+Existing PostgreSQL installation path (e.g. /usr/pgsql-15)
+  :code:`export OLD_PG_PATH=/usr/pgsql-15`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/15/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/16/data`
 
 New PostgreSQL installation path
   :code:`export NEW_PG_PATH=/usr/pgsql-16`

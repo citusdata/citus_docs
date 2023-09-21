@@ -26,11 +26,11 @@ Steps to be executed on all nodes
 ::
 
   # install PostgreSQL with Citus extension
-  sudo yum install -y citus113_15
-  # initialize system database (using RHEL 6 vs 7 method as necessary)
-  sudo service postgresql-16 initdb || sudo /usr/pgsql-16/bin/postgresql-16-setup initdb
+  sudo yum install -y citus121_16
+  # initialize system database
+  sudo /usr/pgsql-16/bin/postgresql-16-setup initdb
   # preload citus extension
-  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/15/data/postgresql.conf
+  echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/16/data/postgresql.conf
 
 PostgreSQL adds version-specific binaries in `/usr/pgsql-16/bin`, but you'll usually just need psql, whose latest version is added to your path, and managing the server itself can be done with the *service* command.
 
@@ -42,7 +42,7 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo vi /var/lib/pgsql/15/data/postgresql.conf
+  sudo vi /var/lib/pgsql/16/data/postgresql.conf
 
 ::
 
@@ -51,7 +51,7 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo vi /var/lib/pgsql/15/data/pg_hba.conf
+  sudo vi /var/lib/pgsql/16/data/pg_hba.conf
 
 ::
 
