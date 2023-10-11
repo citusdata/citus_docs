@@ -13,7 +13,7 @@ h4 {
 }
 
 :focus {
-  outline: 2px dashed #2cc95c;
+  outline: 1px dashed #929292;
 }
 
 .btn-fat {
@@ -227,7 +227,7 @@ footer span.commit code {
 }
 
 footer a:not(:hover, :focus, .btn) {
-  color: #1e873d!important;
+  color: #1e8720!important;
 }
 footer a:hover:not(.btn), footer a:focus:not(.btn) {
   color: #2cc95c!important;
@@ -328,5 +328,7 @@ footer a:hover:not(.btn), footer a:focus:not(.btn) {
 #consentBox .consent-text a:hover, #consentBox .consent-text a:focus { color: #2cc95c; }
 #consentBox .consent-text a:visited { color: #239f49; }
 #consentBox .consent-text p { font-size: inherit; line-height: inherit; }
+
+.document a { text-decoration: dotted underline; }
 
 
