@@ -516,7 +516,7 @@ A Citus installation ships with these strategies in the table:
     improvement_threshold          | 0.5
 
 
-The strategy ``by_disk_size``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The default strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
+The strategy ``by_shard_size``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The default strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
 
 .. _custom_rebalancer_strategies:
 
