@@ -1,4 +1,4 @@
-Sphinx==4.0.2
+Sphinx==5.0.2
 sphinx_rtd_theme_citus==0.5.25
 docutils==0.16
 requests<2.30
