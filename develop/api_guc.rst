@@ -240,8 +240,8 @@ requires extra CPU resources. When the database is experiencing load, the
 administrator may wish to disable statement tracking. The
 ``citus.stat_statements_track`` GUC can turn tracking on and off. 
 
-* **all**: (default) Track all statements.
-* **none**: Disable tracking.
+* **all**: Track all statements.
+* **none**: (default) Disable tracking.
 
 .. _stat_tenants_untracked_sample_rate:
 
