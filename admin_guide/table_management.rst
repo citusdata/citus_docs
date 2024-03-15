@@ -185,7 +185,7 @@ Let's create a new example with more data to benchmark the compression savings.
       c80 int8, c81 int8, c82 int8, c83 int8, c84 int8, c85 int8, c86 int8, c87 int8, c88 int8, c89 int8,
       c90 int8, c91 int8, c92 int8, c93 int8, c94 int8, c95 int8, c96 int8, c97 int8, c98 int8, c99 int8
     );
-    
+
     -- next a table with identical columns using columnar storage
     CREATE TABLE perf_columnar(LIKE perf_row) USING COLUMNAR;
 
@@ -206,7 +206,7 @@ Fill both tables with the same large dataset:
         g % 40500, g % 41000, g % 41500, g % 42000, g % 42500, g % 43000, g % 43500, g % 44000, g % 44500, g % 45000,
         g % 45500, g % 46000, g % 46500, g % 47000, g % 47500, g % 48000, g % 48500, g % 49000, g % 49500, g % 50000
       FROM generate_series(1,50000000) g;
-    
+
     INSERT INTO perf_columnar
       SELECT
         g % 00500, g % 01000, g % 01500, g % 02000, g % 02500, g % 03000, g % 03500, g % 04000, g % 04500, g % 05000,
@@ -220,7 +220,7 @@ Fill both tables with the same large dataset:
         g % 40500, g % 41000, g % 41500, g % 42000, g % 42500, g % 43000, g % 43500, g % 44000, g % 44500, g % 45000,
         g % 45500, g % 46000, g % 46500, g % 47000, g % 47500, g % 48000, g % 48500, g % 49000, g % 49500, g % 50000
       FROM generate_series(1,50000000) g;
-    
+
     VACUUM (FREEZE, ANALYZE) perf_row;
     VACUUM (FREEZE, ANALYZE) perf_columnar;
 
@@ -289,8 +289,7 @@ Future versions of Citus will incrementally lift the current limitations:
 
 * Append-only (no UPDATE/DELETE support)
 * No space reclamation (e.g. rolled-back transactions may still consume disk space)
-* Support for hash and btree indices only
-* No index scans, or bitmap index scans
+* No bitmap index scans
 * No tidscans
 * No sample scans
 * No TOAST support (large values supported inline)
@@ -298,9 +297,8 @@ Future versions of Citus will incrementally lift the current limitations:
 * No support for tuple locks (SELECT ... FOR SHARE, SELECT ... FOR UPDATE)
 * No support for serializable isolation level
 * Support for PostgreSQL server versions 12+ only
-* No support for foreign keys, unique constraints, or exclusion constraints
+* No support for foreign keys
 * No support for logical decoding
 * No support for intra-node parallel scans
 * No support for AFTER ... FOR EACH ROW triggers
 * No UNLOGGED columnar tables
-* No TEMPORARY columnar tables
