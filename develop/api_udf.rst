@@ -411,11 +411,11 @@ update_distributed_table_colocation
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The update_distributed_table_colocation() function is used to update colocation
-of a distributed table. This function can also be used to break colocation of a
+of a distributed table. This function can also be used to break colocation of a 
 distributed table. Citus will implicitly colocate two tables if the distribution
-column is the same type, this can be useful if the tables are related and will
-do some joins. If table A and B are colocated, and table A gets rebalanced, table B
-will also be rebalanced. If table B does not have a replica identity, the rebalance will
+column is the same type, this can be useful if the tables are related and will 
+do some joins. If table A and B are colocated, and table A gets rebalanced, table B 
+will also be rebalanced. If table B does not have a replica identity, the rebalance will 
 fail. Therefore, this function can be useful breaking the implicit colocation in that case.
 
 Note that this function does not move any data around physically.
@@ -450,7 +450,7 @@ Assume that ``table A`` and ``table B`` are colocated( possibily implicitly), if
 
   SELECT update_distributed_table_colocation('A', colocate_with => 'none');
 
-Now, assume that ``table A``, ``table B``, ``table C`` and ``table D`` are colocated and you want to colocate ``table A``
+Now, assume that ``table A``, ``table B``, ``table C`` and ``table D`` are colocated and you want to colocate ``table A`` 
 and ``table B`` together, and ``table C`` and ``table D`` together:
 
 .. code-block:: postgresql
@@ -998,9 +998,9 @@ Example
 .. code-block:: postgresql
 
     select citus_remove_node('new-node', 12345);
-     citus_remove_node
+     citus_remove_node 
     --------------------
-
+     
     (1 row)
 
 citus_get_active_worker_nodes
@@ -1029,7 +1029,7 @@ Example
 .. code-block:: postgresql
 
     SELECT * from citus_get_active_worker_nodes();
-     node_name | node_port
+     node_name | node_port 
     -----------+-----------
      localhost |      9700
      localhost |      9702
@@ -1211,7 +1211,7 @@ The example below fetches and displays the table metadata for the github_events 
 .. code-block:: postgresql
 
     SELECT * from master_get_table_metadata('github_events');
-     logical_relid | part_storage_type | part_method | part_key | part_replica_count | part_max_size | part_placement_policy
+     logical_relid | part_storage_type | part_method | part_key | part_replica_count | part_max_size | part_placement_policy 
     ---------------+-------------------+-------------+----------+--------------------+---------------+-----------------------
              24180 | t                 | h           | repo_id  |                  1 |    1073741824 |                     2
     (1 row)
