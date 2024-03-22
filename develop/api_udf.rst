@@ -70,16 +70,16 @@ For more examples, see :ref:`microservices_tutorial`.
 .. _citus_schema_move:
 
 citus_schema_move
-$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$
 
 This function moves a distributed schema from one node to another.
 
 There are two ways to move a distributed schema: blocking or nonblocking. The blocking approach means that during the move all modifications to the tables in the schema are paused. The second way, which avoids blocking writes, relies on Postgres 10 logical replication.
 
 Arguments
-**********
+*********
 
-**schema_id:** Oid of the distributed schema to be moved.
+**schema_id:** Oid of the distributed schema to be moved. If you provide the name of the schema as a string literal, this string is automatically casted to the oid.
 
 **target_node_name:** DNS name of the node on which the distributed schema is to be moved ("target" node).
 
@@ -97,11 +97,11 @@ Return Value
 N/A
 
 Example
-********
+*******
 
 .. code-block:: postgresql
 
-    SELECT citus_schema_move('schema-name'::regnamespace;, 'from_host', 5432, 'to_host', 5432);
+    SELECT citus_schema_move('schema-name', 'to_host', 5432);
 
 .. _create_distributed_table:
 
