@@ -67,6 +67,42 @@ Converting three different distributed schemas, back into regular schemas.
 
 For more examples, see :ref:`microservices_tutorial`.
 
+.. _citus_schema_move:
+
+citus_schema_move
+$$$$$$$$$$$$$$$$$
+
+This function moves a distributed schema from one node to another.
+
+There are two ways to move a distributed schema: blocking or nonblocking. The blocking approach means that during the move all modifications to the tables in the schema are paused. The second way, which avoids blocking writes, relies on Postgres 10 logical replication.
+
+Arguments
+*********
+
+**schema_id:** Oid of the distributed schema to be moved. If you provide the name of the schema as a string literal, this string is automatically casted to the oid.
+
+**target_node_name:** DNS name of the node on which the distributed schema is to be moved ("target" node).
+
+**target_node_port:** The port on the target worker node on which the database server is listening.
+
+**shard_transfer_mode:** (Optional) Specify the method of replication, whether to use PostgreSQL logical replication or a cross-worker COPY command. The possible values are:
+
+  * ``auto``: Require replica identity if logical replication is possible, otherwise use legacy behaviour. This is the default value.
+  * ``force_logical``: Use logical replication even if the all the tables in the schema don't have a replica identity. Any concurrent update/delete statements to the tables in the schema will fail during replication.
+  * ``block_writes``: Use COPY (blocking writes) for the tables in the schema lacking primary key or replica identity.
+
+Return Value
+************
+
+N/A
+
+Example
+*******
+
+.. code-block:: postgresql
+
+    SELECT citus_schema_move('schema-name', 'to_host', 5432);
+
 .. _create_distributed_table:
 
 create_distributed_table
