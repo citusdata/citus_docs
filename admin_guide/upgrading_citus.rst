@@ -170,6 +170,15 @@ For Every Node
     $NEW_PG_PATH/bin/pg_upgrade -b $OLD_PG_PATH/bin/ -B $NEW_PG_PATH/bin/ \
                                 -d $OLD_PG_DATA -D $NEW_PG_DATA
 
+5. If you did not set up TLS configuration yourself, Citus will have done that and you need to copy the Citus-generated :code:`postgresql.auto.conf` file along with the generated certificate files (:code:`server.crt` and :code:`server.key`)
+
+.. code-block:: bash
+
+    cp $OLD_PG_DATA/postgresql.auto.conf $NEW_PG_DATA/
+    cp $OLD_PG_DATA/server.crt $NEW_PG_DATA/
+    cp $OLD_PG_DATA/server.key $NEW_PG_DATA/
+
+
 6. Start the new server.
 
   * **DO NOT** run any query before running the queries given in the next step
