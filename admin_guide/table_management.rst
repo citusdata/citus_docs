@@ -252,18 +252,14 @@ Gotchas
   so inserting one row per transaction will put single rows into their own
   stripes. Compression and performance of single row stripes will be worse than
   a row table. Always insert in bulk to a columnar table.
-* If you mess up and columnarize a bunch of tiny stripes, there is no way to
-  repair the table. The only fix is to create a new columnar table and copy
-  data from the original in one transaction:
+* If you mess up and columnarize a bunch of tiny stripes, it'll need to
+  repaired by recreating. To do so you can change the table access method to :ref:`heap` 
+  and then back to :ref:`columnar` again like so:
 
   .. code-block:: postgresql
-
-    BEGIN;
-    CREATE TABLE foo_compacted (LIKE foo) USING columnar;
-    INSERT INTO foo_compacted SELECT * FROM foo;
-    DROP TABLE foo;
-    ALTER TABLE foo_compacted RENAME TO foo;
-    COMMIT;
+  
+      SELECT alter_table_set_access_method('messed_table', 'heap');
+      SELECT alter_table_set_access_method('messed_table', 'columnar');
 
 * Fundamentally non-compressible data can be a problem, although it can still
   be useful to use columnar so that less is loaded into memory when selecting
