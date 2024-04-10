@@ -261,6 +261,18 @@ Gotchas
       SELECT alter_table_set_access_method('messed_table', 'heap');
       SELECT alter_table_set_access_method('messed_table', 'columnar');
 
+  The above commands will technically rewrite the data twice. In some cases it might be
+  more desirable to simply create a new table, move the data and drop the old one.
+
+  .. code-block:: postgresql
+
+    BEGIN;
+    CREATE TABLE foo_compacted (LIKE foo) USING columnar;
+    INSERT INTO foo_compacted SELECT * FROM foo;
+    DROP TABLE foo;
+    ALTER TABLE foo_compacted RENAME TO foo;
+    COMMIT;
+
 * Fundamentally non-compressible data can be a problem, although it can still
   be useful to use columnar so that less is loaded into memory when selecting
   specific columns.
