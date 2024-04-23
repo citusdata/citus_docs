@@ -253,16 +253,14 @@ Gotchas
   stripes. Compression and performance of single row stripes will be worse than
   a row table. Always insert in bulk to a columnar table.
 * If you mess up and columnarize a bunch of tiny stripes, it'll need to
-  repaired by recreating. To do so you can change the table access method to :ref:`heap` 
-  and then back to :ref:`columnar` again like so:
+  repaired by recreating. To do so you can simply run `VACUUM (FULL)` on the table like so:
 
   .. code-block:: postgresql
-  
-      SELECT alter_table_set_access_method('messed_table', 'heap');
-      SELECT alter_table_set_access_method('messed_table', 'columnar');
 
-  The above commands will technically rewrite the data twice. In some cases it might be
-  more desirable to simply create a new table, move the data and drop the old one.
+      VACUUM (FULL) foo_table;
+
+  In some cases it might be more desirable to create a new table, move the data
+  and drop the old one. You can do it like so:
 
   .. code-block:: postgresql
 
