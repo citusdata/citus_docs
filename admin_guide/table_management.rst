@@ -252,9 +252,15 @@ Gotchas
   so inserting one row per transaction will put single rows into their own
   stripes. Compression and performance of single row stripes will be worse than
   a row table. Always insert in bulk to a columnar table.
-* If you mess up and columnarize a bunch of tiny stripes, there is no way to
-  repair the table. The only fix is to create a new columnar table and copy
-  data from the original in one transaction:
+* Even if you mess up and columnarize a bunch of tiny stripes, it is possible
+  to repair it. Simply run `VACUUM (FULL)` on the table like so:
+
+  .. code-block:: postgresql
+
+      VACUUM (FULL) foo_table;
+
+  In some cases it might be more desirable to create a new table, move the data
+  and drop the old one. You can do it like so:
 
   .. code-block:: postgresql
 
