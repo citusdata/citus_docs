@@ -252,8 +252,8 @@ Gotchas
   so inserting one row per transaction will put single rows into their own
   stripes. Compression and performance of single row stripes will be worse than
   a row table. Always insert in bulk to a columnar table.
-* If you mess up and columnarize a bunch of tiny stripes, it'll need to
-  repaired by recreating. To do so you can simply run `VACUUM (FULL)` on the table like so:
+* Even if you mess up and columnarize a bunch of tiny stripes, it is possible
+  to repair it. To do so you can simply run `VACUUM (FULL)` on the table like so:
 
   .. code-block:: postgresql
 
