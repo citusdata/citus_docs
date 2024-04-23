@@ -253,7 +253,7 @@ Gotchas
   stripes. Compression and performance of single row stripes will be worse than
   a row table. Always insert in bulk to a columnar table.
 * Even if you mess up and columnarize a bunch of tiny stripes, it is possible
-  to repair it. To do so you can simply run `VACUUM (FULL)` on the table like so:
+  to repair it. Simply run `VACUUM (FULL)` on the table like so:
 
   .. code-block:: postgresql
 
