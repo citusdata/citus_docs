@@ -75,7 +75,7 @@ Doing the whole table at once may cause too much load on the database and disrup
 
 .. code-block:: postgresql
 
-   -- the function to backfill up to one
+   -- the function to backfill up to ten
    -- thousand rows from line_items
 
    CREATE FUNCTION backfill_batch()
