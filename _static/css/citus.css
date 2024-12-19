@@ -37,6 +37,16 @@ a.skiplink {
   margin-bottom: 0;
 }
 
+@media screen and (max-width: 414px) {
+  a.reference span {
+    word-break: break-word;
+  }
+}
+
+[class*="toctree-"] a:focus {
+  outline-color: currentColor;
+}
+
 .wy-menu-vertical li.current {
   border-left: 2px solid;
 }
