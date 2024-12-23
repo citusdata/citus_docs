@@ -119,6 +119,7 @@ Citus honors only a specific subset of the allowed options, namely:
 * application_name
 * connect_timeout
 * gsslib†
+* host
 * keepalives
 * keepalives_count
 * keepalives_idle
