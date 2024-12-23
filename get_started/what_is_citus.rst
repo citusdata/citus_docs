@@ -14,7 +14,7 @@ I/O bandwidth can lead to significant performance improvements for multi-tenant
 SaaS applications, customer-facing real-time analytics dashboards, and time
 series workloads.
 
-**Two Ways to Get Citus:**
+Two Ways to Get Citus:
 
 1. **Open source**: Citus is 100% open source. You can `download Citus <https://www.citusdata.com/download/>`_
    open source, or to see the source code and build it yourself, visit the `Citus repo <https://github.com/citusdata/citus>`_

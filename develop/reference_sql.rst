@@ -120,7 +120,8 @@ Calculating the first *n* elements in a set by applying count, sort, and limit i
 
 The open source `TopN extension <https://github.com/citusdata/postgresql-topn>`_ for Postgres enables fast approximate results to "top-n" queries. The extension materializes the top values into a JSON data type. TopN can incrementally update these top values, or merge them on-demand across different time intervals.
 
-**Basic Operations**
+Basic Operations
+$$$$$$$$$$$$$$$$
 
 Before seeing a realistic example of TopN, let's see how some of its primitive operations work. First ``topn_add`` updates a JSON object with counts of how many times a key has been seen:
 
@@ -148,7 +149,8 @@ The extension also provides aggregations to scan multiple values:
 
 If the number of distinct values crosses a threshold, the aggregation drops information for those seen least frequently. This keeps space usage under control. The threshold can be controlled by the ``topn.number_of_counters`` GUC. Its default value is 1000.
 
-**Realistic Example**
+Realistic Example
+$$$$$$$$$$$$$$$$$
 
 Now onto a more realistic example of how TopN works in practice. Let's ingest Amazon product reviews from the year 2000 and use TopN to query it quickly. First download the dataset:
 
