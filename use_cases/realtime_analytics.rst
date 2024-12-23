@@ -186,8 +186,7 @@ The following function wraps the rollup query up for convenience.
       SUM(response_time_msec) / COUNT(1) AS average_response_time_msec
     FROM http_request
     -- roll up only data new since last_rollup_time
-    WHERE date_trunc('minute', ingest_time) <@
-            tstzrange(last_rollup_time, curr_rollup_time, '(]')
+    WHERE ingest_time <@ tstzrange(last_rollup_time, curr_rollup_time, '(]')
     GROUP BY 1, 2;
 
     -- update the value in latest_rollup so that next time we run the
