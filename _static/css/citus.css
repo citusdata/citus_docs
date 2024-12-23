@@ -1,5 +1,10 @@
 /* General */
 
+:root {
+  --readthedocs-flyout-link-color: #27AE60!important;
+  --readthedocs-flyout-section-heading-color: #8D8D8D!important;
+}
+
 h1,h2,.rst-content .toctree-wrapper p.caption,h3,h4,h5,h6,legend {
   font-family: "Lato", "proxima-nova", "Helvetica Neue", Arial, sans-serif !important;
 }
@@ -37,6 +42,16 @@ a.skiplink {
   margin-bottom: 0;
 }
 
+@media screen and (max-width: 414px) {
+  a.reference span {
+    word-break: break-word;
+  }
+}
+
+[class*="toctree-"] a:focus {
+  outline-color: currentColor;
+}
+
 .wy-menu-vertical li.current {
   border-left: 2px solid;
 }
@@ -59,7 +74,7 @@ a.skiplink {
 }
 
 .wy-menu-vertical li.toctree-l2 a {
-  color: #555;
+  color: #4c4c4c;
   background: none !important;
 }
 
