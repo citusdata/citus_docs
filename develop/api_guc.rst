@@ -127,6 +127,7 @@ Citus honors only a specific subset of the allowed options, namely:
 * sslcompression
 * sslcrl
 * sslmode  (defaults to "require" as of Citus 8.1)
+* sslnegotiation
 * sslrootcert
 * tcp_user_timeout
 
