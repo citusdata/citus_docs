@@ -32,11 +32,11 @@ one of three methods, in this order of preference:
      avg, min, max, sum, count, array_agg, jsonb_agg, jsonb_object_agg,
      json_agg, json_object_agg, bit_and, bit_or, bool_and, bool_or,
      every, hll_add_agg, hll_union_agg, topn_add_agg, topn_union_agg,
-     any_value, var_pop(float4), var_pop(float8), var_samp(float4),
-     var_samp(float8), variance(float4), variance(float8) stddev_pop(float4),
-     stddev_pop(float8), stddev_samp(float4), stddev_samp(float8)
-     stddev(float4), stddev(float8)
-     tdigest(double precision, int), tdigest_percentile(double precision, int, double precision), tdigest_percentile(double precision, int, double precision[]), tdigest_percentile(tdigest, double precision), tdigest_percentile(tdigest, double precision[]), tdigest_percentile_of(double precision, int, double precision), tdigest_percentile_of(double precision, int, double precision[]), tdigest_percentile_of(tdigest, double precision), tdigest_percentile_of(tdigest, double precision[])
+     any_value, tdigest(double precision, int), tdigest_percentile(double precision, int, double precision),
+     tdigest_percentile(double precision, int, double precision[]), tdigest_percentile(tdigest, double precision),
+     tdigest_percentile(tdigest, double precision[]), tdigest_percentile_of(double precision, int, double precision),
+     tdigest_percentile_of(double precision, int, double precision[]), tdigest_percentile_of(tdigest, double precision),
+     tdigest_percentile_of(tdigest, double precision[])
 
 3. Last resort: pull all rows from the workers and perform the aggregation on
    the coordinator node. When the aggregate is not grouped on a distribution
@@ -120,7 +120,8 @@ Calculating the first *n* elements in a set by applying count, sort, and limit i
 
 The open source `TopN extension <https://github.com/citusdata/postgresql-topn>`_ for Postgres enables fast approximate results to "top-n" queries. The extension materializes the top values into a JSON data type. TopN can incrementally update these top values, or merge them on-demand across different time intervals.
 
-**Basic Operations**
+Basic Operations
+$$$$$$$$$$$$$$$$
 
 Before seeing a realistic example of TopN, let's see how some of its primitive operations work. First ``topn_add`` updates a JSON object with counts of how many times a key has been seen:
 
@@ -148,7 +149,8 @@ The extension also provides aggregations to scan multiple values:
 
 If the number of distinct values crosses a threshold, the aggregation drops information for those seen least frequently. This keeps space usage under control. The threshold can be controlled by the ``topn.number_of_counters`` GUC. Its default value is 1000.
 
-**Realistic Example**
+Realistic Example
+$$$$$$$$$$$$$$$$$
 
 Now onto a more realistic example of how TopN works in practice. Let's ingest Amazon product reviews from the year 2000 and use TopN to query it quickly. First download the dataset:
 
@@ -312,7 +314,7 @@ Citus supports all views on distributed tables. For an overview of views' syntax
 
 Note that some views cause a less efficient query plan than others. For more about detecting and improving poor view performance, see :ref:`subquery_perf`. (Views are treated internally as subqueries.)
 
-Citus supports materialized views as well, and stores them as local tables on the coordinator node. Using them in distributed queries after materialization requires wrapping them in a subquery, a technique described in :ref:`join_local_dist`.
+Citus supports materialized views as well, and stores them as local tables on the coordinator node.
 
 .. _joins:
 
@@ -337,7 +339,7 @@ Reference table joins
 
 :ref:`reference_tables` can be used as "dimension" tables to join efficiently with large "fact" tables. Because reference tables are replicated in full across all worker nodes, a reference join can be decomposed into local joins on each worker and performed in parallel. A reference join is like a more flexible version of a co-located join because reference tables aren't distributed on any particular column and are free to join on any of their columns.
 
-Reference tables can also join with tables local to the coordinator node, but only if you enable reference table placement on the coordinator. See :ref:`join_local_ref`.
+Reference tables can also join with tables local to the coordinator node.
 
 .. _repartition_joins:
 

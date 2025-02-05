@@ -1,6 +1,188 @@
 External Integrations
 #####################
 
+.. _cdc:
+
+Change Data Capture (CDC)
+=========================
+
+.. note::
+
+  Logical decoding for distributed tables is a preview feature since Citus v11.3.
+
+Differences from single-node PostgreSQL
+---------------------------------------
+
+PostgreSQL provides `logical decoding
+<https://www.postgresql.org/docs/current/logicaldecoding.html>`_ to export
+events of interest from its write-ahead log (WAL) to other programs or
+databases. The WAL keeps track of all committed data transactions; it is the
+authority on all data changes happening on a PostgreSQL instance. By
+subscribing to a logical replication slot, an application can get real-time
+notification of the changes.
+
+Consuming change events from a Citus cluster rather than single-node PostgreSQL
+adds two sets of challenges:
+
+1. **Client subscription complexity.** Any logical decoding publication must be
+   created in duplicate across all nodes. An interested application must
+   subscribe to all of them. Furthermore, events within each publication are
+   guaranteed to be emitted in the order they happen in the node, but this
+   guarantee does not hold for events arriving from multiple nodes.
+2. **Shard complexity.** (Automatically handled by Citus v11.3+ when the
+   :ref:`enable_change_data_capture` GUC is enabled.) Citus nodes store shards
+   as physical tables. For example, a distributed table called ``foo`` is
+   stored across multiple tables with names such as ``foo_102027``,
+   ``foo_102028``, etc. The underlying shard names should be translated back to
+   the conceptual name of the distributed table for CDC.  Also administrative
+   actions like moving shards between worker nodes generates WAL events, but
+   these spurious events should be hidden from CDC.
+
+If the :ref:`enable_change_data_capture` GUC is enabled, Citus automatically
+handles the first set of issues, normalizing shard names and suppressing events
+from shard creation and movement. The second set of issues, however, are the
+client's responsibility.
+
+Logical replication of distributed tables to PostgreSQL tables
+--------------------------------------------------------------
+
+Postgres' CDC with logical decoding forms the basis of `logical
+replication
+<https://www.postgresql.org/docs/current/logical-replication.html>`_, which
+allows you to replicate table changes from one PostgreSQL server to another.
+As an example, let's subscribe to changes from a distributed table in a Citus
+cluster, and populate a regular table in a single-node PostgreSQL server. 
+
+First, enable logical decoding on all Citus nodes. In the postgresql.conf file
+of each of them, configure the WAL and replication slots:
+
+.. code-block:: ini
+
+  # add to postgresql.conf on all nodes
+
+  # include enough information in WAL for logical decoding
+
+  wal_level = logical
+
+  # we need at least one replication slot, but leave headroom
+
+  max_replication_slots = 10
+
+  # enable Citus' logical decoding improvements for dist tables
+
+  citus.enable_change_data_capture = 'on'
+
+After changing the configuration files, restart the PostgreSQL server in each
+Citus node.
+
+Create an example distributed table on the coordinator, and a publication to
+share changes from the table.
+
+.. code-block:: postgresql
+
+  -- example distributed table
+
+  CREATE TABLE items (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
+
+  SELECT create_distributed_table('items', 'key');
+
+  -- citus will propagate to workers, creating publications there too
+
+  CREATE PUBLICATION items_pub FOR TABLE items;
+
+  -- fill with sample data
+
+  INSERT INTO items SELECT generate_series(1,10), 'a value';
+
+.. note::
+
+  Be careful *not* to create a publication for all tables.
+
+  .. code-block:: postgresql
+
+    -- don't do this!
+    CREATE PUBLICATION FOR ALL TABLES;
+
+  Creating publications for all tables includes Citus' own :ref:`metadata
+  tables <metadata_tables>`, which can cause problems.
+
+Check that the worker nodes have the correct hostname set for the coordinator,
+and adjust with :ref:`set_coordinator_host` if necessary. Then, create logical
+replication slots on all nodes by running the following on the coordinator:
+
+.. code-block:: postgresql
+
+  -- create replication slots on all nodes, and choose the pgoutput format
+
+  SELECT * FROM run_command_on_all_nodes($$
+    SELECT pg_create_logical_replication_slot('cdc_slot', 'pgoutput', false)
+  $$);
+
+Finally, on the single node PostgreSQL server, create the ``items`` table, and
+set up subscriptions to read rows from all Citus nodes.
+
+.. code-block:: postgresql
+
+  -- on the standalone PostgreSQL server
+
+  -- match the table structure we have on Citus
+
+  CREATE TABLE items (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
+
+  -- subscribe to coordinator
+
+  CREATE SUBSCRIPTION subc
+    CONNECTION 'dbname=<dbname> host=<coordinator host> user=<username> port=<coordinator port>'
+    PUBLICATION items_pub
+    WITH (copy_data=true,create_slot=false,slot_name='cdc_slot');
+
+  -- subscribe to each worker (assuming there are two workers)
+
+  CREATE SUBSCRIPTION subw0
+    CONNECTION 'dbname=<dbname> host=<worker1 host> user=<user> port=<worker1 port>'
+    PUBLICATION items_pub
+    WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
+
+  CREATE SUBSCRIPTION subw1
+    CONNECTION 'dbname=<dbname> host=<worker2 host> user=<user> port=<worker2 port>'
+    PUBLICATION items_pub
+    WITH (copy_data=false,create_slot=false,slot_name='cdc_slot');
+
+.. note::
+
+   The ``copy_data`` argument should be set to true on the coordinator
+   subscription, to copy any existing data to the CDC client. However,
+   ``copy_data`` should be false for worker subscriptions, otherwise it'll
+   result in duplicate data in the CDC client and cause replication errors.
+
+Logical decoding caveats
+------------------------
+
+* **Support for only the pgoutput and wal2json formats, so far.** You can
+  currently use these two decoders (if installed). Other decoders will not have
+  the distributed table name normalizing applied to them
+* **Replication slots need to be created separately on each node.** While the
+  initial creation is easy with :ref:`run_command_on_all_nodes
+  <worker_propagation>`, there is still extra work when adding a new node. You
+  need to create a replication slot (or subscription) before rebalancing
+  shards.
+* **Cross-node changes arriving out of order.** Changes happening on the same
+  node always arrive in the same order, but since your client will listen to
+  each node separately, there are no guarantees regarding the order of changes
+  happening across different nodes.
+* **Distributed table modification restriction.** Using
+  :ref:`alter_distributed_table` will break the replication stream.
+* **No columnar tables.** logical decoding does not work with :ref:`columnar`.
+* **The need for a consumer.** When doing logical decoding (with or without
+  Citus), be sure there are subscribers consuming publications, or else the WAL
+  data will accumulate and cause problems for the publishing database.
+
 Ingesting Data from Kafka
 =========================
 
@@ -135,7 +317,7 @@ Caveats
 -------
 
 * At the time of this writing, kafka-sink-pg-json requires Kafka version 0.9 or earlier.
-* The kafka-sink-pg-json connector config file does not provide a way to connect with SSL support, so this tool will not work with Citus Cloud which requires secure connections.
+* The kafka-sink-pg-json connector config file does not provide a way to connect with SSL support, so this tool will not work with our :ref:`cloud_topic`, which requires secure connections.
 * A malformed JSON string in the Kafka topic will cause the tool to become stuck. Manual intervention in the topic is required to process more events.
 
 Ingesting Data from Spark
@@ -330,7 +512,7 @@ You can now interact with Tableau using the following steps.
 
   .. image:: ../images/tableau-add-connection.png
     :alt: postgres option selected in menu
-* Enter the connection details for the coordinator node of your Citus cluster. (Note if you're connecting to Citus Cloud you must select "Require SSL.")
+* Enter the connection details for the coordinator node of your Citus cluster. (Note if you're connecting to our :ref:`cloud_topic` you must select "Require SSL.")
 
   .. image:: ../images/tableau-connection-details.png
     :alt: postgres connection details form

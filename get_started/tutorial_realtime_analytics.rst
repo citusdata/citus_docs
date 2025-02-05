@@ -27,8 +27,8 @@ We will use two Postgres tables to represent this data. To get started, you will
 
 .. code-block:: bash
 
-    docker cp users.csv citus_master:.
-    docker cp events.csv citus_master:.
+    docker cp users.csv citus:.
+    docker cp events.csv citus:.
 
 Creating tables
 ---------------
@@ -45,7 +45,7 @@ To start, you can first connect to the Citus coordinator using psql.
 
 .. code-block:: bash
 
-    docker exec -it citus_master psql -U postgres
+    docker exec -it citus psql -U postgres
 
 Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE` commands.
 

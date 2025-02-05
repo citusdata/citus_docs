@@ -12,51 +12,26 @@ Currently Citus imposes primary key constraint only if the distribution column i
 How do I add nodes to an existing Citus cluster?
 ------------------------------------------------
 
-On Azure Database for PostgreSQL - Hyperscale (Citus) it's as easy as dragging a slider in the user interface. In Citus Community edition you can add nodes manually by calling the :ref:`citus_add_node` UDF with the hostname (or IP address) and port number of the new node.
+On the Citus managed service with Azure Cosmos DB for PostgreSQL (formerly known as Hyperscale (Citus)), adding nodes is quite easy: all it takes is a few clicks in the Azure portal. With Citus open source, you can add nodes manually by calling the :ref:`citus_add_node` UDF with the hostname (or IP address) and port number of the new node.
 
-Either way, after adding a node to an existing cluster it will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, Citus provides a shard rebalancer utility. You can find more information in the :ref:`shard_rebalancing` section.
+Either way, after adding a node to an existing cluster, the new node will not contain any data (shards). Citus will start assigning any newly created shards to this node. To rebalance existing shards from the older nodes to the new node, Citus provides an open source shard rebalancer utility. You can find more information in the :ref:`shard_rebalancing` section.
 
 How does Citus handle failure of a worker node?
 -----------------------------------------------
 
-Citus supports two modes of replication, allowing it to tolerate worker-node failures. In the first model, we use PostgreSQL's streaming replication to replicate the entire worker-node as-is. In the second model, Citus can replicate data modification statements, thus replicating shards across different worker nodes. They have different advantages depending on the workload and use-case as discussed below:
-
-1. **PostgreSQL streaming replication.** This option is best for heavy OLTP workloads. It replicates entire worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_ or use :ref:`Citus Cloud <cloud_overview>` which is pre-configured for replication and high-availability.
-
-2. **Citus shard replication.** This option is best suited for an append-only workload. Citus replicates shards across different nodes by automatically replicating DML statements and managing consistency. If a node goes down, the coordinator node will continue to serve queries by routing the work to the replicas seamlessly. To enable shard replication simply set :code:`SET citus.shard_replication_factor = 2;` (or higher) before distributing data to the cluster.
+Citus uses PostgreSQL's streaming replication to replicate the entire worker-node as-is. It replicates worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_.
 
 How does Citus handle failover of the coordinator node?
 -------------------------------------------------------
 
 As the Citus coordinator node is similar to a standard PostgreSQL server, regular PostgreSQL synchronous replication and failover can be used to provide higher availability of the coordinator node. Many of our customers use synchronous replication in this way to add resilience against coordinator node failure. You can find more information about handling :ref:`coordinator_node_failures`.
 
-How do I ingest the results of a query into a distributed table?
-----------------------------------------------------------------
-
-Citus supports the `INSERT / SELECT <https://www.postgresql.org/docs/current/static/sql-insert.html>`_ syntax for copying the results of a query on a distributed table into a distributed table, when the tables are :ref:`co-located <colocation>`.
-
-If your tables are not co-located, or you are using append distribution, there
-are workarounds you can use (for eg. using COPY to copy data out and then back
-into the destination table). Please contact us if your use-case demands such
-ingest workflows.
-
-Can I join distributed and non-distributed tables together in the same query?
------------------------------------------------------------------------------
-
-If you want to do joins between small dimension tables (regular Postgres tables) and large tables (distributed), then wrap the local table in a subquery. Citus' subquery execution logic will allow the join to work. See :ref:`join_local_dist` and :ref:`join_local_ref`.
-
 .. _unsupported:
 
 Are there any PostgreSQL features not supported by Citus?
 ---------------------------------------------------------
 
-Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. The vast majority of queries are supported, even when they combine data across the network from multiple database nodes. This includes transactional semantics across nodes. Currently all SQL is supported except:
-
-* Correlated subqueries
-* Recursive CTEs
-* Table sample
-* SELECT … FOR UPDATE
-* Grouping sets
+Since Citus provides distributed functionality by extending PostgreSQL, it uses the standard PostgreSQL SQL constructs. The vast majority of queries are supported, even when they combine data across the network from multiple database nodes. This includes transactional semantics across nodes. For an up to date list of SQL coverage see :ref:`limits`
 
 What's more, Citus has 100% SQL support for queries which access a single node in the database cluster. These queries are common, for instance, in multi-tenant applications where different nodes store different tenants (see :ref:`when_to_use_citus`).
 
@@ -87,7 +62,8 @@ For more guidance on this topic, see :ref:`production_sizing`.
 How do I change the shard count for a hash partitioned table?
 -------------------------------------------------------------
 
-Note that it is not straightforward to change the shard count of an already distributed table. If you need to do so, please `Contact Us <https://www.citusdata.com/about/contact_us>`_. It's good to think about shard count carefully at distribution time, see :ref:`faq_choose_shard_count`.
+Citus has a function called :ref:`alter_distributed_table` that can change the shard count
+of a distributed table.
 
 How does citus support count(distinct) queries?
 -----------------------------------------------
@@ -106,11 +82,10 @@ How do I create database roles, functions, extensions etc in a Citus cluster?
 
 Certain commands, when run on the coordinator node, do not get propagated to the workers:
 
-* ``CREATE ROLE/USER (gets propagated in Citus Enterprise)``
+* ``CREATE ROLE/USER``
 * ``CREATE DATABASE``
 * ``ALTER … SET SCHEMA``
 * ``ALTER TABLE ALL IN TABLESPACE``
-* ``CREATE FUNCTION`` (use :ref:`create_distributed_function`)
 * ``CREATE TABLE`` (see :ref:`table_types`)
 
 For the other types of objects above, create them explicitly on all nodes. Citus provides a function to execute queries across all workers:
@@ -185,29 +160,12 @@ As the error message suggests, you can (cautiously) increase this limit by alter
 Can I run Citus on Microsoft Azure?
 -----------------------------------
 
-Yes, Citus is a deployment option of `Azure Database for PostgreSQL <https://docs.microsoft.com/azure/postgresql/>`_ called **Hyperscale**. It is a fully managed database-as-a-service.
-
-Can I run Citus on Amazon RDS?
-------------------------------
-
-At this time Amazon does not support running Citus directly on top of Amazon RDS.
-
-What is the state of Citus on AWS?
-----------------------------------
-
-Existing customers of :ref:`Citus Cloud <cloud_overview>` can provision a Citus cluster on Amazon Web Services. However, we are no longer accepting new signups for Citus Cloud.
-
-For a fully managed Citus database-as-a-service, try `Azure Database for PostgreSQL - Hyperscale (Citus) <https://docs.microsoft.com/en-us/azure/postgresql/overview#azure-database-for-postgresql---hyperscale-citus-preview>`_.
-
-Can I create a new DB in a Citus Cloud instance?
-------------------------------------------------
-
-No, but you can use database `schemas <https://www.postgresql.org/docs/current/ddl-schemas.html>`_ to separate and group related sets of tables.
+Yes, Citus is available as a managed service with `Azure Cosmos DB for PostgreSQL <https://learn.microsoft.com/azure/cosmos-db/postgresql/introduction/>`_, formerly known as Hyperscale (Citus) in Azure Database for PostgreSQL.
 
 Can I shard by schema on Citus for multi-tenant applications?
 -------------------------------------------------------------
 
-It turns out that while storing each tenant's information in a separate schema can be an attractive way to start when dealing with tenants, it leads to problems down the road. In Citus we partition by the tenant_id, and a shard can contain data from several tenants. To learn more about the reason for this design, see our article `Lessons learned from PostgreSQL schema sharding <https://www.citusdata.com/blog/2016/12/18/schema-sharding-lessons/>`_.
+Yes, :ref:`schema_based_sharding` is available since Citus 12.0.
 
 How does cstore_fdw work with Citus?
 ------------------------------------

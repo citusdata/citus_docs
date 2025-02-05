@@ -1,7 +1,46 @@
 .. _ddl:
 
-Creating and Modifying Distributed Tables (DDL)
-===============================================
+Creating and Modifying Distributed Objects (DDL)
+================================================
+
+Creating and Distributing Schemas
+---------------------------------
+
+Citus 12.0 introduced :ref:`schema_based_sharding` that allows a schema to be distributed. Distributed schemas are automatically associated with individual colocation groups such that the tables created in those schemas will be automatically converted to colocated distributed tables without a shard key.
+
+There are two ways in which a schema can be distributed in Citus:
+
+Manually by calling :ref:`citus_schema_distribute` function:
+
+.. code-block:: sql
+
+    SELECT citus_schema_distribute('user_service');
+
+This method also allows you to convert existing regular schemas into distributed schemas.
+
+.. note::
+
+    You can only distribute schemas that do not contain distributed and reference tables.
+
+Alternative approach is to enable :ref:`enable_schema_based_sharding` configuration variable:
+
+.. code-block:: sql
+
+    SET citus.enable_schema_based_sharding TO ON;
+
+    CREATE SCHEMA AUTHORIZATION user_service;
+
+The variable can be changed for the current session or permanently in `postgresql.conf`. With the parameter set to `ON` all created schemas will be distributed by default.
+
+The process of distributing the schema will automatically assign and move it to an existing node in the cluster. The background shard rebalancer takes these schemas and all tables within them when rebalancing the cluster, performing the optimal moves and migrating the schemas between the nodes in the cluster.
+
+To convert a schema back into a regular PostgreSQL schema use the :ref:`citus_schema_undistribute` function:
+
+.. code-block:: sql
+
+    SELECT citus_schema_undistribute('user_service');
+
+The tables and data in the `user_service` schema will be moved from the current node back to the coordinator node in the cluster.
 
 Creating And Distributing Tables
 --------------------------------
@@ -32,17 +71,13 @@ distribution column and create the worker shards.
 
 This function informs Citus that the github_events table should be distributed
 on the repo_id column (by hashing the column value). The function also creates
-shards on the worker nodes using the citus.shard_count and
-citus.shard_replication_factor configuration values.
+shards on the worker nodes using the citus.shard_count configuration value.
 
-This example would create a total of citus.shard_count number of shards where each
-shard owns a portion of a hash token space and gets replicated based on the
-default citus.shard_replication_factor configuration value. The shard replicas
-created on the worker have the same table schema, index, and constraint
-definitions as the table on the coordinator. Once the replicas are created, this
-function saves all distributed metadata on the coordinator.
+This example would create a total of citus.shard_count number of shards where
+each shard owns a portion of a hash token space. Once the shards are created,
+this function saves all distributed metadata on the coordinator.
 
-Each created shard is assigned a unique shard id and all its replicas have the same shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. You can connect to the worker postgres instances to view or run commands on individual shards.
+Each created shard is assigned a unique shard id. Each shard is represented on the worker node as a regular PostgreSQL table with name 'tablename_shardid' where tablename is the name of the distributed table and shardid is the unique id assigned to that shard. You can connect to the worker postgres instances to view or run commands on individual shards.
 
 You are now ready to insert data into the distributed table and run queries on it. You can also learn more about the UDF used in this section in the :ref:`user_defined_functions` of our documentation.
 
@@ -79,11 +114,13 @@ Now queries such as one calculating tax for a shopping cart can join on the :cod
 
 In addition to distributing a table as a single replicated shard, the :code:`create_reference_table` UDF marks it as a reference table in the Citus metadata tables. Citus automatically performs two-phase commits (`2PC <https://en.wikipedia.org/wiki/Two-phase_commit_protocol>`_) for modifications to tables marked this way, which provides strong consistency guarantees.
 
-If you have an existing distributed table which has a shard count of one, you can upgrade it to be a recognized reference table by running
+If you have an existing distributed table, you can change it to
+a reference table by running:
 
 .. code-block:: postgresql
 
-  SELECT upgrade_to_reference_table('table_name');
+   SELECT undistribute_table('table_name');
+   SELECT create_reference_table('table_name');
 
 For another example of using reference tables in a multi-tenant application, see :ref:`mt_ref_tables`.
 
@@ -120,7 +157,7 @@ If it's not possible to distribute in the correct order then drop the foreign ke
 
 After the tables are distributed, use the :ref:`truncate_local_data_after_distributing_table` function to remove local data. Leftover local data in distributed tables is inaccessible to Citus queries, and can cause irrelevant constraint violations on the coordinator.
 
-When migrating data from an external database, such as from Amazon RDS to Citus Cloud, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table. Copying into distributed tables avoids running out of space on the coordinator node.
+When migrating data from an external database, such as from Amazon RDS to our :ref:`cloud_topic`, first create the Citus distributed tables via :code:`create_distributed_table`, then copy the data into the table. Copying into distributed tables avoids running out of space on the coordinator node.
 
 .. _colocation_groups:
 
@@ -129,7 +166,7 @@ Co-Locating Tables
 
 Co-location is the practice of dividing data tactically, keeping related information on the same machines to enable efficient relational operations, while taking advantage of the horizontal scalability for the whole dataset. For more information and examples see :ref:`colocation`.
 
-Tables are co-located in groups. To manually control a table's co-location group assignment use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. If you don't care about a table's co-location then omit this parameter. It defaults to the value :code:`'default'`, which groups the table with any other default co-location table having the same distribution column type, shard count, and replication factor. 
+Tables are co-located in groups. To manually control a table's co-location group assignment use the optional :code:`colocate_with` parameter of :code:`create_distributed_table`. If you don't care about a table's co-location then omit this parameter. It defaults to the value :code:`'default'`, which groups the table with any other default co-location table having the same distribution column type, and shard count. 
 If you want to break or update this implicit colocation, you can use ``update_distributed_table_colocation()``.
 
 .. code-block:: postgresql
@@ -165,24 +202,6 @@ To explicitly co-locate multiple tables, distribute one and then put the others 
   SELECT create_distributed_table('products', 'store_id', colocate_with => 'stores');
 
 Information about co-location groups is stored in the :ref:`pg_dist_colocation <colocation_group_table>` table, while :ref:`pg_dist_partition <partition_table>` reveals which tables are assigned to which groups.
-
-.. _marking_colocation:
-
-Upgrading from Citus 5.x
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Starting with Citus 6.0, we made co-location a first-class concept, and started tracking tables' assignment to co-location groups in pg_dist_colocation. Since Citus 5.x didn't have this concept, tables created with Citus 5 were not explicitly marked as co-located in metadata, even when the tables were physically co-located.
-
-Since Citus uses co-location metadata information for query optimization and pushdown, it becomes critical to inform Citus of this co-location for previously created tables. To fix the metadata, simply mark the tables as co-located using :ref:`mark_tables_colocated`:
-
-.. code-block:: postgresql
-
-  -- Assume that stores, products and line_items were created in a Citus 5.x database.
-
-  -- Put products and line_items into store's co-location group
-  SELECT mark_tables_colocated('stores', ARRAY['products', 'line_items']);
-
-This function requires the tables to be distributed with the same method, column type, number of shards, and replication method. It doesn't re-shard or physically move data, it merely updates Citus metadata.
 
 Dropping Tables
 ---------------
@@ -233,7 +252,8 @@ Attempting to do so causes an error:
   ERROR:  cannot execute ALTER TABLE command involving partition column
   */
 
-However, there's a workaround of re-creating the distributed table. See :ref:`change_dist_col`.
+As a workaround, you can consider :ref:`changing the distribution column
+<alter_distributed_table>`, updating it, and changing it back.
 
 Adding/Removing Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -388,7 +408,73 @@ Adding an index takes a write lock, which can be undesirable in a multi-tenant "
 
   CREATE INDEX CONCURRENTLY clicked_at_idx ON clicks USING BRIN (clicked_at);
 
-Manual Modification
-~~~~~~~~~~~~~~~~~~~
+.. _ddl_prop_objects:
 
-Currently other DDL commands are not auto-propagated, however, you can propagate the changes manually. See :ref:`manual_prop`.
+Types and Functions
+-------------------
+
+Creating custom SQL types and user-defined functions propogates to worker
+nodes. However, creating such database objects in a transaction with
+distributed operations involves tradeoffs.
+
+Citus parallelizes operations such as ``create_distributed_table()`` across
+shards using multiple connections per worker. Whereas, when creating a database
+object, Citus propagates it to worker nodes using a single connection per
+worker. Combining the two operations in a single transaction may cause issues,
+because the parallel connections will not be able to see the object that was
+created over a single connection but not yet committed.
+
+Consider a transaction block that creates a type, a table, loads data, and
+distributes the table:
+
+::
+
+   BEGIN;
+
+   -- type creation over a single connection:
+   CREATE TYPE coordinates AS (x int, y int);
+   CREATE TABLE positions (object_id text primary key, position coordinates);
+
+   -- data loading thus goes over a single connection:
+   SELECT create_distributed_table(‘positions’, ‘object_id’);
+   \COPY positions FROM ‘positions.csv’
+
+   COMMIT;
+
+Prior to Citus 11.0, Citus would defer creating the type on the worker
+nodes, and commit it separately when creating the distributed table.  This
+enabled the data copying in ``create_distributed_table()`` to happen in
+parallel.  However, it also meant that the type was not always present on the
+Citus worker nodes -- or if the transaction rolled back, the type would remain
+on the worker nodes.
+
+With Citus 11.0, the default behaviour changes to prioritize schema
+consistency between coordinator and worker nodes. The new behavior has a
+downside: if object propagation happens after a parallel command in the same
+transaction, then the transaction can no longer be completed, as highlighted by
+the ERROR in the code block below:
+
+::
+
+   BEGIN;
+   CREATE TABLE items (key text, value text);
+   -- parallel data loading:
+   SELECT create_distributed_table(‘items’, ‘key’);
+   \COPY items FROM ‘items.csv’
+   CREATE TYPE coordinates AS (x int, y int);
+
+   ERROR:  cannot run type command because there was a parallel operation on a distributed table in the transaction
+
+If you run into this issue, there are two simple workarounds:
+
+1. Use set ``citus.create_object_propagation`` to ``deferred`` to return to the
+   old object propagation behavior, in which case there may be some
+   inconsistency between which database objects exist on different nodes.
+2. Use set ``citus.multi_shard_modify_mode`` to ``sequential`` to disable
+   per-node parallelism. Data load in the same transaction might be slower.
+
+Manual Modification
+-------------------
+
+Most DDL commands are auto-propagated. For any others, you can propagate the
+changes manually. See :ref:`manual_prop`.

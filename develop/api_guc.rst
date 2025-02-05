@@ -17,6 +17,21 @@ As an example you can update a setting with:
 General configuration
 ---------------------------------------
 
+.. _max_background_task_executors_per_node:
+
+citus.max_background_task_executors_per_node (integer)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Determines how many background tasks can be executed in parallel at a given
+time. For instance, these tasks are for shard moves from/to a node. When
+increasing this value, you'll often also want to increase
+``citus.max_background_task_executors`` and `max_worker_processes
+<https://www.postgresql.org/docs/current/runtime-config-resource.html#GUC-MAX-WORKER-PROCESSES>`_.
+
+* Default: 1
+* Minimum: 1
+* Maximum: 128 
+
 citus.max_worker_nodes_tracked (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -99,11 +114,12 @@ The ``citus.node_conninfo`` GUC sets non-sensitive `libpq connection parameters 
   SET citus.node_conninfo =
     'sslrootcert=/path/to/citus.crt sslmode=verify-full';
 
-Citus honors only a whitelisted subset of the options, namely:
+Citus honors only a specific subset of the allowed options, namely:
 
 * application_name
 * connect_timeout
 * gsslib†
+* host
 * keepalives
 * keepalives_count
 * keepalives_idle
@@ -113,6 +129,7 @@ Citus honors only a whitelisted subset of the options, namely:
 * sslcrl
 * sslmode  (defaults to "require" as of Citus 8.1)
 * sslrootcert
+* tcp_user_timeout
 
 *(† = subject to the runtime presence of optional PostgreSQL features)*
 
@@ -126,6 +143,60 @@ The ``node_conninfo`` setting takes effect only on newly opened connections. To 
 
    Citus versions prior to 9.2.4 require a full database restart to force all connections to use the new setting.
 
+.. _local_hostname:
+
+citus.local_hostname (text)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Citus nodes need occasionally to connect to themselves for systems operations.
+By default, they use the address ``localhost`` to refer to themselves, but this
+can cause problems. For instance, when a host requires ``sslmode=verify-full``
+for incoming connections, adding ``localhost`` as an alternative hostname on
+the SSL certificate isn't always desirable -- or even feasible.
+
+``citus.local_hostname`` selects the hostname a node uses to connect to itself.
+The default value is ``localhost``.
+
+.. code-block:: postgresql
+
+   ALTER SYSTEM SET citus.local_hostname TO 'mynode.example.com';
+
+.. _show_shards_for_app_name_prefixes:
+
+citus.show_shards_for_app_name_prefixes (text)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+By default, Citus hides shards from the list of tables PostgreSQL gives to SQL
+clients. It does this because there are multiple shards per distributed table,
+and the shards can be distracting to the SQL client.
+
+The citus.show_shards_for_app_name_prefixes GUC allows shards to be displayed
+for selected clients that want to see them. Its default value is ``''``.
+
+.. code-block:: psql
+
+   -- show shards to psql only (hide in other clients, like pgAdmin)
+
+   SET citus.show_shards_for_app_name_prefixes TO 'psql';
+
+   -- also accepts a comma separated list
+
+   SET citus.show_shards_for_app_name_prefixes TO 'psql,pg_dump';
+
+.. _rebalancer_by_disk_size_base_cost:
+
+citus.rebalancer_by_disk_size_base_cost (integer)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+When using the by_disk_size rebalance strategy each shard group 
+will get this cost in bytes added to its actual disk size. This 
+is used to avoid creating a bad balance when there's very little 
+data in some of the shards. The assumption is that even empty 
+shards have some cost, because of parallelism and because empty 
+shard groups will likely grow in the future.
+
+The default value is ``100MB``.
+
 Query Statistics
 ---------------------------
 
@@ -134,7 +205,8 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
-   This GUC is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+   This GUC is now part of the Citus Community edition as of
+   version 11.0!
 
 Sets the frequency at which the maintenance daemon removes records from :ref:`citus_stat_statements <citus_stat_statements>` that are unmatched in ``pg_stat_statements``. This configuration value sets the time interval between purges in seconds, with a default value of 10. A value of 0 disables the purges.
 
@@ -149,11 +221,35 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
-   This GUC is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+   This GUC is now part of the Citus Community edition as of
+   version 11.0!
 
 The maximum number of rows to store in :ref:`citus_stat_statements <citus_stat_statements>`. Defaults to 50000, and may be changed to any value in the range 1000 - 10000000. Note that each row requires 140 bytes of storage, so setting stat_statements_max to its maximum value of 10M would consume 1.4GB of memory.
 
 Changing this GUC will not take effect until PostgreSQL is restarted.
+
+citus.stat_statements_track (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+   This GUC is now part of the Citus Community edition as of
+   version 11.0!
+
+Recording statistics for :ref:`citus_stat_statements <citus_stat_statements>`
+requires extra CPU resources. When the database is experiencing load, the
+administrator may wish to disable statement tracking. The
+``citus.stat_statements_track`` GUC can turn tracking on and off. 
+
+* **all**: Track all statements.
+* **none**: (default) Disable tracking.
+
+.. _stat_tenants_untracked_sample_rate:
+
+citus.stat_tenants_untracked_sample_rate (floating point)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Sampling rate for new tenants in citus_stat_tenants. The rate can be of range between ``0.0`` and ``1.0``. Default is ``1.0`` meaning 100% of untracked tenant queries are sampled. Setting it to a lower value means that already tracked tenants have 100% queries sampled, but tenants that are currently untracked are sampled only at the provided rate.
 
 Data Loading
 ---------------------------
@@ -167,14 +263,6 @@ Sets the commit protocol to use when performing COPY on a hash distributed table
 
 * **1pc:** The transactions in which COPY is performed on the shard placements are committed in a single round. Data may be lost if a commit fails after COPY succeeds on all placements (rare).
 
-.. _replication_factor:
-
-citus.shard_replication_factor (integer)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-Sets the replication factor for shards i.e. the number of nodes on which shards will be placed and defaults to 1. This parameter can be set at run-time and is effective on the coordinator.
-The ideal value for this parameter depends on the size of the cluster and rate of node failure. For example, you may want to increase this replication factor if you run large clusters and observe node failures on a more frequent basis.
-
 citus.shard_count (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -186,17 +274,6 @@ citus.shard_max_size (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Sets the maximum size to which a shard will grow before it gets split and defaults to 1GB. When the source file's size (which is used for staging) for one shard exceeds this configuration value, the database ensures that a new shard gets created. This parameter can be set at run-time and is effective on the coordinator.
-
-.. Comment out this configuration as currently COPY only support random
-   placement policy.
-.. citus.shard_placement_policy (enum)
-   $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-   Sets the policy to use when choosing nodes for placing newly created shards. When using the \\copy command, the coordinator needs to choose the worker nodes on which it will place the new shards. This configuration value is applicable on the coordinator and specifies the policy to use for selecting these nodes. The supported values for this parameter are :-
-
-   * **round-robin:** The round robin policy is the default and aims to distribute shards evenly across the cluster by selecting nodes in a round-robin fashion. This allows you to copy from any node including the coordinator node.
-
-   * **local-node-first:** The local node first policy places the first replica of the shard on the client node from which the \\copy command is being run. As the coordinator node does not store any data, the policy requires that the command be run from a worker node. As the first replica is always placed locally, it provides better shard placement guarantees.
 
 .. _replicate_reference_tables_on_activate:
 
@@ -214,13 +291,118 @@ You can defer reference table replication by setting the
 ``citus.replicate_reference_tables_on_activate`` GUC to 'off'. Reference table
 replication will then happen when we create new shards on the node. For instance,
 when calling :ref:`create_distributed_table`, :ref:`create_reference_table`,
-:ref:`upgrade_to_reference_table`, or when the shard rebalancer moves shards to
-the new node.
+or when the shard rebalancer moves shards to the new node.
 
 The default value for this GUC is 'on'.
 
+.. _metadata_sync_mode:
+
+citus.metadata_sync_mode (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+.. note::
+
+   Requires superuser access to change.
+
+This GUC determines how Citus synchronizes :ref:`metadata <metadata_tables>`
+across nodes. By default Citus updates all metadata in a single transaction for
+consistency. However, PostgreSQL has a hard memory limit related to cache
+invalidations, and Citus metadata syncing for a large cluster can fail from
+memory exhaustion.
+
+As a workaround, Citus provides an optional nontransactional sync mode which
+uses a series of smaller transactions. While this mode works in limited memory,
+there's a possibility of transactions failing and leaving metadata in an
+inconsistency state. To help with this potential problem, nontransactional
+metadata sync is designed as an idempotent action, so you can re-run it
+repeatedly if needed.
+
+There are two values for this GUC:
+
+* **transactional:** (Default) Synchronize all metadata in a single transaction.
+
+* **nontransactional:** Synchronize metadata using multiple small transactions.
+
+Examples:
+
+.. code-block:: postgresql
+
+   -- to add a new node and sync nontransactionally
+
+   SET citus.metadata_sync_mode TO 'nontransactional';
+   SELECT citus_add_node(<ip>, <port>);
+
+   -- to manually (re)sync
+
+   SET citus.metadata_sync_mode TO 'nontransactional';
+   SELECT start_metadata_sync_to_all_nodes();
+
+We advise trying transactional mode first, and switching to nontransactional
+only if a memory failure occurs.
+
 Planner Configuration
 ------------------------------------------------
+
+.. _local_table_join_policy:
+
+citus.local_table_join_policy (enum)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This GUC determines how Citus moves data when doing a join between local and
+distributed tables. Customizing the join policy can help reduce the amount of
+data sent between worker nodes.
+
+Citus will send either the local or distributed tables to nodes as necessary to
+support the join. Copying table data is referred to as a "conversion." If a
+local table is converted, then it will be sent to any workers that need its
+data to perform the join.  If a distributed table is converted, then it will be
+collected in the coordinator to support the join.  The citus planner will send
+only the necessary rows doing a conversion.
+
+There are four modes available to express conversion preference:
+
+* **auto:** (Default) Citus will convert either all local or all distributed
+  tables to support local and distributed table joins. Citus decides which to
+  convert using a heuristic. It will convert distributed tables if they are
+  joined using a constant filter on a unique index (such as a primary key).
+  This ensures less data gets moved between workers.
+
+* **never:** Citus will not allow joins between local and distributed tables.
+
+* **prefer-local:** Citus will prefer converting local tables to support local
+  and distributed table joins.
+
+* **prefer-distributed:** Citus will prefer converting distributed tables to
+  support local and distributed table joins. If the distributed tables are
+  huge, using this option might result in moving lots of data between workers.
+
+For example, assume ``citus_table`` is a distributed table distributed by the
+column ``x``, and that ``postgres_table`` is a local table:
+
+.. code-block:: postgresql
+
+   CREATE TABLE citus_table(x int primary key, y int);
+   SELECT create_distributed_table('citus_table', 'x');
+
+   CREATE TABLE postgres_table(x int, y int);
+
+   -- even though the join is on primary key, there isn't a constant filter
+   -- hence postgres_table will be sent to worker nodes to support the join
+   SELECT * FROM citus_table JOIN postgres_table USING (x);
+
+   -- there is a constant filter on a primary key, hence the filtered row
+   -- from the distributed table will be pulled to coordinator to support the join
+   SELECT * FROM citus_table JOIN postgres_table USING (x) WHERE citus_table.x = 10;
+
+   SET citus.local_table_join_policy to 'prefer-distributed';
+   -- since we prefer distributed tables, citus_table will be pulled to coordinator
+   -- to support the join. Note that citus_table can be huge.
+   SELECT * FROM citus_table JOIN postgres_table USING (x);
+
+   SET citus.local_table_join_policy to 'prefer-local';
+   -- even though there is a constant filter on primary key for citus_table
+   -- postgres_table will be sent to necessary workers because we are using 'prefer-local'.
+   SELECT * FROM citus_table JOIN postgres_table USING (x) WHERE citus_table.x = 10;
 
 citus.limit_clause_row_fetch_count (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -237,7 +419,7 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 .. note::
 
-   This GUC is applicable only when :ref:`shard_replication_factor <replication_factor>` is greater than one, or for queries against :ref:`reference_tables`.
+   This GUC is applicable for queries against :ref:`reference_tables`.
 
 Sets the policy to use when assigning tasks to workers. The coordinator assigns tasks to workers based on shard locations. This configuration value specifies the policy to use when making these assignments. Currently, there are three possible task assignment policies which can be used.
 
@@ -249,14 +431,36 @@ Sets the policy to use when assigning tasks to workers. The coordinator assigns 
 
 This parameter can be set at run-time and is effective on the coordinator.
 
+.. _enable_non_colocated_router_query_pushdown:
+
+enable_non_colocated_router_query_pushdown (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Enables router planner for the queries that reference non-colocated distributed tables.
+
+Normally, router planner planner is only enabled for
+the queries that reference colocated distributed tables 
+because it is not guaranteed to have the target shards 
+always on the same node, e.g., after rebalancing the 
+shards. For this reason, while enabling this flag allows 
+some degree of optimization for the queries that reference 
+non-colocated distributed tables, it is not guaranteed 
+that the same query will work after rebalancing the shards 
+or altering the shard count of one of those distributed 
+tables.
+
+The default is ``off``.
+
+
 Intermediate Data Transfer
 -------------------------------------------------------------------
 
+.. _binary_worker_copy_format:
+
 citus.binary_worker_copy_format (boolean)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-Use the binary copy format to transfer intermediate data between workers. During large table joins, Citus may have to dynamically repartition and shuffle data between different workers. By default, this data is transferred in text format. Enabling this parameter instructs the database to use PostgreSQL’s binary serialization format to transfer this data. This parameter is effective on the workers and needs to be changed in the postgresql.conf file. After editing the config file, users can send a SIGHUP signal or restart the server for this change to take effect.
-
+Use the binary copy format to transfer intermediate data between workers. During large table joins, Citus may have to dynamically repartition and shuffle data between different workers. For Postgres 13 and lower, the default for this setting is ``false``, which means text encoding is used to transfer this data. For Postgres 14 and higher, the default is ``true``. Setting this parameter is ``true`` instructs the database to use PostgreSQL’s binary serialization format to transfer data. The parameter is effective on the workers and needs to be changed in the postgresql.conf file. After editing the config file, users can send a SIGHUP signal or restart the server for this change to take effect.
 
 citus.max_intermediate_result_size (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -293,6 +497,31 @@ limitations as reference tables (see :ref:`ddl` and :ref:`citus_sql_reference`).
 
 If you drop the foreign keys, Citus will automatically remove such local tables from metadata,
 which eliminates such limitations on those tables.
+
+.. _enable_change_data_capture:
+
+citus.enable_change_data_capture (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+This setting, disabled by default, causes Citus to alter the ``wal2json`` and
+``pgoutput`` logical decoders to work with distributed tables. Specifically, it
+rewrites the names of shards (e.g. ``foo_102027``) in decoder output to the
+base names of the distributed tables (e.g. ``foo``).  It also avoids publishing
+duplicate events during tenant isolation and shard split/move/rebalance
+operations.
+
+For an example of using this GUC, see :ref:`cdc`.
+
+.. _enable_schema_based_sharding:
+
+citus.enable_schema_based_sharding (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+With the parameter set to `ON` all created schemas will be distributed by default. Distributed schemas are automatically associated with individual colocation groups such that the tables created in those schemas will be automatically converted to colocated distributed tables without a shard key. This setting can be modified for individual sessions.
+
+For an example of using this GUC, see :ref:`microservices_tutorial`.
+
+.. _executor_configuration:
 
 Executor Configuration
 ------------------------------------------------------------
@@ -376,8 +605,8 @@ amounts of data.  Examples are when a lot of rows are requested, the rows have
 many columns, or they use big types such as ``hll`` from the postgresql-hll
 extension.
 
-The default value is false, which means all results are encoded and transferred
-in text format.
+The default value is ``true``. When set to ``false``, all results are
+encoded and transferred in text format.
 
 .. _max_shared_pool_size:
 
@@ -406,6 +635,10 @@ the note below). The value -1 disables throttling.
   on the coordinator. This gives extra space for connections required for
   repartition queries on the workers.
 
+
+
+.. _local_share_pool_size:
+
 citus.local_shared_pool_size (integer)
 **************************************
 
@@ -422,6 +655,8 @@ connection slots in ``max_connections`` and allow the client backends (e.g.,
 ``psql``) to have enough space to connect. The value -1 disables throttling.
 
 
+.. _max_adaptive_executor_pool_size:
+
 citus.max_adaptive_executor_pool_size (integer)
 ***********************************************
 
@@ -435,6 +670,8 @@ just the *current* session. This GUC is useful for:
   values
 
 The default value is 16.
+
+.. _executor_slow_start_interval:
 
 citus.executor_slow_start_interval (integer)
 ********************************************
@@ -452,6 +689,8 @@ time.
 For long queries (those taking >500ms), slow start might add latency, but for
 short queries it's faster. The default value is 10ms.
 
+.. _max_cached_conns_per_worker:
+
 citus.max_cached_conns_per_worker (integer)
 *******************************************
 
@@ -463,6 +702,8 @@ multi-shard queries, but will also increase overhead on the workers.
 The default value is 1. A larger value such as 2 might be helpful for clusters
 that use a small number of concurrent sessions, but it's not wise to go much
 further (e.g. 16 would be too high).
+
+.. _force_max_query_parallelization:
 
 citus.force_max_query_parallelization (boolean)
 ***********************************************

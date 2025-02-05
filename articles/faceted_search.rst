@@ -3,6 +3,16 @@ Scalable Real-time Product Search using PostgreSQL with Citus
 
 (Copy of `original publication <https://www.citusdata.com/blog/2016/04/28/scalable-product-search/>`__)
 
+.. NOTE::
+
+   This article mentions the Citus Cloud service.  We are no longer onboarding
+   new users to Citus Cloud on AWS. If you’re new to Citus, the good news is,
+   Citus is still available to you: as open source, and in the cloud on
+   Microsoft Azure, as a fully-integrated deployment option in Azure Database
+   for PostgreSQL.
+
+   See :ref:`cloud_topic`.
+
 Product search is a common, yet sometimes challenging use-case for
 online retailers and marketplaces. It typically involves a combination
 of full-text search and filtering by attributes which differ for every
@@ -35,7 +45,6 @@ that different types of products can use different attributes:
 
 .. code:: sql
 
-    $ psql
     CREATE TABLE product (
       product_id int primary key,
       name text not null,
@@ -76,7 +85,7 @@ of a product into a tsvector, in which the name is assigned the highest
 weight (from 'A' to 'D'), such that matches with the name will show up
 higher when sorting by relevance.
 
-.. code:: sql
+.. code:: postgresql
 
     CREATE FUNCTION product_text_search(name text, description text)
     RETURNS tsvector LANGUAGE sql IMMUTABLE AS $function$
@@ -84,28 +93,11 @@ higher when sorting by relevance.
              setweight(to_tsvector(description),'B');
     $function$;
 
-To use the product\_text\_search function in queries and
-indexes, it also needs to be created on the workers. We'll use
-``run_command_on_workers`` to do this (see :ref:`worker_propagation` for
-more info).
-
-.. code:: sql
-
-    $ psql
-    SELECT run_command_on_workers($cmd$
-      CREATE FUNCTION product_text_search(name text, description text)
-      RETURNS tsvector LANGUAGE sql IMMUTABLE AS $function$
-        SELECT setweight(to_tsvector(name),'A') ||
-               setweight(to_tsvector(description),'B');
-      $function$;
-    $cmd$);
-
 After setting up the function, we define a GIN index on it, which speeds
 up text searches on the product table.
 
 .. code:: sql
 
-    $ psql
     CREATE INDEX text_idx ON product USING GIN (product_text_search(name, description));
 
 We don't have a large product dataset available, so instead we generate
@@ -116,7 +108,7 @@ This is probably not be the fastest way to generate mock data, but we're
 PostgreSQL geeks :). After adding some words to the words table, we can
 run:
 
-.. code:: sql
+.. code:: psql
 
     \COPY (SELECT * FROM generate_products(10000000)) TO '/data/base/products.tsv'
 
@@ -128,7 +120,7 @@ using COPY on distributed tables is that workers can process multiple
 rows in parallel. Because each shard is indexed separately, the indexes
 are also kept small, which improves ingestion rate for GIN indexes.
 
-.. code:: sql
+.. code:: psql
 
     \COPY product FROM '/data/base/products.tsv'
 
@@ -154,6 +146,10 @@ very random words :). To order the query by relevance, we can use the
     ORDER BY ts_rank(product_text_search(name, description),
                      plainto_tsquery('copper oven')) DESC
     LIMIT 10;
+
+::
+
+    .
      product_id |         name         | price
     ------------+----------------------+-------
         2016884 | oven copper hot      | 32.33
@@ -161,7 +157,7 @@ very random words :). To order the query by relevance, we can use the
         4021935 | argument chin rub    | 79.33
         5347636 | oven approval circle | 50.78
     (4 rows)
-
+    
     Time: 68.832 ms (~78ms on non-distributed table)
 
 The query above uses both GIN indexes to do a very fast look-up of a
@@ -179,6 +175,10 @@ first 10:
     ORDER BY ts_rank(product_text_search(name, description),
                      plainto_tsquery('oven')) DESC
     LIMIT 10;
+
+::
+
+    .
      product_id |         name         | price
     ------------+----------------------+-------
         6295883 | end oven oven        |  7.80
@@ -186,7 +186,7 @@ first 10:
         2291463 | town oven oven       |  7.47
     ...
     (10 rows)
-
+    
     Time: 2262.502 ms (37 seconds on non-distributed table)
 
 This query gets the top 10 results from each of the 16 shards, which is
@@ -233,6 +233,10 @@ Offers are included in the results as an array of JSON objects.
     ORDER BY ts_rank(product_text_search(p.name, p.description),
                      plainto_tsquery('popcorn oven')) DESC
     LIMIT 10;
+
+::
+
+    .
      product_id |          name          | price |                                        to_json
     ------------+------------------------+-------+---------------------------------------------------------------------------------------
         9354998 | oven popcorn bridge    | 41.18 | [null]
@@ -240,7 +244,7 @@ Offers are included in the results as an array of JSON objects.
          985098 | popcorn oven scent     | 73.32 | [{"product_id":985098,"offer_id":5890813,"seller_id":5727,"price":67.00,"new":true}]
     ...
     (10 rows)
-
+    
     Time: 337.441 ms (4 seconds on non-distributed tables)
 
 Given the wide array of features available in PostgreSQL, we can keep

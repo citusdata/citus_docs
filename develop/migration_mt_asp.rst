@@ -152,7 +152,7 @@ looks like this:
 .. note::
     
     You can use the `Secret
-    Manager <https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?tabs=visual-studio-code>`__
+    Manager <https://docs.microsoft.com/aspnet/core/security/app-secrets?tabs=visual-studio-code>`__
     to avoid storing your database credentials in code (and accidentally
     checking them into source control).
 
@@ -167,7 +167,7 @@ Define the Entity Framework Core context and models
 The database context class provides an interface between your code and
 your database. Entity Framework Core uses it to understand what your
 `data
-schema <https://msdn.microsoft.com/en-us/library/jj679962(v=vs.113).aspx#Anchor_2>`__
+schema <https://msdn.microsoft.com/library/jj679962(v=vs.113).aspx#Anchor_2>`__
 looks like, so you'll need to define what tables are available in your
 database.
 

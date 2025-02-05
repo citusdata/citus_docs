@@ -23,7 +23,6 @@ The pg_dist_partition table stores metadata about which tables in the database a
 +----------------+----------------------+---------------------------------------------------------------------------+
 |  partmethod    |         char         | | The method used for partitioning / distribution. The values of this     |
 |                |                      | | column corresponding to different distribution methods are :-           |
-|                |                      | | append: 'a'                                                             |
 |                |                      | | hash: 'h'                                                               |
 |                |                      | | reference table: 'n'                                                    |
 +----------------+----------------------+---------------------------------------------------------------------------+
@@ -37,7 +36,6 @@ The pg_dist_partition table stores metadata about which tables in the database a
 +----------------+----------------------+---------------------------------------------------------------------------+
 |   repmodel     |         char         | | The method used for data replication. The values of this column         |
 |                |                      | | corresponding to different replication methods are :-                   |
-|                |                      | | * citus statement-based replication: 'c'                                |
 |                |                      | | * postgresql streaming replication:  's'                                |
 |                |                      | | * two-phase commit (for reference tables): 't'                          |
 +----------------+----------------------+---------------------------------------------------------------------------+
@@ -47,7 +45,7 @@ The pg_dist_partition table stores metadata about which tables in the database a
     SELECT * from pg_dist_partition;
      logicalrelid  | partmethod |                                                        partkey                                                         | colocationid | repmodel 
     ---------------+------------+------------------------------------------------------------------------------------------------------------------------+--------------+----------
-     github_events | h          | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location -1} |            2 | c
+     github_events | h          | {VAR :varno 1 :varattno 4 :vartype 20 :vartypmod -1 :varcollid 0 :varlevelsup 0 :varnoold 1 :varoattno 4 :location -1} |            2 | s
      (1 row)
 
 .. _pg_dist_shard:
@@ -55,7 +53,7 @@ The pg_dist_partition table stores metadata about which tables in the database a
 Shard table
 ~~~~~~~~~~~~~~~~~
 
-The pg_dist_shard table stores metadata about individual shards of a table. This includes information about which distributed table the shard belongs to and statistics about the distribution column for that shard. For append distributed tables, these statistics correspond to min / max values of the distribution column. In case of hash distributed tables, they are hash token ranges assigned to that shard. These statistics are used for pruning away unrelated shards during SELECT queries.
+The pg_dist_shard table stores metadata about individual shards of a table. This includes information about which distributed table the shard belongs to and statistics about the distribution column for that shard. In case of hash distributed tables, they are hash token ranges assigned to that shard. These statistics are used for pruning away unrelated shards during SELECT queries.
 
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
@@ -68,14 +66,10 @@ The pg_dist_shard table stores metadata about individual shards of a table. This
 | shardstorage   |            char      | | Type of storage used for this shard. Different storage types are        |
 |                |                      | | discussed in the table below.                                           |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| shardminvalue  |            text      | | For append distributed tables, minimum value of the distribution column |
-|                |                      | | in this shard (inclusive).                                              |
-|                |                      | | For hash distributed tables, minimum hash token value assigned to that  |
+| shardminvalue  |            text      | | For hash distributed tables, minimum hash token value assigned to that  |
 |                |                      | | shard (inclusive).                                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| shardmaxvalue  |            text      | | For append distributed tables, maximum value of the distribution column |
-|                |                      | | in this shard (inclusive).                                              |
-|                |                      | | For hash distributed tables, maximum hash token value assigned to that  |
+| shardmaxvalue  |            text      | | For hash distributed tables, maximum hash token value assigned to that  |
 |                |                      | | shard (inclusive).                                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
@@ -150,7 +144,7 @@ The colocation_id refers to the :ref:`colocation group <colocation_group_table>`
 Shard placement table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The pg_dist_placement table tracks the location of shard replicas on worker nodes. Each replica of a shard assigned to a specific node is called a shard placement. This table stores information about the health and location of each shard placement.
+The pg_dist_placement table tracks the location of shards on worker nodes. Each shard assigned to a specific node is called a shard placement. This table stores information about the health and location of each shard placement.
 
 +----------------+----------------------+---------------------------------------------------------------------------+
 |      Name      |         Type         |       Description                                                         |
@@ -163,12 +157,10 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
 | shardstate     |         int          | | Describes the state of this placement. Different shard states are       |
 |                |                      | | discussed in the section below.                                         |
 +----------------+----------------------+---------------------------------------------------------------------------+
-| shardlength    |       bigint         | | For append distributed tables, the size of the shard placement on the   |
-|                |                      | | worker node in bytes.                                                   |
-|                |                      | | For hash distributed tables, zero.                                      |
+| shardlength    |       bigint         | | For hash distributed tables, zero.                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 | groupid        |         int          | | Identifier used to denote a group of one primary server and zero or more|
-|                |                      | | secondary servers, when the streaming replication model is used.        |
+|                |                      | | secondary servers.                                                      |
 +----------------+----------------------+---------------------------------------------------------------------------+
 
 ::
@@ -204,34 +196,6 @@ The pg_dist_placement table tracks the location of shard replicas on worker node
   That information is now available by joining pg_dist_placement with :ref:`pg_dist_node <pg_dist_node>` on the groupid. For compatibility Citus still provides pg_dist_shard_placement as a view. However, we recommend using the new, more normalized, tables when possible.
 
 
-Shard Placement States
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-Citus manages shard health on a per-placement basis and automatically marks a placement as unavailable if leaving the placement in service would put the cluster in an inconsistent state. The shardstate column in the pg_dist_placement table is used to store the state of shard placements. A brief overview of different shard placement states and their representation is below.
-
-
-+----------------+----------------------+---------------------------------------------------------------------------+
-|  State name    |  Shardstate value    |       Description                                                         |
-+================+======================+===========================================================================+
-|   FINALIZED    |           1          | | This is the state new shards are created in. Shard placements           |
-|                |                      | | in this state are considered up-to-date and are used in query   	    |
-|                |                      | | planning and execution.                                                 |
-+----------------+----------------------+---------------------------------------------------------------------------+   
-|  INACTIVE      |            3         | | Shard placements in this state are considered inactive due to           |
-|                |                      | | being out-of-sync with other replicas of the same shard. This           |
-|                |                      | | can occur when an append, modification (INSERT, UPDATE or               |
-|                |                      | | DELETE ) or a DDL operation fails for this placement. The query         |
-|                |                      | | planner will ignore placements in this state during planning and        |
-|                |                      | | execution. Users can synchronize the data in these shards with          |
-|                |                      | | a finalized replica as a background activity.                           |
-+----------------+----------------------+---------------------------------------------------------------------------+
-|   TO_DELETE    |            4         | | If Citus attempts to drop a shard placement in response to a            |
-|                |                      | | master_apply_delete_command call and fails, the placement is            |
-|                |                      | | moved to this state. Users can then delete these shards as a            |
-|                |                      | | subsequent background activity.                                         |
-+----------------+----------------------+---------------------------------------------------------------------------+
-
-
 .. _pg_dist_node:
 
 Worker node table
@@ -245,8 +209,7 @@ The pg_dist_node table contains information about the worker nodes in the cluste
 | nodeid           |         int          | | Auto-generated identifier for an individual node.                       |
 +------------------+----------------------+---------------------------------------------------------------------------+
 | groupid          |         int          | | Identifier used to denote a group of one primary server and zero or more|
-|                  |                      | | secondary servers, when the streaming replication model is used. By     |
-|                  |                      | | default it is the same as the nodeid.                                   |
+|                  |                      | | secondary servers. By default it is the same as the nodeid.             |
 +------------------+----------------------+---------------------------------------------------------------------------+
 | nodename         |         text         | | Host Name or IP Address of the PostgreSQL worker node.                  |
 +------------------+----------------------+---------------------------------------------------------------------------+
@@ -361,6 +324,36 @@ Here's an example of how ``create_distributed_function()`` adds entries to the
     distribution_argument_index |
     colocationid                |
 
+.. _citus_schemas:
+
+Citus schemas view
+~~~~~~~~~~~~~~~~~~
+
+Citus 12.0 intoduced the concept of :ref:`schema_based_sharding` and with it the `citus_schemas` view which shows which schemas have been distributed in the system. The view only lists distributed schemas, local schemas are not displayed.
+
++-----------------------------+--------------+--------------------------------------------------------------+
+| Name                        | Type         | Description                                                  |
++=============================+==============+==============================================================+
+| schema_name                 | regnamespace | Name of the distributed schema                               |
++-----------------------------+--------------+--------------------------------------------------------------+
+| colocation_id               | integer      | Colocation ID of the distributed schema                      |
++-----------------------------+--------------+--------------------------------------------------------------+
+| schema_size                 | text         | Human readable size summary of all objects within the schema |
++-----------------------------+--------------+--------------------------------------------------------------+
+| schema_owner                | name         | Role that owns the schema                                    |
++-----------------------------+--------------+--------------------------------------------------------------+
+
+
+Here's an example:
+
+.. code-block:: sql
+
+   schema_name  | colocation_id | schema_size | schema_owner
+  --------------+---------------+-------------+--------------
+   user_service |             1 | 0 bytes     | user_service
+   time_service |             2 | 0 bytes     | time_service
+   ping_service |             3 | 632 kB      | ping_service
+
 .. _citus_tables:
 
 Citus tables view
@@ -392,12 +385,45 @@ Here's an example:
   │ test       │ distributed      │ id                  │             1 │ 248 TB     │          32 │ citus       │ heap          │
   └────────────┴──────────────────┴─────────────────────┴───────────────┴────────────┴─────────────┴─────────────┴───────────────┘
 
+.. _time_partitions:
+
+Time partitions view
+~~~~~~~~~~~~~~~~~~~~
+
+Citus provides UDFs to manage partitions for the :ref:`timeseries` use case.
+It also maintains a ``time_partitions`` view to inspect the partitions it
+manages.
+
+Columns:
+
+* **parent_table** the table which is partitioned
+* **partition_column** the column on which the parent table is partitioned
+* **partition** the name of a partition table
+* **from_value** lower bound in time for rows in this partition
+* **to_value** upper bound in time for rows in this partition
+* **access_method** ``heap`` for row-based storage, and ``columnar`` for columnar storage
+
+.. code-block:: postgresql
+
+   SELECT * FROM time_partitions;
+
+::
+
+   ┌────────────────────────┬──────────────────┬─────────────────────────────────────────┬─────────────────────┬─────────────────────┬───────────────┐
+   │      parent_table      │ partition_column │                partition                │     from_value      │      to_value       │ access_method │
+   ├────────────────────────┼──────────────────┼─────────────────────────────────────────┼─────────────────────┼─────────────────────┼───────────────┤
+   │ github_columnar_events │ created_at       │ github_columnar_events_p2015_01_01_0000 │ 2015-01-01 00:00:00 │ 2015-01-01 02:00:00 │ columnar      │
+   │ github_columnar_events │ created_at       │ github_columnar_events_p2015_01_01_0200 │ 2015-01-01 02:00:00 │ 2015-01-01 04:00:00 │ columnar      │
+   │ github_columnar_events │ created_at       │ github_columnar_events_p2015_01_01_0400 │ 2015-01-01 04:00:00 │ 2015-01-01 06:00:00 │ columnar      │
+   │ github_columnar_events │ created_at       │ github_columnar_events_p2015_01_01_0600 │ 2015-01-01 06:00:00 │ 2015-01-01 08:00:00 │ heap          │
+   └────────────────────────┴──────────────────┴─────────────────────────────────────────┴─────────────────────┴─────────────────────┴───────────────┘
+
 .. _colocation_group_table:
 
 Co-location group table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The pg_dist_colocation table contains information about which tables' shards should be placed together, or :ref:`co-located <colocation>`. When two tables are in the same co-location group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard co-location is inferred when the shard counts, replication factors, and partition column types all match between two tables; however, a custom co-location group may be specified when creating a distributed table, if so desired.
+The pg_dist_colocation table contains information about which tables' shards should be placed together, or :ref:`co-located <colocation>`. When two tables are in the same co-location group, Citus ensures shards with the same partition values will be placed on the same worker nodes. This enables join optimizations, certain distributed rollups, and foreign key support. Shard co-location is inferred when the shard counts, and partition column types all match between two tables; however, a custom co-location group may be specified when creating a distributed table, if so desired.
 
 +-----------------------------+----------------------+---------------------------------------------------------------------------+
 |      Name                   |         Type         |       Description                                                         |
@@ -407,6 +433,7 @@ The pg_dist_colocation table contains information about which tables' shards sho
 | shardcount                  |         int          | | Shard count for all tables in this co-location group                    |
 +-----------------------------+----------------------+---------------------------------------------------------------------------+
 | replicationfactor           |         int          | | Replication factor for all tables in this co-location group.            |
+|                             |                      | | (Deprecated)                                                            |
 +-----------------------------+----------------------+---------------------------------------------------------------------------+
 | distributioncolumntype      |         oid          | | The type of the distribution column for all tables in this              |
 |                             |                      | | co-location group.                                                      |
@@ -420,7 +447,7 @@ The pg_dist_colocation table contains information about which tables' shards sho
     SELECT * from pg_dist_colocation;
       colocationid | shardcount | replicationfactor | distributioncolumntype | distributioncolumncollation
      --------------+------------+-------------------+------------------------+-----------------------------
-                 2 |         32 |                 2 |                     20 |                           0
+                 2 |         32 |                 1 |                     20 |                           0
       (1 row)
 
 .. _pg_dist_rebalance_strategy:
@@ -428,14 +455,14 @@ The pg_dist_colocation table contains information about which tables' shards sho
 Rebalancer strategy table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This table defines strategies that :ref:`rebalance_table_shards` can use to determine where to move shards.
+This table defines strategies that :ref:`citus_rebalance_start` can use to determine where to move shards.
 
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 |      Name                      |         Type         |       Description                                                         |
 +================================+======================+===========================================================================+
 | name                           |         name         | | Unique name for the strategy                                            |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
-| default_strategy               |         boolean      | | Whether :ref:`rebalance_table_shards` should choose this strategy by    |
+| default_strategy               |         boolean      | | Whether :ref:`citus_rebalance_start` should choose this strategy by     |
 |                                |                      | | default. Use :ref:`citus_set_default_rebalance_strategy` to update      |
 |                                |                      | | this column                                                             |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
@@ -450,10 +477,15 @@ This table defines strategies that :ref:`rebalance_table_shards` can use to dete
 |                                |                      | | node                                                                    |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 | default_threshold              |         float4       | | Threshold for deeming a node too full or too empty, which determines    |
-|                                |                      | | when the rebalance_table_shards should try to move shards               |
+|                                |                      | | when the citus_rebalance_start should try to move shards                |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 | minimum_threshold              |         float4       | | A safeguard to prevent the threshold argument of                        |
-|                                |                      | | rebalance_table_shards() from being set too low                         |
+|                                |                      | | citus_rebalance_start() from being set too low                          |
++--------------------------------+----------------------+---------------------------------------------------------------------------+
+| improvement_threshold          |         float4       | | Determines when moving a shard is worth it during a rebalance.          |
+|                                |                      | | The rebalancer will move a shard when the ratio of the improvement with |
+|                                |                      | | the shard move to the improvement without crosses the threshold. This   |
+|                                |                      | | is most useful with the by_disk_size strategy.                          |
 +--------------------------------+----------------------+---------------------------------------------------------------------------+
 
 A Citus installation ships with these strategies in the table:
@@ -463,25 +495,28 @@ A Citus installation ships with these strategies in the table:
     SELECT * FROM pg_dist_rebalance_strategy;
 
 ::
+  
+    -[ RECORD 1 ]------------------+---------------------------------
+    name                           | by_shard_count
+    default_strategy               | f
+    shard_cost_function            | citus_shard_cost_1
+    node_capacity_function         | citus_node_capacity_1
+    shard_allowed_on_node_function | citus_shard_allowed_on_node_true
+    default_threshold              | 0
+    minimum_threshold              | 0
+    improvement_threshold          | 0
+    -[ RECORD 2 ]------------------+---------------------------------
+    name                           | by_disk_size
+    default_strategy               | t
+    shard_cost_function            | citus_shard_cost_by_disk_size
+    node_capacity_function         | citus_node_capacity_1
+    shard_allowed_on_node_function | citus_shard_allowed_on_node_true
+    default_threshold              | 0.1
+    minimum_threshold              | 0.01
+    improvement_threshold          | 0.5
 
-    -[ RECORD 1 ]-------------------+-----------------------------------
-    Name                            | by_shard_count
-    default_strategy                | true
-    shard_cost_function             | citus_shard_cost_1
-    node_capacity_function          | citus_node_capacity_1
-    shard_allowed_on_node_function  | citus_shard_allowed_on_node_true
-    default_threshold               | 0
-    minimum_threshold               | 0
-    -[ RECORD 2 ]-------------------+-----------------------------------
-    Name                            | by_disk_size
-    default_strategy                | false
-    shard_cost_function             | citus_shard_cost_by_disk_size
-    node_capacity_function          | citus_node_capacity_1
-    shard_allowed_on_node_function  | citus_shard_allowed_on_node_true
-    default_threshold               | 0.1
-    minimum_threshold               | 0.01
 
-The default strategy, ``by_shard_count``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The other predefined strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
+The strategy ``by_shard_count``, assigns every shard the same cost. Its effect is to equalize the shard count across nodes. The default strategy, ``by_disk_size``, assigns a cost to each shard matching its disk size in bytes plus that of the shards that are colocated with it. The disk size is calculated using ``pg_total_relation_size``, so it includes indices. This strategy attempts to achieve the same disk space on every node. Note the threshold of 0.1 -- it prevents unnecessary shard movement caused by insigificant differences in disk space.
 
 .. _custom_rebalancer_strategies:
 
@@ -551,11 +586,10 @@ Query statistics table
 
 .. note::
 
-  The citus_stat_statements view is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+  The citus_stat_statements view is part of Citus Community edition as of
+  version 11.0!
 
 Citus provides ``citus_stat_statements`` for stats about how queries are being executed, and for whom. It's analogous to (and can be joined with) the `pg_stat_statements <https://www.postgresql.org/docs/current/static/pgstatstatements.html>`_ view in PostgreSQL which tracks statistics about query speed.
-
-This view can trace queries to originating tenants in a multi-tenant application, which helps for deciding when to do :ref:`tenant_isolation`.
 
 +----------------+--------+---------------------------------------------------------+
 | Name           | Type   | Description                                             |
@@ -628,6 +662,82 @@ Caveats:
 * Tracks a limited number of queries, set by the ``pg_stat_statements.max`` GUC (default 5000)
 * To truncate the table, use the ``citus_stat_statements_reset()`` function
 
+.. _citus_stat_tenants:
+
+Tenant-level query statistics view
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``citus_stat_tenants`` view augments the :ref:`citus_stat_statements` with
+information about how many queries each tenant is running. Tracing queries to
+originating tenants helps, among other things, for deciding when to do
+:ref:`tenant_isolation`.
+
+This view counts recent single-tenant queries happening during a configurable
+time period. The tally of read-only and total queries for the period increases
+until the current period ends. After that, the counts are moved to last
+period's statistics, which stays constant until expiration. The period length
+can be set in seconds using ``citus.stats_tenants_period``, and is 60 seconds by
+default.
+
+The view displays up to ``citus.stat_tenants_limit`` rows (by default 100). It
+counts only queries filtered to a single tenant, ignoring queries that apply to
+multiple tenants at once.
+
++----------------------------+--------+---------------------------------------------------------+
+| Name                       | Type   | Description                                             |
++============================+========+=========================================================+
+| nodeid                     | int    | Node ID from :ref:`pg_dist_node`                        |
++----------------------------+--------+---------------------------------------------------------+
+| colocation_id              | int    | ID of :ref:`colocation group <colocation_group_table>`  |
++----------------------------+--------+---------------------------------------------------------+
+| tenant_attribute           | text   | Value in the distribution column identifying tenant     |
++----------------------------+--------+---------------------------------------------------------+
+| read_count_in_this_period  | int    | Number of read (SELECT) queries for tenant in period    |
++----------------------------+--------+---------------------------------------------------------+
+| read_count_in_last_period  | int    | Number of read queries one period of time ago           |
++----------------------------+--------+---------------------------------------------------------+
+| query_count_in_this_period | int    | Number of read/write queries for tenant in time period  |
++----------------------------+--------+---------------------------------------------------------+
+| query_count_in_last_period | int    | Number of read/write queries one period of time ago     |
++----------------------------+--------+---------------------------------------------------------+
+| cpu_usage_in_this_period   | double | Seconds of CPU time spent for this tenant in period     |
++----------------------------+--------+---------------------------------------------------------+
+| cpu_usage_in_last_period   | double | Seconds of CPU time spent for this tenant last period   |
++----------------------------+--------+---------------------------------------------------------+
+
+Tracking tenant level statistics adds overhead, and by default is disabled.  To
+enable it, set ``citus.stat_tenants_track`` to ``'all'``.
+
+**Example:**
+
+Suppose we have a distributed table called ``dist_table``, with distribution
+column ``tenant_id``. Then we make some queries:
+
+.. code-block:: postgres
+
+  INSERT INTO dist_table(tenant_id) VALUES (1);
+  INSERT INTO dist_table(tenant_id) VALUES (1);
+  INSERT INTO dist_table(tenant_id) VALUES (2);
+  
+  SELECT count(*) FROM dist_table WHERE tenant_id = 1;
+
+The tenant-level statistics will reflect the queries we just made:
+
+.. code-block:: postgres
+
+  SELECT tenant_attribute, read_count_in_this_period,
+         query_count_in_this_period, cpu_usage_in_this_period
+    FROM citus_stat_tenants;
+
+::
+
+   tenant_attribute | read_count_in_this_period | query_count_in_this_period | cpu_usage_in_this_period
+  ------------------+---------------------------+----------------------------+--------------------------
+   1                |                         1 |                          3 |                 0.000883
+   2                |                         0 |                          1 |                 0.000144
+
+.. _dist_query_activity:
+
 Distributed Query Activity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -635,95 +745,148 @@ In some situations, queries might get blocked on row-level locks on one of the s
 
 Citus provides special views to watch queries and locks throughout the cluster, including shard-specific queries used internally to build results for distributed queries.
 
-* **citus_dist_stat_activity**: shows the distributed queries that are executing on all nodes. A superset of ``pg_stat_activity``, usable wherever the latter is.
-* **citus_worker_stat_activity**: shows queries on workers, including fragment queries against individual shards.
+* **citus_stat_activity**: shows the distributed queries that are executing on all nodes. A superset of ``pg_stat_activity``, usable wherever the latter is.
+* **citus_dist_stat_activity**: the same as ``citus_stat_activity`` but restricted to distributed queries only, and excluding Citus fragment queries.
 * **citus_lock_waits**: Blocked queries throughout the cluster.
 
-The first two views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the host/port of the worker that initiated the query and the host/port of the coordinator node of the cluster.
+The first two views include all columns of `pg_stat_activity <https://www.postgresql.org/docs/current/static/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW>`_ plus the global PID of the worker that initiated the query.
 
 For example, consider counting the rows in a distributed table:
 
 .. code-block:: postgres
 
-   -- run from worker on localhost:9701
+   -- run in one session
+   -- (with a pg_sleep so we can see it)
 
-   SELECT count(*) FROM users_table;
+   SELECT count(*), pg_sleep(3) FROM users_table;
 
 We can see the query appear in ``citus_dist_stat_activity``:
 
 .. code-block:: postgres
 
+   -- run in another session
+
    SELECT * FROM citus_dist_stat_activity;
 
-   -[ RECORD 1 ]----------+----------------------------------
-   query_hostname         | localhost
-   query_hostport         | 9701
-   master_query_host_name | localhost
-   master_query_host_port | 9701
-   transaction_number     | 1
-   transaction_stamp      | 2018-10-05 13:27:20.691907+03
-   datid                  | 12630
-   datname                | postgres
-   pid                    | 23723
-   usesysid               | 10
-   usename                | citus
-   application_name       | psql
-   client_addr            | 
-   client_hostname        | 
-   client_port            | -1
-   backend_start          | 2018-10-05 13:27:14.419905+03
-   xact_start             | 2018-10-05 13:27:16.362887+03
-   query_start            | 2018-10-05 13:27:20.682452+03
-   state_change           | 2018-10-05 13:27:20.896546+03
-   wait_event_type        | Client
-   wait_event             | ClientRead
-   state                  | idle in transaction
-   backend_xid            | 
-   backend_xmin           | 
-   query                  | SELECT count(*) FROM users_table;
-   backend_type           | client backend
+   -[ RECORD 1 ]----+-------------------------------------------
+   global_pid       | 10000012199
+   nodeid           | 1
+   is_worker_query  | f
+   datid            | 13724
+   datname          | postgres
+   pid              | 12199
+   leader_pid       |
+   usesysid         | 10
+   usename          | postgres
+   application_name | psql
+   client_addr      |
+   client_hostname  |
+   client_port      | -1
+   backend_start    | 2022-03-23 11:30:00.533991-05
+   xact_start       | 2022-03-23 19:35:28.095546-05
+   query_start      | 2022-03-23 19:35:28.095546-05
+   state_change     | 2022-03-23 19:35:28.09564-05
+   wait_event_type  | Timeout
+   wait_event       | PgSleep
+   state            | active
+   backend_xid      |
+   backend_xmin     | 777
+   query_id         |
+   query            | SELECT count(*), pg_sleep(3) FROM users_table;
+   backend_type     | client backend
 
-This query requires information from all shards. Some of the information is in shard ``users_table_102038`` which happens to be stored in localhost:9700. We can see a query accessing the shard by looking at the ``citus_worker_stat_activity`` view:
+The ``citus_dist_stat_activity`` view hides internal Citus fragment queries. To
+see those, we can use the more detailed ``citus_stat_activity`` view. For
+instance, the previous ``count(*)`` query requires information from all shards.
+Some of the information is in shard ``users_table_102039``, which is visible in
+the query below.
 
 .. code-block:: postgres
 
-   SELECT * FROM citus_worker_stat_activity;
+   SELECT * FROM citus_stat_activity;
 
-   -[ RECORD 1 ]----------+-----------------------------------------------------------------------------------------
-   query_hostname         | localhost
-   query_hostport         | 9700
-   master_query_host_name | localhost
-   master_query_host_port | 9701
-   transaction_number     | 1
-   transaction_stamp      | 2018-10-05 13:27:20.691907+03
-   datid                  | 12630
-   datname                | postgres
-   pid                    | 23781
-   usesysid               | 10
-   usename                | citus
-   application_name       | citus
-   client_addr            | ::1
-   client_hostname        | 
-   client_port            | 51773
-   backend_start          | 2018-10-05 13:27:20.75839+03
-   xact_start             | 2018-10-05 13:27:20.84112+03
-   query_start            | 2018-10-05 13:27:20.867446+03
-   state_change           | 2018-10-05 13:27:20.869889+03
-   wait_event_type        | Client
-   wait_event             | ClientRead
-   state                  | idle in transaction
-   backend_xid            | 
-   backend_xmin           | 
-   query                  | COPY (SELECT count(*) AS count FROM users_table_102038 users_table WHERE true) TO STDOUT
-   backend_type           | client backend
+   -[ RECORD 1 ]----+-----------------------------------------------------------------------
+   global_pid       | 10000012199
+   nodeid           | 1
+   is_worker_query  | f
+   datid            | 13724
+   datname          | postgres
+   pid              | 12199
+   leader_pid       |
+   usesysid         | 10
+   usename          | postgres
+   application_name | psql
+   client_addr      |
+   client_hostname  |
+   client_port      | -1
+   backend_start    | 2022-03-23 11:30:00.533991-05
+   xact_start       | 2022-03-23 19:32:18.260803-05
+   query_start      | 2022-03-23 19:32:18.260803-05
+   state_change     | 2022-03-23 19:32:18.260821-05
+   wait_event_type  | Timeout
+   wait_event       | PgSleep
+   state            | active
+   backend_xid      |
+   backend_xmin     | 777
+   query_id         |
+   query            | SELECT count(*), pg_sleep(3) FROM users_table;
+   backend_type     | client backend
+   -[ RECORD 2 ]----------+-----------------------------------------------------------------------------------------
+   global_pid       | 10000012199
+   nodeid           | 1
+   is_worker_query  | t
+   datid            | 13724
+   datname          | postgres
+   pid              | 12725
+   leader_pid       |
+   usesysid         | 10
+   usename          | postgres
+   application_name | citus_internal gpid=10000012199
+   client_addr      | 127.0.0.1
+   client_hostname  |
+   client_port      | 44106
+   backend_start    | 2022-03-23 19:29:53.377573-05
+   xact_start       |
+   query_start      | 2022-03-23 19:32:18.278121-05
+   state_change     | 2022-03-23 19:32:18.278281-05
+   wait_event_type  | Client
+   wait_event       | ClientRead
+   state            | idle
+   backend_xid      |
+   backend_xmin     |
+   query_id         |
+   query            | SELECT count(*) AS count FROM public.users_table_102039 users WHERE true
+   backend_type     | client backend
 
-The ``query`` field shows data being copied out of the shard to be counted.
+The ``query`` field shows rows being counted in shard 102039.
 
-.. note::
+Here are examples of useful queries you can build using
+``citus_stat_activity``:
 
-  If a router query (e.g. single-tenant in a multi-tenant application, ``SELECT * FROM table WHERE tenant_id = X``) is executed without a transaction block, then citus_query_host_name and citus_query_host_port columns will be NULL in citus_worker_stat_activity.
+.. code-block:: postgres
 
-To see how ``citus_lock_waits`` works, we can generate a locking situation manually. First we'll set up a test table from the coordinator:
+  -- active queries' wait events
+
+  SELECT query, wait_event_type, wait_event
+    FROM citus_stat_activity
+   WHERE state='active';
+
+  -- active queries' top wait events
+
+  SELECT wait_event, wait_event_type, count(*)
+    FROM citus_stat_activity
+   WHERE state='active'
+   GROUP BY wait_event, wait_event_type
+   ORDER BY count(*) desc;
+
+  -- total internal connections generated per node by Citus
+
+  SELECT nodeid, count(*)
+    FROM citus_stat_activity
+   WHERE is_worker_query
+   GROUP BY nodeid;
+
+The next view is ``citus_lock_waits``. To see how it works, we can generate a locking situation manually. First we'll set up a test table from the coordinator:
 
 .. code-block:: postgres
 
@@ -749,17 +912,13 @@ The ``citus_lock_waits`` view shows the situation.
 
    SELECT * FROM citus_lock_waits;
 
-   -[ RECORD 1 ]-------------------------+----------------------------------------
-   waiting_pid                           | 88624
-   blocking_pid                          | 88615
+   -[ RECORD 1 ]-------------------------+--------------------------------------
+   waiting_gpid                          | 10000011981
+   blocking_gpid                         | 10000011979
    blocked_statement                     | UPDATE numbers SET j = 3 WHERE i = 1;
    current_statement_in_blocking_process | UPDATE numbers SET j = 2 WHERE i = 1;
-   waiting_node_id                       | 0
-   blocking_node_id                      | 0
-   waiting_node_name                     | coordinator_host
-   blocking_node_name                    | coordinator_host
-   waiting_node_port                     | 5432
-   blocking_node_port                    | 5432
+   waiting_nodeid                        | 1
+   blocking_nodeid                       | 1
 
 In this example the queries originated on the coordinator, but the view can also list locks between queries originating on workers.
 
@@ -775,7 +934,8 @@ Connection Credentials Table
 
 .. note::
 
-  This table is a part of Citus Enterprise Edition. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+  This table is part of Citus Community edition as of
+  version 11.0!
 
 The ``pg_dist_authinfo`` table holds authentication parameters used by Citus nodes to connect to one another.
 
@@ -809,7 +969,8 @@ Connection Pooling Credentials
 
 .. note::
 
-  This table is a part of Citus Enterprise Edition. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+  This table is part of Citus Community edition as of
+  version 11.0!
 
 If you want to use a connection pooler to connect to a node, you can specify the pooler options using ``pg_dist_poolinfo``. This metadata table holds the host, port and database name for Citus to use when connecting to a node through a pooler.
 

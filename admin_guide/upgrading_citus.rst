@@ -8,36 +8,34 @@ $$$$$$$$$$$$$$$
 Upgrading Citus Versions
 ########################
 
-Citus adheres to `semantic versioning <http://semver.org/>`_ with patch-, minor-, and major-versions. The upgrade process differs for each, requiring more effort for bigger version jumps.
-
 Upgrading the Citus version requires first obtaining the new Citus extension and then installing it in each of your database instances. Citus uses separate packages for each minor version to ensure that running a default package upgrade will provide bug fixes but never break anything. Let's start by examining patch upgrades, the easiest kind.
 
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 9.5 is currently installed on Postgres 13:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 12.1 is currently installed on Postgres 16:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-13-citus-9.5
+  sudo apt-get install --only-upgrade postgresql-16-citus-12.1
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus95_13
-  sudo service postgresql-13 restart
+  sudo yum update citus121_16
+  sudo service postgresql-16 restart
 
 .. _major_minor_upgrade:
 
 Major and Minor Version Upgrades
 --------------------------------
 
-Major and minor version upgrades follow the same steps, but be careful: major upgrades can make backward-incompatible changes in the Citus API. It is best to review the Citus `changelog <https://github.com/citusdata/citus/blob/master/CHANGELOG.md>`_ before a major upgrade and look for any changes which may cause problems for your application.
+Major and minor version upgrades follow the same steps, but be careful: they can make backward-incompatible changes in the Citus API. It is best to review the Citus `changelog <https://github.com/citusdata/citus/blob/master/CHANGELOG.md>`_ before an upgrade and look for any changes which may cause problems for your application.
 
 .. note::
 
@@ -48,14 +46,14 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 8.3 to 9.5
+If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 11.3 to 12.1 on Postgres 15:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-11-citus-9.5
+  sudo apt-get install postgresql-15-citus-12.1
   sudo service postgresql restart
 
 **Fedora, CentOS, or Red Hat**
@@ -63,22 +61,32 @@ If upgrading both Citus and Postgres, always be sure to upgrade the Citus extens
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus83_11 citus95_11
-  sudo service postgresql-11 restart
+  sudo yum swap citus113_15 citus121_15
+  sudo service postgresql-15 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 After installing the new package and restarting the database, run the extension upgrade script.
 
-.. code-block:: bash
+.. code-block:: postgresql
 
-  # you must restart PostgreSQL before running this
-  psql -c 'ALTER EXTENSION citus UPDATE;'
+  -- you must restart PostgreSQL before running this
+  ALTER EXTENSION citus UPDATE;
 
-  # you should see the newer Citus version in the list
-  psql -c '\dx'
+  -- you should see the upgraded Citus version
+  SELECT * FROM citus_version();
 
+  -- if upgrading to Citus 11.x or later,
+  -- run on the coordinator node
+  CALL citus_finish_citus_upgrade();
+
+.. note::
+
+  If upgrading to Citus 11.x from an earlier major version, the
+  citus_finish_citus_upgrade() procedure will make sure that all worker nodes
+  have the right schema and metadata. It may take several minutes to run,
+  depending on how much metadata needs to be synced.
 
 .. note::
 
@@ -94,26 +102,29 @@ After installing the new package and restarting the database, run the extension 
 
 .. _upgrading_postgres:
 
-Upgrading PostgreSQL version from 11 to 12
+Upgrading PostgreSQL version from 15 to 16
 ##########################################
 
 .. note::
 
    Do not attempt to upgrade *both* Citus and Postgres versions at once. If both upgrades are desired, upgrade Citus first.
 
+   Also, if you're running Citus 10.0 or 10.1, don't upgrade your Postgres version. Upgrade to at least Citus 10.2 and
+   then perform the Postgres upgrade.
+
 Record the following paths before you start (your actual paths may be different than those below):
 
-Existing data directory (e.g. /opt/pgsql/10/data)
-  :code:`export OLD_PG_DATA=/opt/pgsql/11/data`
+Existing data directory (e.g. /opt/pgsql/15/data)
+  :code:`export OLD_PG_DATA=/opt/pgsql/15/data`
 
-Existing PostgreSQL installation path (e.g. /usr/pgsql-10)
-  :code:`export OLD_PG_PATH=/usr/pgsql-11`
+Existing PostgreSQL installation path (e.g. /usr/pgsql-15)
+  :code:`export OLD_PG_PATH=/usr/pgsql-15`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/12/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/16/data`
 
 New PostgreSQL installation path
-  :code:`export NEW_PG_PATH=/usr/pgsql-12`
+  :code:`export NEW_PG_PATH=/usr/pgsql-16`
 
 For Every Node
 --------------
@@ -122,7 +133,7 @@ For Every Node
 
   .. code-block:: postgres
 
-    -- this step for the coordinator node only, not workers
+    -- run this on the coordinator and worker nodes
 
     SELECT citus_prepare_pg_upgrade();
 
@@ -159,6 +170,15 @@ For Every Node
     $NEW_PG_PATH/bin/pg_upgrade -b $OLD_PG_PATH/bin/ -B $NEW_PG_PATH/bin/ \
                                 -d $OLD_PG_DATA -D $NEW_PG_DATA
 
+5. If you did not set up TLS configuration yourself, Citus will have done that and you need to copy the Citus-generated :code:`postgresql.auto.conf` file along with the generated certificate files (:code:`server.crt` and :code:`server.key`)
+
+.. code-block:: bash
+
+    cp $OLD_PG_DATA/postgresql.auto.conf $NEW_PG_DATA/
+    cp $OLD_PG_DATA/server.crt $NEW_PG_DATA/
+    cp $OLD_PG_DATA/server.key $NEW_PG_DATA/
+
+
 6. Start the new server.
 
   * **DO NOT** run any query before running the queries given in the next step
@@ -167,6 +187,6 @@ For Every Node
 
   .. code-block:: postgres
 
-    -- this step for the coordinator node only, not workers
+    -- run this on the coordinator and worker nodes
 
     SELECT citus_finish_pg_upgrade();

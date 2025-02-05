@@ -88,7 +88,7 @@ There are helper libraries for a number of popular application frameworks that m
   :maxdepth: 1
 
   migration_mt_ror.rst
-  migration_mt_django.rst
+  Django Multitenant <https://django-multitenant.readthedocs.io/en/latest/migration_mt_django.html>
   migration_mt_asp.rst
   Java Hibernate <https://www.citusdata.com/blog/2018/02/13/using-hibernate-and-spring-to-build-multitenant-java-apps/>
 
@@ -145,7 +145,7 @@ Finally, when joining tables make sure to filter by tenant id too. For instance 
 Enable Secure Connections
 -------------------------
 
-Clients should connect to Citus with SSL to protect information and prevent man-in-the-middle attacks. Citus Cloud, in fact, rejects unencrypted connections. To learn how to make an SSL connection see :ref:`cloud_ssl`.
+Clients should connect to Citus with SSL to protect information and prevent man-in-the-middle attacks.
 
 Check for cross-node traffic
 ----------------------------

@@ -189,7 +189,7 @@ For higher INSERT performance, the factor which impacts insert rates the most is
 .. _subquery_perf:
 
 Subquery/CTE Network Overhead
-=============================
+-----------------------------
 
 In the best case Citus can execute queries containing subqueries and CTEs in a single step. This is usually because both the main query and subquery filter by tables' distribution column in the same way, and can be pushed down to worker nodes together. However, Citus is sometimes forced to execute subqueries *before* executing the main query, copying the intermediate subquery results to other worker nodes for use by the main query. This technique is called :ref:`push_pull_execution`.
 
@@ -270,7 +270,7 @@ In the above EXPLAIN ANALYZE output, you can see the following information about
   Intermediate Data Size: 26 MB
   Result destination: Write locally
 
-It tells us how large the intermediate results where, and where the intermediate results were written to. In this case,
+It tells us how large the intermediate results were, and where the intermediate results were written to. In this case,
 they were written to the node coordinating the query execution, as specified by "Write locally". For some other queries
 it can also be of the following format:
 
@@ -296,6 +296,33 @@ Advanced
 
 In this section, we discuss advanced performance tuning parameters. These parameters are applicable to specific use cases and may not be required for all deployments.
 
+.. _connection_management:
+
+Connection Management
+---------------------
+
+When executing multi-shard queries, Citus must balance the gains from
+parallelism with the overhead from database connections. The
+:ref:`query_execution` section explains the steps of turning queries into
+worker tasks and obtaining database connections to the workers.
+
+* Set :ref:`max_adaptive_executor_pool_size` to a low value like 1 or 2 for
+  transactional workloads with short queries (e.g. < 20ms of latency). For
+  analytical workloads where parallelism is critical, leave this setting at its
+  default value of 16.
+* Set :ref:`executor_slow_start_interval` to a high value like 100ms for
+  transactional workloads comprised of short queries that are bound on network
+  latency rather than parallelism.  For analytical workloads, leave this
+  setting at its default value of 10ms.
+* The default value of 1 for :ref:`max_cached_conns_per_worker` is
+  reasonable.  A larger value such as 2 might be helpful for clusters that use
+  a small number of concurrent sessions, but it’s not wise to go much further
+  (e.g. 16 would be too high). If set too high, sessions will hold idle
+  connections and use worker resources unnecessarily.
+* Set :ref:`max_shared_pool_size` to match the `max_connections
+  <https://www.postgresql.org/docs/current/runtime-config-connection.html#RUNTIME-CONFIG-CONNECTION-SETTINGS>`_
+  setting of your *worker* nodes. This setting is mainly a fail-safe.
+
 Task Assignment Policy
 -------------------------------------
 
@@ -306,9 +333,7 @@ The **greedy** policy aims to distribute tasks evenly across the workers. This p
 Intermediate Data Transfer Format
 ------------------------------------------------
 
-Citus, by default, transfers intermediate query data between workers in textual format. This is generally best, as text files typically have smaller sizes than the binary representation. A more compact representation leads to lower network and disk I/O while writing and transferring intermediate data.
-
-However, for certain data types like hll or hstore arrays, the cost of serializing and deserializing data is pretty high. In such cases, using binary format for transferring intermediate data can improve query performance. Enabling the citus.binary_worker_copy_format configuration option uses the binary format.
+On Postgres 13 and lower, Citus defaults to transfering intermediate query data between workers in textual format. For certain data types, like hll or hstore arrays, the cost of serializing and deserializing data can be high. In such cases, using the binary format to transfer intermediate data can improve query performance. You can enable the :ref:`binary_worker_copy_format` configuration option to use the binary format.
 
 Binary protocol
 ---------------
@@ -324,12 +349,8 @@ using text encoding. Binary encoding significantly reduces bandwidth for types
 that have a compact binary representation, such as ``hll``, ``tdigest``,
 ``timestamp`` and ``double precision``.
 
-Adaptive Executor
------------------
-
-Citus' adaptive executor conserves database connections to help reduce resource usage on worker nodes during multi-shard queries. When running a query, the executor begins by using a single -- usually precached -- connection to a remote node. If the query finishes within the time period specified by citus.executor_slow_start_interval, no more connections are required. Otherwise the executor gradually establishes new connections as directed by citus.executor_slow_start_interval. (See also https://docs.citusdata.com/en/latest/develop/api_guc.html#adaptive-executor-configuration)
-
-With the behavior explained above, the executor aims to open an optimal number of connections to remote nodes. For short running multi-shard queries, like an index-only-scan on the shards, the executor may use only a single connection and execute all the queries on the shards over a single connection. For longer running multi-shard queries, the executor will keep opening connections to parallelize the execution on the remote nodes. If the queries on the shards take long (such as > 500ms), the executor converges to using one connection per shard (or up to citus.max_adaptive_executor_pool_size), in order to maximize the parallelism.
+For Postgres 14 and higher, the default for this setting is already ``true``.
+So explicitly enabling it for those Postgres versions has no effect.
 
 .. _scaling_data_ingestion:
 
@@ -387,11 +408,9 @@ To measure UPDATE throughputs with Citus, we used the :ref:`same benchmarking st
 | 8 cores -  30GB RAM | 4 * (1 core - 15GB RAM) |          10.7 |               23,900 |
 +---------------------+-------------------------+---------------+----------------------+
 
-These benchmark numbers show that Citus's UPDATE throughput is slightly lower than those of INSERTs. This is because pgbench creates a primary key index for UPDATE statements and an UPDATE incurs more work on the worker nodes. It's also worth noting two additional differences between INSERT and UPDATEs.
+These benchmark numbers show that Citus's UPDATE throughput is slightly lower than those of INSERTs. This is because pgbench creates a primary key index for UPDATE statements and an UPDATE incurs more work on the worker nodes. It's also worth noting an additional differences between INSERT and UPDATEs.
 
-First, UPDATE statements cause bloat in the database and VACUUM needs to run regularly to clean up this bloat. In Citus, since VACUUM runs in parallel across worker nodes, your workloads are less likely to be impacted by VACUUM.
-
-Second, these benchmark numbers show UPDATE throughput for standard Citus deployments. If you're on the Citus community edition, using statement-based replication, and you increased the default replication factor to 2, you're going to observe notably lower UPDATE throughputs. For this particular setting, Citus comes with additional configuration (citus.all_modifications_commutative) that may increase UPDATE ratios.
+UPDATE statements cause bloat in the database and VACUUM needs to run regularly to clean up this bloat. In Citus, since VACUUM runs in parallel across worker nodes, your workloads are less likely to be impacted by VACUUM.
 
 Insert and Update: Throughput Checklist
 ---------------------------------------

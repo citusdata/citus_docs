@@ -29,20 +29,17 @@ However, this is a distributed table, so a single trigger on the coordinator for
 .. code-block:: postgresql
 
   -- First create a function that all these triggers will use.
-  -- The function needs to be present on all workers.
 
-  SELECT run_command_on_workers($cmd$
-    CREATE OR REPLACE FUNCTION set_author() RETURNS TRIGGER AS $$
-      BEGIN
-        NEW.author := current_user;
-        RETURN NEW;
-      END;
-    $$ LANGUAGE plpgsql;
-  $cmd$);
+  CREATE OR REPLACE FUNCTION set_author() RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.author := current_user;
+      RETURN NEW;
+    END;
+  $$ LANGUAGE plpgsql;
 
   -- Now create a trigger for every placement
 
-  SELECT run_command_on_placements(
+  SELECT run_command_on_shards(
     'events',
     $cmd$
       CREATE TRIGGER events_set_author BEFORE INSERT OR UPDATE ON %s
@@ -83,19 +80,17 @@ Suppose that for every value inserted into ``little_vals`` we want to insert one
 
   -- This trigger function takes the destination placement as an argument
 
-  SELECT run_command_on_workers($cmd$
-    CREATE OR REPLACE FUNCTION embiggen() RETURNS TRIGGER AS $$
-      BEGIN
-        IF (TG_OP = 'INSERT') THEN
-          EXECUTE format(
-            'INSERT INTO %s (key, val) SELECT ($1).key, ($1).val*2;',
-            TG_ARGV[0]
-          ) USING NEW;
-        END IF;
-        RETURN NULL;
-      END;
-    $$ LANGUAGE plpgsql;
-  $cmd$);
+  CREATE OR REPLACE FUNCTION embiggen() RETURNS TRIGGER AS $$
+    BEGIN
+      IF (TG_OP = 'INSERT') THEN
+        EXECUTE format(
+          'INSERT INTO %s (key, val) SELECT ($1).key, ($1).val*2;',
+          TG_ARGV[0]
+        ) USING NEW;
+      END IF;
+      RETURN NULL;
+    END;
+  $$ LANGUAGE plpgsql;
 
   -- Next we relate the co-located tables by the trigger function
   -- on each co-located placement
@@ -149,11 +144,11 @@ Suppose we want to record the author of every change in ``insert_target`` to ``a
   SELECT create_reference_table('insert_target');
   SELECT create_reference_table('audit_table');
 
-To make a trigger on each worker that updates ``audit_table``, we need to know the name of that table's shard. Rather than looking up the name in the metadata tables and using it manually in ``run_command_on_workers``, we can use ``run_command_on_placements``. Reference tables have exactly one placement per worker node, so the following creates what we want.
+To make a trigger on each worker that updates ``audit_table``, we need to know the name of that table's shard. Rather than looking up the name in the metadata tables and using it manually in ``run_command_on_workers``, we can use ``run_command_on_shards``. Reference tables have exactly one placement per worker node, so the following creates what we want.
 
 .. code-block:: postgresql
 
-  SELECT run_command_on_placements(
+  SELECT run_command_on_shards(
     'audit_table',
     $cmd$
       CREATE OR REPLACE FUNCTION process_audit() RETURNS TRIGGER AS $$
@@ -166,7 +161,7 @@ To make a trigger on each worker that updates ``audit_table``, we need to know t
     $cmd$
   );
 
-  SELECT run_command_on_placements(
+  SELECT run_command_on_shards(
     'insert_target',
     $cmd$
       CREATE TRIGGER emp_audit

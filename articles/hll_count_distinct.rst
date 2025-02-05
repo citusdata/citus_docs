@@ -146,6 +146,16 @@ anything extra once you configured it.
 Hands on with HLL
 -----------------
 
+.. NOTE::
+
+   This section mentions the Citus Cloud service.  We are no longer onboarding
+   new users to Citus Cloud on AWS. If you’re new to Citus, the good news is,
+   Citus is still available to you: as open source, and in the cloud on
+   Microsoft Azure, as a fully-integrated deployment option in Azure Database
+   for PostgreSQL.
+
+   See :ref:`cloud_topic`.
+
 Setup
 ~~~~~
 
@@ -175,7 +185,7 @@ we will only use github\_events table and we will use
 `large\_events.csv <https://examples.citusdata.com/large_events.csv>`__
 data set;
 
-.. code:: sql
+.. code:: psql
 
     CREATE TABLE github_events
     (
@@ -209,12 +219,13 @@ to find out how many unique users created an event;
 
 It should return something like this;
 
-.. code:: sql
+::
 
+    .
      count
     --------
      264227
-     
+    
     (1 row)
 
 It looks like this query does not have anything with HLL. However if you
@@ -238,12 +249,13 @@ can query number of unique users who created a PushEvent;
 
 It would return;
 
-.. code:: sql
+::
 
+    .
      count
     --------
      157471
-
+    
     (1 row)
 
 Similarly exact distinct count for this query is 157154 and our error

@@ -6,7 +6,8 @@ Cluster Management
 In this section, we discuss how you can add or remove nodes from your Citus cluster and how you can deal with node failures.
 
 .. note::
-  To make moving shards across nodes or re-replicating shards on failed nodes easier, Citus Enterprise comes with a shard rebalancer extension. We discuss briefly about the functions provided by the shard rebalancer as and when relevant in the sections below. You can learn more about these functions, their arguments and usage, in the :ref:`cluster_management_functions` reference section.
+
+  To make moving shards across nodes or re-replicating shards on failed nodes easier, Citus Community edition 11.0+ supports fully online shard rebalancing. We discuss briefly the functions provided by the shard rebalancer when relevant in the sections below. You can learn more about these functions, their arguments, and usage, in the :ref:`cluster_management_functions` reference section.
 
 .. _production_sizing:
 
@@ -20,7 +21,7 @@ This section explores configuration settings for running a cluster in production
 Shard Count
 -----------
 
-The number of nodes in a cluster is easy to change (see :ref:`scaling_out_cluster`), but the number of shards to distribute among those nodes is more difficult to change after cluster creation. Choosing the shard count for each distributed table is a balance between the flexibility of having more shards, and the overhead for query planning and execution across them.
+Choosing the shard count for each distributed table is a balance between the flexibility of having more shards, and the overhead for query planning and execution across them. If you decide to change the shard count of a table after distributing, you can use the :ref:`alter_distributed_table` function.
 
 Multi-Tenant SaaS Use-Case
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -39,14 +40,14 @@ However, keep in mind that for each query Citus opens one database connection pe
 Initial Hardware Size
 =====================
 
-The size of a cluster, in terms of number of nodes and their hardware capacity, is easy to change. (:ref:`Scaling <cloud_scaling>` on Citus Cloud is especially easy.) However, you still need to choose an initial size for a new cluster. Here are some tips for a reasonable initial cluster size.
+The size of a cluster, in terms of number of nodes and their hardware capacity, is easy to change. (Scaling on our :ref:`cloud_topic` is especially easy.) However, you still need to choose an initial size for a new cluster. Here are some tips for a reasonable initial cluster size.
 
 Multi-Tenant SaaS Use-Case
 --------------------------
 
 For those migrating to Citus from an existing single-node database instance, we recommend choosing a cluster where the number of worker cores and RAM in total equals that of the original instance. In such scenarios we have seen 2-3x performance improvements because sharding improves resource utilization, allowing smaller indices etc.
 
-The coordinator node needs less memory than workers, so you can choose a compute-optimized machine for running the coordinator. The number of cores required depends on your existing workload (write/read throughput). By default in Citus Cloud the workers use Amazon EC2 instance type R4S, and the coordinator uses C4S.
+The coordinator node needs less memory than workers, so you can choose a compute-optimized machine for running the coordinator. The number of cores required depends on your existing workload (write/read throughput).
 
 Real-Time Analytics Use-Case
 ----------------------------
@@ -77,24 +78,18 @@ To add a new node to the cluster, you first need to add the DNS name or IP addre
 
 The new node is available for shards of new distributed tables. Existing shards will stay where they are unless redistributed, so adding a new worker may not help performance without further steps.
 
-If your cluster has very large reference tables, they can slow down the addition of a node. In this case, consider the :ref:`replicate_reference_tables_on_activate` GUC.
-
 .. note::
 
-   As of Citus 8.1, workers use encrypted communication by default. A new node running version 8.1 or greater will refuse to talk with other workers who do not have SSL enabled. When adding a node to a cluster without encrypted communication, you must reconfigure the new node before creating the Citus extension.
+  If your cluster has very large reference tables, they can slow down the
+  addition of a node. In this case, consider the
+  :ref:`replicate_reference_tables_on_activate` GUC.
 
-   First, from the coordinator node check whether the other workers use SSL:
-
-   .. code-block:: sql
-
-      SELECT run_command_on_workers('show ssl');
-
-   If they do not, then connect to the new node and permit it to communicate over plaintext if necessary:
-
-   .. code-block:: sql
-
-      ALTER SYSTEM SET citus.node_conninfo TO 'sslmode=prefer';
-      SELECT pg_reload_conf();
+  Also, new nodes synchronize Citus' :ref:`metadata <metadata_tables>` upon
+  creation.  By default, the sync happens inside a single transaction for
+  consistency.  However, in a big cluster with large amounts of metadata, the
+  transaction can run out of memory and fail.  If you encounter this situation,
+  you can choose a non-transactional metadata sync mode with the
+  :ref:`metadata_sync_mode` GUC.
 
 .. _shard_rebalancing:
 
@@ -103,13 +98,12 @@ Rebalance Shards without Downtime
 
 .. note::
 
-  Shard rebalancing is available in Citus Community edition, but shards are
-  blocked for write access while being moved. For non-blocking reads *and*
-  writes during rebalancing, try Citus Enterprise edition.
+  Starting in version 11.0, Citus Community edition now supports non-blocking
+  reads *and* writes during rebalancing.
 
 If you want to move existing shards to a newly added worker, Citus provides a
-:ref:`rebalance_table_shards` function to make it easier. This function will
-move the shards of a given table to distribute them evenly among the workers.
+:ref:`citus_rebalance_start` function to make it easier. This function will
+distribute shards evenly among the workers.
 
 The function is configurable to rebalance shards according to a number of
 strategies, to best match your database workload. See the function reference to
@@ -118,17 +112,48 @@ the default strategy:
 
 .. code-block:: postgresql
 
-  SELECT rebalance_table_shards();
+  SELECT citus_rebalance_start();
 
 Many products, like multi-tenant SaaS applications, cannot tolerate downtime,
-and with Citus Enterprise edition rebalancing is able to honor this requirement
+and on our managed service, rebalancing is able to honor this requirement
 on PostgreSQL 10 or above. This means reads and writes from the application can
 continue with minimal interruption while data is being moved.
+
+Parallel Rebalancing
+~~~~~~~~~~~~~~~~~~~~
+
+This operation carries out multiple shard moves in a sequential order by 
+default. There are some cases where you may prefer to rebalance faster at the
+expense of using more resources such as network bandwidth. In those situations,
+customers are able to configure a rebalance operation to perform a number of 
+shard moves in parallel. 
+
+The :ref:`max_background_task_executors_per_node` GUC allows tasks such as shard
+rebalancing to operate in parallel. You can increase it from its default value
+(1) as desired to boost parallelism. 
+
+.. code-block:: postgresql
+
+   ALTER SYSTEM SET citus.max_background_task_executors_per_node = 2;
+   SELECT pg_reload_conf();
+   
+   SELECT citus_rebalance_start();
+
+**What are the typical use cases?**
+
+* Scaling out faster when adding new nodes to the cluster
+* Rebalancing the cluster faster to even out the utilization of nodes
+
+**Corner Cases and Gotchas**
+
+:code:`citus.max_background_task_executors_per_node` value limits the number of parallel 
+task executors in general. Also, shards in the same colocation group will always move
+sequentially so parallelism may be limited by the number of colocation groups.
 
 How it Works
 ~~~~~~~~~~~~
 
-Citus Enterprise's shard rebalancing uses PostgreSQL logical replication to move data from the old shard (called the "publisher" in replication terms) to the new (the "subscriber.") Logical replication allows application reads and writes to continue uninterrupted while copying shard data. Citus puts a brief write-lock on a shard only during the time it takes to update metadata to promote the subscriber shard as active.
+Citus's shard rebalancing uses PostgreSQL logical replication to move data from the old shard (called the "publisher" in replication terms) to the new (the "subscriber.") Logical replication allows application reads and writes to continue uninterrupted while copying shard data. Citus puts a brief write-lock on a shard only during the time it takes to update metadata to promote the subscriber shard as active.
 
 As the PostgreSQL docs `explain <https://www.postgresql.org/docs/current/static/logical-replication-publication.html>`_, the source needs a *replica identity* configured:
 
@@ -139,32 +164,7 @@ As the PostgreSQL docs `explain <https://www.postgresql.org/docs/current/static/
   one. Another unique index (with certain additional requirements) can
   also be set to be the replica identity.
 
-In other words, if your distributed table has a primary key defined then it's ready for shard rebalancing with no extra work. However, if it doesn't have a primary key or an explicitly defined replica identity, then attempting to rebalance it will cause an error. For instance:
-
-.. code-block:: sql
-
-  -- creating the following table without REPLICA IDENTITY or PRIMARY KEY
-  CREATE TABLE test_table (key int not null, value text not null);
-  SELECT create_distributed_table('test_table', 'key');
-
-  -- add a new worker node to simulate need for
-  -- shard rebalancing
-  
-  -- running shard rebalancer with default behavior
-  SELECT rebalance_table_shards('test_table');
-
-  /*
-  NOTICE:  Moving shard 102040 from localhost:9701 to localhost:9700 ...
-  ERROR: cannot use logical replication to transfer shards of the
-    relation test_table since it doesn't have a REPLICA IDENTITY or
-    PRIMARY KEY
-  DETAIL:  UPDATE and DELETE commands on the shard will error out during
-    logical replication unless there is a REPLICA IDENTIY or PRIMARY KEY.
-  HINT:  If you wish to continue without a replica identity set the
-    shard_transfer_mode to 'force_logical' or 'block_writes'.
-  */
-
-Here's how to fix this error.
+In other words, if your distributed table has a primary key defined then it's ready for shard rebalancing with no extra work. However, if it doesn't have a primary key or an explicitly defined replica identity, then attempting to rebalance it will cause an error. Here's how to fix it.
 
 **First, does the table have a unique index?**
 
@@ -186,56 +186,35 @@ If the table to be replicated already has a unique index which includes the dist
 
 Add a primary key to the table. If the desired key happens to be the distribution column, then it's quite easy, just add the constraint. Otherwise, a primary key with a non-distribution column must be composite and contain the distribution column too.
 
-**Unwilling to add primary key or unique index?**
-
-If the distributed table doesn't have a primary key or replica identity, and adding one is unclear or undesirable, you can still force the use of logical replication on PostgreSQL 10 or above. It's OK to do this on a table which receives only reads and inserts (no deletes or updates). Include the optional ``shard_transfer_mode`` argument of ``rebalance_table_shards``:
-
-.. code-block:: sql
-
-  SELECT rebalance_table_shards(
-    'test_table',
-    shard_transfer_mode => 'force_logical'
-  );
-
-In this situation if an application does attempt an update or delete during replication, then the request will merely return an error. Deletes and writes will become possible again after replication is complete.
-
-**What about PostgreSQL 9.x?**
-
-On PostgreSQL 9.x and lower, logical replication is not supported. In this case we must fall back to a less efficient solution: locking a shard for writes as we copy it to its new location. Unlike logical replication, this approach introduces downtime for write statements (although read queries continue unaffected).
-
-To choose this replication mode, use the ``shard_transfer_mode`` parameter again. Here is how to block writes and use the COPY command for replication:
-
-.. code-block:: sql
-
-  SELECT rebalance_table_shards(
-    'test_table',
-    shard_transfer_mode => 'block_writes'
-  );
-
 Adding a coordinator
 ----------------------
 
 The Citus coordinator only stores metadata about the table shards and does not store any data. This means that all the computation is pushed down to the workers and the coordinator does only final aggregations on the result of the workers. Therefore, it is not very likely that the coordinator becomes a bottleneck for read performance. Also, it is easy to boost up the coordinator by shifting to a more powerful machine.
 
-However, in some write heavy use cases where the coordinator becomes a performance bottleneck, users can add another coordinator. As the metadata tables are small (typically a few MBs in size), it is possible to copy over the metadata onto another node and sync it regularly. Once this is done, users can send their queries to any coordinator and scale out performance. If your setup requires you to use multiple coordinators, please `contact us <https://www.citusdata.com/about/contact_us>`_.
+However, in some write heavy use cases where the coordinator becomes a performance bottleneck, you can add another node as below and load balance the client connections.
 
+.. code-block:: postgresql
+
+  SELECT * FROM citus_add_node(second_coordinator_hostname, second_coordinator_port);
+  SELECT * FROM citus_set_node_property(second_coordinator_hostname, second_coordinator_port, 'shouldhaveshards', false);
+
+.. note::
+  
+  DDL queries can only be run though the first coordinator node.
+  
 .. _dealing_with_node_failures:
 
 Dealing With Node Failures
 ==========================
 
-In this subsection, we discuss how you can deal with node failures without incurring any downtime on your Citus cluster. We first discuss how Citus handles worker failures automatically by maintaining multiple replicas of the data. We also briefly describe how users can replicate their shards to bring them to the desired replication factor in case a node is down for a long time. Lastly, we discuss how you can setup redundancy and failure handling mechanisms for the coordinator.
+In this subsection, we discuss how you can deal with node failures without incurring any downtime on your Citus cluster.
 
 .. _worker_node_failures:
 
 Worker Node Failures
 --------------------
 
-Citus supports two modes of replication, allowing it to tolerate worker-node failures. In the first model, we use PostgreSQL's streaming replication to replicate the entire worker-node as-is. In the second model, Citus can replicate data modification statements, thus replicating shards across different worker nodes. They have different advantages depending on the workload and use-case as discussed below:
-
-1. **PostgreSQL streaming replication.** This option is best for heavy OLTP workloads. It replicates entire worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_ or use :ref:`Citus Cloud <cloud_overview>` which is pre-configured for replication and high-availability.
-
-2. **Citus shard replication.** This option is best suited for an append-only workload. Citus replicates shards across different nodes by automatically replicating DML statements and managing consistency. If a node goes down, the coordinator node will continue to serve queries by routing the work to the replicas seamlessly. To enable shard replication simply set :code:`SET citus.shard_replication_factor = 2;` (or higher) before distributing data to the cluster.
+Citus uses PostgreSQL streaming replication, allowing it to tolerate worker-node failures. This option  replicates entire worker nodes by continuously streaming their WAL records to a standby. You can configure streaming replication on-premise yourself by consulting the `PostgreSQL replication documentation <https://www.postgresql.org/docs/current/static/warm-standby.html#STREAMING-REPLICATION>`_ or use our :ref:`cloud_topic` which is pre-configured for replication and high-availability.
 
 .. _coordinator_node_failures:
 
@@ -245,28 +224,37 @@ Coordinator Node Failures
 The Citus coordinator maintains metadata tables to track all of the cluster nodes and the locations of the database shards on those nodes. The metadata tables are small (typically a few MBs in size) and do not change very often. This means that they can be replicated and quickly restored if the node ever experiences a failure. There are several options on how users can deal with coordinator failures.
 
 1. **Use PostgreSQL streaming replication:** You can use PostgreSQL's streaming
-replication feature to create a hot standby of the coordinator. Then, if the primary
-coordinator node fails, the standby can be promoted to the primary automatically to
-serve queries to your cluster. For details on setting this up, please refer to the `PostgreSQL wiki <https://wiki.postgresql.org/wiki/Streaming_Replication>`_.
+   replication feature to create a hot standby of the coordinator. Then, if the
+   primary coordinator node fails, the standby can be promoted to the primary
+   automatically to serve queries to your cluster. For details on setting this
+   up, please refer to the `PostgreSQL wiki
+   <https://wiki.postgresql.org/wiki/Streaming_Replication>`_.
 
-2. Since the metadata tables are small, users can use EBS volumes, or `PostgreSQL
-backup tools <https://www.postgresql.org/docs/current/static/backup.html>`_ to backup the metadata. Then, they can easily
-copy over that metadata to new nodes to resume operation.
+2. **Use backup tools:** Since the metadata tables are small, users can use EBS
+   volumes, or `PostgreSQL backup tools
+   <https://www.postgresql.org/docs/current/static/backup.html>`_ to backup the
+   metadata. Then, they can easily copy over that metadata to new nodes to
+   resume operation.
 
 .. _tenant_isolation:
 
 Tenant Isolation
 ================
 
+
+Row-based sharding
+------------------
+
 .. note::
 
-  Tenant isolation is a feature of **Citus Enterprise Edition** only.
+  Starting in version 11.0, Citus Community edition includes tenant isolation
+  functionality!
 
 Citus places table rows into worker shards based on the hashed value of the rows' distribution column. Multiple distribution column values often fall into the same shard. In the Citus multi-tenant use case this means that tenants often share shards.
 
 However, sharing shards can cause resource contention when tenants differ drastically in size. This is a common situation for systems with a large number of tenants -- we have observed that the size of tenant data tend to follow a Zipfian distribution as the number of tenants increases. This means there are a few very large tenants, and many smaller ones. To improve resource allocation and make guarantees of tenant QoS it is worthwhile to move large tenants to dedicated nodes.
 
-Citus Enterprise Edition provides the tools to isolate a tenant on a specific node. This happens in two phases: 1) isolating the tenant's data to a new dedicated shard, then 2) moving the shard to the desired node. To understand the process it helps to know precisely how rows of data are assigned to shards.
+Citus provides the tools to isolate a tenant on a specific node. This happens in two phases: 1) isolating the tenant's data to a new dedicated shard, then 2) moving the shard to the desired node. To understand the process it helps to know precisely how rows of data are assigned to shards.
 
 Every shard is marked in Citus metadata with the range of hashed values it contains (more info in the reference for :ref:`pg_dist_shard <pg_dist_shard>`). The Citus UDF :code:`isolate_tenant_to_new_shard(table_name, tenant_id)` moves a tenant into a dedicated shard in three steps:
 
@@ -306,6 +294,58 @@ Output:
 
 The new shard(s) are created on the same node as the shard(s) from which the tenant was removed. For true hardware isolation they can be moved to a separate node in the Citus cluster. As mentioned, the :code:`isolate_tenant_to_new_shard` function returns the newly created shard id, and this id can be used to move the shard:
 
+Now that you have the shard identifier, you can :ref:`move_shard`.
+
+Schema-based sharding
+---------------------
+
+In schema based sharding, the act of isolating a tenant is not required as by definition each tenant already resides in its own schema. The only thing that is needed is obtaining a shard identifier for a schema to perform a move.
+
+First find the colocation ID of the schema you want to move.
+
+
+.. code-block:: sql
+
+  select * from citus_schemas;
+
+
+.. code-block:: text
+
+   schema_name  | colocation_id | schema_size | schema_owner
+  --------------+---------------+-------------+--------------
+   user_service |             1 | 0 bytes     | user_service
+   time_service |             2 | 0 bytes     | time_service
+   ping_service |             3 | 0 bytes     | ping_service
+   a            |             4 | 128 kB      | citus
+   b            |             5 | 32 kB       | citus
+   with_data    |            11 | 6408 kB     | citus
+  (6 rows)
+
+The next step is to query `citus_shards`, we will use colocation identifier 11 from the output above:
+
+.. code-block:: sql
+
+  select * from citus_shards where colocation_id = 11;
+
+.. code-block:: text
+
+     table_name    | shardid |       shard_name       | citus_table_type | colocation_id | nodename  | nodeport | shard_size
+  -----------------+---------+------------------------+------------------+---------------+-----------+----------+------------
+   with_data.test  |  102180 | with_data.test_102180  | schema           |            11 | localhost |     9702 |     647168
+   with_data.test2 |  102183 | with_data.test2_102183 | schema           |            11 | localhost |     9702 |    5914624
+  (2 rows)
+
+You can pick any `shardid` from the output as making the move will also propaget to all colocated tables, which in case of schema based sharding means moving all tables within the schema.
+
+Now that you have the shard identifier, you can :ref:`move_shard`.
+
+.. _move_shard:
+
+Make the move
+-------------
+
+Knowing the shard identifier that denotes the tenant, you can execute the move:
+
 .. code-block:: postgresql
 
   -- find the node currently holding the new shard
@@ -330,11 +370,12 @@ Viewing Query Statistics
 
 .. note::
 
-  The citus_stat_statements view is a feature of **Citus Enterprise Edition** only.
+  Starting in version 11.0, Citus Community edition now includes the
+  citus_stat_statements view!
 
 When administering a Citus cluster it's useful to know what queries users are running, which nodes are involved, and which execution method Citus is using for each query. Citus records query statistics in a metadata view called :ref:`citus_stat_statements <citus_stat_statements>`, named analogously to Postgres' `pg_stat_statments <https://www.postgresql.org/docs/current/static/pgstatstatements.html>`_. Whereas pg_stat_statements stores info about query duration and I/O, citus_stat_statements stores info about Citus execution methods and shard partition keys (when applicable).
 
-Citus requires the ``pg_stat_statements`` extension to be installed in order to track query statistics. On Citus Cloud this extension will be pre-activated, but on a self-hosted Postgres instance you must load the extension in postgresql.conf via ``shared_preload_libraries``, then create the extension in SQL:
+Citus requires the ``pg_stat_statements`` extension to be installed in order to track query statistics. On our :ref:`cloud_topic` this extension will be pre-activated, but on a self-hosted Postgres instance you must load the extension in postgresql.conf via ``shared_preload_libraries``, then create the extension in SQL:
 
 .. code-block:: postgresql
 
@@ -399,6 +440,9 @@ Results:
 
 We can see that Citus uses the adaptive executor most commonly to run queries. This executor fragments the query into constituent queries to run on relevant nodes, and combines the results on the coordinator node. In the case of the second query (filtering by the distribution column ``id = $1``), Citus determined that it needed the data from just one node. Lastly, we can see that the ``insert into foo select…`` statement ran with the insert-select executor which provides flexibility to run these kind of queries.
 
+Tenant-level Statistics
+-----------------------
+
 So far the information in this view doesn't give us anything we couldn't already learn by running the ``EXPLAIN`` command for a given query. However, in addition to getting information about individual queries, the ``citus_stat_statements`` view allows us to answer questions such as "what percentage of queries in the cluster are scoped to a single tenant?"
 
 .. code-block:: postgresql
@@ -418,24 +462,7 @@ So far the information in this view doesn't give us anything we couldn't already
 
 In a multi-tenant database, for instance, we would expect the vast majority of queries to be single tenant. Seeing too many multi-tenant queries may indicate that queries do not have the proper filters to match a tenant, and are using unnecessary resources.
 
-We can also find which partition_ids are the most frequent targets. In a multi-tenant application these would be the busiest tenants.
-
-.. code-block:: sql
-
-  SELECT partition_key, sum(calls) as total_queries
-  FROM citus_stat_statements
-  WHERE coalesce(partition_key, '') <> ''
-  GROUP BY partition_key
-  ORDER BY total_queries desc
-  LIMIT 10;
-
-::
-
-  ┌───────────────┬───────────────┐
-  │ partition_key │ total_queries │
-  ├───────────────┼───────────────┤
-  │ 42            │             1 │
-  └───────────────┴───────────────┘
+To investigate which tenants in particular are most active, you can use the :ref:`citus_stat_tenants`.
 
 Statistics Expiration
 ---------------------
@@ -495,7 +522,7 @@ Connection Management
 
    Clusters originally created with a Citus version before 8.1.0 do not have any network encryption enabled between nodes (even if upgraded later). To set up self-signed TLS on on this type of installation follow the steps in `official postgres documentation <https://www.postgresql.org/docs/current/ssl-tcp.html#SSL-CERTIFICATE-CREATION>`_ together with the citus specific settings described here, i.e. changing ``citus.node_conninfo`` to ``sslmode=require``. This setup should be done on coordinator and workers.
 
-When Citus nodes communicate with one another they consult a GUC for connection parameters and, in the Enterprise Edition of Citus, a table with connection credentials. This gives the database administrator flexibility to adjust parameters for security and efficiency.
+When Citus nodes communicate with one another they consult a table with connection credentials. This gives the database administrator flexibility to adjust parameters for security and efficiency.
 
 To set non-sensitive libpq connection parameters to be used for all node connections, update the ``citus.node_conninfo`` GUC:
 
@@ -520,8 +547,6 @@ After changing this setting it is important to reload the postgres configuration
    Citus versions before 9.2.4 require a restart for existing connections to be closed.
 
    For these versions a reload of the configuration does not trigger connection ending and subsequent reconnecting. Instead the server should be restarted to enforce all connections to use the new settings.
-
-Citus Enterprise Edition includes an extra table used to set sensitive connection credentials. This is fully configurable per host/user. It's easier than managing ``.pgpass`` files through the cluster and additionally supports certificate authentication.
 
 .. code-block:: postgresql
 
@@ -579,7 +604,7 @@ Once all files are in place on the nodes, the following settings need to be conf
    # this will tell citus to verify the certificate of the server it is connecting to 
    citus.node_conninfo = 'sslmode=verify-full sslrootcert=/path/to/ca.crt sslcrl=/path/to/ca.crl'
 
-After changing, either restart the database or reload the configuration to apply these changes. A restart is required if a Citus version below 9.2.4 is used.
+After changing, either restart the database or reload the configuration to apply these changes. A restart is required if a Citus version below 9.2.4 is used. Also, adjusting :ref:`local_hostname` may be required for proper functioning with ``sslmode=verify-full``.
 
 Depending on the policy of the Certificate Authority used you might need or want to change ``sslmode=verify-full`` in ``citus.node_conninfo`` to ``sslmode=verify-ca``. For the difference between the two settings please consult `the official postgres documentation <https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS>`_.
 
@@ -628,7 +653,7 @@ To require that all connections supply a hashed password, update the PostgreSQL 
   hostssl    all             all             127.0.0.1/32            md5
   hostssl    all             all             ::1/128                 md5
 
-The coordinator node needs to know roles' passwords in order to communicate with the workers. In Citus Enterprise the ``pg_dist_authinfo`` table can provide that information, as discussed earlier. However, in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
+The coordinator node needs to know roles' passwords in order to communicate with the workers. Our :ref:`cloud_topic` keeps track of that kind of information for you. However, in Citus Community Edition the authentication information has to be maintained in a `.pgpass <https://www.postgresql.org/docs/current/static/libpq-pgpass.html>`_ file. Edit .pgpass in the postgres user's home directory, with a line for each combination of worker address and role:
 
 ::
 
@@ -643,13 +668,14 @@ Row-Level Security
 
 .. note::
 
-  Row-level security support is a part of Citus Enterprise. Please `contact us <https://www.citusdata.com/about/contact_us>`_ to obtain this functionality.
+  Starting in version 11.0, Citus Community edition now supports row-level
+  security for distributed tables.
 
 PostgreSQL `row-level security <https://www.postgresql.org/docs/current/static/ddl-rowsecurity.html>`_ policies restrict, on a per-user basis, which rows can be returned by normal queries or inserted, updated, or deleted by data modification commands. This can be especially useful in a multi-tenant Citus cluster because it allows individual tenants to have full SQL access to the database while hiding each tenant's information from other tenants.
 
 We can implement the separation of tenant data by using a naming convention for database roles that ties into table row-level security policies. We'll assign each tenant a database role in a numbered sequence: ``tenant_1``, ``tenant_2``, etc. Tenants will connect to Citus using these separate roles. Row-level security policies can compare the role name to values in the ``tenant_id`` distribution column to decide whether to allow access.
 
-Here is how to apply the approach on a simplified events table distributed by ``tenant_id``. First create the roles ``tenant_1`` and ``tenant_2`` (it's easy on Citus Cloud, see :ref:`cloud_roles`). Then run the following as an administrator:
+Here is how to apply the approach on a simplified events table distributed by ``tenant_id``. First create the roles ``tenant_1`` and ``tenant_2``. Then run the following as an administrator:
 
 .. code-block:: sql
 

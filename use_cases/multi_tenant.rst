@@ -6,6 +6,7 @@ Multi-tenant Applications
 =========================
 
 .. contents::
+   :backlinks: none
 
 *Estimated read time: 30 minutes*
 
@@ -192,7 +193,7 @@ Try it Yourself
 
   You'll run the SQL commands using psql and connect to the Coordinator node:
 
-  * **Docker**: :code:`docker exec -it citus_master psql -U postgres`
+  * **Docker**: :code:`docker exec -it citus psql -U postgres`
 
 At this point feel free to follow along in your own Citus cluster by `downloading <https://examples.citusdata.com/mt_ref_arch/schema.sql>`_ and executing the SQL to create the schema. Once the schema is ready, we can tell Citus to create shards on the workers. From the coordinator node, run:
 
@@ -223,7 +224,7 @@ The next step is loading sample data into the cluster from the command line.
   .. code-block:: bash
 
     for dataset in companies campaigns ads clicks impressions geo_ips; do
-      docker cp ${dataset}.csv citus_master:.
+      docker cp ${dataset}.csv citus:.
     done
 
 Being an extension of PostgreSQL, Citus supports bulk loading with the COPY command. Use it to ingest the data you downloaded, and make sure that you specify the correct file path if you downloaded the file to some other location. Back inside psql run this:
@@ -257,7 +258,7 @@ Django:
 
 Basically when the resulting SQL executed in the database contains a :code:`WHERE company_id = :value` clause on every table (including tables in JOIN queries), then Citus will recognize that the query should be routed to a single node and execute it there as it is. This makes sure that all SQL functionality is available. The node is an ordinary PostgreSQL server after all.
 
-Also, to make it even simpler, you can use our `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ library for Rails, or `django-multitenant <https://github.com/citusdata/django-multitenant>`_ for Django which will automatically add these filters to all your queries, even the complicated ones. Check out our migration guides for :ref:`rails_migration` and :ref:`django_migration`.
+Also, to make it even simpler, you can use our `activerecord-multi-tenant <https://github.com/citusdata/activerecord-multi-tenant>`_ library for Rails, or `django-multitenant <https://github.com/citusdata/django-multitenant>`_ for Django which will automatically add these filters to all your queries, even the complicated ones. Check out our migration guides for :ref:`rails_migration` and `Django <https://django-multitenant.readthedocs.io/en/latest/migration_mt_django.html>`_.
 
 This guide is framework-agnostic, so we'll point out some Citus features using SQL. Use your imagination for how these statements would be expressed in your language of choice.
 
@@ -426,26 +427,20 @@ Multi-tenant databases should be designed for future scale as business grows or 
 
 Being able to rebalance data in the Citus cluster allows you to grow your data size or number of customers and improve performance on demand. Adding new machines allows you to keep data in memory even when it is much larger than what a single machine can store.
 
-Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance. (Tenant isolation is a feature of Citus Enterprise edition.)
+Also, if data increases for only a few large tenants, then you can isolate those particular tenants to separate nodes for better performance.
 
-To scale out your Citus cluster, first add a new worker node to it. On Azure Database for PostgreSQL - Hyperscale (Citus), you can use the Azure Portal to add the required number of nodes. Alternatively, if you run your own Citus installation, you can add nodes manually with the :ref:`citus_add_node` UDF.
+To scale out your Citus cluster, first add a new worker node to it. On Azure Cosmos DB for PostgreSQL (formerly known as Hyperscale (Citus) in Azure Database for PostgreSQL), you can use the Azure Portal to add the required number of nodes. Alternatively, if you run your own Citus installation, you can add nodes manually with the :ref:`citus_add_node` UDF.
 
 Once you add the node it will be available in the system. However, at this point no tenants are stored on it and Citus will not yet run any queries there. To move your existing data, you can ask Citus to rebalance the data. This operation moves bundles of rows called shards between the currently active nodes to attempt to equalize the amount of data on each node.
 
 .. code-block:: postgres
 
-  SELECT rebalance_table_shards('companies');
+  SELECT citus_rebalance_start();
 
-Rebalancing preserves :ref:`colocation`, which means we can tell Citus to rebalance the companies table and it will take the hint and rebalance the other tables which are distributed by company_id. Also, with Citus Enterprise Edition, applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight. In Citus Community edition, writes to shards are blocked during rebalancing but reads are unaffected.
-
-You can learn more about how shard rebalancing works here: :ref:`scaling_out`.
+With our :ref:`cloud_topic`, or with Community edition 11.0 and above, applications do not need to undergo downtime during shard rebalancing. Read requests continue seamlessly, and writes are locked only when they affect shards which are currently in flight. In Citus Community edition, writes to shards are blocked during rebalancing but reads are unaffected.
 
 Dealing with Big Tenants
 ------------------------
-
-.. note::
-
-  This section uses features available only in Citus Enterprise.
 
 The previous section describes a general-purpose way to scale a cluster as the number of tenants increases. However, users often have two questions. The first is what will happen to their largest tenant if it grows too big. The second is what are the performance implications of hosting a large tenant together with small ones on a single worker node, and what can be done about it.
 
@@ -513,4 +508,4 @@ Where to Go From Here
 
 With this, you now know how to use Citus to power your multi-tenant application for scalability. If you have an existing schema and want to migrate it for Citus, see :ref:`Multi-Tenant Transitioning <transitioning_mt>`.
 
-To adjust a front-end application, specifically Ruby on Rails or Django, read :ref:`rails_migration` or :ref:`django_migration`. Finally, try `Azure Database for PostgreSQL - Hyperscale (Citus) <https://docs.microsoft.com/en-us/azure/postgresql/quickstart-create-hyperscale-portal>`_, the easiest way to manage a Citus cluster.
+To adjust a front-end application, specifically Ruby on Rails or Django, read :ref:`rails_migration` or `Django migration <https://django-multitenant.readthedocs.io/en/latest/migration_mt_django.html>`_. Finally, try `Azure Cosmos DB for PostgreSQL <https://learn.microsoft.com/azure/cosmos-db/postgresql/introduction>`_, the easiest way to manage a Citus cluster.

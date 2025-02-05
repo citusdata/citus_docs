@@ -94,7 +94,7 @@ However, if a root certificate authority file exists (typically in ``~/.postgres
 Resolution
 ~~~~~~~~~~
 
-Possible solutions are to sign the certificate, turn off SSL, or remove the root certificate.
+Possible solutions are to sign the certificate, turn off SSL, or remove the root certificate. Also a node may have trouble connecting to itself without the help of :ref:`local_hostname`.
 
 Could not connect to any active placements
 ------------------------------------------
@@ -121,7 +121,7 @@ Resolution
 
 The `max_connections <https://www.postgresql.org/docs/current/static/runtime-config-connection.html#GUC-MAX-CONNECTIONS>`_ GUC adjusts the limit, with a typical default of 100 connections. Note that each connection consumes resources, so adjust sensibly. When increasing ``max_connections`` it's usually a good idea to increase `memory limits <https://www.postgresql.org/docs/current/static/runtime-config-resource.html#RUNTIME-CONFIG-RESOURCE-MEMORY>`_ too.
 
-Using `PgBouncer <https://pgbouncer.github.io/>`_ can also help by queueing connection requests which exceed the connection limit. Citus Cloud has a built-in PgBouncer instance, see :ref:`cloud_pgbouncer` to learn how to connect through it.
+Using `PgBouncer <https://pgbouncer.github.io/>`_ can also help by queueing connection requests which exceed the connection limit. (Our :ref:`cloud_topic` has a built-in PgBouncer instance.)
 
 PgBouncer cannot connect to server
 ----------------------------------
@@ -239,7 +239,7 @@ STABLE functions used in UPDATE queries cannot be called with column references
 
 Each PostgreSQL function is marked with a `volatility <https://www.postgresql.org/docs/current/static/xfunc-volatility.html>`_, which indicates whether the function can update the database, and whether the function's return value can vary over time given the same inputs. A ``STABLE`` function is guaranteed to return the same results given the same arguments for all rows within a single statement, while an ``IMMUTABLE`` function is guaranteed to return the same results given the same arguments forever.
 
-Non-immutable functions can be inconvenient in distributed systems because they can introduce subtle changes when run at slightly different times across shard replicas. Differences in database configuration across nodes can also interact harmfully with non-immutable functions.
+Non-immutable functions can be inconvenient in distributed systems because they can introduce subtle changes when run at slightly different times across shards. Differences in database configuration across nodes can also interact harmfully with non-immutable functions.
 
 One of the most common ways this can happen is using the ``timestamp`` type in Postgres, which unlike ``timestamptz`` does not keep a record of time zone. Interpreting a timestamp column makes reference to the database timezone, which can be changed between queries, hence functions operating on timestamps are not immutable.
 

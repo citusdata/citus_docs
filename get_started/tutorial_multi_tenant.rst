@@ -31,9 +31,9 @@ We will use three Postgres tables to represent this data. To get started, you wi
 
 .. code-block:: bash
 
-    docker cp companies.csv citus_master:.
-    docker cp campaigns.csv citus_master:.
-    docker cp ads.csv citus_master:.
+    docker cp companies.csv citus:.
+    docker cp campaigns.csv citus:.
+    docker cp ads.csv citus:.
 
 Creating tables
 ---------------
@@ -50,7 +50,7 @@ To start, you can first connect to the Citus coordinator using psql.
 
 .. code-block:: bash
 
-    docker exec -it citus_master psql -U postgres
+    docker exec -it citus psql -U postgres
 
 Then, you can create the tables by using standard PostgreSQL :code:`CREATE TABLE` commands.
 
@@ -106,9 +106,6 @@ you can run :code:`create_distributed_table` and specify the table you want to s
 In this case, we will shard all the tables on the :code:`company_id`.
 
 .. code-block:: sql
-
-    -- before distributing tables, enable some extra features
-    SET citus.replication_model = 'streaming';
 
     SELECT create_distributed_table('companies', 'id');
     SELECT create_distributed_table('campaigns', 'company_id');
@@ -184,8 +181,7 @@ Next use :ref:`create_distributed_function` to instruct Citus to run the
 function directly on workers rather than on the coordinator (except on a
 single-node Citus installation, which runs everything on the coordinator). It
 will run the function on whatever worker holds the :ref:`shards` for tables
-``ads`` and ``campaigns`` corresponding to the value ``company_id``. (This
-feature requires the ``citus.replication_model`` change we made earlier.)
+``ads`` and ``campaigns`` corresponding to the value ``company_id``.
 
 .. code-block:: sql
 
@@ -217,6 +213,7 @@ We can also run a join query across multiple tables to see information about run
            sum(impressions_count) as total_impressions, sum(clicks_count) as total_clicks
     FROM ads, campaigns
     WHERE ads.company_id = campaigns.company_id
+    AND ads.campaign_id = campaigns.id
     AND campaigns.company_id = 5
     AND campaigns.state = 'running'
     GROUP BY campaigns.id, campaigns.name, campaigns.monthly_budget

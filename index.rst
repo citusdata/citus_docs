@@ -1,16 +1,12 @@
 Citus Documentation
 ===================
 
-Welcome to the documentation for Citus 10! Citus is an open source extension to
-PostgreSQL that transforms Postgres into a distributed database. To scale out
-Postgres horizontally, Citus employs distributed tables, reference tables, and
-a distributed SQL query engine. The query engine parallelizes SQL queries
+Welcome to the documentation for Citus 12.1! Citus is an open source extension
+to PostgreSQL that transforms Postgres into a distributed database. To scale
+out Postgres horizontally, Citus employs distributed tables, reference tables,
+and a distributed SQL query engine. The query engine parallelizes SQL queries
 across multiple servers in a database cluster to deliver dramatically improved
 query response times, even for data-intensive applications.
-
-As of version 10, Citus includes new ways to grow and scale your database, with
-the introduction of a new columnar storage feature and the ability to run on a
-single-node.
 
 .. raw:: html
 
@@ -78,8 +74,8 @@ single-node.
    :caption: Install
    :hidden:
 
-   installation/single_machine.rst
-   installation/multi_machine.rst
+   installation/single_node.rst
+   installation/multi_node.rst
    installation/citus_cloud.rst
 
 .. toctree::
@@ -130,41 +126,7 @@ single-node.
    faq/faq.rst
 
 .. toctree::
-   :caption: Citus Cloud
-   :hidden:
-
-   cloud/getting_started.rst
-   cloud/manage.rst
-   cloud/additional.rst
-   cloud/support.rst
-
-.. toctree::
    :caption: Articles
    :hidden:
 
    articles/index.rst
-
-.. Declare these images as dependencies so that
-.. sphinx copies them. It can't detect them in
-.. the embedded raw html
-
-.. image:: images/icons/number-one.png
-  :width: 0%
-.. image:: images/icons/use-cases.png
-  :width: 0%
-.. image:: images/icons/migrating.png
-  :width: 0%
-.. image:: images/icons/cloud.png
-  :width: 0%
-.. image:: images/icons/reference.png
-  :width: 0%
-.. image:: images/icons/help.png
-  :width: 0%
-.. image:: images/logo.png
-  :width: 0%
-.. image:: images/citus-docs-og-logo.png
-  :width: 0%
-.. image:: images/cloud-bill-credit.png
-  :width: 0%
-.. image:: images/cloud-bill-ach.png
-  :width: 0%

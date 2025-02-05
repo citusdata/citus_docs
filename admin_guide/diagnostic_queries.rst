@@ -31,6 +31,52 @@ The output contains the host and port of the worker database.
   │  102009 │          1 │           0 │ localhost │     5433 │           2 │
   └─────────┴────────────┴─────────────┴───────────┴──────────┴─────────────┘
 
+.. _schema_placements:
+
+Finding which node hosts a distributed schema
+---------------------------------------------
+
+Distributed schemas are automatically associated with individual colocation groups such that the tables created in those schemas are converted to colocated distributed tables without a shard key. You can find where a distributed schema resides by joining `citus_shards` with `citus_schemas`:
+
+.. code-block:: sql
+
+  select schema_name, nodename, nodeport
+    from citus_shards
+    join citus_schemas cs
+      on cs.colocation_id = citus_shards.colocation_id
+   group by 1,2,3;
+ 
+.. code-block:: text
+
+   schema_name | nodename  | nodeport
+  -------------+-----------+----------
+   a           | localhost |     9701
+   b           | localhost |     9702
+   with_data   | localhost |     9702
+
+You can also query `citus_shards` directly filtering down to `schema` table type to have a detailed listing for all tables.
+
+.. code-block:: sql
+
+  select * from citus_shards where citus_table_type = 'schema';
+
+.. code-block:: text
+
+
+     table_name   | shardid |      shard_name       | citus_table_type | colocation_id | nodename  | nodeport | shard_size | schema_name | colocation_id | schema_size | schema_owner
+  ----------------+---------+-----------------------+------------------+---------------+-----------+----------+------------+-------------+---------------+-------------+--------------
+   a.cities       |  102080 | a.cities_102080       | schema           |             4 | localhost |     9701 |       8192 | a           |             4 | 128 kB      | citus
+   a.map_tags     |  102145 | a.map_tags_102145     | schema           |             4 | localhost |     9701 |      32768 | a           |             4 | 128 kB      | citus
+   a.measurement  |  102047 | a.measurement_102047  | schema           |             4 | localhost |     9701 |          0 | a           |             4 | 128 kB      | citus
+   a.my_table     |  102179 | a.my_table_102179     | schema           |             4 | localhost |     9701 |      16384 | a           |             4 | 128 kB      | citus
+   a.people       |  102013 | a.people_102013       | schema           |             4 | localhost |     9701 |      32768 | a           |             4 | 128 kB      | citus
+   a.test         |  102008 | a.test_102008         | schema           |             4 | localhost |     9701 |       8192 | a           |             4 | 128 kB      | citus
+   a.widgets      |  102146 | a.widgets_102146      | schema           |             4 | localhost |     9701 |      32768 | a           |             4 | 128 kB      | citus
+   b.test         |  102009 | b.test_102009         | schema           |             5 | localhost |     9702 |       8192 | b           |             5 | 32 kB       | citus
+   b.test_col     |  102012 | b.test_col_102012     | schema           |             5 | localhost |     9702 |      24576 | b           |             5 | 32 kB       | citus
+   with_data.test |  102180 | with_data.test_102180 | schema           |            11 | localhost |     9702 |     647168 | with_data   |            11 | 632 kB      | citus
+
+
 .. _finding_dist_col:
 
 Finding the distribution column for a table
@@ -80,51 +126,9 @@ This query will run across all worker nodes and identify locks, how long they've
 
 .. code-block:: postgresql
 
-  SELECT run_command_on_workers($cmd$
-    SELECT array_agg(
-      blocked_statement || ' $ ' || cur_stmt_blocking_proc
-      || ' $ ' || cnt::text || ' $ ' || age
-    )
-    FROM (
-      SELECT blocked_activity.query    AS blocked_statement,
-             blocking_activity.query   AS cur_stmt_blocking_proc,
-             count(*)                  AS cnt,
-             age(now(), min(blocked_activity.query_start)) AS "age"
-      FROM pg_catalog.pg_locks         blocked_locks
-      JOIN pg_catalog.pg_stat_activity blocked_activity
-        ON blocked_activity.pid = blocked_locks.pid
-      JOIN pg_catalog.pg_locks         blocking_locks
-        ON blocking_locks.locktype = blocked_locks.locktype
-       AND blocking_locks.DATABASE IS NOT DISTINCT FROM blocked_locks.DATABASE
-       AND blocking_locks.relation IS NOT DISTINCT FROM blocked_locks.relation
-       AND blocking_locks.page IS NOT DISTINCT FROM blocked_locks.page
-       AND blocking_locks.tuple IS NOT DISTINCT FROM blocked_locks.tuple
-       AND blocking_locks.virtualxid IS NOT DISTINCT FROM blocked_locks.virtualxid
-       AND blocking_locks.transactionid IS NOT DISTINCT FROM blocked_locks.transactionid
-       AND blocking_locks.classid IS NOT DISTINCT FROM blocked_locks.classid
-       AND blocking_locks.objid IS NOT DISTINCT FROM blocked_locks.objid
-       AND blocking_locks.objsubid IS NOT DISTINCT FROM blocked_locks.objsubid
-       AND blocking_locks.pid != blocked_locks.pid
-      JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
-      WHERE NOT blocked_locks.GRANTED
-       AND blocking_locks.GRANTED
-      GROUP BY blocked_activity.query,
-               blocking_activity.query
-      ORDER BY 4
-    ) a
-  $cmd$);
+  SELECT * FROM citus_lock_waits;
 
-Example output:
-
-::
-
-  ┌───────────────────────────────────────────────────────────────────────────────────┐
-  │                               run_command_on_workers                              │
-  ├───────────────────────────────────────────────────────────────────────────────────┤
-  │ (localhost,5433,t,"")                                                             │
-  │ (localhost,5434,t,"{""update ads_102277 set name = 'new name' where id = 1; $ sel…│
-  │…ect * from ads_102277 where id = 1 for update; $ 1 $ 00:00:03.729519""}")         │
-  └───────────────────────────────────────────────────────────────────────────────────┘
+For more information, see :ref:`dist_query_activity`.
 
 Querying the size of your shards
 --------------------------------
@@ -173,32 +177,6 @@ Example output:
   └───────────────┴────────────┘
 
 There are other ways to measure distributed table size, as well. See :ref:`table_size`.
-
-Determining Replication Factor per Table
-----------------------------------------
-
-When using Citus replication rather than PostgreSQL streaming replication, each table can have a customized "replication factor." This controls the number of redundant copies Citus keeps of each of the table's shards. (See :ref:`worker_node_failures`.)
-
-To see an overview of this setting for all tables, run:
-
-.. code-block:: postgresql
-
-  SELECT logicalrelid AS tablename,
-         count(*)/count(DISTINCT ps.shardid) AS replication_factor
-  FROM pg_dist_shard_placement ps
-  JOIN pg_dist_shard p ON ps.shardid=p.shardid
-  GROUP BY logicalrelid;
-
-Example output:
-
-::
-
-  ┌───────────────┬────────────────────┐
-  │   tablename   │ replication_factor │
-  ├───────────────┼────────────────────┤
-  │ github_events │                  1 │
-  │ github_users  │                  1 │
-  └───────────────┴────────────────────┘
 
 Identifying unused indices
 --------------------------
@@ -264,6 +242,48 @@ Exxample output:
   │ ∅      │     1 │
   └────────┴───────┘
 
+Viewing system queries
+----------------------
+
+Active queries
+~~~~~~~~~~~~~~
+
+The ``citus_stat_activity`` view shows which queries are currently executing. You
+can filter to find the actively executing ones, along with the process ID of
+their backend:
+
+.. code-block:: postgresql
+
+  SELECT global_pid, query, state
+    FROM citus_stat_activity
+   WHERE state != 'idle';
+
+Why are queries waiting
+~~~~~~~~~~~~~~~~~~~~~~~
+
+We can also query to see the most common reasons that non-idle queries that are
+waiting. For an explanation of the reasons, check the `PostgreSQL documentation
+<https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE>`_.
+
+.. code-block:: postgresql
+
+  SELECT wait_event || ':' || wait_event_type AS type, count(*) AS number_of_occurences
+    FROM pg_stat_activity
+   WHERE state != 'idle'
+  GROUP BY wait_event, wait_event_type
+  ORDER BY number_of_occurences DESC;
+
+Example output when running ``pg_sleep`` in a separate query concurrently:
+
+::
+
+  ┌─────────────────┬──────────────────────┐
+  │      type       │ number_of_occurences │
+  ├─────────────────┼──────────────────────┤
+  │ ∅               │                    1 │
+  │ PgSleep:Timeout │                    1 │
+  └─────────────────┴──────────────────────┘
+
 Index hit rate
 --------------
 
@@ -271,25 +291,27 @@ This query will provide you with your index hit rate across all nodes. Index hit
 
 .. code-block:: postgresql
 
+  -- on coordinator
+  SELECT 100 * (sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit) AS index_hit_rate
+    FROM pg_statio_user_indexes;
+
+  -- on workers
   SELECT nodename, result as index_hit_rate
   FROM run_command_on_workers($cmd$
-    SELECT CASE sum(idx_blks_hit)
-      WHEN 0 THEN 'NaN'::numeric
-      ELSE to_char((sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit + idx_blks_read), '99.99')::numeric
-      END AS ratio
-    FROM pg_statio_user_indexes
+    SELECT 100 * (sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit) AS index_hit_rate
+      FROM pg_statio_user_indexes;
   $cmd$);
 
 Example output:
 
 ::
 
-  ┌───────────────────────────────────────────────────┬────────────────┐
-  │                     nodename                      │ index_hit_rate │
-  ├───────────────────────────────────────────────────┼────────────────┤
-  │ ec2-13-59-96-221.us-east-2.compute.amazonaws.com  │ 0.88           │
-  │ ec2-52-14-226-167.us-east-2.compute.amazonaws.com │ 0.89           │
-  └───────────────────────────────────────────────────┴────────────────┘
+  ┌───────────┬────────────────┐
+  │ nodename  │ index_hit_rate │
+  ├───────────┼────────────────┤
+  │ 10.0.0.16 │ 96.0           │
+  │ 10.0.0.20 │ 98.0           │
+  └───────────┴────────────────┘
 
 Cache hit rate
 --------------
@@ -305,21 +327,32 @@ vs the disk in your workload:
 
 .. code-block:: postgresql
 
+  -- on coordinator
   SELECT
     sum(heap_blks_read) AS heap_read,
     sum(heap_blks_hit)  AS heap_hit,
-    sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)) AS ratio
+    100 * sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)) AS cache_hit_rate
   FROM
     pg_statio_user_tables;
+
+  -- on workers
+  SELECT nodename, result as cache_hit_rate
+  FROM run_command_on_workers($cmd$
+    SELECT
+      100 * sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)) AS cache_hit_rate
+    FROM
+      pg_statio_user_tables;
+  $cmd$);
 
 Example output:
 
 ::
 
-  .
-   heap_read | heap_hit |         ratio
-  -----------+----------+------------------------
-           1 |      132 | 0.99248120300751879699
+  ┌───────────┬──────────┬─────────────────────┐
+  │ heap_read │ heap_hit │   cache_hit_rate    │
+  ├───────────┼──────────┼─────────────────────┤
+  │         1 │      132 │ 99.2481203007518796 │
+  └───────────┴──────────┴─────────────────────┘
 
 If you find yourself with a ratio significantly lower than 99%, then you likely
 want to consider increasing the cache available to your database

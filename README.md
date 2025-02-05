@@ -1,19 +1,14 @@
-#### Sphinx source files for Citus documentation
+### Sphinx source files for Citus documentation
 
-To generate HTML version:
+This is the repo that generates
+[docs.citusdata.com](https://docs.citusdata.com). It documents the [Citus
+open-source extension](https://github.com/citusdata/citus) for PostgreSQL.
 
-1. Install Sphinx from the [sphinx website](http://www.sphinx-doc.org/en/master/usage/installation.html)
-2. Clone this repository
-4. Generate HTML
-    ```bash
-    cd citus_docs
-    make
+For instructions to build and preview locally, see
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
-    # open _build/index.html in your browser
-    ```
+## Code of Conduct
 
----
-
-**Sphinx Installation Note:** on OS X it's better to install sphinx via [pip](https://pip.pypa.io/en/stable/installing/) rather than Homebrew.
-(The brew formula is keg-only and used primarily by other tools.)
-Use `pip install sphinx`.
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
+contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
