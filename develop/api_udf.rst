@@ -411,11 +411,11 @@ update_distributed_table_colocation
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 The update_distributed_table_colocation() function is used to update colocation
-of a distributed table. This function can also be used to break colocation of a 
+of a distributed table. This function can also be used to break colocation of a
 distributed table. Citus will implicitly colocate two tables if the distribution
-column is the same type, this can be useful if the tables are related and will 
-do some joins. If table A and B are colocated, and table A gets rebalanced, table B 
-will also be rebalanced. If table B does not have a replica identity, the rebalance will 
+column is the same type, this can be useful if the tables are related and will
+do some joins. If table A and B are colocated, and table A gets rebalanced, table B
+will also be rebalanced. If table B does not have a replica identity, the rebalance will
 fail. Therefore, this function can be useful breaking the implicit colocation in that case.
 
 Note that this function does not move any data around physically.
@@ -450,7 +450,7 @@ Assume that ``table A`` and ``table B`` are colocated( possibily implicitly), if
 
   SELECT update_distributed_table_colocation('A', colocate_with => 'none');
 
-Now, assume that ``table A``, ``table B``, ``table C`` and ``table D`` are colocated and you want to colocate ``table A`` 
+Now, assume that ``table A``, ``table B``, ``table C`` and ``table D`` are colocated and you want to colocate ``table A``
 and ``table B`` together, and ``table C`` and ``table D`` together:
 
 .. code-block:: postgresql
@@ -998,9 +998,9 @@ Example
 .. code-block:: postgresql
 
     select citus_remove_node('new-node', 12345);
-     citus_remove_node 
+     citus_remove_node
     --------------------
-     
+
     (1 row)
 
 citus_get_active_worker_nodes
@@ -1029,7 +1029,7 @@ Example
 .. code-block:: postgresql
 
     SELECT * from citus_get_active_worker_nodes();
-     node_name | node_port 
+     node_name | node_port
     -----------+-----------
      localhost |      9700
      localhost |      9702
@@ -1173,48 +1173,6 @@ Example
 
    -- then add a worker
    SELECT * FROM citus_add_node('worker1.example.com', 5432);
-
-master_get_table_metadata
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-The master_get_table_metadata() function can be used to return distribution related metadata for a distributed table. This metadata includes the relation id, storage type, distribution method, distribution column, replication count (deprecated), maximum shard size and the shard placement policy for that table. Behind the covers, this function queries Citus metadata tables to get the required information and concatenates it into a tuple before returning it to the user.
-
-Arguments
-***********************
-
-**table_name:** Name of the distributed table for which you want to fetch metadata.
-
-Return Value
-*********************************
-
-A tuple containing the following information:
-
-**logical_relid:** Oid of the distributed table. This values references the relfilenode column in the pg_class system catalog table.
-
-**part_storage_type:** Type of storage used for the table. May be 't' (standard table), 'f' (foreign table) or 'c' (columnar table).
-
-**part_method:** Distribution method used for the table. Must be 'h' (hash).
-
-**part_key:** Distribution column for the table.
-
-**part_replica_count:** (Deprecated) Current shard replication count.
-
-**part_max_size:** Current maximum shard size in bytes.
-
-**part_placement_policy:** Shard placement policy used for placing the table’s shards. May be 1 (local-node-first) or 2 (round-robin).
-
-Example
-*************************
-
-The example below fetches and displays the table metadata for the github_events table.
-
-.. code-block:: postgresql
-
-    SELECT * from master_get_table_metadata('github_events');
-     logical_relid | part_storage_type | part_method | part_key | part_replica_count | part_max_size | part_placement_policy 
-    ---------------+-------------------+-------------+----------+--------------------+---------------+-----------------------
-             24180 | t                 | h           | repo_id  |                  1 |    1073741824 |                     2
-    (1 row)
 
 .. _get_shard_id:
 
