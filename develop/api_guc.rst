@@ -116,7 +116,6 @@ The ``citus.node_conninfo`` GUC sets non-sensitive `libpq connection parameters 
 
 Citus honors only a specific subset of the allowed options, namely:
 
-* application_name
 * connect_timeout
 * gsslib†
 * host
