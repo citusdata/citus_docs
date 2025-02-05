@@ -7,7 +7,7 @@ Fedora, CentOS, or Red Hat
 
 This section describes the steps needed to set up a single-node Citus cluster on your own Linux machine from RPM packages.
 
-**1. Install PostgreSQL 16 and the Citus extension**
+**1. Install PostgreSQL 17 and the Citus extension**
 
 .. code-block:: sh
 
@@ -15,7 +15,7 @@ This section describes the steps needed to set up a single-node Citus cluster on
   curl https://install.citusdata.com/community/rpm.sh | sudo bash
 
   # install Citus extension
-  sudo yum install -y citus121_16
+  sudo yum install -y citus130_17
 
 .. _post_install:
 
@@ -29,7 +29,7 @@ Let's create a new database on disk. For convenience in using PostgreSQL Unix do
   sudo su - postgres
 
   # include path to postgres binaries
-  export PATH=$PATH:/usr/pgsql-16/bin
+  export PATH=$PATH:/usr/pgsql-17/bin
 
   cd ~
   mkdir citus
