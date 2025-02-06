@@ -614,7 +614,7 @@ citus.max_shared_pool_size (integer)
 ************************************
 
 Specifies the maximum number of connections that the coordinator node, across
-all simultaneous sessions, is allowed to make per worker node. PostgreSQL must
+all simultaneous sessions, is allowed to make per remote node. PostgreSQL must
 allocate fixed resources for every connection and this GUC helps ease
 connection pressure on workers.
 
@@ -634,6 +634,26 @@ the note below). The value -1 disables throttling.
   the max_connections on the workers a bit higher than max_connections
   on the coordinator. This gives extra space for connections required for
   repartition queries on the workers.
+
+
+
+.. _local_share_pool_size:
+
+citus.local_shared_pool_size (integer)
+**************************************
+
+Specifies the maximum number of connections, across all simultaneous
+sessions, is allowed to make to the local node. This setting is relevant
+when the local node has shards, such as Citus on Single Node.
+
+By default, the value is automatically set equal to the half of the node's
+own ``max_connections``.
+
+The setting provides similar throttling as :ref:`max_shared_pool_size`, however
+only for local node. The goal is that Citus should refrain to use all the avaliable
+connection slots in ``max_connections`` and allow the client backends (e.g.,
+``psql``) to have enough space to connect. The value -1 disables throttling.
+
 
 .. _max_adaptive_executor_pool_size:
 
