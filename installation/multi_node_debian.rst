@@ -26,12 +26,12 @@ Steps to be executed on all nodes
 ::
 
   # install the server and initialize db
-  sudo apt-get -y install postgresql-16-citus-12.1
+  sudo apt-get -y install postgresql-17-citus-13.0
 
   # preload citus extension
-  sudo pg_conftool 16 main set shared_preload_libraries citus
+  sudo pg_conftool 17 main set shared_preload_libraries citus
 
-This installs centralized configuration in `/etc/postgresql/16/main`, and creates a database in `/var/lib/postgresql/16/main`.
+This installs centralized configuration in `/etc/postgresql/17/main`, and creates a database in `/var/lib/postgresql/17/main`.
 
 .. _post_enterprise_deb:
 
@@ -41,11 +41,11 @@ Before starting the database let's change its access permissions. By default the
 
 ::
 
-  sudo pg_conftool 16 main set listen_addresses '*'
+  sudo pg_conftool 17 main set listen_addresses '*'
 
 ::
 
-  sudo vi /etc/postgresql/16/main/pg_hba.conf
+  sudo vi /etc/postgresql/17/main/pg_hba.conf
 
 ::
 

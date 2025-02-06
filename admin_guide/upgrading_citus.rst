@@ -13,21 +13,21 @@ Upgrading the Citus version requires first obtaining the new Citus extension and
 Patch Version Upgrade
 ---------------------
 
-To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 12.1 is currently installed on Postgres 16:
+To upgrade a Citus version to its latest patch, issue a standard upgrade command for your package manager. Assuming version 13.0 is currently installed on Postgres 16:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install --only-upgrade postgresql-16-citus-12.1
+  sudo apt-get install --only-upgrade postgresql-16-citus-13.0
   sudo service postgresql restart
 
-**Fedora, CentOS, or Red Hat**
+**Red Hat**
 
 .. code-block:: bash
 
-  sudo yum update citus121_16
+  sudo yum update citus130_16
   sudo service postgresql-16 restart
 
 .. _major_minor_upgrade:
@@ -46,23 +46,23 @@ Each major and minor version of Citus is published as a package with a separate 
 Step 1. Update Citus Package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 11.3 to 12.1 on Postgres 15:
+If upgrading both Citus and Postgres, always be sure to upgrade the Citus extension first, and the PostgreSQL version second (see :ref:`upgrading_postgres`). Here is how to do a Citus upgrade from 12.1 to 13.0 on Postgres 16:
 
 **Ubuntu or Debian**
 
 .. code-block:: bash
 
   sudo apt-get update
-  sudo apt-get install postgresql-15-citus-12.1
+  sudo apt-get install postgresql-16-citus-13.0
   sudo service postgresql restart
 
-**Fedora, CentOS, or Red Hat**
+**Red Hat**
 
 .. code-block:: bash
 
   # Fedora, CentOS, or Red Hat
-  sudo yum swap citus113_15 citus121_15
-  sudo service postgresql-15 restart
+  sudo yum swap citus121_16 citus130_16
+  sudo service postgresql-16 restart
 
 Step 2. Apply Update in DB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,7 +102,7 @@ After installing the new package and restarting the database, run the extension 
 
 .. _upgrading_postgres:
 
-Upgrading PostgreSQL version from 15 to 16
+Upgrading PostgreSQL version from 16 to 17
 ##########################################
 
 .. note::
@@ -114,17 +114,17 @@ Upgrading PostgreSQL version from 15 to 16
 
 Record the following paths before you start (your actual paths may be different than those below):
 
-Existing data directory (e.g. /opt/pgsql/15/data)
-  :code:`export OLD_PG_DATA=/opt/pgsql/15/data`
+Existing data directory (e.g. /opt/pgsql/16/data)
+  :code:`export OLD_PG_DATA=/opt/pgsql/16/data`
 
-Existing PostgreSQL installation path (e.g. /usr/pgsql-15)
-  :code:`export OLD_PG_PATH=/usr/pgsql-15`
+Existing PostgreSQL installation path (e.g. /usr/pgsql-16)
+  :code:`export OLD_PG_PATH=/usr/pgsql-16`
 
 New data directory after upgrade
-  :code:`export NEW_PG_DATA=/opt/pgsql/16/data`
+  :code:`export NEW_PG_DATA=/opt/pgsql/17/data`
 
 New PostgreSQL installation path
-  :code:`export NEW_PG_PATH=/usr/pgsql-16`
+  :code:`export NEW_PG_PATH=/usr/pgsql-17`
 
 For Every Node
 --------------

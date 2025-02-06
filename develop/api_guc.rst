@@ -116,7 +116,6 @@ The ``citus.node_conninfo`` GUC sets non-sensitive `libpq connection parameters 
 
 Citus honors only a specific subset of the allowed options, namely:
 
-* application_name
 * connect_timeout
 * gsslib†
 * host
@@ -128,6 +127,7 @@ Citus honors only a specific subset of the allowed options, namely:
 * sslcompression
 * sslcrl
 * sslmode  (defaults to "require" as of Citus 8.1)
+* sslnegotiation
 * sslrootcert
 * tcp_user_timeout
 
