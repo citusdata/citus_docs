@@ -115,7 +115,10 @@ inserts appropriate metadata to mark the table as distributed. The function
 defaults to 'hash' distribution if no distribution method is specified. If the
 table is hash-distributed, the function also creates worker shards based on the
 shard count configuration value. If the table contains any rows, they are
-automatically distributed to worker nodes.
+automatically distributed to worker nodes, but not deleted from the table on the
+coordinator. Leftover local data in distributed tables is inaccessible to Citus queries,
+and can cause irrelevant constraint violations on the coordinator. In order to remove
+the leftover data, use the :ref:`truncate_local_data_after_distributing_table` function.
 
 Arguments
 ************************
