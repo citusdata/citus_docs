@@ -270,11 +270,6 @@ Sets the shard count for hash-partitioned tables and defaults to 32. This value 
 the :ref:`create_distributed_table <create_distributed_table>` UDF when creating
 hash-partitioned tables. This parameter can be set at run-time and is effective on the coordinator. 
 
-citus.shard_max_size (integer)
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-Sets the maximum size to which a shard will grow before it gets split and defaults to 1GB. When the source file's size (which is used for staging) for one shard exceeds this configuration value, the database ensures that a new shard gets created. This parameter can be set at run-time and is effective on the coordinator.
-
 .. _replicate_reference_tables_on_activate:
 
 citus.replicate_reference_tables_on_activate (boolean)
