@@ -263,6 +263,8 @@ Sets the commit protocol to use when performing COPY on a hash distributed table
 
 * **1pc:** The transactions in which COPY is performed on the shard placements are committed in a single round. Data may be lost if a commit fails after COPY succeeds on all placements (rare).
 
+.. _citus.shard_count:
+
 citus.shard_count (integer)
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 

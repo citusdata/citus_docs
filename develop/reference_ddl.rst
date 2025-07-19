@@ -71,9 +71,9 @@ distribution column and create the worker shards.
 
 This function informs Citus that the github_events table should be distributed
 on the repo_id column (by hashing the column value). The function also creates
-shards on the worker nodes using the citus.shard_count configuration value.
+shards on the worker nodes using the :ref:`citus.shard_count <citus.shard_count>` configuration value.
 
-This example would create a total of citus.shard_count number of shards where
+This example would create a total of :ref:`citus.shard_count <citus.shard_count>` number of shards where
 each shard owns a portion of a hash token space. Once the shards are created,
 this function saves all distributed metadata on the coordinator.
 
