@@ -129,7 +129,7 @@ New PostgreSQL installation path
 For Every Node
 --------------
 
-1. Back up Citus metadata in the old coordinator node.
+1. Back up Citus metadata.
 
   .. code-block:: postgres
 
