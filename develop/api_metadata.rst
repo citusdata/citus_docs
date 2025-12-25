@@ -747,9 +747,9 @@ The view reports aggregate statistics for each database, tracking both connectio
 
 **Connection Management Statistics:**
 
-* **connection_establishment_succeeded**: Number of successful inter-node connections initiated by this node
-* **connection_establishment_failed**: Number of failed connection attempts. This includes various failure scenarios such as unreachable nodes, connection timeouts (see :ref:`citus.node_connection_timeout <node_connection_timeout>`), configuration errors, or internal issues. Note that optional connections that were skipped due to connection throttling (see ``citus.max_shared_pool_size`` and ``citus.local_shared_pool_size``) are not counted as failures since they were never attempted
-* **connection_reused**: Number of times a cached connection was reused instead of establishing a new one (see ``citus.max_cached_conns_per_worker`` and ``citus.max_cached_connection_lifetime``)
+* **connection_establishment_succeeded**: Number of successful inter-node connections initiated by this node.
+* **connection_establishment_failed**: Number of failed connection attempts. This includes various failure scenarios such as unreachable nodes, connection timeouts (see :ref:`citus.node_connection_timeout <node_connection_timeout>`), configuration errors, or internal issues. Note that optional connections that were skipped due to connection throttling (see ``citus.max_shared_pool_size`` and ``citus.local_shared_pool_size``) are not counted as failures since they were never attempted.
+* **connection_reused**: Number of times a cached connection was reused instead of establishing a new one (see ``citus.max_cached_conns_per_worker`` and ``citus.max_cached_connection_lifetime``).
 
 **Query Execution Statistics:**
 
