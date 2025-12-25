@@ -77,16 +77,27 @@ After installing the new package and restarting the database, run the extension 
   -- you should see the upgraded Citus version
   SELECT * FROM citus_version();
 
-  -- if upgrading to Citus 11.x or later,
-  -- run on the coordinator node
+  -- This UDF must be executed during one of the following upgrade paths:
+  --   * when upgrading to Citus 11 or later, while still on a pre-11 version, OR
+  --   * when upgrading to Citus 14 or later, while still on a pre-14 version.
+  --
+  -- Must be run on the coordinator node.
   CALL citus_finish_citus_upgrade();
-
 .. note::
 
   If upgrading to Citus 11.x from an earlier major version, the
   citus_finish_citus_upgrade() procedure will make sure that all worker nodes
   have the right schema and metadata. It may take several minutes to run,
   depending on how much metadata needs to be synced.
+
+.. note::
+
+  If upgrading to Citus 14.x from an earlier major version, the
+  citus_finish_citus_upgrade() procedure will make sure to fix the colocation
+  groups whose registered collation columns do not match the distribution
+  columns of the tables in the group, if any. No data movement is involved
+  in this process, but it has to adjust pg_dist_colocation and pg_dist_partition
+  metadata tables on all nodes, if needed.
 
 .. note::
 
