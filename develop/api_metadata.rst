@@ -736,6 +736,68 @@ The tenant-level statistics will reflect the queries we just made:
    1                |                         1 |                          3 |                 0.000883
    2                |                         0 |                          1 |                 0.000144
 
+.. _citus_stat_counters:
+
+Statistics counters view
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``citus_stat_counters`` view provides statistics about Citus operations including connection management and query execution. These statistics are collected when :ref:`citus.enable_stat_counters <enable_stat_counters>` is enabled.
+
+The view reports aggregate statistics for each database, tracking both connection-level metrics (connection establishment and reuse) and query execution patterns (single-shard vs multi-shard queries).
+
+**Connection Management Statistics:**
+
+* **connection_establishment_succeeded**: Number of successful inter-node connections initiated by this node
+* **connection_establishment_failed**: Number of failed connection attempts. This includes various failure scenarios such as unreachable nodes, connection timeouts (see :ref:`citus.node_connection_timeout <node_connection_timeout>`), configuration errors, or internal issues. Note that optional connections that were skipped due to connection throttling (see ``citus.max_shared_pool_size`` and ``citus.local_shared_pool_size``) are not counted as failures since they were never attempted
+* **connection_reused**: Number of times a cached connection was reused instead of establishing a new one (see ``citus.max_cached_conns_per_worker`` and ``citus.max_cached_connection_lifetime``)
+
+**Query Execution Statistics:**
+
+These counters are incremented not just for top-level queries but also for subplans and subqueries. For example, recursive planning steps and the SELECT portion of INSERT ... SELECT queries increment these counters separately.
+
+* **query_execution_single_shard**: Number of queries that accessed only a single shard.
+* **query_execution_multi_shard**: Number of queries that accessed multiple shards across the cluster.
+
++-------------------------------------+-------------+------------------------------------------------------------------------+
+| Name                                | Type        | Description                                                            |
++=====================================+=============+========================================================================+
+| database_id                         | oid         | Database OID                                                           |
++-------------------------------------+-------------+------------------------------------------------------------------------+
+| name                                | name        | Database name (NULL if database has been dropped)                      |
++-------------------------------------+-------------+------------------------------------------------------------------------+
+| connection_establishment_succeeded  | bigint      | Successful inter-node connection establishments                        |
++-------------------------------------+-------------+------------------------------------------------------------------------+
+| connection_establishment_failed     | bigint      | Failed connection attempts                                             |
++-------------------------------------+-------------+------------------------------------------------------------------------+
+| connection_reused                   | bigint      | Cached connections that were reused                                    |
++-------------------------------------+-------------+------------------------------------------------------------------------+
+| query_execution_single_shard        | bigint      | Queries accessing a single shard                                       |
++-------------------------------------+-------------+------------------------------------------------------------------------+
+| query_execution_multi_shard         | bigint      | Queries accessing multiple shards                                      |
++-------------------------------------+-------------+------------------------------------------------------------------------+
+| stats_reset                         | timestamptz | Last time the statistics were reset (NULL if never reset)              |
++-------------------------------------+-------------+------------------------------------------------------------------------+
+
+Example:
+
+.. code-block:: postgres
+
+  SELECT * FROM citus_stat_counters;
+
+::
+
+   database_id | name       | connection_establishment_succeeded | connection_establishment_failed | connection_reused | query_execution_single_shard | query_execution_multi_shard | stats_reset
+  -------------+------------+------------------------------------+---------------------------------+-------------------+------------------------------+-----------------------------+-------------
+         13340 | mydb       |                                245 |                               3 |                89 |                          156 |                          78 | 2025-01-15...
+         16384 | analytics  |                                 12 |                               0 |                 5 |                           23 |                          45 | 2025-01-14...
+
+Caveats:
+
+* Statistics are not persisted and are lost on server restart.
+* Statistics can be manually reset using the :ref:`citus_stat_counters_reset() <citus_stat_counters_reset>` function.
+* The ``citus_stat_counters()`` function can be used to query statistics for a specific database by providing its OID.
+* Even after a database is dropped, its statistics remain visible via the ``citus_stat_counters()`` function, though the ``name`` column will be NULL in the view.
+
 .. _dist_query_activity:
 
 Distributed Query Activity

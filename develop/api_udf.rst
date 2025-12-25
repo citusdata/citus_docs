@@ -1348,6 +1348,95 @@ Return Value
 
 None
 
+.. _citus_stat_counters_reset:
+
+citus_stat_counters_reset
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Resets the Citus statistics counters to zero for a specified database. The statistics are displayed in the :ref:`citus_stat_counters <citus_stat_counters>` view and include connection management and query execution metrics.
+
+This function requires superuser privileges.
+
+Arguments
+*********
+
+**database_id:** (Optional) OID of the database for which to reset statistics. Use ``0`` or ``NULL`` (or omit the parameter) to reset statistics for the current database. You can provide a specific database OID to reset statistics for any database **on the local node** in the cluster.
+
+Return Value
+************
+
+None
+
+Example
+*******
+
+.. code-block:: postgresql
+
+  -- reset stats for the current database
+  SELECT citus_stat_counters_reset();
+
+  -- or explicitly specify the current database
+  SELECT citus_stat_counters_reset(0);
+
+  -- reset stats for a specific database by OID, no-op if no such database
+  SELECT citus_stat_counters_reset(12345);
+
+Caveats
+*******
+
+* Due to concurrent access patterns, there is a small possibility that the function might not reset counters for all active backends. This is a rare edge case.
+* After resetting, the ``stats_reset`` column in the :ref:`citus_stat_counters <citus_stat_counters>` view will show the timestamp when the reset occurred.
+
+citus_stat_counters
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Returns Citus statistics counters for one or more databases. This function is particularly useful for querying statistics for specific databases, including databases that have been dropped (which will still have their statistics available through this function, though not through the :ref:`citus_stat_counters view <citus_stat_counters>`).
+
+The statistics include the same information as the :ref:`citus_stat_counters view <citus_stat_counters>`.
+
+See :ref:`citus.enable_stat_counters <enable_stat_counters>` to enable statistics collection.
+
+Arguments
+*********
+
+**database_id:** (Optional) OID of the database for which to retrieve statistics. Use ``0`` or ``NULL`` (or omit the parameter) to retrieve statistics for all databases.
+
+Return Value
+************
+
+A set of records with the following columns:
+
+* **database_id** (oid): Database OID.
+* **connection_establishment_succeeded** (bigint): Successful inter-node connection establishments.
+* **connection_establishment_failed** (bigint): Failed connection attempts.
+* **connection_reused** (bigint): Cached connections that were reused.
+* **query_execution_single_shard** (bigint): Queries accessing a single shard.
+* **query_execution_multi_shard** (bigint): Queries accessing multiple shards.
+* **stats_reset** (timestamptz): Last time the statistics were reset (NULL if never reset).
+
+Example
+*******
+
+.. code-block:: postgresql
+
+  -- get stats for all databases
+  SELECT * FROM citus_stat_counters();
+
+  -- get stats for a specific database
+  SELECT * FROM citus_stat_counters(12345);
+
+  -- get stats for current database only
+  SELECT * FROM citus_stat_counters(
+    (SELECT oid FROM pg_database WHERE datname = current_database())
+  );
+
+Caveats
+*******
+
+* Unlike the :ref:`citus_stat_counters view <citus_stat_counters>`, this function can return statistics for databases that have been dropped (the view filters these out).
+* Statistics are only available for databases that have had at least one connection since the last server restart.
+* Providing a database OID that has never been used returns an empty result set.
+
 .. _cluster_management_functions:
 
 Cluster Management And Repair Functions

@@ -251,6 +251,26 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 Sampling rate for new tenants in citus_stat_tenants. The rate can be of range between ``0.0`` and ``1.0``. Default is ``1.0`` meaning 100% of untracked tenant queries are sampled. Setting it to a lower value means that already tracked tenants have 100% queries sampled, but tenants that are currently untracked are sampled only at the provided rate.
 
+.. _enable_stat_counters:
+
+citus.enable_stat_counters (boolean)
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+When enabled, Citus maintains statistics counters that track various operations including connection management and query execution. These statistics are available through the :ref:`citus_stat_counters <citus_stat_counters>` view and can be reset using the :ref:`citus_stat_counters_reset() <citus_stat_counters_reset>` function.
+
+Important notes:
+
+* Statistics are not persisted and are lost on server shutdown.
+* The default value is false (disabled).
+* Requires superuser privileges to change.
+* When disabled, no statistics are collected, but existing statistics remain queryable.
+
+.. code-block:: postgresql
+
+  -- enable stat counters collection
+  ALTER SYSTEM SET citus.enable_stat_counters = true;
+  SELECT pg_reload_conf();
+
 Data Loading
 ---------------------------
 
